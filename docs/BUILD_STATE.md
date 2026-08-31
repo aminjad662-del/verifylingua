@@ -12,8 +12,8 @@
 |---|---|---|---|
 | **Phase 0** | Repo Setup, Design Tokens, Prisma Schema, CI, UILO Hard Gate 1 | **COMPLETE** | `next build` passed, `prisma generate` clean, vitest 5/5 passing, check:hex 0 errors, git committed (`60f9517`). Hard Gate 1 documented: UILO not found; proceeding with shadcn/ui + screenshot-led contract. |
 | **Phase 1** | Design System Tokens Page (`/dev/tokens`) | **COMPLETE** | Live token catalog, dark mode toggle, contrast matrix, button/form/switch/toggle-row matrix, git committed (`8a94a2e`). |
-| **Phase 2** | Marketing Shell & Homepage (Screenshot-Led) | **IN PROGRESS** | Building Header (5 links), Footer, Hero Dropzone, How It Works, Comparison Matrix, Rejection-Proof Dark Band, Trust Stats, FAQ, and core marketing routes (`/pricing`, `/how-it-works`, `/documents`, `/languages`, `/help`). |
-| **Phase 3** | Nano Banana Pro Asset Pipeline (Hard Gate 2: 5 assets) | PENDING | - |
+| **Phase 2** | Marketing Shell & Homepage (Screenshot-Led) | **COMPLETE** | 10 static marketing routes compiled (`/`, `/pricing`, `/how-it-works`, `/documents`, `/languages`, `/help`, `/dev/tokens`), git committed (`05fe114`). |
+| **Phase 3** | Nano Banana Pro Asset Pipeline (Hard Gate 2: 5 assets) | **IN PROGRESS** | Building idempotent asset manifest, generator script, generating the initial 5 assets (Hero + 4 step icons), and presenting Hard Gate 2 review. |
 | **Phase 4** | Order Funnel & Sticky Price Bar (Hard Gate 3: Funnel test) | PENDING | - |
 | **Phase 5** | The Six Differentiators & Public Verification Portal | PENDING | - |
 | **Phase 6** | Auth, Onboarding, Customer Dashboard & Vault | PENDING | - |
@@ -29,3 +29,7 @@
 - **Status**: RESOLVED
 - **Outcome**: Searched for UILO / uilo / uilo-pro / uilo-pro-max across installed skills, plugins, and MCP servers. UILO was not found.
 - **Action Taken**: Defaulting autonomously to shadcn/ui (Radix primitives) with Tailwind CSS v4 custom property tokens mapped 1:1 to the visual references.
+
+### Hard Gate 2: Nano Banana Pro Initial 5 Assets Review
+- **Status**: IN PROGRESS
+- **Requirement**: Stop and present the Hero illustration (16:9) + 4 step icons (1:1 matched set) before proceeding with the remaining ~30 assets.

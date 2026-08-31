@@ -1,0 +1,75 @@
+{
+  "stylePrompt": "Premium editorial SaaS visual aligned to the two UI reference screenshots: clean modern composition, generous negative space, soft pale-blue/lilac fields, restrained peach warmth, deep blue-black subjects, and cobalt accents. Subtle grain is allowed. Use broad low-contrast gradients and fine curved-line motifs sparingly; no neon, chrome, glass overload, or generic purple AI glow. Images must feel calm, trustworthy, human, and suitable for legal/certified translation. No text unless explicitly requested. Use diverse, dignified, non-stereotypical people. Do not imitate or reproduce any person, brand, logo, or proprietary image from the references.",
+  "assets": [
+    {
+      "id": "hero-photograph-document",
+      "prompt": "A calm, professional person holding a modern smartphone to photograph an official paper document laid flat on a clean minimalist desk. Soft atmospheric daylight with pale lavender and sky-blue ambient tones, deep navy accents, generous negative space, editorial composition.",
+      "aspect": "16:9",
+      "outPath": "public/images/hero-photograph-document.webp",
+      "alt": "A person using a smartphone to capture a clear photo of an official document for certified translation"
+    },
+    {
+      "id": "step-upload",
+      "prompt": "A modern minimalist 3D icon illustration of an official document floating smoothly into a cloud upload interface. Deep navy, cobalt blue, and pale lilac highlights, subtle soft shadow, clean white background.",
+      "aspect": "1:1",
+      "outPath": "public/images/steps/step-upload.webp",
+      "alt": "Icon representing secure document upload and initial scanning"
+    },
+    {
+      "id": "step-triage",
+      "prompt": "A modern minimalist 3D icon illustration of an optical scan line analyzing document quality, checking resolution and seal clarity. Cobalt blue beam, deep navy details, soft lavender aura.",
+      "aspect": "1:1",
+      "outPath": "public/images/steps/step-triage.webp",
+      "alt": "Icon representing AI vision document triage and legibility verification"
+    },
+    {
+      "id": "step-translate",
+      "prompt": "A modern minimalist 3D icon illustration of bilingual document translation and a golden lock symbolizing passport name consistency. Deep navy, cobalt blue, subtle warm peach accent.",
+      "aspect": "1:1",
+      "outPath": "public/images/steps/step-translate.webp",
+      "alt": "Icon representing certified human translation and passport name consistency lock"
+    },
+    {
+      "id": "step-deliver",
+      "prompt": "A modern minimalist 3D icon illustration of an official Certificate of Accuracy with a wax seal emblem and a holographic QR verification code. Cobalt blue, deep navy, clean studio lighting.",
+      "aspect": "1:1",
+      "outPath": "public/images/steps/step-deliver.webp",
+      "alt": "Icon representing signed certificate of accuracy with QR code verification"
+    },
+    {
+      "id": "doc-birth-certificate",
+      "prompt": "Minimalist clean spot illustration of an official birth certificate with an embossed seal emblem. Pale lilac background, cobalt blue and deep ink details.",
+      "aspect": "1:1",
+      "outPath": "public/images/docs/birth-certificate.webp",
+      "alt": "Birth certificate certified translation spot illustration"
+    },
+    {
+      "id": "doc-diploma",
+      "prompt": "Minimalist clean spot illustration of an academic graduation diploma and degree scroll with ribbon. Pale lilac background, cobalt blue and deep ink details.",
+      "aspect": "1:1",
+      "outPath": "public/images/docs/diploma.webp",
+      "alt": "Academic diploma and degree certificate spot illustration"
+    },
+    {
+      "id": "doc-passport",
+      "prompt": "Minimalist clean spot illustration of an international biometric passport booklet open to the identity page. Pale lilac background, cobalt blue and deep ink details.",
+      "aspect": "1:1",
+      "outPath": "public/images/docs/passport.webp",
+      "alt": "Passport and identification document spot illustration"
+    },
+    {
+      "id": "doc-marriage-certificate",
+      "prompt": "Minimalist clean spot illustration of an official marriage license certificate with registry stamps. Pale lilac background, cobalt blue and deep ink details.",
+      "aspect": "1:1",
+      "outPath": "public/images/docs/marriage-certificate.webp",
+      "alt": "Marriage certificate certified translation spot illustration"
+    },
+    {
+      "id": "trust-security-vault",
+      "prompt": "Minimalist clean 3D illustration of an encrypted document vault shield with 256-bit cryptographic locks and verified checkmark. Deep navy, cobalt blue, pale sky aura.",
+      "aspect": "1:1",
+      "outPath": "public/images/trust-security-vault.webp",
+      "alt": "Encrypted document storage vault security illustration"
+    }
+  ]
+}
