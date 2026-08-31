@@ -11,8 +11,8 @@
 | Phase | Description | Status | Evidence / Notes |
 |---|---|---|---|
 | **Phase 0** | Repo Setup, Design Tokens, Prisma Schema, CI, UILO Hard Gate 1 | **COMPLETE** | `next build` passed, `prisma generate` clean, vitest 5/5 passing, check:hex 0 errors, git committed (`60f9517`). Hard Gate 1 documented: UILO not found; proceeding with shadcn/ui + screenshot-led contract. |
-| **Phase 1** | Design System Tokens Page (`/dev/tokens`) | **IN PROGRESS** | Creating interactive token gallery, light/dark switch, ratio checks, and interactive component showcases. |
-| **Phase 2** | Marketing Shell & Homepage (Screenshot-Led) | PENDING | - |
+| **Phase 1** | Design System Tokens Page (`/dev/tokens`) | **COMPLETE** | Live token catalog, dark mode toggle, contrast matrix, button/form/switch/toggle-row matrix, git committed (`8a94a2e`). |
+| **Phase 2** | Marketing Shell & Homepage (Screenshot-Led) | **IN PROGRESS** | Building Header (5 links), Footer, Hero Dropzone, How It Works, Comparison Matrix, Rejection-Proof Dark Band, Trust Stats, FAQ, and core marketing routes (`/pricing`, `/how-it-works`, `/documents`, `/languages`, `/help`). |
 | **Phase 3** | Nano Banana Pro Asset Pipeline (Hard Gate 2: 5 assets) | PENDING | - |
 | **Phase 4** | Order Funnel & Sticky Price Bar (Hard Gate 3: Funnel test) | PENDING | - |
 | **Phase 5** | The Six Differentiators & Public Verification Portal | PENDING | - |
