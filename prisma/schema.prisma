@@ -1,0 +1,291 @@
+// Prisma Schema for VerifyLingua
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceType {
+  CERTIFIED
+  STANDARD
+}
+
+enum OrderStatus {
+  DRAFT
+  TRIAGED
+  PAID
+  ASSIGNED
+  TRANSLATING
+  QA
+  CERTIFIED
+  DELIVERED
+  NEEDS_CUSTOMER_INPUT
+  REFUNDED
+  CANCELLED
+}
+
+enum FindingKind {
+  LOW_RES
+  CROPPED
+  ILLEGIBLE
+  MISSING_PAGE
+  GLARE
+}
+
+enum Severity {
+  WARN
+  BLOCK
+}
+
+enum GlossaryKind {
+  NAME
+  DATE
+  PLACE
+  ID
+}
+
+enum AddOnType {
+  NOTARIZATION
+  EXPEDITED
+  HARD_COPY
+  APOSTILLE
+}
+
+enum SenderType {
+  CUSTOMER
+  TRANSLATOR
+  SYSTEM
+}
+
+enum OrderEventType {
+  STATUS_CHANGE
+  TRIAGE_COMPLETED
+  ASSIGNED
+  TRANSLATION_SUBMITTED
+  QA_PASSED
+  CERTIFICATE_ISSUED
+  MESSAGE_SENT
+  CUSTOMER_ACTION
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  locale        String    @default("en")
+  phone         String?
+  notifyChannel String    @default("EMAIL") // EMAIL, SMS, WHATSAPP
+  isGuest       Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orders        Order[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Order {
+  id              String         @id @default(cuid())
+  publicCode      String         @unique // e.g. VL-8921-XQ
+  userId          String?
+  guestEmail      String?
+  status          OrderStatus    @default(DRAFT)
+  sourceLang      String
+  targetLang      String
+  serviceType     ServiceType    @default(CERTIFIED)
+  pageCount       Int            @default(1)
+  wordCount       Int            @default(0)
+  subtotal        Float          @default(0)
+  addOnTotal      Float          @default(0)
+  total           Float          @default(0)
+  currency        String         @default("USD")
+  receivingParty  String?        // USCIS, UNIVERSITY, COURT, DMV, CONSULATE, EMPLOYER, OTHER
+  promisedAt      DateTime?
+  deliveredAt     DateTime?
+  stripeSessionId String?        @unique
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user            User?          @relation(fields: [userId], references: [id])
+  documents       Document[]
+  glossaryTerms   GlossaryTerm[]
+  addOns          AddOn[]
+  assignments     Assignment[]
+  events          OrderEvent[]
+  messages        Message[]
+  certificate     Certificate?
+
+  @@index([status])
+  @@index([publicCode])
+  @@index([guestEmail])
+}
+
+model Document {
+  id            String          @id @default(cuid())
+  orderId       String
+  fileName      String
+  s3Key         String
+  mimeType      String
+  fileSizeBytes Int             @default(0)
+  pages         Int             @default(1)
+  ocrText       String?
+  triageReport  Json?
+  sha256        String?
+  createdAt     DateTime        @default(now())
+
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  findings      TriageFinding[]
+
+  @@index([orderId])
+}
+
+model TriageFinding {
+  id          String      @id @default(cuid())
+  documentId  String
+  kind        FindingKind
+  severity    Severity
+  message     String
+  pageNumber  Int         @default(1)
+  createdAt   DateTime    @default(now())
+
+  document    Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}
+
+model GlossaryTerm {
+  id             String       @id @default(cuid())
+  orderId        String
+  sourceText     String
+  requiredTarget String
+  kind           GlossaryKind @default(NAME)
+  locked         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model AddOn {
+  id        String    @id @default(cuid())
+  orderId   String
+  type      AddOnType
+  price     Float
+  meta      Json?
+  createdAt DateTime  @default(now())
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model Translator {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  languages   String[]
+  credentials String
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+
+  assignments Assignment[]
+}
+
+model Assignment {
+  id           String      @id @default(cuid())
+  orderId      String
+  translatorId String
+  assignedAt   DateTime    @default(now())
+  submittedAt  DateTime?
+
+  order        Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  translator   Translator  @relation(fields: [translatorId], references: [id])
+
+  @@index([orderId])
+  @@index([translatorId])
+}
+
+model OrderEvent {
+  id        String         @id @default(cuid())
+  orderId   String
+  type      OrderEventType @default(STATUS_CHANGE)
+  message   String
+  actor     String         // e.g. 'SYSTEM', 'CUSTOMER', 'TRANSLATOR: Maria R.'
+  createdAt DateTime       @default(now())
+
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+model Message {
+  id          String     @id @default(cuid())
+  orderId     String
+  senderType  SenderType
+  senderName  String?
+  body        String
+  attachments Json?
+  createdAt   DateTime   @default(now())
+
+  order       Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model Certificate {
+  id                    String    @id @default(cuid())
+  orderId               String    @unique
+  verifyCode            String    @unique // 8-char short code e.g. VL-7X9K2
+  pdfS3Key              String
+  documentSha256        String
+  issuedAt              DateTime  @default(now())
+  revokedAt             DateTime?
+  translatorName        String
+  translatorCredentials String
+  qrCodeSvg             String?
+
+  order                 Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([verifyCode])
+}

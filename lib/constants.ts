@@ -1,0 +1,158 @@
+export const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME || "VerifyLingua";
+export const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@verifylingua.com";
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+export const PRICING_CONFIG = {
+  certifiedPerPage: 24.95,
+  standardPerWord: 0.10,
+  minWordsPerStandardPage: 250,
+  wordsPerPage: 250,
+  addOns: {
+    notarization: 19.95,
+    expeditedMultiplier: 1.6, // +60% base
+    hardCopy: 19.95,
+    apostilleEstimate: 75.00,
+  },
+};
+
+export const INCUMBENT_COMPARISONS = [
+  {
+    name: "VerifyLingua",
+    pricePerPage: "$24.95",
+    prePaymentTriage: true,
+    acceptancePreCheck: true,
+    nameDateLock: true,
+    deterministicDelivery: true,
+    publicVerificationPortal: true,
+    guarantee: "100% USCIS Acceptance or Full Refund + Free Redo",
+    highlight: true,
+  },
+  {
+    name: "RushTranslate",
+    pricePerPage: "$24.95",
+    prePaymentTriage: false,
+    acceptancePreCheck: false,
+    nameDateLock: false,
+    deterministicDelivery: false,
+    publicVerificationPortal: false,
+    guarantee: "USCIS Acceptance Guarantee (Redo only)",
+    highlight: false,
+  },
+  {
+    name: "ImmiTranslate",
+    pricePerPage: "$25.00",
+    prePaymentTriage: false,
+    acceptancePreCheck: false,
+    nameDateLock: false,
+    deterministicDelivery: false,
+    publicVerificationPortal: false,
+    guarantee: "Standard Guarantee",
+    highlight: false,
+  },
+  {
+    name: "Translayte",
+    pricePerPage: "$31.75",
+    prePaymentTriage: false,
+    acceptancePreCheck: false,
+    nameDateLock: false,
+    deterministicDelivery: false,
+    publicVerificationPortal: false,
+    guarantee: "Standard Guarantee",
+    highlight: false,
+  },
+];
+
+export const POPULAR_LANGUAGES = [
+  { code: "es", name: "Spanish", nativeName: "Español", dir: "ltr" },
+  { code: "zh", name: "Chinese (Simplified)", nativeName: "简体中文", dir: "ltr" },
+  { code: "ar", name: "Arabic", nativeName: "العربية", dir: "rtl" },
+  { code: "fr", name: "French", nativeName: "Français", dir: "ltr" },
+  { code: "pt", name: "Portuguese", nativeName: "Português", dir: "ltr" },
+  { code: "ru", name: "Russian", nativeName: "Русский", dir: "ltr" },
+  { code: "de", name: "German", nativeName: "Deutsch", dir: "ltr" },
+  { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt", dir: "ltr" },
+  { code: "fa", name: "Persian (Farsi)", nativeName: "فارسی", dir: "rtl" },
+  { code: "he", name: "Hebrew", nativeName: "עבריت", dir: "rtl" },
+  { code: "ur", name: "Urdu", nativeName: "اردو", dir: "rtl" },
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी", dir: "ltr" },
+  { code: "uk", name: "Ukrainian", nativeName: "Українська", dir: "ltr" },
+  { code: "it", name: "Italian", nativeName: "Italiano", dir: "ltr" },
+  { code: "ja", name: "Japanese", nativeName: "日本語", dir: "ltr" },
+  { code: "ko", name: "Korean", nativeName: "한국어", dir: "ltr" },
+  { code: "tl", name: "Tagalog", nativeName: "Tagalog", dir: "ltr" },
+  { code: "tr", name: "Turkish", nativeName: "Türkçe", dir: "ltr" },
+  { code: "pl", name: "Polish", nativeName: "Polski", dir: "ltr" },
+  { code: "en", name: "English", nativeName: "English", dir: "ltr" },
+];
+
+export const DOCUMENT_TYPES = [
+  { id: "birth-cert", slug: "birth-certificate", name: "Birth Certificate", typicalPages: 1, popular: true, receivingAgency: "USCIS, NVC, Consulates" },
+  { id: "marriage-cert", slug: "marriage-certificate", name: "Marriage Certificate", typicalPages: 1, popular: true, receivingAgency: "USCIS, Courts" },
+  { id: "diploma", slug: "diploma-and-degree", name: "Academic Diploma & Degree", typicalPages: 1, popular: true, receivingAgency: "WES, Universities, USCIS" },
+  { id: "transcript", slug: "academic-transcript", name: "Academic Transcript", typicalPages: 3, popular: true, receivingAgency: "WES, Universities" },
+  { id: "police-clearance", slug: "police-clearance-certificate", name: "Police Background Check", typicalPages: 1, popular: true, receivingAgency: "USCIS, Consulates, NVC" },
+  { id: "passport", slug: "passport-and-id", name: "Passport & National ID", typicalPages: 1, popular: true, receivingAgency: "USCIS, Banks, DMV" },
+  { id: "court-order", slug: "court-order-and-judgment", name: "Court Order & Judgment", typicalPages: 4, popular: false, receivingAgency: "Courts, Immigration Judges" },
+  { id: "medical-record", slug: "medical-record-and-vaccination", name: "Medical & Vaccination Record", typicalPages: 2, popular: false, receivingAgency: "USCIS Civil Surgeons, Schools" },
+  { id: "bank-statement", slug: "financial-and-bank-statement", name: "Bank Statement & Financial Affidavit", typicalPages: 3, popular: false, receivingAgency: "USCIS, Embassies (Affidavit of Support)" },
+  { id: "death-cert", slug: "death-certificate", name: "Death Certificate", typicalPages: 1, popular: false, receivingAgency: "USCIS, Probate Courts" },
+  { id: "divorce-decree", slug: "divorce-decree", name: "Divorce Decree", typicalPages: 3, popular: false, receivingAgency: "USCIS, Marriage Registries" },
+  { id: "drivers-license", slug: "drivers-license", name: "Driver's License", typicalPages: 1, popular: false, receivingAgency: "State DMV" },
+];
+
+export const RECEIVING_PARTIES = [
+  {
+    id: "USCIS",
+    name: "USCIS (Immigration & Green Cards)",
+    description: "Accepts Certified Translation with signed statement of competence.",
+    requiresNotarization: false,
+    requiresCertified: true,
+    badgeText: "100% Guaranteed Acceptance",
+    specSummary: "Certified translation matching exact visual format, all stamps & seals translated, translator certificate with competence statement.",
+  },
+  {
+    id: "UNIVERSITY",
+    name: "University or Academic Credential Evaluator (WES, ECE)",
+    description: "Requires certified translation with course title and grade transliteration accuracy.",
+    requiresNotarization: false,
+    requiresCertified: true,
+    badgeText: "Academic Evaluation Ready",
+    specSummary: "Full word-for-word translation, grade scale retention, certified accuracy statement.",
+  },
+  {
+    id: "COURT",
+    name: "State or Federal Court / Legal Proceedings",
+    description: "Often requires both Certification and Notarization depending on jurisdiction.",
+    requiresNotarization: true,
+    requiresCertified: true,
+    badgeText: "Notarized Recommended",
+    specSummary: "Certified translation signed by translator, plus notary jurat with wet/electronic notary seal.",
+  },
+  {
+    id: "DMV",
+    name: "State DMV / Driver Licensing",
+    description: "Requires certified translation of foreign driver license with name consistency.",
+    requiresNotarization: false,
+    requiresCertified: true,
+    badgeText: "State DMV Compliant",
+    specSummary: "Mirror translation of foreign license with class conversion notes.",
+  },
+  {
+    id: "CONSULATE",
+    name: "Foreign Consulate / Embassy / Visa Office",
+    description: "May require certified translation with optional apostille authentication.",
+    requiresNotarization: true,
+    requiresCertified: true,
+    badgeText: "Consulate Spec Sheet",
+    specSummary: "Certified + Notarized translation for international recognition.",
+  },
+  {
+    id: "EMPLOYER",
+    name: "Employer / Background Check / Licensing Board",
+    description: "Standard or Certified translation of credentials and background records.",
+    requiresNotarization: false,
+    requiresCertified: true,
+    badgeText: "Employment Ready",
+    specSummary: "Official certification of accuracy for HR and licensing compliance.",
+  },
+];

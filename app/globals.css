@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-800: var(--brand-800);
+  --color-brand-700: var(--brand-700);
+  --color-brand-500: var(--brand-500);
+  --color-brand-300: var(--brand-300);
+  --color-brand-100: var(--brand-100);
+  --color-brand-50: var(--brand-50);
+
+  --color-lavender-100: var(--lavender-100);
+  --color-lavender-50: var(--lavender-50);
+  --color-peach-100: var(--peach-100);
+  --color-sky-100: var(--sky-100);
+
+  --color-status-success: var(--status-success);
+  --color-status-info: var(--status-info);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger: var(--status-danger);
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-text-muted: var(--text-muted);
+  --color-text: var(--text);
+  --color-footer: var(--footer);
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:root {
+  --brand-ink: #0B0D2A;
+  --brand-800: #17204D;
+  --brand-700: #2947C7;
+  --brand-500: #4160E8;
+  --brand-300: #7A96F2;
+  --brand-100: #DCE6FF;
+  --brand-50: #F1F4FF;
+
+  --lavender-100: #E9EBF8;
+  --lavender-50: #F4F4FC;
+  --peach-100: #F7DFDA;
+  --sky-100: #D9EBFF;
+
+  --status-success: #2F7D6D;
+  --status-info: #4160E8;
+  --status-warning: #B87514;
+  --status-danger: #C55353;
+
+  --canvas: #FFFFFF;
+  --surface: #F7F8FD;
+  --surface-raised: #FFFFFF;
+  --border: #D9DDE8;
+  --text-muted: #62697B;
+  --text: #0B0D2A;
+  --footer: #0A0C2B;
+
+  --gradient-hero: radial-gradient(100% 100% at 50% 0%, #DCE6FF 0%, #F4F4FC 50%, #FFFFFF 100%);
+  --gradient-panel: linear-gradient(135deg, #F1F4FF 0%, #E9EBF8 100%);
+  --gradient-dark-band: radial-gradient(100% 120% at 50% 0%, #17204D 0%, #0B0D2A 70%, #07081A 100%);
+  --gradient-subtle: linear-gradient(180deg, #F7F8FD 0%, #FFFFFF 100%);
+}
+
+.dark {
+  --canvas: #0B0D2A;
+  --surface: #101438;
+  --surface-raised: #17204D;
+  --border: #232B5C;
+  --text-muted: #9DA6BD;
+  --text: #F1F4FF;
+  --footer: #07081A;
+
+  --brand-ink: #F1F4FF;
+  --brand-800: #DCE6FF;
+  --brand-700: #7A96F2;
+  --brand-500: #4160E8;
+  --brand-300: #2947C7;
+  --brand-100: #17204D;
+  --brand-50: #101438;
+
+  --lavender-100: #17204D;
+  --lavender-50: #101438;
+  --peach-100: #331D1B;
+  --sky-100: #132742;
+
+  --gradient-hero: radial-gradient(100% 100% at 50% 0%, #17204D 0%, #101438 50%, #0B0D2A 100%);
+  --gradient-panel: linear-gradient(135deg, #17204D 0%, #101438 100%);
+  --gradient-dark-band: radial-gradient(100% 120% at 50% 0%, #17204D 0%, #07081A 100%);
+  --gradient-subtle: linear-gradient(180deg, #101438 0%, #0B0D2A 100%);
+}
+
+body {
+  background-color: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.bg-gradient-hero {
+  background-image: var(--gradient-hero);
+}
+
+.bg-gradient-panel {
+  background-image: var(--gradient-panel);
+}
+
+.bg-gradient-dark-band {
+  background-image: var(--gradient-dark-band);
+}
+
+.bg-gradient-subtle {
+  background-image: var(--gradient-subtle);
+}
