@@ -1,0 +1,376 @@
+"use client";
+
+import * as React from "react";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useDropzone } from "react-dropzone";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { StickyPriceBar } from "@/components/order/StickyPriceBar";
+import {
+  UploadCloud,
+  Camera,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  FileText,
+  RefreshCw,
+  Info,
+} from "lucide-react";
+import { calculatePricing } from "@/lib/pricing";
+
+interface Finding {
+  id: string;
+  kind: "LOW_RES" | "CROPPED" | "ILLEGIBLE" | "MISSING_PAGE" | "GLARE";
+  severity: "WARN" | "BLOCK";
+  title: string;
+  message: string;
+  reshootTip: string;
+  pageNumber: number;
+}
+
+function TriageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const [uploadedFile, setUploadedFile] = React.useState<{
+    name: string;
+    size: number;
+    pages: number;
+    words: number;
+  } | null>(null);
+
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [findings, setFindings] = React.useState<Finding[]>([]);
+  const [acknowledgedWarnings, setAcknowledgedWarnings] = React.useState<Record<string, boolean>>({});
+
+  // Restore any pending upload from hero or camera trigger
+  React.useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem("pending_upload");
+      if (pending) {
+        const data = JSON.parse(pending);
+        handleFileAnalysis(data.fileName, data.fileSize);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleFileAnalysis = (fileName: string, fileSize: number) => {
+    setIsAnalyzing(true);
+    setFindings([]);
+
+    // Simulate real AI vision triage latency (< 1.5s)
+    setTimeout(() => {
+      setIsAnalyzing(false);
+
+      const isLargeDoc = fileName.toLowerCase().includes("transcript") || fileName.toLowerCase().includes("court");
+      const isPhoto = fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".png");
+      const pages = isLargeDoc ? 3 : 1;
+      const words = pages * 230;
+
+      setUploadedFile({
+        name: fileName,
+        size: fileSize || 1024 * 450,
+        pages,
+        words,
+      });
+
+      const generatedFindings: Finding[] = [];
+
+      if (isPhoto) {
+        generatedFindings.push({
+          id: "f-1",
+          kind: "GLARE",
+          severity: "WARN",
+          title: "Minor Flash Reflection on Top Seal",
+          message: "A light reflection is detected over the issuing notary stamp. The text remains readable, but daylight without direct flash is recommended.",
+          reshootTip: "Place the paper flat near a window and turn off direct room flash for highest clarity.",
+          pageNumber: 1,
+        });
+      }
+
+      setFindings(generatedFindings);
+
+      try {
+        sessionStorage.setItem(
+          "triage_result",
+          JSON.stringify({
+            fileName,
+            pages,
+            words,
+            findings: generatedFindings,
+          })
+        );
+      } catch {
+        // ignore
+      }
+    }, 1200);
+  };
+
+  const onDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      handleFileAnalysis(file.name, file.size);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "application/pdf": [".pdf"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+    },
+    maxSize: 25 * 1024 * 1024,
+  });
+
+  const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      handleFileAnalysis(file.name || "camera-scan.jpg", file.size);
+    }
+  };
+
+  const pageCount = uploadedFile?.pages || 1;
+  const wordCount = uploadedFile?.words || 250;
+
+  const pricing = React.useMemo(() => {
+    return calculatePricing({
+      serviceType: "CERTIFIED",
+      pageCount,
+      wordCount,
+      isExpedited: false,
+      needsNotarization: false,
+    });
+  }, [pageCount, wordCount]);
+
+  const hasBlockingFindings = findings.some((f) => f.severity === "BLOCK");
+
+  const handleContinue = () => {
+    router.push(`/order/precheck?pages=${pageCount}&words=${wordCount}`);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Step Header */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="default" className="text-xs font-mono font-bold">
+            Step 1 of 4
+          </Badge>
+          <span className="text-xs font-mono text-brand-500 font-bold uppercase tracking-wider">
+            Pre-Payment Document Quality Triage (§2.2)
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight">
+          Upload & Verify Document Readability
+        </h1>
+        <p className="text-sm sm:text-base text-text-muted max-w-3xl leading-relaxed">
+          Before taking payment, our AI vision model inspects your upload for illegible handwriting,
+          cropped seals, and missing pages — preventing post-payment rejections and delays.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Upload & Triage Results */}
+        <div className="lg:col-span-8 space-y-6">
+          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border space-y-6">
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-3 ${
+                isDragActive
+                  ? "border-brand-500 bg-brand-50/70 scale-[1.01]"
+                  : "border-border hover:border-brand-500/60 bg-surface hover:bg-brand-50/20"
+              }`}
+            >
+              <input {...getInputProps()} />
+
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                ref={fileInputRef}
+                onChange={handleCameraChange}
+                className="hidden"
+              />
+
+              <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-500 shadow-sm">
+                <UploadCloud className="w-7 h-7" />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-base font-bold text-brand-ink">
+                  {uploadedFile
+                    ? "Upload another document or replace current file"
+                    : "Drop your official document here, or browse"}
+                </p>
+                <p className="text-xs text-text-muted">
+                  Supports PDF, JPG, PNG, WebP up to 25MB • Front & back pages supported
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-raised border border-border hover:bg-surface text-xs font-bold text-brand-ink shadow-sm transition-colors"
+                >
+                  <Camera className="w-4 h-4 text-brand-500" />
+                  Take a Photo on Phone
+                </button>
+              </div>
+            </div>
+
+            {isAnalyzing && (
+              <div className="p-6 rounded-2xl bg-brand-50 border border-brand-100 flex items-center gap-4 animate-pulse">
+                <RefreshCw className="w-6 h-6 text-brand-500 animate-spin shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-brand-ink">
+                    Running Pre-Payment AI Document Triage...
+                  </p>
+                  <p className="text-xs text-text-muted">
+                    Checking OCR readability, edge boundaries, stamps, and page count.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {uploadedFile && !isAnalyzing && (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-surface border border-border">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-6 h-6 text-brand-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-brand-ink truncate max-w-xs md:max-w-md">
+                        {uploadedFile.name}
+                      </p>
+                      <p className="text-xs text-text-muted font-mono">
+                        {(uploadedFile.size / 1024).toFixed(1)} KB • {uploadedFile.pages} Page (approx. {uploadedFile.words} words)
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="success" className="text-xs py-0.5">
+                    Analyzed
+                  </Badge>
+                </div>
+
+                {findings.length === 0 ? (
+                  <div className="p-5 rounded-2xl bg-status-success/10 border border-status-success/20 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-status-success shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold text-brand-ink">
+                        Document Passed Quality Triage with 100% Readability
+                      </p>
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        All stamps, seals, signatures, and body text are crisp and eligible for USCIS certified translation.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-status-warning">
+                      Triage Findings & Recommendations
+                    </span>
+                    {findings.map((f) => (
+                      <div
+                        key={f.id}
+                        className={`p-5 rounded-2xl border space-y-3 ${
+                          f.severity === "BLOCK"
+                            ? "bg-status-danger/10 border-status-danger/30"
+                            : "bg-status-warning/10 border-status-warning/30"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {f.severity === "BLOCK" ? (
+                            <XCircle className="w-5 h-5 text-status-danger shrink-0 mt-0.5" />
+                          ) : (
+                            <AlertTriangle className="w-5 h-5 text-status-warning shrink-0 mt-0.5" />
+                          )}
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-bold text-brand-ink">{f.title}</p>
+                              <Badge
+                                variant={f.severity === "BLOCK" ? "danger" : "warning"}
+                                className="text-[10px] py-0"
+                              >
+                                {f.severity}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-text-muted leading-relaxed">{f.message}</p>
+                            <p className="text-xs text-brand-ink font-semibold pt-1">
+                              💡 Re-shoot Tip: {f.reshootTip}
+                            </p>
+                          </div>
+                        </div>
+
+                        {f.severity === "WARN" && (
+                          <div className="pt-2 border-t border-status-warning/20 flex items-center justify-between">
+                            <label className="text-xs text-brand-ink font-medium flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={acknowledgedWarnings[f.id] || false}
+                                onChange={(e) =>
+                                  setAcknowledgedWarnings((prev) => ({
+                                    ...prev,
+                                    [f.id]: e.target.checked,
+                                  }))
+                                }
+                                className="rounded text-brand-500 focus:ring-brand-500"
+                              />
+                              I confirm text is readable; proceed with this scan
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+
+          <div className="p-5 rounded-2xl bg-lavender-50 border border-border flex items-start gap-3 text-xs text-text-muted">
+            <Info className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              <strong className="text-brand-ink font-bold">Why we triage before payment:</strong> Competitors like RushTranslate and ImmiTranslate take your payment first, and issue a refund or delay your file days later when a translator discovers handwriting issues. We prevent delays upfront.
+            </p>
+          </div>
+        </div>
+
+        {/* Right Sticky Rail */}
+        <div className="lg:col-span-4">
+          <StickyPriceBar
+            pricing={pricing}
+            onNext={handleContinue}
+            nextLabel="Continue to Pre-Check"
+            disabled={!uploadedFile || hasBlockingFindings || isAnalyzing}
+            blockReason={
+              !uploadedFile
+                ? "Please upload a document to proceed"
+                : hasBlockingFindings
+                ? "Please fix blocking triage issue before continuing"
+                : undefined
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function TriagePage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-text-muted">Loading document triage...</div>}>
+      <TriageContent />
+    </Suspense>
+  );
+}

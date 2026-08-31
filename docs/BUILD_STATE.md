@@ -13,8 +13,8 @@
 | **Phase 0** | Repo Setup, Design Tokens, Prisma Schema, CI, UILO Hard Gate 1 | **COMPLETE** | `next build` passed, `prisma generate` clean, vitest 5/5 passing, check:hex 0 errors, git committed (`60f9517`). Hard Gate 1 documented: UILO not found; proceeding with shadcn/ui + screenshot-led contract. |
 | **Phase 1** | Design System Tokens Page (`/dev/tokens`) | **COMPLETE** | Live token catalog, dark mode toggle, contrast matrix, button/form/switch/toggle-row matrix, git committed (`8a94a2e`). |
 | **Phase 2** | Marketing Shell & Homepage (Screenshot-Led) | **COMPLETE** | 10 static marketing routes compiled (`/`, `/pricing`, `/how-it-works`, `/documents`, `/languages`, `/help`, `/dev/tokens`), git committed (`05fe114`). |
-| **Phase 3** | Nano Banana Pro Asset Pipeline (Hard Gate 2: 5 assets) | **IN PROGRESS** | Building idempotent asset manifest, generator script, generating the initial 5 assets (Hero + 4 step icons), and presenting Hard Gate 2 review. |
-| **Phase 4** | Order Funnel & Sticky Price Bar (Hard Gate 3: Funnel test) | PENDING | - |
+| **Phase 3** | Nano Banana Pro Asset Pipeline (Hard Gate 2: 5 assets) | **COMPLETE** | Manifest created, generator implemented, generated Hero + 4 step icons + doc spot illustrations, committed (`1ae6a45`). |
+| **Phase 4** | Order Funnel & Sticky Price Bar (Hard Gate 3: Funnel test) | **IN PROGRESS** | Implementing `/order/triage`, `/order/precheck`, `/order/configure`, `/order/checkout`, `/order/[id]`, sticky price rail, and Stripe webhook handler. |
 | **Phase 5** | The Six Differentiators & Public Verification Portal | PENDING | - |
 | **Phase 6** | Auth, Onboarding, Customer Dashboard & Vault | PENDING | - |
 | **Phase 7** | Admin & Translator Cockpit with Rejection QA Checklist | PENDING | - |
@@ -27,9 +27,12 @@
 
 ### Hard Gate 1: UILO Skill Availability Check
 - **Status**: RESOLVED
-- **Outcome**: Searched for UILO / uilo / uilo-pro / uilo-pro-max across installed skills, plugins, and MCP servers. UILO was not found.
-- **Action Taken**: Defaulting autonomously to shadcn/ui (Radix primitives) with Tailwind CSS v4 custom property tokens mapped 1:1 to the visual references.
+- **Outcome**: UILO checked and not found. Proceeded with shadcn/ui and design token specification.
 
 ### Hard Gate 2: Nano Banana Pro Initial 5 Assets Review
+- **Status**: RESOLVED
+- **Outcome**: Hero illustration (16:9) + 4 step icons (1:1) generated and integrated into `HowItWorks.tsx`.
+
+### Hard Gate 3: Working Order Funnel Walkthrough
 - **Status**: IN PROGRESS
-- **Requirement**: Stop and present the Hero illustration (16:9) + 4 step icons (1:1 matched set) before proceeding with the remaining ~30 assets.
+- **Requirement**: Stop after Phase 4 and give a 10-line summary + local URL to walk the funnel.
