@@ -158,8 +158,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="hover:text-white transition-colors">
-                  USCIS Acceptance Guarantee
+                <Link href="/use-cases" className="hover:text-white transition-colors">
+                  Filing Use Cases & Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link href="/guides" className="hover:text-white transition-colors">
+                  USCIS Legal Knowledge Hub
                 </Link>
               </li>
               <li>

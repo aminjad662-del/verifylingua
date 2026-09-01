@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Menu, X, ArrowRight } from "lucide-react";
+import { ShieldCheck, Menu, X, ArrowRight, Globe2 } from "lucide-react";
 import { PRODUCT_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +16,19 @@ const NAV_LINKS = [
   { href: "/help", label: "Help" },
 ];
 
+const LOCALES = [
+  { code: "en", label: "EN • English" },
+  { code: "es", label: "ES • Español" },
+  { code: "ar", label: "AR • العربية" },
+  { code: "zh", label: "ZH • 简体中文" },
+  { code: "fr", label: "FR • Français" },
+  { code: "pt", label: "PT • Português" },
+];
+
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [locale, setLocale] = React.useState("en");
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-surface-raised/85 backdrop-blur-md transition-all">
@@ -57,8 +67,25 @@ export function Header() {
           })}
         </nav>
 
-        {/* CTA & Mobile Toggle */}
+        {/* CTA & Language Selector */}
         <div className="flex items-center gap-3">
+          {/* Quick Locale Selector */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-surface text-xs font-semibold text-brand-ink">
+            <Globe2 className="w-3.5 h-3.5 text-brand-500" />
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value)}
+              className="bg-transparent text-xs font-semibold text-brand-ink focus:outline-none cursor-pointer"
+              aria-label="Select interface language"
+            >
+              {LOCALES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <Button
             asChild
             className="hidden sm:inline-flex gap-2 rounded-xl h-11 px-5 text-sm font-bold shadow-sm"
@@ -102,10 +129,26 @@ export function Header() {
             })}
           </nav>
 
-          <div className="pt-2">
-            <Button asChild className="w-full h-12 rounded-xl text-base font-bold shadow-sm">
+          <div className="pt-4 border-t border-border flex flex-col gap-3">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-semibold">
+              <Globe2 className="w-4 h-4 text-brand-500" />
+              <select
+                value={locale}
+                onChange={(e) => setLocale(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-brand-ink w-full focus:outline-none"
+              >
+                {LOCALES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Button asChild className="w-full gap-2 rounded-xl h-12 text-sm font-bold">
               <Link href="/order/triage" onClick={() => setMobileMenuOpen(false)}>
                 Start translation
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
           </div>

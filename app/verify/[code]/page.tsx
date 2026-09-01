@@ -22,6 +22,7 @@ import {
   Printer,
   ExternalLink,
   Search,
+  Download,
 } from "lucide-react";
 
 export default function VerifyCodePage() {
@@ -197,14 +198,30 @@ export default function VerifyCodePage() {
 
             {/* Officer Action Bar */}
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border">
-              <Button
-                onClick={handlePrint}
-                variant="outline"
-                className="w-full sm:w-auto gap-2 rounded-xl"
-              >
-                <Printer className="w-4 h-4" />
-                Print Verification Sheet
-              </Button>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Button
+                  onClick={handlePrint}
+                  variant="outline"
+                  className="flex-1 sm:flex-initial gap-2 rounded-xl"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print Verification Sheet
+                </Button>
+
+                <Button
+                  asChild
+                  className="flex-1 sm:flex-initial gap-2 rounded-xl shadow-sm"
+                >
+                  <a
+                    href={`/api/certificate/${verifyCode}/download`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Signed PDF
+                  </a>
+                </Button>
+              </div>
 
               <div className="flex items-center gap-2 text-xs text-text-muted">
                 <ShieldCheck className="w-4 h-4 text-status-success" />

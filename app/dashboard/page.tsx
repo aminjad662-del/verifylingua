@@ -160,9 +160,15 @@ export default function DashboardPage() {
                             Verify Record
                           </Link>
                         </Button>
-                        <Button size="sm" className="gap-1.5 rounded-xl text-xs font-bold shadow-sm">
-                          <Download className="w-3.5 h-3.5" />
-                          Download PDF
+                        <Button asChild size="sm" className="gap-1.5 rounded-xl text-xs font-bold shadow-sm">
+                          <a
+                            href={`/api/certificate/${ord.verifyCode}/download`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            Download PDF
+                          </a>
                         </Button>
                       </>
                     ) : (
