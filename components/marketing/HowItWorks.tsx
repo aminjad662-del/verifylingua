@@ -9,8 +9,8 @@ const STEPS = [
     title: "Instant Upload & AI Vision Triage",
     description:
       "Drop your PDF or take a photo. In under 5 seconds, our vision model checks for illegible text, cropped seals, and missing pages before taking payment.",
-    image: "/images/steps/step-upload.jpg",
-    alt: "Icon representing secure document upload and instant AI OCR scanning",
+    image: "/images/step-ai-triage-3d.jpg",
+    alt: "Minimalist 3D icon showing AI vision document triage laser scan",
     badge: "< 5s OCR Analysis",
   },
   {
@@ -19,7 +19,7 @@ const STEPS = [
     description:
       "Select your receiving agency (USCIS, university, court, DMV). The wizard outputs an exact compliance spec sheet and pre-configures your order.",
     image: "/images/steps/step-triage.jpg",
-    alt: "Icon representing AI vision document triage and legibility verification",
+    alt: "Minimalist icon representing acceptance wizard and compliance specification",
     badge: "Agency Pre-Configured",
   },
   {
@@ -27,8 +27,8 @@ const STEPS = [
     title: "Certified Human Translation & Name-Lock",
     description:
       "A vetted professional translator translates word-for-word. Exact passport spellings are hard-locked into the workspace to prevent silent RFE mismatches.",
-    image: "/images/steps/step-translate.jpg",
-    alt: "Icon representing certified human translation and passport name consistency lock",
+    image: "/images/step-human-cert-3d.jpg",
+    alt: "Minimalist 3D icon showing human translation certification with gold notary seal and pen",
     badge: "Zero Transliteration Errors",
   },
   {
@@ -36,8 +36,8 @@ const STEPS = [
     title: "Signed Certificate & QR Verification",
     description:
       "Receive your signed certificate of accuracy PDF with ATA credentials, translator signature, and a public QR code for instant officer verification.",
-    image: "/images/steps/step-deliver.jpg",
-    alt: "Icon representing signed certificate of accuracy with QR code verification",
+    image: "/images/step-qr-verified-3d.jpg",
+    alt: "Minimalist 3D icon showing verified certificate with QR code and shield",
     badge: "Official Legal PDF",
   },
 ];
@@ -78,7 +78,7 @@ export function HowItWorks() {
                   <span className="text-3xl font-black font-mono text-brand-300">
                     {step.step}
                   </span>
-                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-border bg-surface shadow-inner">
+                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-border bg-white shadow-inner">
                     <Image
                       src={step.image}
                       alt={step.alt}
@@ -99,8 +99,8 @@ export function HowItWorks() {
                 </div>
               </div>
 
-              <div className="pt-2">
-                <span className="inline-block text-[11px] font-mono font-semibold text-brand-500 bg-brand-50 px-3 py-1 rounded-full border border-brand-100">
+              <div className="pt-4 border-t border-border/60">
+                <span className="inline-block px-3 py-1 rounded-lg bg-surface text-xs font-mono font-semibold text-brand-500 border border-border/50">
                   {step.badge}
                 </span>
               </div>
