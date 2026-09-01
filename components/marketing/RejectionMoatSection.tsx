@@ -1,5 +1,6 @@
-import { ShieldAlert, ShieldCheck, CheckCircle2, Lock, Stamp, FileSearch, QrCode } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { ShieldAlert, ShieldCheck, CheckCircle2, Lock, Stamp, FileSearch, QrCode, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const REJECTION_MOATS = [
@@ -46,18 +47,30 @@ export function RejectionMoatSection() {
     <section className="py-20 md:py-28 bg-canvas">
       <div className="max-w-7xl mx-auto px-6">
         <div className="rounded-[36px] bg-gradient-dark-band border border-white/10 p-8 sm:p-12 md:p-16 text-white space-y-16 relative overflow-hidden shadow-2xl">
-          {/* Section Header */}
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 text-brand-300 text-xs font-bold uppercase tracking-wider">
-              <ShieldAlert className="w-4 h-4 text-brand-300" />
-              <span>Research-Backed Rejection Prevention</span>
+          {/* Section Header with Vault Shield Art */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+            <div className="max-w-3xl space-y-4">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 text-brand-300 text-xs font-bold uppercase tracking-wider">
+                <ShieldAlert className="w-4 h-4 text-brand-300" />
+                <span>Research-Backed Rejection Prevention</span>
+              </div>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.02]">
+                Why USCIS Rejects Translations — And How We Eliminate Every Risk.
+              </h2>
+              <p className="text-base sm:text-lg text-white/80 leading-relaxed">
+                We studied hundreds of USCIS Requests for Evidence (RFEs) and incumbent failure modes. VerifyLingua is built specifically to protect your immigration case.
+              </p>
             </div>
-            <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.02]">
-              Why USCIS Rejects Translations — And How We Eliminate Every Risk.
-            </h2>
-            <p className="text-base sm:text-lg text-white/80 leading-relaxed">
-              We studied hundreds of USCIS Requests for Evidence (RFEs) and incumbent failure modes. VerifyLingua is built specifically to protect your immigration case.
-            </p>
+
+            {/* 3D Shield Security Vault Image */}
+            <div className="shrink-0 relative w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden border border-white/15 bg-white/5 shadow-2xl">
+              <Image
+                src="/images/trust-security-vault.jpg"
+                alt="256-bit encrypted security vault shield"
+                fill
+                className="object-cover"
+              />
+            </div>
           </div>
 
           {/* 6 Moat Cards Grid */}
@@ -106,9 +119,10 @@ export function RejectionMoatSection() {
               </p>
             </div>
 
-            <Button size="lg" asChild className="gap-2 shrink-0 bg-brand-500 hover:bg-brand-700 text-white font-bold h-14 px-8 rounded-2xl">
+            <Button size="lg" asChild className="gap-2 shrink-0 bg-brand-500 hover:bg-brand-700 text-white font-bold h-14 px-8 rounded-2xl shadow-lg">
               <Link href="/order/triage">
                 Start translation
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
           </div>

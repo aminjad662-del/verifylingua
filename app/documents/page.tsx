@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BottomCTA } from "@/components/marketing/BottomCTA";
@@ -9,7 +10,19 @@ import { DOCUMENT_TYPES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { FileText, Search, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Search, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
+
+const DOC_IMAGE_MAP: Record<string, string> = {
+  "birth-certificate": "/images/docs/birth-certificate.jpg",
+  "marriage-certificate": "/images/docs/marriage-certificate.jpg",
+  "diploma-and-degree": "/images/docs/diploma.jpg",
+  "academic-transcript": "/images/docs/transcript.jpg",
+  "passport-and-id": "/images/docs/passport.jpg",
+  "court-order-and-judgment": "/images/docs/court-order.jpg",
+  "medical-record-and-vaccination": "/images/docs/medical-record.jpg",
+  "financial-and-bank-statement": "/images/docs/bank-statement.jpg",
+  "drivers-license": "/images/docs/drivers-license.jpg",
+};
 
 export default function DocumentsPage() {
   const [search, setSearch] = React.useState("");
@@ -68,66 +81,67 @@ export default function DocumentsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDocs.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-7 rounded-3xl bg-surface-raised border border-border hover:border-brand-500 hover:shadow-md transition-all flex flex-col justify-between space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-500">
-                        <FileText className="w-6 h-6" />
+              {filteredDocs.map((doc) => {
+                const imageSrc = DOC_IMAGE_MAP[doc.slug] || "/images/docs/birth-certificate.jpg";
+                return (
+                  <div
+                    key={doc.id}
+                    className="p-6 rounded-3xl bg-surface-raised border border-border hover:border-brand-500 hover:shadow-md transition-all flex flex-col justify-between space-y-5"
+                  >
+                    <div className="space-y-4">
+                      <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-border/60 bg-surface">
+                        <Image
+                          src={imageSrc}
+                          alt={doc.name}
+                          fill
+                          className="object-cover"
+                        />
+                        {doc.popular && (
+                          <Badge variant="default" className="absolute top-3 right-3 text-[11px] shadow-sm">
+                            Most Requested
+                          </Badge>
+                        )}
                       </div>
-                      {doc.popular && (
-                        <Badge variant="default" className="text-[11px]">Most Requested</Badge>
-                      )}
+
+                      <div className="space-y-1.5">
+                        <h3 className="text-xl font-bold text-brand-ink leading-tight">
+                          {doc.name}
+                        </h3>
+                        <p className="text-xs text-text-muted">
+                          Required by: <span className="font-semibold text-brand-ink">{doc.receivingAgency}</span>
+                        </p>
+                      </div>
+
+                      <div className="space-y-1 pt-1 text-xs text-text-muted">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
+                          <span>All official stamps & seals translated</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
+                          <span>Passport spelling consistency lock</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-brand-ink leading-tight">
-                        {doc.name}
-                      </h3>
-                      <p className="text-sm text-text-muted">
-                        Required by: <span className="font-semibold text-brand-ink">{doc.receivingAgency}</span>
-                      </p>
-                    </div>
-
-                    <div className="space-y-1.5 pt-2 text-xs text-text-muted">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-status-success" />
-                        <span>All official stamps & seals translated</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-status-success" />
-                        <span>Passport name transliteration locked</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-status-success" />
-                        <span>Signed Certificate of Accuracy included</span>
-                      </div>
+                    <div className="pt-4 flex items-center justify-between border-t border-border/60">
+                      <span className="font-mono text-xs text-text-muted">
+                        ~{doc.typicalPages} page avg. • 24h turnaround
+                      </span>
+                      <Button asChild size="sm" className="gap-1.5 rounded-xl font-bold">
+                        <Link href={`/order/triage?doc=${doc.slug}`}>
+                          Translate
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="pt-4 border-t border-border flex items-center justify-between">
-                    <div className="text-xs font-mono">
-                      <span className="text-text-muted block">Typical pages</span>
-                      <span className="font-bold text-brand-ink">~{doc.typicalPages} page</span>
-                    </div>
-
-                    <Button asChild size="sm" className="gap-1.5 rounded-xl">
-                      <Link href={`/order/triage?doc=${doc.slug}`}>
-                        Start translation
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* Bottom CTA */}
         <BottomCTA />
       </main>
       <Footer />
