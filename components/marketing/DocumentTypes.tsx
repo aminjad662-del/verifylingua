@@ -1,8 +1,20 @@
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 import { DOCUMENT_TYPES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+
+const DOC_IMAGE_MAP: Record<string, string> = {
+  "birth-certificate": "/images/docs/birth-certificate.jpg",
+  "marriage-certificate": "/images/docs/marriage-certificate.jpg",
+  "diploma-and-degree": "/images/docs/diploma.jpg",
+  "academic-transcript": "/images/docs/transcript.jpg",
+  "passport-and-id": "/images/docs/passport.jpg",
+  "court-order-and-judgment": "/images/docs/court-order.jpg",
+  "medical-record-and-vaccination": "/images/docs/medical-record.jpg",
+  "financial-and-bank-statement": "/images/docs/bank-statement.jpg",
+  "drivers-license": "/images/docs/drivers-license.jpg",
+};
 
 export function DocumentTypes() {
   return (
@@ -29,39 +41,25 @@ export function DocumentTypes() {
           </Button>
         </div>
 
-        {/* 12 Document Types Grid with Modular 3D Icons */}
+        {/* 12 Document Types Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {DOCUMENT_TYPES.map((doc) => {
-            const isPassport = doc.slug === "passport";
-            const isCert = doc.slug === "birth-certificate" || doc.slug === "marriage-certificate";
-
+            const imageSrc = DOC_IMAGE_MAP[doc.slug] || "/images/docs/birth-certificate.jpg";
             return (
               <Link
                 key={doc.id}
                 href={`/order/triage?doc=${doc.slug}`}
-                className="group p-6 rounded-3xl bg-surface-raised border border-border hover:border-brand-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4"
+                className="group p-5 rounded-3xl bg-surface-raised border border-border hover:border-brand-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-border/70 overflow-hidden relative flex items-center justify-center text-brand-500 group-hover:scale-105 transition-transform shadow-sm">
-                    {isPassport ? (
-                      <Image
-                        src="/images/doc-passport-3d.jpg"
-                        alt="Minimalist 3D passport icon"
-                        fill
-                        className="object-cover"
-                        sizes="48px"
-                      />
-                    ) : isCert ? (
-                      <Image
-                        src="/images/doc-certificate-3d.jpg"
-                        alt="Minimalist 3D certificate icon"
-                        fill
-                        className="object-cover"
-                        sizes="48px"
-                      />
-                    ) : (
-                      <FileText className="w-6 h-6 text-brand-500" />
-                    )}
+                  {/* Spot Illustration */}
+                  <div className="relative w-full h-36 rounded-2xl overflow-hidden bg-surface border border-border/60 group-hover:scale-[1.02] transition-transform">
+                    <Image
+                      src={imageSrc}
+                      alt={`${doc.name} certified translation`}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
 
                   <h3 className="text-lg font-bold text-brand-ink group-hover:text-brand-500 transition-colors leading-snug">

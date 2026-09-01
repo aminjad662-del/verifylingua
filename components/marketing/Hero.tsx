@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ import {
   Clock,
   CheckCircle2,
   Lock,
-  Sparkles,
 } from "lucide-react";
 import { POPULAR_LANGUAGES } from "@/lib/constants";
 import { calculatePricing, formatDeliveryDate } from "@/lib/pricing";
@@ -81,43 +79,42 @@ export function Hero() {
 
   const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
       try {
         sessionStorage.setItem(
           "pending_upload",
           JSON.stringify({
-            fileName: e.target.files[0].name,
-            fileSize: e.target.files[0].size,
+            fileName: file.name || "camera-scan.jpg",
+            fileSize: file.size,
             sourceLang,
             targetLang,
-            fileCount: e.target.files.length,
+            fileCount: 1,
+            isCameraScan: true,
           })
         );
       } catch {
         // ignore
       }
-      router.push(`/order/triage?source=${sourceLang}&target=${targetLang}`);
+      router.push(`/order/triage?source=${sourceLang}&target=${targetLang}&camera=true`);
     }
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-hero pt-12 pb-20 md:pt-20 md:pb-28 border-b border-border/60">
-      <div className="max-w-7xl mx-auto px-6 space-y-16">
-        {/* Main Grid: Headline & Value Proposition Left, Dropzone Right */}
+    <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden bg-gradient-hero border-b border-border/60">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Left Column: Value Proposition & Rejection Guarantee (§2) */}
-          <div className="lg:col-span-7 space-y-8">
+          {/* Left Column: Editorial Value Proposition */}
+          <div className="lg:col-span-7 space-y-6 text-left">
             {/* Pill Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 border border-brand-100 text-brand-500 text-xs font-semibold tracking-wide">
-              <ShieldCheck className="w-4 h-4 text-brand-500" />
-              <span>USCIS 8 CFR 103.2(b)(3) Compliance Guaranteed</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-100 bg-brand-50 text-brand-500 text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-brand-500 shrink-0" />
+              <span>USCIS & Federal Court Guaranteed Acceptance</span>
             </div>
 
-            {/* Oversized Sans Headline (§4.2) */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-brand-ink tracking-tight leading-[1.04]">
-              Certified Document Translation.{" "}
-              <span className="text-brand-500">
-                100% Acceptance Guaranteed.
-              </span>
+            {/* Display Headline */}
+            <h1 className="text-4xl sm:text-6xl lg:text-[4.75rem] font-black tracking-tight text-brand-ink leading-[0.96]">
+              Certified Document Translations <br />
+              <span className="text-brand-500">Without Rejection Risk.</span>
             </h1>
 
             {/* Lead Copy */}
@@ -305,31 +302,6 @@ export function Hero() {
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </Card>
-          </div>
-        </div>
-
-        {/* 3D Conceptual Pipeline Showcase Graphic */}
-        <div className="relative rounded-[32px] overflow-hidden border-2 border-brand-100 bg-white shadow-xl">
-          <div className="relative w-full aspect-[16/9] md:aspect-[21/9]">
-            <Image
-              src="/images/hero-3d-pipeline.jpg"
-              alt="Conceptual 3D scene of legal documents, birth certificates, and passports flowing securely through a streamlined AI digital pipeline"
-              fill
-              priority
-              className="object-cover"
-              sizes="(max-width: 1280px) 100vw, 1280px"
-            />
-          </div>
-          <div className="p-4 sm:p-6 bg-surface-raised/95 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-500 shrink-0" />
-              <span className="font-bold text-brand-ink">
-                Streamlined AI Pre-Triage to Certified ATA Human Translation Pipeline
-              </span>
-            </div>
-            <span className="font-mono text-text-muted">
-              100% USCIS Evidentiary Compliance Guarantee
-            </span>
           </div>
         </div>
       </div>
