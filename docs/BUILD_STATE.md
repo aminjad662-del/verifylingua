@@ -17,6 +17,6 @@
 | **Phase 4** | Order Funnel & Sticky Price Bar (Hard Gate 3: Funnel test) | **COMPLETE** | Full 5-stage funnel (`/order/triage`, `/order/precheck`, `/order/configure`, `/order/checkout`, `/order/[id]`) with sticky price rail and guest order API, vitest 10/10 passing, 0 hex errors, git committed (`0df52c5`). |
 | **Phase 5** | The Six Differentiators & Public Verification Portal | **COMPLETE** | Public portal `/verify/[code]`, certificate generation engine with 8 CFR 103.2 compliance & QR verification, 13/13 vitest tests passing, git committed (`0d30e8f`). |
 | **Phase 6** | Auth, Onboarding, Customer Dashboard & Vault | **COMPLETE** | Skippable 3-step onboarding (`/onboarding`), orders dashboard (`/dashboard`), encrypted document vault (`/dashboard/documents`), settings (`/dashboard/settings`), git committed (`6d5fa43`). |
-| **Phase 7** | Admin & Translator Cockpit with Rejection QA Checklist | **IN PROGRESS** | Implementing `/admin/queue` and side-by-side translation workspace `/admin/orders/[id]` with locked passport glossary check and USCIS rejection checklist. |
-| **Phase 8** | Pillar Pages & Programmatic SEO (~110 pages) | PENDING | - |
+| **Phase 7** | Admin & Translator Cockpit with Rejection QA Checklist | **COMPLETE** | Queue (`/admin/queue`), side-by-side studio (`/admin/orders/[id]`) with locked glossary check and USCIS QA checklist, 18/18 tests passing, git committed (`0090e3f`). |
+| **Phase 8** | Pillar Pages & Programmatic SEO (~110 pages) | **IN PROGRESS** | Implementing 4 pillar clusters (`/documents/[slug]`, `/languages/[slug]`, `/use-cases/[slug]`, `/guides/[slug]`), sitemap.xml, robots.txt, and JSON-LD schemas. |
 | **Phase 9** | i18n / RTL, a11y & Security Hardening, Deployment Config | PENDING | - |
