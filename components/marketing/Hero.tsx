@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
   Clock,
   CheckCircle2,
   Lock,
+  Award,
 } from "lucide-react";
 import { POPULAR_LANGUAGES } from "@/lib/constants";
 import { calculatePricing, formatDeliveryDate } from "@/lib/pricing";
@@ -38,7 +40,6 @@ export function Hero() {
   const onDrop = React.useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
-        // Save file name/count to sessionStorage for frictionless triage transfer
         try {
           sessionStorage.setItem(
             "pending_upload",
@@ -103,10 +104,10 @@ export function Hero() {
     <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden bg-gradient-hero border-b border-border/60">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Left Column: Editorial Value Proposition */}
+          {/* Left Column: Editorial Value Proposition & Real Translation Artwork */}
           <div className="lg:col-span-7 space-y-6 text-left">
             {/* Pill Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-100 bg-brand-50 text-brand-500 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-100 bg-brand-50 text-brand-500 text-xs font-bold uppercase tracking-wider font-mono">
               <ShieldCheck className="w-4 h-4 text-brand-500 shrink-0" />
               <span>USCIS & Federal Court Guaranteed Acceptance</span>
             </div>
@@ -123,8 +124,30 @@ export function Hero() {
               Backed by pre-payment AI document triage, passport name-locking, and public QR verification.
             </p>
 
+            {/* Visual Photography Proof Card */}
+            <div className="relative w-full h-48 sm:h-56 rounded-3xl overflow-hidden border-2 border-border shadow-lg bg-surface group">
+              <Image
+                src="/images/hero-photograph-document.jpg"
+                alt="Person photographing official paper document with phone for certified translation"
+                fill
+                priority
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-transparent to-transparent flex items-end p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 w-full text-white">
+                  <div className="flex items-center gap-2 text-xs font-bold">
+                    <Award className="w-4 h-4 text-brand-300" />
+                    <span>ATA Corporate Member No. 271892</span>
+                  </div>
+                  <Badge variant="success" className="text-[11px] shadow-sm">
+                    100% USCIS Acceptance Guaranteed
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
             {/* Rejection Guarantee Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
               <div className="flex items-center gap-2.5 text-sm font-semibold text-brand-ink">
                 <CheckCircle2 className="w-5 h-5 text-status-success shrink-0" />
                 <span>Pre-payment OCR & vision quality triage</span>
@@ -144,7 +167,7 @@ export function Hero() {
             </div>
 
             {/* Micro Trust Proof */}
-            <div className="flex items-center gap-4 pt-4 text-xs text-text-muted">
+            <div className="flex items-center gap-4 pt-2 text-xs text-text-muted">
               <div className="flex items-center gap-1.5">
                 <Lock className="w-4 h-4 text-brand-500" />
                 <span>256-bit AES Encryption</span>
@@ -162,7 +185,7 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Right Column: Interactive Dropzone & Instant Quote Widget (§5.1, §5.2) */}
+          {/* Right Column: Interactive Dropzone & Instant Quote Widget */}
           <div className="lg:col-span-5">
             <Card className="p-6 md:p-8 rounded-[28px] border-2 border-border bg-surface-raised/95 backdrop-blur-md shadow-xl space-y-6">
               <div className="space-y-1">
@@ -252,7 +275,7 @@ export function Hero() {
                   </p>
                 </div>
 
-                {/* Mobile First: Take a Photo Button (§5.1) */}
+                {/* Mobile First: Take a Photo Button */}
                 <div className="pt-1">
                   <button
                     type="button"
@@ -265,7 +288,7 @@ export function Hero() {
                 </div>
               </div>
 
-              {/* Real-time Pricing & Delivery Time Preview (§2.4) */}
+              {/* Real-time Pricing & Delivery Time Preview */}
               <div className="p-4 rounded-2xl bg-lavender-50 border border-border/80 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-semibold text-text-muted">Estimated Turnaround</span>
@@ -288,7 +311,7 @@ export function Hero() {
                 </div>
               </div>
 
-              {/* One Single Sitewide CTA Verb (§5.1) */}
+              {/* One Single Sitewide CTA Verb */}
               <Button
                 size="lg"
                 onClick={() =>

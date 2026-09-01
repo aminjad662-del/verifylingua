@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/marketing/Hero";
 import { TrustStats } from "@/components/marketing/TrustStats";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { CertifiedSampleShowcase } from "@/components/marketing/CertifiedSampleShowcase";
 import { DocumentTypes } from "@/components/marketing/DocumentTypes";
 import { ComparisonTable } from "@/components/marketing/ComparisonTable";
 import { RejectionMoatSection } from "@/components/marketing/RejectionMoatSection";
@@ -17,6 +18,7 @@ export default function HomePage() {
         <Hero />
         <TrustStats />
         <HowItWorks />
+        <CertifiedSampleShowcase />
         <DocumentTypes />
         <ComparisonTable />
         <RejectionMoatSection />
