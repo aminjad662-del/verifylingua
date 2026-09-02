@@ -25,10 +25,10 @@ export function DocumentTypes() {
             <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
               Official Document Directory
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
               Accepted for All Legal & Official Purposes
             </h2>
-            <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+            <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
               Every document is translated by accredited human linguists with precise formatting matching the original layout.
             </p>
           </div>
@@ -49,7 +49,7 @@ export function DocumentTypes() {
               <Link
                 key={doc.id}
                 href={`/order/triage?doc=${doc.slug}`}
-                className="group p-5 rounded-3xl bg-surface-raised border border-border hover:border-brand-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4"
+                className="group p-5 rounded-3xl bg-surface-raised border border-border hover:border-brand-500/60 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
                   {/* Spot Illustration */}
@@ -65,7 +65,7 @@ export function DocumentTypes() {
                   <h3 className="text-lg font-bold text-brand-ink group-hover:text-brand-500 transition-colors leading-snug">
                     {doc.name}
                   </h3>
-                  <p className="text-xs text-text-muted">
+                  <p className="text-xs text-ink-soft">
                     Required for: <span className="font-semibold text-brand-ink">{doc.receivingAgency}</span>
                   </p>
                 </div>

@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { MagneticButton } from "@/components/ui/magnetic-button";
 import { ShieldCheck, Menu, X, ArrowRight, Globe2 } from "lucide-react";
 import { PRODUCT_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -31,15 +32,15 @@ export function Header() {
   const [locale, setLocale] = React.useState("en");
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-surface-raised/85 backdrop-blur-md transition-all">
-      <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-surface-raised/90 backdrop-blur-xl transition-all">
+      <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500 text-white shadow-sm transition-transform group-hover:scale-105">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-extrabold tracking-tight text-brand-ink">
+            <span className="text-xl font-extrabold tracking-tight text-brand-ink font-display">
               Verify<span className="text-brand-500">Lingua</span>
             </span>
             <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">
@@ -86,15 +87,17 @@ export function Header() {
             </select>
           </div>
 
-          <Button
-            asChild
-            className="hidden sm:inline-flex gap-2 rounded-xl h-11 px-5 text-sm font-bold shadow-sm"
-          >
-            <Link href="/order/triage">
-              Start translation
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </Button>
+          <MagneticButton>
+            <Button
+              asChild
+              className="hidden sm:inline-flex gap-2 rounded-xl h-11 px-5 text-sm font-bold shadow-sm active:scale-[0.97] transition-all duration-200"
+            >
+              <Link href="/order/triage">
+                Start translation
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </MagneticButton>
 
           {/* Mobile Menu Button */}
           <button

@@ -79,10 +79,10 @@ export function CertifiedSampleShowcase() {
               <Eye className="w-4 h-4" />
               Specimen & Document Anatomy
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
               See Exactly What You & USCIS Receive.
             </h2>
-            <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+            <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
               Every VerifyLingua certified translation is delivered as an official multi-page PDF packet engineered to pass USCIS, court, and university scrutiny on the first review.
             </p>
           </div>
@@ -93,10 +93,10 @@ export function CertifiedSampleShowcase() {
               <button
                 key={s.id}
                 onClick={() => setActiveTab(idx)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
                   activeTab === idx
-                    ? "bg-brand-500 text-white shadow-sm"
-                    : "text-text-muted hover:text-brand-ink hover:bg-surface-raised"
+                    ? "bg-brand-500 text-white shadow-md"
+                    : "text-ink-softer hover:text-brand-ink hover:bg-surface-raised"
                 }`}
               >
                 {s.title.split("(")[0].trim()}
@@ -106,7 +106,7 @@ export function CertifiedSampleShowcase() {
         </div>
 
         {/* Visual Specimen Card */}
-        <div className="p-8 sm:p-10 md:p-12 rounded-[36px] bg-surface-raised border-2 border-border shadow-xl space-y-10">
+        <div className="p-8 sm:p-10 md:p-12 rounded-[36px] bg-surface-raised border border-border/60 shadow-lg shadow-brand-500/5 space-y-10">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-8 border-b border-border">
             <div className="space-y-1.5">
               <div className="flex items-center gap-3">
@@ -117,7 +117,7 @@ export function CertifiedSampleShowcase() {
                   Required for: <strong className="text-brand-ink">{sample.agency}</strong>
                 </span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-brand-ink tracking-tight">
+              <h3 className="text-2xl sm:text-3xl font-black text-brand-ink tracking-tight font-display">
                 {sample.title} Translation Packet
               </h3>
             </div>
@@ -142,7 +142,7 @@ export function CertifiedSampleShowcase() {
                   </span>
                   <Badge variant="secondary" className="text-[11px]">Foreign Language</Badge>
                 </div>
-                <p className="text-xs text-text-muted">
+                <p className="text-xs text-ink-softer">
                   Foreign civil registry, university degree, or court decree with official seals.
                 </p>
               </div>
@@ -174,7 +174,7 @@ export function CertifiedSampleShowcase() {
                   </span>
                   <Badge variant="success" className="text-[11px]">USCIS Compliant</Badge>
                 </div>
-                <p className="text-xs text-text-muted">
+                <p className="text-xs text-ink-softer">
                   Mirror-formatted English translation with ATA certification statement & live QR stamp.
                 </p>
               </div>

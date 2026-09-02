@@ -23,7 +23,7 @@ export default function LanguagesPage() {
   }, [search]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-text">
+    <div className="min-h-screen flex flex-col bg-canvas text-ink-soft">
       <Header />
       <main className="flex-1">
         {/* Page Header */}
@@ -34,11 +34,11 @@ export default function LanguagesPage() {
               70+ Supported Language Pairs
             </Badge>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight font-display">
               Certified Translation Languages
             </h1>
 
-            <p className="text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
               Every language is translated by native, accredited linguists with specialized support for complex Right-to-Left (RTL) scripts, non-Latin alphabets, and legal seal formatting.
             </p>
 

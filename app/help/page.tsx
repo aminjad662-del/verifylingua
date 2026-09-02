@@ -22,7 +22,7 @@ export default function HelpPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-text">
+    <div className="min-h-screen flex flex-col bg-canvas text-ink-soft">
       <Header />
       <main className="flex-1">
         {/* Page Header */}
@@ -33,11 +33,11 @@ export default function HelpPage() {
               24/7 Compliance & Support Center
             </Badge>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight font-display">
               How Can We Help You?
             </h1>
 
-            <p className="text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
               Have questions about an upcoming immigration deadline, USCIS RFE response, or receiving agency requirements? Our compliance team is here to assist.
             </p>
           </div>

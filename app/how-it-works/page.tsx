@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-text">
+    <div className="min-h-screen flex flex-col bg-canvas text-ink-soft">
       <Header />
       <main className="flex-1">
         {/* Page Header */}
@@ -21,12 +21,12 @@ export default function HowItWorksPage() {
               Engineered for 100% USCIS Acceptance
             </Badge>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight font-display">
               The Architecture Behind <br />
               <span className="text-brand-500">Rejection-Proof Translations.</span>
             </h1>
 
-            <p className="text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
               Discover how our pre-payment AI vision triage, passport name-locking, and public verification portal guarantee your application succeeds on the first attempt.
             </p>
           </div>

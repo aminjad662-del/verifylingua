@@ -168,10 +168,10 @@ function TriageContent() {
             Pre-Payment Document Quality Triage (§2.2)
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight font-display">
           Upload & Verify Document Readability
         </h1>
-        <p className="text-sm sm:text-base text-text-muted max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base text-ink-soft max-w-3xl leading-relaxed">
           Before taking payment, our AI vision model inspects your upload for illegible handwriting,
           cropped seals, and missing pages — preventing post-payment rejections and delays.
         </p>

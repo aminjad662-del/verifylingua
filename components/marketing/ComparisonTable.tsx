@@ -69,16 +69,16 @@ export function ComparisonTable() {
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
             Incumbent Comparison Matrix
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
             See How VerifyLingua Compares
           </h2>
-          <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+          <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
             We don&apos;t try to undercut on price — we match the $24.95 industry standard and win by eliminating the 6 documented failure points of incumbent agencies.
           </p>
         </div>
 
         {/* Comparison Table Container */}
-        <div className="overflow-x-auto rounded-[28px] border-2 border-border bg-surface-raised shadow-lg">
+        <div className="overflow-x-auto rounded-[28px] border border-border/80 bg-surface-raised shadow-md">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border bg-surface">
@@ -109,7 +109,7 @@ export function ComparisonTable() {
               {COMPARISON_ROWS.map((row, idx) => (
                 <tr
                   key={idx}
-                  className={`transition-colors hover:bg-surface/50 ${
+                  className={`transition-colors hover:bg-brand-50/20 ${
                     row.isHighlight ? "bg-brand-50/30 font-semibold" : ""
                   }`}
                 >
@@ -172,7 +172,7 @@ export function ComparisonTable() {
         </div>
 
         <div className="text-center pt-2">
-          <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md">
+          <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md active:scale-[0.97] transition-all duration-200">
             <Link href="/order/triage">
               Start translation with 100% guarantee
               <ArrowRight className="w-5 h-5" />

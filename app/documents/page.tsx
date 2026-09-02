@@ -35,7 +35,7 @@ export default function DocumentsPage() {
   }, [search]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-text">
+    <div className="min-h-screen flex flex-col bg-canvas text-ink-soft">
       <Header />
       <main className="flex-1">
         {/* Page Header */}
@@ -46,11 +46,11 @@ export default function DocumentsPage() {
               USCIS & Institutional Document Directory
             </Badge>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight font-display">
               Certified Document Directory
             </h1>
 
-            <p className="text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
               Find exact translation standards, required certifications, and typical turnaround times for over 25+ document categories.
             </p>
 

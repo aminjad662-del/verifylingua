@@ -51,10 +51,10 @@ export function HowItWorks() {
             <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
               The 4-Step Rejection-Proof Process
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight">
               How VerifyLingua Works
             </h2>
-            <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+            <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
               We engineered the translation workflow to eliminate the points of failure where incumbent agencies cause delays and rejections.
             </p>
           </div>
@@ -71,35 +71,34 @@ export function HowItWorks() {
           {STEPS.map((step) => (
             <div
               key={step.step}
-              className="relative p-8 rounded-[28px] bg-surface-raised border border-border flex flex-col justify-between space-y-6 shadow-sm hover:border-brand-500/50 hover:shadow-md transition-all duration-200"
+              className="relative p-6 rounded-[28px] bg-surface-raised border border-border flex flex-col justify-between space-y-5 shadow-sm hover:shadow-lg hover:border-brand-500/40 hover:-translate-y-1 transition-all duration-300 group"
             >
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-3xl font-black font-mono text-brand-300">
-                    {step.step}
-                  </span>
-                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-border bg-surface shadow-inner">
-                    <Image
-                      src={step.image}
-                      alt={step.alt}
-                      fill
-                      className="object-cover"
-                      sizes="64px"
-                    />
+              <div className="space-y-4">
+                {/* Full-width step visual illustration */}
+                <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-border/60 bg-surface shadow-inner group-hover:scale-[1.02] transition-transform duration-300">
+                  <Image
+                    src={step.image}
+                    alt={step.alt}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                  />
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-xl bg-brand-ink/80 backdrop-blur-md text-white text-xs font-mono font-black shadow-md border border-white/15">
+                    Step {step.step}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-brand-ink leading-tight">
+                  <h3 className="font-display text-lg font-bold text-brand-ink leading-snug">
                     {step.title}
                   </h3>
-                  <p className="text-sm text-text-muted leading-relaxed">
+                  <p className="text-xs text-ink-soft leading-relaxed">
                     {step.description}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 border-t border-border/60">
                 <span className="inline-block text-[11px] font-mono font-semibold text-brand-500 bg-brand-50 px-3 py-1 rounded-full border border-brand-100">
                   {step.badge}
                 </span>

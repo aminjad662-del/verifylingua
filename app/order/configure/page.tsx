@@ -91,10 +91,10 @@ function ConfigureContent() {
             Language & Name Consistency Lock (§2.3)
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight font-display">
           Lock In Passport Spellings & Options
         </h1>
-        <p className="text-sm sm:text-base text-text-muted max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base text-ink-soft max-w-3xl leading-relaxed">
           USCIS rejects translations when foreign names differ by even one letter from your passport.
           We lock your exact transliteration into the translator workspace to prevent silent RFEs.
         </p>

@@ -27,8 +27,88 @@
   --color-text: var(--text);
   --color-footer: var(--footer);
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Basier Square", var(--font-inter), system-ui, sans-serif;
-  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-softer: var(--ink-softer);
+
+  --font-heading: var(--font-basier-square), "Basier Square", "BasierSquare", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  --font-display: var(--font-basier-square), "Basier Square", "BasierSquare", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  --font-body: var(--font-san-francisco), "San Francisco", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-san-francisco), "San Francisco", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Basier Square: loads authentic local font files and OS installations */
+@font-face {
+  font-family: "Basier Square";
+  src: url("/fonts/basier-square/BasierSquare-Regular.otf") format("opentype"),
+       local("Basier Square Regular"), local("BasierSquare-Regular"), local("Basier Square"), local("BasierSquare");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Basier Square";
+  src: url("/fonts/basier-square/BasierSquare-Medium.otf") format("opentype"),
+       local("Basier Square Medium"), local("BasierSquare-Medium");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Basier Square";
+  src: url("/fonts/basier-square/BasierSquare-SemiBold.otf") format("opentype"),
+       local("Basier Square SemiBold"), local("BasierSquare-SemiBold"), local("Basier Square Semibold");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Basier Square";
+  src: url("/fonts/basier-square/BasierSquare-Bold.otf") format("opentype"),
+       local("Basier Square Bold"), local("BasierSquare-Bold");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apple San Francisco font declarations */
+@font-face {
+  font-family: "San Francisco";
+  src: url("/fonts/san-francisco/SFProDisplay-Regular.woff2") format("woff2"),
+       local("SF Pro Text"), local("SF Pro Display"), local("SF Pro"), local("-apple-system"), local("BlinkMacSystemFont");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "San Francisco";
+  src: url("/fonts/san-francisco/SFProDisplay-Medium.woff2") format("woff2"),
+       local("SF Pro Text Medium"), local("SF Pro Display Medium"), local("SF Pro Medium");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "San Francisco";
+  src: url("/fonts/san-francisco/SFProDisplay-Semibold.woff2") format("woff2"),
+       local("SF Pro Text Semibold"), local("SF Pro Display Semibold"), local("SF Pro Semibold");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "San Francisco";
+  src: url("/fonts/san-francisco/SFProDisplay-Bold.woff2") format("woff2"),
+       local("SF Pro Text Bold"), local("SF Pro Display Bold"), local("SF Pro Bold");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 :root {
@@ -58,10 +138,18 @@
   --text: #0B0D2A;
   --footer: #0A0C2B;
 
+  --ink-soft: #3B4152;
+  --ink-softer: #62697B;
+
   --gradient-hero: radial-gradient(100% 100% at 50% 0%, #DCE6FF 0%, #F4F4FC 50%, #FFFFFF 100%);
   --gradient-panel: linear-gradient(135deg, #F1F4FF 0%, #E9EBF8 100%);
   --gradient-dark-band: radial-gradient(100% 120% at 50% 0%, #17204D 0%, #0B0D2A 70%, #07081A 100%);
   --gradient-subtle: linear-gradient(180deg, #F7F8FD 0%, #FFFFFF 100%);
+
+  /* Custom easing tokens (Emil Kowalski / Apple UI standard) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .dark {
@@ -86,18 +174,54 @@
   --peach-100: #331D1B;
   --sky-100: #132742;
 
+  --ink-soft: #BFC6D6;
+  --ink-softer: #9DA6BD;
+
   --gradient-hero: radial-gradient(100% 100% at 50% 0%, #17204D 0%, #101438 50%, #0B0D2A 100%);
   --gradient-panel: linear-gradient(135deg, #17204D 0%, #101438 100%);
   --gradient-dark-band: radial-gradient(100% 120% at 50% 0%, #17204D 0%, #07081A 100%);
   --gradient-subtle: linear-gradient(180deg, #101438 0%, #0B0D2A 100%);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-body {
+html, body {
   background-color: var(--canvas);
-  color: var(--text);
-  font-family: var(--font-sans);
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings (all h1–h6, display text, nav labels, button labels): Basier Square */
+h1, h2, h3, h4, h5, h6, .font-display, .font-heading {
+  font-family: var(--font-heading) !important;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+p, span, li, a, button, input, textarea, select {
+  font-family: var(--font-body);
+}
+
+/* Keep mono font for numbers/codes */
+.font-mono, [data-tabular-nums], code, pre {
+  font-family: var(--font-mono) !important;
+}
+
+/* Tabular numerals enforced on all prices, counts, and stats */
+.tabular-nums, [data-tabular-nums] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Smooth focus ring for interactive elements */
+:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
 }
 
 .bg-gradient-hero {

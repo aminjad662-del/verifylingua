@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import Link from "next/link";
 
@@ -47,10 +48,10 @@ export function FAQSection() {
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
             Frequently Asked Questions
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
             Everything You Need to Know About Certified Translations
           </h2>
-          <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+          <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
             Have questions about government standards, notary requirements, or formatting? We have answers.
           </p>
         </div>
@@ -58,27 +59,41 @@ export function FAQSection() {
         <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
           {FAQS.map((faq, idx) => (
             <AccordionItem key={idx} value={`item-${idx}`}>
-              <AccordionTrigger className="text-left font-bold text-lg md:text-xl">
+              <AccordionTrigger className="text-left font-bold text-lg md:text-xl font-display">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="text-base text-text-muted leading-relaxed pt-2 pb-6">
+              <AccordionContent className="text-base text-ink-soft leading-relaxed pt-2 pb-6">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
 
-        <div className="p-8 rounded-3xl bg-lavender-50 border border-border text-center space-y-3">
-          <h3 className="text-lg font-bold text-brand-ink">Still have questions?</h3>
-          <p className="text-sm text-text-muted max-w-md mx-auto">
-            Our certified compliance specialists are available 24/7 to review your requirements.
-          </p>
-          <div className="pt-2">
+        <div className="p-8 sm:p-10 rounded-3xl bg-lavender-50/90 border border-border/80 flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow duration-300">
+          <div className="flex items-center gap-5 text-left">
+            <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-brand-100 bg-white shadow-sm shrink-0">
+              <Image
+                src="/images/step-human-cert-3d.jpg"
+                alt="24/7 ATA accredited certified translation specialist"
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold text-brand-ink font-display">Still have questions?</h3>
+              <p className="text-sm text-ink-soft max-w-md">
+                Our certified compliance specialists and ATA linguists are available 24/7 to review your document requirements before you order.
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0">
             <Link
               href="/help"
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-500 hover:text-brand-700 underline underline-offset-4"
+              className="inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-brand-500 hover:bg-brand-700 text-white text-sm font-bold shadow-sm transition-colors"
             >
-              Visit our Help & Compliance Center →
+              Ask Compliance Specialist →
             </Link>
           </div>
         </div>

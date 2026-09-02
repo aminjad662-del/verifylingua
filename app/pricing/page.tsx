@@ -37,7 +37,7 @@ export default function PricingPage() {
   }, [serviceType, pageCount, wordCount, isExpedited, needsNotarization, needsHardCopy, needsApostille]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-text">
+    <div className="min-h-screen flex flex-col bg-canvas text-ink-soft">
       <Header />
       <main className="flex-1">
         {/* Pricing Header */}
@@ -48,12 +48,12 @@ export default function PricingPage() {
               100% Transparent Flat-Rate Pricing
             </Badge>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight font-display">
               Simple, Deterministic Pricing. <br />
               <span className="text-brand-500">Zero Hidden Surcharges.</span>
             </h1>
 
-            <p className="text-lg text-text-muted max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
               We match the $24.95/page industry benchmark and include pre-payment AI document triage,
               passport name-locking, and public QR verification at no extra cost.
             </p>
@@ -257,7 +257,7 @@ export default function PricingPage() {
                       <Clock className="w-4 h-4" />
                       <span>Deterministic Promised Delivery</span>
                     </div>
-                    <p className="text-lg font-black text-brand-ink font-mono">
+                    <p suppressHydrationWarning className="text-lg font-black text-brand-ink font-mono">
                       {pricing.promisedAtFormatted}
                     </p>
                     <p className="text-[11px] text-text-muted">

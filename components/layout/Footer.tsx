@@ -13,11 +13,11 @@ export function Footer() {
               <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-500 text-white">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <span className="text-2xl font-black tracking-tight text-white">
+              <span className="text-2xl font-black tracking-tight text-white font-display">
                 Verify<span className="text-brand-300">Lingua</span>
               </span>
             </div>
-            <p className="text-sm text-white/70 leading-relaxed">
+            <p className="text-sm text-white/60 leading-relaxed">
               The certified translation platform engineered to eliminate rejection risk for USCIS, universities, courts, and consulates.
             </p>
           </div>
@@ -172,25 +172,47 @@ export function Footer() {
                   Design System & Tokens
                 </Link>
               </li>
+              <li className="pt-3 border-t border-white/10">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-brand-300 block mb-1 font-bold">
+                  Competitor Alternatives
+                </span>
+                <div className="space-y-1.5 text-xs text-white/70">
+                  <div>
+                    <Link href="/compare/immitranslate" className="hover:text-white transition-colors">
+                      vs. ImmiTranslate
+                    </Link>
+                  </div>
+                  <div>
+                    <Link href="/compare/rushtranslate" className="hover:text-white transition-colors">
+                      vs. RushTranslate
+                    </Link>
+                  </div>
+                  <div>
+                    <Link href="/compare/translayte" className="hover:text-white transition-colors">
+                      vs. Translayte
+                    </Link>
+                  </div>
+                </div>
+              </li>
             </ul>
           </div>
         </div>
 
         {/* Institutional Trust Badges */}
         <div className="pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80">
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
             <CheckCircle className="w-4 h-4 text-status-success shrink-0" />
             <span>100% USCIS Guaranteed</span>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80">
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
             <ShieldCheck className="w-4 h-4 text-brand-300 shrink-0" />
             <span>ATA Corporate Standards</span>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80">
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
             <Lock className="w-4 h-4 text-brand-300 shrink-0" />
             <span>256-Bit SSE-KMS Vault</span>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80">
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
             <FileCheck className="w-4 h-4 text-status-info shrink-0" />
             <span>Public SHA-256 QR Code</span>
           </div>

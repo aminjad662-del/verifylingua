@@ -89,7 +89,7 @@ export function StickyPriceBar({
               <Clock className="w-3.5 h-3.5" />
               <span>Promised Delivery Date</span>
             </div>
-            <p className="text-sm font-black text-brand-ink font-mono">
+            <p suppressHydrationWarning className="text-sm font-black text-brand-ink font-mono">
               {pricing.promisedAtFormatted}
             </p>
             <p className="text-[10px] text-text-muted">
@@ -144,7 +144,7 @@ export function StickyPriceBar({
                 {formatCurrency(pricing.total)}
               </span>
             </div>
-            <p className="text-[11px] font-mono text-brand-500 font-semibold truncate max-w-[170px]">
+            <p suppressHydrationWarning className="text-[11px] font-mono text-brand-500 font-semibold truncate max-w-[170px]">
               Ready {pricing.promisedAtFormatted}
             </p>
           </div>

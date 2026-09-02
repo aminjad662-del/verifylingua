@@ -54,10 +54,10 @@ export function RejectionMoatSection() {
                 <ShieldAlert className="w-4 h-4 text-brand-300" />
                 <span>Research-Backed Rejection Prevention</span>
               </div>
-              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.02]">
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.02] font-display">
                 Why USCIS Rejects Translations — And How We Eliminate Every Risk.
               </h2>
-              <p className="text-base sm:text-lg text-white/80 leading-relaxed">
+              <p className="text-base sm:text-lg text-white/70 leading-relaxed">
                 We studied hundreds of USCIS Requests for Evidence (RFEs) and incumbent failure modes. VerifyLingua is built specifically to protect your immigration case.
               </p>
             </div>
@@ -80,7 +80,7 @@ export function RejectionMoatSection() {
               return (
                 <div
                   key={idx}
-                  className="rounded-3xl bg-white/5 border border-white/10 p-7 space-y-5 backdrop-blur-sm hover:bg-white/[0.08] hover:border-brand-300/40 transition-all"
+                  className="rounded-3xl bg-white/5 border border-white/10 p-7 space-y-5 backdrop-blur-sm hover:bg-white/[0.08] hover:border-brand-300/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-brand-300">
                     <Icon className="w-6 h-6" />
