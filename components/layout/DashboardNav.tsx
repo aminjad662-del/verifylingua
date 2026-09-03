@@ -10,10 +10,25 @@ import { Badge } from "@/components/ui/badge";
 export function DashboardNav() {
   const pathname = usePathname();
   const [isDark, setIsDark] = React.useState(false);
+  const [user, setUser] = React.useState<{ name: string | null; email: string } | null>(null);
 
   React.useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
+
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.authenticated && data.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  };
 
   const toggleDarkMode = () => {
     const nextDark = !isDark;
@@ -32,6 +47,8 @@ export function DashboardNav() {
     { href: "/dashboard/documents", label: "Document Vault", icon: FolderLock },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];
+
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : "U";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface-raised/95 backdrop-blur-md px-6 py-3.5">
@@ -87,10 +104,21 @@ export function DashboardNav() {
             </Link>
           </Button>
 
-          <div className="hidden sm:flex items-center gap-2.5 pl-2 border-l border-border">
-            <div className="w-8 h-8 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center text-xs font-bold font-mono text-brand-500">
-              U
+          <div className="flex items-center gap-2 pl-2 border-l border-border">
+            <div
+              className="w-8 h-8 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center text-xs font-bold font-mono text-brand-500"
+              title={user ? (user.name || user.email) : "User profile"}
+            >
+              {userInitial}
             </div>
+            <button
+              onClick={handleLogout}
+              className="text-text-muted hover:text-brand-ink p-1 rounded-lg transition-colors"
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
