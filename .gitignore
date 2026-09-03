@@ -35,7 +35,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# external skills package in root
+# external skills and agents
 ui-ux-pro-max-skill-main
 .agents
+.agent
+agent
+agent/
 .claude
+skills-lock.json
