@@ -30,6 +30,28 @@ export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [locale, setLocale] = React.useState("en");
+  const [currentUser, setCurrentUser] = React.useState<{ name: string | null; email: string } | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.authenticated && data.user) {
+          setCurrentUser(data.user);
+        } else {
+          setCurrentUser(null);
+        }
+      })
+      .catch(() => {
+        setCurrentUser(null);
+      });
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setCurrentUser(null);
+    window.location.href = "/";
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-surface-raised/90 backdrop-blur-xl transition-all">
@@ -87,6 +109,30 @@ export function Header() {
             </select>
           </div>
 
+          {/* Auth State Links */}
+          {currentUser ? (
+            <div className="hidden sm:flex items-center gap-2">
+              <Button asChild variant="outline" className="rounded-xl h-10 px-3.5 text-xs font-bold border-border">
+                <Link href="/dashboard">
+                  Dashboard
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="rounded-xl h-10 px-3 text-xs font-semibold text-text-muted hover:text-brand-ink"
+              >
+                Sign out
+              </Button>
+            </div>
+          ) : (
+            <div className="hidden sm:flex items-center gap-2">
+              <Button asChild variant="ghost" className="rounded-xl h-10 px-3.5 text-xs font-bold text-brand-ink hover:text-brand-500">
+                <Link href="/login">Sign in</Link>
+              </Button>
+            </div>
+          )}
+
           <MagneticButton>
             <Button
               asChild
@@ -133,6 +179,39 @@ export function Header() {
           </nav>
 
           <div className="pt-4 border-t border-border flex flex-col gap-3">
+            {currentUser ? (
+              <div className="flex flex-col gap-2">
+                <Button asChild variant="outline" className="w-full h-11 rounded-xl font-bold">
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                    Go to Dashboard
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full h-11 rounded-xl text-text-muted"
+                >
+                  Sign out ({currentUser.name || currentUser.email})
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant="outline" className="w-full h-11 rounded-xl font-bold">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    Sign in
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full h-11 rounded-xl font-bold border-brand-500 text-brand-500 bg-brand-50/40">
+                  <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+                    Register
+                  </Link>
+                </Button>
+              </div>
+            )}
+
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-semibold">
               <Globe2 className="w-4 h-4 text-brand-500" />
               <select

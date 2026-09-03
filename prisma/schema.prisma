@@ -76,10 +76,15 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
+  passwordHash  String?
+  role          String    @default("CUSTOMER") // CUSTOMER, ATTORNEY, TRANSLATOR, ADMIN
+  accountType   String    @default("INDIVIDUAL") // INDIVIDUAL, LAW_FIRM, INSTITUTION
+  companyName   String?
   locale        String    @default("en")
   phone         String?
   notifyChannel String    @default("EMAIL") // EMAIL, SMS, WHATSAPP
   isGuest       Boolean   @default(true)
+  emailVerified DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
