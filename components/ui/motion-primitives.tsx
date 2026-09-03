@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "motion/react";
 
 interface ScrollRevealProps {
   children: React.ReactNode;
@@ -11,15 +11,17 @@ interface ScrollRevealProps {
 }
 
 /**
- * Reusable scroll-reveal component.
- * Uses whileInView({ once: true }) to reveal content as it enters viewport.
- * Disables transform translation when prefers-reduced-motion is active.
+ * Reusable scroll-reveal component per §3.5.3.
+ * - Triggered via whileInView with once: true.
+ * - Animates opacity (0 -> 1) and translateY (16px -> 0) with --dur-slow (340ms) and --ease-out-soft.
+ * - Completely bypasses translation when prefers-reduced-motion is active.
+ * - Zero CLS: only compositor properties (opacity, transform) are animated.
  */
 export function ScrollReveal({
   children,
   className = "",
   delay = 0,
-  yOffset = 24,
+  yOffset = 16, // Default 16px per §3.5.3
 }: ScrollRevealProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -27,11 +29,11 @@ export function ScrollReveal({
     <motion.div
       initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: yOffset }}
       whileInView={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
+      viewport={{ once: true, margin: "-10%" }}
       transition={{
-        duration: 0.5,
+        duration: 0.34, // --dur-slow: 340ms per §3.5.1
         delay,
-        ease: [0.23, 1, 0.32, 1], // --ease-out curve
+        ease: [0.22, 1, 0.36, 1], // --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1) per §3.5.1
       }}
       suppressHydrationWarning
       className={className}
@@ -64,8 +66,8 @@ const itemVariants: Variants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.45,
-      ease: [0.23, 1, 0.32, 1],
+      duration: 0.34, // --dur-slow: 340ms
+      ease: [0.22, 1, 0.36, 1], // --ease-out-soft
     },
   },
 };

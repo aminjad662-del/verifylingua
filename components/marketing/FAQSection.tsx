@@ -42,13 +42,13 @@ const FAQS = [
 
 export function FAQSection() {
   return (
-    <section className="py-20 md:py-28 bg-canvas border-b border-border/60">
+    <section className="py-16 md:py-24 bg-canvas border-b border-border/60">
       <div className="max-w-4xl mx-auto px-6 space-y-12">
         <div className="text-center space-y-4">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
             Frequently Asked Questions
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
             Everything You Need to Know About Certified Translations
           </h2>
           <p className="text-base sm:text-lg text-ink-soft leading-relaxed">

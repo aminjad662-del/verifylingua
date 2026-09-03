@@ -94,13 +94,10 @@ export function DarkProductHowItWorks() {
   return (
     <section className="py-20 md:py-32 bg-surface">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Outer Dark Navy Container with Subtle Radial Glow */}
-        <div className="rounded-[36px] bg-footer border border-white/10 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-2xl space-y-12">
-          {/* Subtle Radial Glow in background */}
-          <div
-            className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-brand-500/15 rounded-full blur-3xl pointer-events-none"
-            aria-hidden="true"
-          />
+        {/* Outer Dark Navy Container with Subtle Grain Overlay and Gradient (§3.2.2, §3.2.3, §3.6.1) */}
+        <div className="rounded-[var(--r-2xl)] bg-gradient-dark-band border border-white/10 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-2xl space-y-12">
+          {/* Subtle SVG Grain Overlay */}
+          <div className="absolute inset-0 grain-overlay z-0 pointer-events-none" aria-hidden="true" />
 
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4 relative z-10">

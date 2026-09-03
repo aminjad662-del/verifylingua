@@ -44,45 +44,49 @@ const REJECTION_MOATS = [
 
 export function RejectionMoatSection() {
   return (
-    <section className="py-20 md:py-28 bg-canvas">
+    <section className="py-24 md:py-40 bg-canvas">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="rounded-[36px] bg-gradient-dark-band border border-white/10 p-8 sm:p-12 md:p-16 text-white space-y-16 relative overflow-hidden shadow-2xl">
+        <div className="rounded-[var(--r-2xl)] bg-gradient-dark-band border border-white/10 p-8 sm:p-12 md:p-16 text-white space-y-16 relative overflow-hidden shadow-2xl">
+          {/* Subtle SVG Grain Overlay */}
+          <div className="absolute inset-0 grain-overlay z-0 pointer-events-none" aria-hidden="true" />
+
           {/* Section Header with Vault Shield Art */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
             <div className="max-w-3xl space-y-4">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 text-brand-300 text-xs font-bold uppercase tracking-wider">
                 <ShieldAlert className="w-4 h-4 text-brand-300" />
                 <span>Research-Backed Rejection Prevention</span>
               </div>
-              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.02] font-display">
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-[1.02] font-display">
                 Why USCIS Rejects Translations — And How We Eliminate Every Risk.
               </h2>
-              <p className="text-base sm:text-lg text-white/70 leading-relaxed">
+              <p className="text-base sm:text-lg text-white/70 leading-relaxed text-lead max-w-[56ch]">
                 We studied hundreds of USCIS Requests for Evidence (RFEs) and incumbent failure modes. VerifyLingua is built specifically to protect your immigration case.
               </p>
             </div>
 
             {/* 3D Shield Security Vault Image */}
-            <div className="shrink-0 relative w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden border border-white/15 bg-white/5 shadow-2xl">
+            <div className="shrink-0 relative w-32 h-32 sm:w-40 sm:h-40 rounded-[var(--r-xl)] overflow-hidden border border-white/15 bg-white/5 shadow-2xl">
               <Image
                 src="/images/trust-security-vault.jpg"
                 alt="256-bit encrypted security vault shield"
                 fill
+                sizes="(max-width: 640px) 128px, 160px"
                 className="object-cover"
               />
             </div>
           </div>
 
           {/* 6 Moat Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
             {REJECTION_MOATS.map((moat, idx) => {
               const Icon = moat.icon;
               return (
                 <div
                   key={idx}
-                  className="rounded-3xl bg-white/5 border border-white/10 p-7 space-y-5 backdrop-blur-sm hover:bg-white/[0.08] hover:border-brand-300/40 hover:-translate-y-0.5 transition-all duration-300"
+                  className="rounded-[var(--r-xl)] bg-white/5 border border-white/10 p-7 space-y-5 backdrop-blur-sm hover:bg-white/[0.08] hover:border-brand-300/40 hover:-translate-y-0.5 transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-brand-300">
+                  <div className="w-12 h-12 rounded-[var(--r-md)] bg-white/10 border border-white/15 flex items-center justify-center text-brand-300">
                     <Icon className="w-6 h-6" />
                   </div>
 

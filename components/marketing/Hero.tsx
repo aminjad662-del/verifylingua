@@ -106,9 +106,12 @@ export function Hero() {
 
   return (
     <section className="relative pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden bg-gradient-hero border-b border-border/40">
-      <div className="max-w-7xl mx-auto px-6">
+      {/* Subtle SVG Grain Overlay (§3.2.3) */}
+      <div className="absolute inset-0 grain-overlay z-0 pointer-events-none" aria-hidden="true" />
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-14 lg:gap-10 items-center">
-          {/* Left Column: Editorial Value Proposition & Real Translation Artwork */}
+          {/* Left Column (7/5 Asymmetrical Grid): Editorial Value Proposition & Real Translation Artwork */}
           <div className="lg:col-span-7 space-y-6 text-left">
             {/* Pill Eyebrow */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-100/80 bg-brand-50/80 text-brand-500 text-xs font-bold uppercase tracking-wider font-mono">
@@ -117,13 +120,13 @@ export function Hero() {
             </div>
 
             {/* Display Headline */}
-            <h1 className="text-4xl sm:text-6xl lg:text-[4.75rem] font-black tracking-tight text-brand-ink leading-[0.96] font-display">
+            <h1 className="text-4xl sm:text-6xl lg:text-[4.75rem] font-bold tracking-tight text-brand-ink leading-[0.96] font-display">
               Certified Document Translations <br />
               <span className="text-brand-500">Without Rejection Risk.</span>
             </h1>
 
             {/* Lead Copy */}
-            <p className="text-lg sm:text-xl text-ink-soft max-w-2xl leading-relaxed">
+            <p className="text-lg sm:text-xl text-ink-soft max-w-2xl leading-relaxed text-lead">
               Official human certified translations for USCIS, universities, courts, and foreign consulates.
               Backed by pre-payment AI document triage, passport name-locking, and public QR verification.
             </p>
@@ -154,6 +157,7 @@ export function Hero() {
                 alt="Person photographing official paper document with phone for certified translation"
                 fill
                 priority
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/90 via-brand-ink/30 to-transparent flex items-end p-5 sm:p-6">
@@ -215,12 +219,12 @@ export function Hero() {
 
           {/* Right Column: Interactive Dropzone & Instant Quote Widget */}
           <div className="lg:col-span-5">
-            <Card className="p-6 md:p-8 rounded-[28px] border border-border/60 bg-surface-raised/95 backdrop-blur-xl shadow-xl shadow-brand-500/5 space-y-6">
+            <Card className="p-6 md:p-8 rounded-[var(--r-xl)] border border-border/60 bg-surface-raised/95 backdrop-blur-xl shadow-xl shadow-brand-500/5 space-y-6">
               <div className="space-y-1">
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-500">
                   Instant Quote & Triage
                 </span>
-                <h3 className="text-2xl font-black text-brand-ink tracking-tight">
+                <h3 className="text-2xl font-bold text-brand-ink tracking-tight font-display">
                   Upload Your Document
                 </h3>
                 <p className="text-xs text-ink-softer">

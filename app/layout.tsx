@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { PRODUCT_NAME } from "@/lib/constants";
@@ -58,6 +58,17 @@ const sanFrancisco = localFont({
   variable: "--font-san-francisco",
   display: "swap",
 });
+
+import { THEME_COLOR_LIGHT, THEME_COLOR_DARK } from "@/lib/theme-constants";
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLOR_LIGHT },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR_DARK },
+  ],
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: `${PRODUCT_NAME} | Certified Translation Services for USCIS, Courts & Universities`,

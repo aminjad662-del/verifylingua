@@ -54,7 +54,7 @@ const PACKET_PARTS = [
 
 export function PacketBreakdownSection() {
   return (
-    <section className="py-20 md:py-28 bg-surface border-b border-border/60 overflow-hidden">
+    <section className="py-20 md:py-32 bg-surface border-b border-border/60 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 space-y-16">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -63,7 +63,7 @@ export function PacketBreakdownSection() {
               <FileText className="w-4 h-4" />
               What You Receive
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
               Inside Your Complete Certified Translation Packet.
             </h2>
             <p className="text-base sm:text-lg text-ink-soft leading-relaxed">

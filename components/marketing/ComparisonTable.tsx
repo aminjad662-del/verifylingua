@@ -63,13 +63,13 @@ const COMPARISON_ROWS = [
 
 export function ComparisonTable() {
   return (
-    <section className="py-20 md:py-28 bg-canvas border-b border-border/60">
+    <section className="py-20 md:py-32 bg-canvas border-b border-border/60">
       <div className="max-w-7xl mx-auto px-6 space-y-14">
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
             Incumbent Comparison Matrix
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
             See How VerifyLingua Compares
           </h2>
           <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
@@ -78,7 +78,7 @@ export function ComparisonTable() {
         </div>
 
         {/* Comparison Table Container */}
-        <div className="overflow-x-auto rounded-[28px] border border-border/80 bg-surface-raised shadow-md">
+        <div className="overflow-x-auto rounded-[var(--r-xl)] border border-border/80 bg-surface-raised shadow-md">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border bg-surface">

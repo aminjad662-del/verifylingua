@@ -70,7 +70,7 @@ export function CertifiedSampleShowcase() {
   const sample = SAMPLES[activeTab];
 
   return (
-    <section className="py-20 md:py-28 bg-canvas border-b border-border/60 overflow-hidden">
+    <section className="py-24 md:py-40 bg-canvas border-b border-border/60 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 space-y-16">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -79,7 +79,7 @@ export function CertifiedSampleShowcase() {
               <Eye className="w-4 h-4" />
               Specimen & Document Anatomy
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
               See Exactly What You & USCIS Receive.
             </h2>
             <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
@@ -152,6 +152,7 @@ export function CertifiedSampleShowcase() {
                   src={sample.sourceImg}
                   alt={`${sample.title} foreign source document sample`}
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
               </div>
@@ -184,6 +185,7 @@ export function CertifiedSampleShowcase() {
                   src={sample.certImg}
                   alt={`${sample.title} certified translation specimen with QR code`}
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
                 <div className="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-brand-500 text-white text-[11px] font-mono font-bold shadow-lg flex items-center gap-1.5">

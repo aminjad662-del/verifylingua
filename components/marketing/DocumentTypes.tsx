@@ -18,14 +18,14 @@ const DOC_IMAGE_MAP: Record<string, string> = {
 
 export function DocumentTypes() {
   return (
-    <section className="py-20 md:py-28 bg-surface border-b border-border/60">
+    <section className="py-24 md:py-44 bg-surface border-b border-border/60">
       <div className="max-w-7xl mx-auto px-6 space-y-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
               Official Document Directory
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-ink tracking-tight font-display">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
               Accepted for All Legal & Official Purposes
             </h2>
             <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
@@ -58,6 +58,7 @@ export function DocumentTypes() {
                       src={imageSrc}
                       alt={`${doc.name} certified translation`}
                       fill
+                      sizes="(max-width: 768px) 100vw, 25vw"
                       className="object-cover"
                     />
                   </div>

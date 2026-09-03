@@ -7,18 +7,18 @@ import { ShieldCheck, ArrowRight, CheckCircle2, Award, QrCode } from "lucide-rea
 
 export function BottomCTA() {
   return (
-    <section className="py-20 md:py-28 bg-surface">
+    <section className="py-20 md:py-32 bg-surface">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="rounded-[36px] bg-gradient-panel border-2 border-brand-100 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-xl">
+        <div className="rounded-[var(--r-2xl)] bg-gradient-panel border-2 border-brand-100 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            {/* Left Content Column */}
+            {/* Left Content Column (7/5 Asymmetrical Grid) */}
             <div className="lg:col-span-7 space-y-6 text-left">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-100 bg-surface-raised text-brand-500 text-xs font-bold uppercase tracking-wider shadow-sm">
                 <ShieldCheck className="w-4 h-4 text-brand-500" />
                 <span>Zero-Risk Certified Translation</span>
               </div>
 
-              <h2 className="text-3xl sm:text-5xl font-black text-brand-ink tracking-tight leading-[1.05] font-display">
+              <h2 className="text-3xl sm:text-5xl font-bold text-brand-ink tracking-tight leading-[1.05] font-display">
                 Ready to Submit Without Rejection Fear?
               </h2>
 

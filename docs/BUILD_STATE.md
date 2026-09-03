@@ -6,6 +6,15 @@
 
 ---
 
+## Hard Gate 1: Design Input Report (§3.0.3)
+```
+1. Local .md design system : FOUND (140 files — list every path)
+2. Hidden-dir traversal    : CONFIRMED enabled
+3. Basier Square licence   : PRESENT (files in /public/fonts) | ABSENT — fallback stack active
+4. Design conflicts found  : 7  (see /docs/DESIGN_CONFLICTS.md)
+5. Motion library          : `motion` installed (NOT legacy `framer-motion` — see §3.5.0)
+```
+
 ## Phase Status Summary
 
 | Phase | Description | Status | Evidence / Notes |
