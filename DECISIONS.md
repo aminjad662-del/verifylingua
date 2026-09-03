@@ -26,3 +26,15 @@
 ## 3. Hydration & Runtime
 - Added `suppressHydrationWarning` to Hero turnaround time (`components/marketing/Hero.tsx`) to fix SSR timestamp mismatch caused by client/server minute tick and timezone resolution differences.
 - Fixed `MagneticButton` and motion primitive hydration mismatch (`style={{}}` vs `style={{transform: 'none'}}`) by deferring spring motion attachment to post-mount via `isMounted` check and adding `suppressHydrationWarning`.
+
+## 4. Font Binding & Token Resolution
+- **Root Cause:** In `app/globals.css`, a second token block within `@theme` was inadvertently overriding `--font-body` and `--font-sans` with `system-ui, -apple-system...`, omitting `var(--font-san-francisco)` and the `@font-face` definitions for `"San Francisco"`.
+- **Resolution:** Re-anchored `--font-body` and `--font-sans` directly to `var(--font-san-francisco), "San Francisco", ...` and declared complete `@font-face` rules for `"San Francisco"` pointing to local `public/fonts/san-francisco/*.woff2` assets. Verified in headless Chrome with `loaded` status across 4 weights.
+
+## 5. Node.js Heap Allocation During Next.js Compilation
+- **Root Cause:** When running concurrent Next.js page compilation across 88 App Router routes on Windows, Node.js exceeded its default 1.5GB 32-bit heap limit, triggering `ERR_MEMORY_ALLOCATION_FAILED`.
+- **Resolution:** Allocated `--max-old-space-size=4096` in `NODE_OPTIONS`, allowing all 88 static and dynamic routes to compile cleanly with 0 errors.
+
+## 6. Next.js Image Responsive Sizing
+- **Root Cause:** Next.js `<Image fill>` without explicit `sizes` triggered browser console warnings and sub-optimal image resource selection.
+- **Resolution:** Added precise responsive `sizes` properties to all `<Image fill>` tags across `Hero.tsx`, `CertifiedSampleShowcase.tsx`, `DocumentTypes.tsx`, and `RejectionMoatSection.tsx`. Verified 0 console warnings in Chrome.
