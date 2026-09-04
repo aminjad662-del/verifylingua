@@ -83,9 +83,16 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - `/verify` — Search portal to verify any certificate code
 - `/verify/[code]` — Public certificate verification record with SHA-256 document hash verification
 
+### Document Translation Engine & Vault
+- `POST /api/translate/upload` — Direct & base64 document upload with MIME sniffing (PDF, DOCX, PNG, JPG)
+- `GET /api/translate/status/[jobId]` — Real-time progress and quality gate stats
+- `GET /api/translate/download/[jobId]` — Token-secured download serving original format
+- `GET /api/translate/jobs` — Sanitized translation job history for customer dashboard
+- `POST /api/auth/reset-password` — Single-use token password reset flow with OWASP scrypt hashing
+
 ### Customer Dashboard
 - `/onboarding` — 3-step post-purchase profile setup (skippable)
-- `/dashboard` — Order history, live status chips, and certificate downloads
+- `/dashboard` — Order history, live status chips, real-time engine jobs, and certificate downloads
 - `/dashboard/documents` — AES-256 encrypted document vault with 90-day retention countdown
 - `/dashboard/settings` — Notification preferences and data purge controls
 
@@ -95,11 +102,22 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
+## 📑 Core Layout-Preserving Translation Engine
+
+VerifyLingua guarantees **1:1 layout, format, and typography round-trips**:
+1. **DOCX**: OpenXML parsing (`jszip`) extracts text runs from `<w:t>` while strictly preserving character styling `<w:rPr>`, tables (`<w:tbl>`), headers (`word/header1.xml`), and footers.
+2. **PDF**: `pdf-lib` overlay parser adds the statutory 8 CFR 103.2 certification banner, page count verification, and USCIS affidavit seal.
+3. **PNG & JPG**: Pure pixel bitmap text rendering (`jimp`) with embedded 5x7 ASCII bitmap matrix font to guarantee zero external font failures.
+4. **Automated Quality Gate**: Runs post-translation integrity checks validating file format signature, byte size, and page count parity.
+
+---
+
 ## 🧪 Testing & Verification
 
 Run the test suite:
 ```bash
 pnpm test
+# or npm test
 ```
 
 Verify design system tokens (zero raw hex in `.tsx`):
@@ -110,6 +128,7 @@ npm run check:hex
 Compile production build:
 ```bash
 pnpm build
+# or npm run build
 ```
 
 ---
