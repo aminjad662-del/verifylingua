@@ -24,6 +24,7 @@ import {
 import { POPULAR_LANGUAGES } from "@/lib/constants";
 import { calculatePricing, formatDeliveryDate } from "@/lib/pricing";
 import { MagneticButton } from "@/components/ui/magnetic-button";
+import { DocumentTransformVisualizer } from "@/components/marketing/DocumentTransformVisualizer";
 
 export function Hero() {
   const router = useRouter();
@@ -44,21 +45,27 @@ export function Hero() {
   const onDrop = React.useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
-        try {
-          sessionStorage.setItem(
-            "pending_upload",
-            JSON.stringify({
-              fileName: acceptedFiles[0].name,
-              fileSize: acceptedFiles[0].size,
-              sourceLang,
-              targetLang,
-              fileCount: acceptedFiles.length,
-            })
-          );
-        } catch {
-          // ignore
-        }
-        router.push(`/order/triage?source=${sourceLang}&target=${targetLang}`);
+        const file = acceptedFiles[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            sessionStorage.setItem(
+              "pending_upload",
+              JSON.stringify({
+                fileName: file.name,
+                fileSize: file.size,
+                sourceLang,
+                targetLang,
+                fileCount: acceptedFiles.length,
+                fileBase64: (reader.result as string)?.split(",")[1] || "",
+              })
+            );
+          } catch {
+            // ignore
+          }
+          router.push(`/order/triage?source=${sourceLang}&target=${targetLang}`);
+        };
+        reader.readAsDataURL(file);
       }
     },
     [router, sourceLang, targetLang]
@@ -68,11 +75,13 @@ export function Hero() {
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/msword": [".doc"],
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
       "image/webp": [".webp"],
     },
-    maxSize: 25 * 1024 * 1024,
+    maxSize: 50 * 1024 * 1024,
   });
 
   const handleCameraClick = (e: React.MouseEvent) => {
@@ -150,33 +159,8 @@ export function Hero() {
               </span>
             </div>
 
-            {/* Visual Photography & Certified Translation Specimen Card */}
-            <div className="relative w-full h-56 sm:h-64 rounded-3xl overflow-hidden border border-border/60 shadow-xl shadow-brand-500/5 bg-surface group">
-              <Image
-                src="/images/hero-photograph-document.jpg"
-                alt="Person photographing official paper document with phone for certified translation"
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/90 via-brand-ink/30 to-transparent flex items-end p-5 sm:p-6">
-                <div className="flex flex-wrap items-center justify-between gap-3 w-full text-white">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs font-bold">
-                      <Award className="w-4 h-4 text-brand-300" />
-                      <span>Official ATA Certified Translation</span>
-                    </div>
-                    <p className="text-[11px] text-white/80">
-                      Mirror formatted • Translator competence affidavit • Public QR verification
-                    </p>
-                  </div>
-                  <Badge variant="success" className="text-xs py-1 px-3 shadow-md font-bold">
-                    100% USCIS Guaranteed
-                  </Badge>
-                </div>
-              </div>
-            </div>
+            {/* Animated Document Transformation Showcase (Preserved Layout & Tables) */}
+            <DocumentTransformVisualizer />
 
             {/* Rejection Guarantee Highlights */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
@@ -352,10 +336,12 @@ export function Hero() {
                       `/order/triage?source=${sourceLang}&target=${targetLang}`
                     )
                   }
-                  className="w-full h-14 rounded-2xl text-base font-bold gap-2 shadow-md active:scale-[0.97] transition-all duration-200"
+                  className="group w-full h-14 rounded-full text-base font-bold pl-7 pr-3.5 shadow-lg active:scale-[0.97] transition-all duration-200 flex items-center justify-between bg-brand-500 hover:bg-brand-600 text-white"
                 >
-                  Start translation
-                  <ArrowRight className="w-5 h-5" />
+                  <span>Start translation</span>
+                  <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-200 group-hover:translate-x-0.5">
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </span>
                 </Button>
               </MagneticButton>
             </Card>

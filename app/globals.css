@@ -427,3 +427,40 @@ h1, h2, h3, h4, h5, h6, [id] {
     display: block !important;
   }
 }
+
+/* ─── Emil Kowalski & Taste-Skill Animation Tokens */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring-snappy: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Universal Button & Interactive Press Feedback (§Emil Kowalski) */
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
+  transform: scale(0.975);
+  transition: transform 120ms var(--ease-out-quint);
+}
+
+/* Themed Text Selection */
+::selection {
+  background-color: var(--brand-100);
+  color: var(--brand-ink);
+}
+
+/* Themed Input Caret */
+input, textarea {
+  caret-color: var(--brand-500);
+}
+
+/* Reduced Motion Safety Override */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

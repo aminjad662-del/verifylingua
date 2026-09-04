@@ -78,4 +78,73 @@ describe("Authentication Security & Cryptography Suite", () => {
       expect(blocked.resetInMs).toBeGreaterThan(0);
     });
   });
+
+  describe("Password Reset API Pipeline", () => {
+    it("handles password reset request and execution cleanly", async () => {
+      const { POST: resetPost } = await import("@/app/api/auth/reset-password/route");
+      const { memoryUsers } = await import("@/lib/auth/dev-store");
+      const { NextRequest } = await import("next/server");
+
+      // Setup a mock test user in memory
+      const testEmail = "reset-test@verifylingua.com";
+      const initialHash = await hashPassword("OldPassword123!");
+      memoryUsers.set("usr_test_reset", {
+        id: "usr_test_reset",
+        email: testEmail,
+        name: "Test User",
+        passwordHash: initialHash,
+        role: "CUSTOMER",
+        accountType: "INDIVIDUAL",
+        companyName: null,
+        phone: null,
+        isGuest: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // 1. Request reset token
+      const reqRequest = new NextRequest("http://localhost:3000/api/auth/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "10.0.0.1" },
+        body: JSON.stringify({ action: "request", email: testEmail }),
+      });
+      const resRequest = await resetPost(reqRequest);
+      expect(resRequest.status).toBe(200);
+      const dataRequest = await resRequest.json();
+      expect(dataRequest.ok).toBe(true);
+      expect(dataRequest.debugResetToken).toBeDefined();
+
+      const resetToken = dataRequest.debugResetToken;
+
+      // 2. Attempt reset with weak password (should fail)
+      const reqWeak = new NextRequest("http://localhost:3000/api/auth/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "10.0.0.2" },
+        body: JSON.stringify({ action: "reset", token: resetToken, newPassword: "weak" }),
+      });
+      const resWeak = await resetPost(reqWeak);
+      expect(resWeak.status).toBe(400);
+
+      // 3. Attempt reset with valid token and strong password
+      const newPassword = "NewSecurePassword999!";
+      const reqSuccess = new NextRequest("http://localhost:3000/api/auth/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "10.0.0.3" },
+        body: JSON.stringify({ action: "reset", token: resetToken, newPassword }),
+      });
+      const resSuccess = await resetPost(reqSuccess);
+      expect(resSuccess.status).toBe(200);
+      const dataSuccess = await resSuccess.json();
+      expect(dataSuccess.ok).toBe(true);
+
+      // 4. Verify user's updated password hash in memory
+      const updatedUser = memoryUsers.get("usr_test_reset");
+      expect(updatedUser).toBeDefined();
+      const isNewValid = await verifyPassword(newPassword, updatedUser!.passwordHash);
+      expect(isNewValid).toBe(true);
+      const isOldValid = await verifyPassword("OldPassword123!", updatedUser!.passwordHash);
+      expect(isOldValid).toBe(false);
+    });
+  });
 });
+

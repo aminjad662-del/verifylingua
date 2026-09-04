@@ -19,16 +19,25 @@ export interface MemorySession {
   expires: Date;
 }
 
+export interface MemoryResetToken {
+  email: string;
+  token: string;
+  expires: Date;
+}
+
 // Global in-memory storage to survive hot-reloads and support offline dev/demo preview
 const globalForMemory = globalThis as unknown as {
   memoryUsers?: Map<string, MemoryUser>;
   memorySessions?: Map<string, MemorySession>;
+  memoryResetTokens?: Map<string, MemoryResetToken>;
 };
 
 export const memoryUsers = globalForMemory.memoryUsers ?? new Map<string, MemoryUser>();
 export const memorySessions = globalForMemory.memorySessions ?? new Map<string, MemorySession>();
+export const memoryResetTokens = globalForMemory.memoryResetTokens ?? new Map<string, MemoryResetToken>();
 
 if (process.env.NODE_ENV !== "production") {
   globalForMemory.memoryUsers = memoryUsers;
   globalForMemory.memorySessions = memorySessions;
+  globalForMemory.memoryResetTokens = memoryResetTokens;
 }

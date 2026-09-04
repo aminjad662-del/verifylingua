@@ -18,6 +18,8 @@ import {
   FileText,
   RefreshCw,
   Info,
+  Download,
+  Sparkles,
 } from "lucide-react";
 import { calculatePricing } from "@/lib/pricing";
 
@@ -29,6 +31,18 @@ interface Finding {
   message: string;
   reshootTip: string;
   pageNumber: number;
+}
+
+interface TranslationJobState {
+  jobId: string;
+  fileName: string;
+  fileFormat: string;
+  status: string;
+  progress: number;
+  currentStep: string;
+  downloadUrl?: string | null;
+  qualityGate?: any;
+  error?: string | null;
 }
 
 function TriageContent() {
@@ -46,6 +60,7 @@ function TriageContent() {
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [findings, setFindings] = React.useState<Finding[]>([]);
   const [acknowledgedWarnings, setAcknowledgedWarnings] = React.useState<Record<string, boolean>>({});
+  const [translationJob, setTranslationJob] = React.useState<TranslationJobState | null>(null);
 
   // Restore any pending upload from hero or camera trigger
   React.useEffect(() => {
@@ -53,18 +68,68 @@ function TriageContent() {
       const pending = sessionStorage.getItem("pending_upload");
       if (pending) {
         const data = JSON.parse(pending);
-        handleFileAnalysis(data.fileName, data.fileSize);
+        handleFileAnalysis(data.fileName, data.fileSize, data.fileBase64);
       }
     } catch {
       // ignore
     }
   }, []);
 
-  const handleFileAnalysis = (fileName: string, fileSize: number) => {
+  const handleFileAnalysis = async (
+    fileName: string,
+    fileSize: number,
+    fileBase64?: string,
+    fileBlob?: File
+  ) => {
     setIsAnalyzing(true);
     setFindings([]);
 
-    // Simulate real AI vision triage latency (< 1.5s)
+    // 1. Kick off real layout-preserving translation
+    try {
+      let uploadRes;
+      if (fileBlob) {
+        const fd = new FormData();
+        fd.append("file", fileBlob);
+        fd.append("sourceLang", searchParams.get("source") || "es");
+        fd.append("targetLang", searchParams.get("target") || "en");
+        uploadRes = await fetch("/api/translate/upload", { method: "POST", body: fd });
+      } else if (fileBase64) {
+        uploadRes = await fetch("/api/translate/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName,
+            fileBase64,
+            sourceLang: searchParams.get("source") || "es",
+            targetLang: searchParams.get("target") || "en",
+          }),
+        });
+      }
+
+      if (uploadRes && uploadRes.ok) {
+        const initialJob = await uploadRes.json();
+        setTranslationJob(initialJob);
+
+        const poll = setInterval(async () => {
+          try {
+            const statusRes = await fetch(`/api/translate/status/${initialJob.jobId}`);
+            if (statusRes.ok) {
+              const current = await statusRes.json();
+              setTranslationJob(current);
+              if (current.status === "ready" || current.status === "failed") {
+                clearInterval(poll);
+              }
+            }
+          } catch {
+            clearInterval(poll);
+          }
+        }, 800);
+      }
+    } catch {
+      // continue with triage
+    }
+
+    // 2. Set document metrics
     setTimeout(() => {
       setIsAnalyzing(false);
 
@@ -109,13 +174,13 @@ function TriageContent() {
       } catch {
         // ignore
       }
-    }, 1200);
+    }, 1000);
   };
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
-      handleFileAnalysis(file.name, file.size);
+      handleFileAnalysis(file.name, file.size, undefined, file);
     }
   };
 
@@ -123,17 +188,19 @@ function TriageContent() {
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/msword": [".doc"],
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
       "image/webp": [".webp"],
     },
-    maxSize: 25 * 1024 * 1024,
+    maxSize: 50 * 1024 * 1024,
   });
 
   const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      handleFileAnalysis(file.name || "camera-scan.jpg", file.size);
+      handleFileAnalysis(file.name || "camera-scan.jpg", file.size, undefined, file);
     }
   };
 
@@ -262,6 +329,56 @@ function TriageContent() {
                     Analyzed
                   </Badge>
                 </div>
+
+                {/* Live Translation Engine Progress & Instant Download Card */}
+                {translationJob && (
+                  <div className="p-5 rounded-2xl bg-surface border-2 border-brand-500/30 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping" />
+                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-ink">
+                          {translationJob.status === "ready" ? "Translation Complete" : "Translation Pipeline"}
+                        </span>
+                      </div>
+                      <Badge variant={translationJob.status === "ready" ? "success" : "default"} className="text-[11px] font-mono">
+                        {translationJob.fileFormat?.toUpperCase()} • {translationJob.progress}%
+                      </Badge>
+                    </div>
+
+                    {/* GPU-Accelerated Progress Bar */}
+                    <div className="w-full h-2 rounded-full bg-surface-raised overflow-hidden border border-border">
+                      <div
+                        className="h-full bg-brand-500 origin-left transition-transform duration-300 ease-out"
+                        style={{ transform: `scaleX(${Math.max(5, translationJob.progress) / 100})` }}
+                      />
+                    </div>
+
+                    <p className="text-xs text-brand-ink font-medium flex items-center justify-between">
+                      <span>{translationJob.currentStep}</span>
+                      {translationJob.qualityGate && (
+                        <span className="text-status-success font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Quality Gate Passed
+                        </span>
+                      )}
+                    </p>
+
+                    {/* Instant Download Action when Ready */}
+                    {translationJob.status === "ready" && translationJob.downloadUrl && (
+                      <div className="pt-2">
+                        <Button
+                          asChild
+                          size="lg"
+                          className="w-full h-12 rounded-xl bg-status-success hover:bg-emerald-600 text-white font-bold gap-2 shadow-md active:scale-[0.97]"
+                        >
+                          <a href={translationJob.downloadUrl} download>
+                            <Download className="w-4 h-4" />
+                            Download Translated Document ({translationJob.fileFormat.toUpperCase()})
+                          </a>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {findings.length === 0 ? (
                   <div className="p-5 rounded-2xl bg-status-success/10 border border-status-success/20 flex items-start gap-3">

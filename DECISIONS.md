@@ -1,40 +1,40 @@
-# Architecture & Design Decisions
+# Architectural & Design Decisions (DECISIONS.md)
 
-## 1. Typography Identity (Enforced: Basier Square & San Francisco)
-- **Headings (`--font-heading`, `--font-display`):** Bound to `var(--font-basier-square), "Basier Square", "BasierSquare", sans-serif`.
-  - Installed genuine **Basier Square** OpenType font binaries directly into `public/fonts/basier-square/`:
-    - `BasierSquare-Regular.otf` (400)
-    - `BasierSquare-Medium.otf` (500)
-    - `BasierSquare-SemiBold.otf` (600)
-    - `BasierSquare-Bold.otf` (700)
-  - Loaded natively via Next.js `localFont` in `app/layout.tsx` (`--font-basier-square`) and declared via `@font-face` blocks so that all `h1`–`h6`, `.font-display`, and `.font-heading` elements strictly render Basier Square on all devices and OS environments (Windows, macOS, Linux, iOS, Android).
-- **Body & UI Font Stack (`--font-body`, `--font-sans`):** Bound to `var(--font-san-francisco), "San Francisco", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, sans-serif`.
-  - Authentic Apple SF Pro (San Francisco) WOFF2 font files installed in `public/fonts/san-francisco/`:
-    - `SFProDisplay-Regular.woff2` (400)
-    - `SFProDisplay-Medium.woff2` (500)
-    - `SFProDisplay-Semibold.woff2` (600)
-    - `SFProDisplay-Bold.woff2` (700)
-  - Loaded natively via Next.js `localFont` in `app/layout.tsx` (`--font-san-francisco`) and declared via `@font-face` blocks.
-  - Applied directly to `html`, `body`, `p`, `span`, `li`, `a`, `button`, and input elements.
-  - Arabic & CJK fallbacks preserved for internationalization.
+This log records every non-obvious decision made during the elevation and production implementation of VerifyLingua.
 
-## 2. Motion Architecture
-- **Primitive:** Created `<MagneticButton>` leveraging Framer Motion's `useMotionValue` and `useSpring` outside the React render loop to pull primary CTAs toward pointer coords with physically springy return-to-rest.
-- **Micro-Interactions:** Added `scale(0.97)` on `:active` with `160ms ease-out` for all buttons; cards lift `translateY(-4px)` with shadow deepening on hover.
-- **Scroll Reveals:** Staggered viewport entrance via `whileInView` (`once: true`) with `translateY(24px) -> 0` and opacity fade over `500ms ease-out`.
+---
 
-## 3. Hydration & Runtime
-- Added `suppressHydrationWarning` to Hero turnaround time (`components/marketing/Hero.tsx`) to fix SSR timestamp mismatch caused by client/server minute tick and timezone resolution differences.
-- Fixed `MagneticButton` and motion primitive hydration mismatch (`style={{}}` vs `style={{transform: 'none'}}`) by deferring spring motion attachment to post-mount via `isMounted` check and adding `suppressHydrationWarning`.
+### Decision 1: High-Fidelity Multi-Format Layout-Preserving Translation Engine
+- **Context**: The user requires a document translation platform for **PDF, DOCX, PNG, and JPG** where the output matches the input format with strictly preserved layout, tables, formatting, and fonts, downloadable immediately in the exact same format.
+- **Architectural Choice**:
+  1. **DOCX Preservation**: Use run-level OpenXML extraction. Rather than converting DOCX to HTML and back (which destroys formatting), parse the internal `word/document.xml`, extract only inner `<w:t>` text nodes while maintaining `<w:rPr>` run properties, paragraph alignments, table cell dimensions, headers, and footers, translate the textual runs in context, and write them back into the ZIP container.
+  2. **PDF Text Extraction & Direct Overlay Reconstruction**: Use `pdf-parse` / `pdfjs-dist` to extract text blocks along with their exact bounding boxes `(x, y, width, height)` and page coordinates. Rebuild the translated PDF by preserving original vector backgrounds and graphics, masking original text runs cleanly, and rendering translated text directly into the identical bounding boxes using `pdf-lib` with auto-fit shrink-to-fit calculation and proper baseline positioning.
+  3. **PNG/JPG OCR & Inpainting Overlay**: Process uploaded scanned images using OCR text detection with bounding boxes. Inpaint/mask original text background cleanly, and composite translated text in place matching font-weight, color, alignment, and size using Node.js canvas rendering.
+- **Studio Rationale**: This satisfies the non-negotiable rule that "a PDF comes back as a PDF, a DOCX as a DOCX, an image as an image with translated text rendered in place. No manual redesign or reformatting by the user, ever."
 
-## 4. Font Binding & Token Resolution
-- **Root Cause:** In `app/globals.css`, a second token block within `@theme` was inadvertently overriding `--font-body` and `--font-sans` with `system-ui, -apple-system...`, omitting `var(--font-san-francisco)` and the `@font-face` definitions for `"San Francisco"`.
-- **Resolution:** Re-anchored `--font-body` and `--font-sans` directly to `var(--font-san-francisco), "San Francisco", ...` and declared complete `@font-face` rules for `"San Francisco"` pointing to local `public/fonts/san-francisco/*.woff2` assets. Verified in headless Chrome with `loaded` status across 4 weights.
+---
 
-## 5. Node.js Heap Allocation During Next.js Compilation
-- **Root Cause:** When running concurrent Next.js page compilation across 88 App Router routes on Windows, Node.js exceeded its default 1.5GB 32-bit heap limit, triggering `ERR_MEMORY_ALLOCATION_FAILED`.
-- **Resolution:** Allocated `--max-old-space-size=4096` in `NODE_OPTIONS`, allowing all 88 static and dynamic routes to compile cleanly with 0 errors.
+### Decision 2: Synthesis of Design References (Synthesia Community + Sunsama)
+- **Context**: The user provided two reference designs (`media_1788545235739.jpg` and `media_1788545236329.jpg`).
+- **Architectural Choice**:
+  - **Hero & Canvas (Synthesia)**: Crisp, luminous background with subtle ambient pastel aura (radial blue/apricot gradient), bold geometric display heading with tinted key phrases, and a central interactive document transformation frame.
+  - **Double-Bezel Upload Zone (Taste-Skill / Apple)**: Outer enclosure with hairline ring and subtle tint, encasing an inner drop target with specular highlight, 44px+ touch targets, and tactile `:active:scale-[0.97]`.
+  - **Before/After Diagnostic Modules (Sunsama)**: Side-by-side diagnostic cards comparing the "Chaotic / Rejected Legacy Translation" (red warning pills, formatting destroyed, uncertified) vs "VerifyLingua Precision" (green checks, exact layout preserved, USCIS accepted).
+  - **Feature Grid & Narrative (Sunsama + Synthesia)**: 2x2 crisp feature cards with single-color SVG icon chips, followed by high-density workflow steps and comparison tables.
+  - **Footer (Synthesia)**: Deep midnight dark footer with structured navigation, ATA certification badge, and legal guarantees.
 
-## 6. Next.js Image Responsive Sizing
-- **Root Cause:** Next.js `<Image fill>` without explicit `sizes` triggered browser console warnings and sub-optimal image resource selection.
-- **Resolution:** Added precise responsive `sizes` properties to all `<Image fill>` tags across `Hero.tsx`, `CertifiedSampleShowcase.tsx`, `DocumentTypes.tsx`, and `RejectionMoatSection.tsx`. Verified 0 console warnings in Chrome.
+---
+
+### Decision 3: Translation LLM System Prompt & Resilience
+- **Context**: Translation must preserve format tokens, legal terminology, dates, numbers, and proper nouns accurately.
+- **Architectural Choice**:
+  - Built-in translation pipeline uses a specialized system prompt enforcing register, legal terminology preservation, strict tag/placeholder preservation, and context-aware sentence translation.
+  - Automatic exponential backoff and retry wrapper to handle rate limits gracefully.
+  - Fallback offline translator for deterministic fixtures and integration testing so the test suite can run fully offline in CI/CD without burning external API quotas.
+
+---
+
+### Decision 4: In-Memory Resilience Layer with Prisma Postgres
+- **Context**: VerifyLingua supports both production PostgreSQL and offline/local development where a local database might be temporarily unavailable.
+- **Architectural Choice**:
+  - Maintain a dual-tier storage strategy (`lib/auth/dev-store.ts` and `lib/jobs/store.ts`): queries write to Prisma PostgreSQL when available, while catching connection errors and falling back seamlessly to an in-memory session/job registry. This ensures all routes, uploads, auth flows, and translations work flawlessly out of the box in local environments.
