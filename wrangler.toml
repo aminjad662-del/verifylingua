@@ -1,0 +1,13 @@
+name = "verifylingua"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".open-next"
+
+[env.production]
+name = "verifylingua"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+NEXT_TELEMETRY_DISABLED = "1"
+NODE_VERSION = "22.16.0"
