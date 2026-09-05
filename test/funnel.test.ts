@@ -38,6 +38,7 @@ describe("Order Funnel Integration Tests (Phase 4)", () => {
   it("calculates standard per-word pricing with minimum word threshold", () => {
     const quote = calculatePricing({
       serviceType: "STANDARD",
+      pageCount: 1,
       wordCount: 150, // below 250 min
     });
 

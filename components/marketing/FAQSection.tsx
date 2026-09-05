@@ -1,27 +1,36 @@
+"use client";
+
 import Image from "next/image";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import Link from "next/link";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
+import { ShieldCheck, MessageSquare, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const FAQS = [
   {
-    question: "What is a Certified Translation, and is it accepted by USCIS?",
+    question: "What is a Certified Translation, and is it 100% accepted by USCIS?",
     answer:
-      "A certified translation includes a formal Certificate of Accuracy signed by a professional linguist, certifying fluency in both languages and exact word-for-word accuracy under 8 CFR 103.2(b)(3). VerifyLingua translations are 100% accepted by USCIS, the National Visa Center (NVC), federal courts, state licensing boards, and US universities.",
+      "A certified translation includes a formal Certificate of Accuracy signed by an accredited professional linguist, certifying fluency in both languages and exact word-for-word accuracy under 8 CFR § 103.2(b)(3). VerifyLingua translations are 100% accepted by USCIS, the National Visa Center (NVC), federal courts, state licensing boards, and US universities.",
   },
   {
-    question: "Do I need Notarization or an Apostille?",
+    question: "Do I need Notarization or an Apostille for my submission?",
     answer:
-      "USCIS does not require notarization for standard green card or visa filings. However, state courts, foreign consulates, DMV driver licensing, and international adoptions often require notarization. If you're submitting documents abroad, an Apostille from the Secretary of State may also be needed. Our Acceptance Pre-Check Wizard automatically determines whether notarization is required for your receiving agency.",
+      "USCIS does not require notarization for standard green card, adjustment of status, or visa filings. However, state courts, foreign consulates, DMV driver licensing, and international adoptions frequently mandate notarization. If you're submitting documents abroad, a Hague Apostille from the Secretary of State may also be needed. Our Acceptance Pre-Check Wizard automatically calculates whether notarization is required for your receiving agency.",
   },
   {
     question: "How does the Pre-Payment AI Document Triage protect me?",
     answer:
-      "Incumbents often take payment first, assign the document, and then cancel or issue a refund days later when an illegible handwriting note or missing page is discovered. Our vision model inspects resolution, glare, handwriting clarity, and missing pages within 5 seconds of upload, offering immediate re-shoot guidance before any payment is collected.",
+      "Legacy agencies often take payment first, assign the document to an external pool, and then cancel or issue a delayed refund days later when an illegible handwriting note or missing page is discovered. Our computer vision model inspects resolution, glare, handwriting clarity, and missing pages within 5 seconds of upload, offering immediate re-shoot guidance before any payment is collected.",
   },
   {
     question: "What is the Name & Date Consistency Lock?",
     answer:
-      "Name transliteration mismatches between civil documents (e.g. birth certificates) and foreign passports are the single most common cause of silent USCIS Requests for Evidence (RFEs). We ask for your exact passport spelling upfront and lock it into the translator workspace so government systems never encounter mismatched records.",
+      "Name transliteration mismatches between civil documents (e.g., birth certificates) and foreign passports are the single most common cause of silent USCIS Requests for Evidence (RFEs). We ask for your exact passport spelling upfront and lock it into the translator workspace so government systems never encounter mismatched records.",
   },
   {
     question: "How does the Public QR Verification Portal work?",
@@ -42,59 +51,78 @@ const FAQS = [
 
 export function FAQSection() {
   return (
-    <section className="py-16 md:py-24 bg-canvas border-b border-border/60">
-      <div className="max-w-4xl mx-auto px-6 space-y-12">
-        <div className="text-center space-y-4">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
-            Frequently Asked Questions
-          </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
-            Everything You Need to Know About Certified Translations
-          </h2>
-          <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
-            Have questions about government standards, notary requirements, or formatting? We have answers.
-          </p>
-        </div>
-
-        <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
-          {FAQS.map((faq, idx) => (
-            <AccordionItem key={idx} value={`item-${idx}`}>
-              <AccordionTrigger className="text-left font-bold text-lg md:text-xl font-display">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-base text-ink-soft leading-relaxed pt-2 pb-6">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-
-        <div className="p-8 sm:p-10 rounded-3xl bg-lavender-50/90 border border-border/80 flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow duration-300">
-          <div className="flex items-center gap-5 text-left">
-            <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-brand-100 bg-white shadow-sm shrink-0">
-              <Image
-                src="/images/step-human-cert-3d.jpg"
-                alt="24/7 ATA accredited certified translation specialist"
-                fill
-                className="object-cover"
-                sizes="80px"
-              />
+    <section className="py-20 md:py-32 bg-canvas border-b border-border/60">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Synthesia 2-Column Minimalist Layout (Reference media_1788643404727.jpg) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          {/* Left Column (Sticky 4-col Sidebar) */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Compliance &amp; Legal FAQ</span>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-xl font-bold text-brand-ink font-display">Still have questions?</h3>
-              <p className="text-sm text-ink-soft max-w-md">
-                Our certified compliance specialists and ATA linguists are available 24/7 to review your document requirements before you order.
-              </p>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-ink tracking-tight font-display leading-[1.08]">
+              Frequently Asked Questions
+            </h2>
+
+            <p className="text-base text-ink-soft leading-relaxed">
+              Have questions about federal immigration standards, notary mandates, or document formatting?
+              Here is everything you need to know.
+            </p>
+
+            {/* Support Callout Box */}
+            <div className="p-6 rounded-2xl bg-surface-raised border border-border/80 space-y-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-brand-100 bg-white shadow-sm shrink-0">
+                  <Image
+                    src="/images/step-human-cert-3d.jpg"
+                    alt="ATA Certified Compliance Specialist"
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
+                    <span className="text-xs font-mono font-bold text-brand-ink">Linguists Online</span>
+                  </div>
+                  <p className="text-xs text-ink-softer">Average response &lt;2 mins</p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-brand-ink font-display">Have a unique document?</h4>
+                <p className="text-xs text-ink-soft">
+                  Our certified compliance specialists are available 24/7 to review your scan before ordering.
+                </p>
+              </div>
+
+              <Link
+                href="/help"
+                className="inline-flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100/80 text-brand-500 text-xs font-bold transition-colors"
+              >
+                <span>Ask Compliance Specialist</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
 
-          <div className="shrink-0">
-            <Link
-              href="/help"
-              className="inline-flex items-center gap-2 h-12 px-6 rounded-xl bg-brand-500 hover:bg-brand-700 text-white text-sm font-bold shadow-sm transition-colors"
-            >
-              Ask Compliance Specialist →
-            </Link>
+          {/* Right Column (Expandable Accordion 8-col) */}
+          <div className="lg:col-span-8 space-y-4">
+            <Accordion type="single" collapsible defaultValue="item-0" className="w-full divide-y divide-border/60">
+              {FAQS.map((faq, idx) => (
+                <AccordionItem key={idx} value={`item-${idx}`} className="py-2 border-b border-border/60">
+                  <AccordionTrigger className="text-left font-bold text-lg sm:text-xl font-display text-brand-ink hover:text-brand-500 hover:no-underline py-4">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm sm:text-base text-ink-soft leading-relaxed pt-1 pb-6 pr-4">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </div>
       </div>
