@@ -4,6 +4,8 @@ import { Hero } from "@/components/marketing/Hero";
 import { TrustStats } from "@/components/marketing/TrustStats";
 import { DarkProductHowItWorks } from "@/components/marketing/DarkProductHowItWorks";
 import { CertifiedSampleShowcase } from "@/components/marketing/CertifiedSampleShowcase";
+import { InstitutionalAcceptanceStack } from "@/components/marketing/InstitutionalAcceptanceStack";
+import { SunsamaFeatureBento } from "@/components/marketing/SunsamaFeatureBento";
 import { PacketBreakdownSection } from "@/components/marketing/PacketBreakdownSection";
 import { DocumentTypes } from "@/components/marketing/DocumentTypes";
 import { ComparisonTable } from "@/components/marketing/ComparisonTable";
@@ -20,6 +22,8 @@ export default function HomePage() {
         <TrustStats />
         <DarkProductHowItWorks />
         <CertifiedSampleShowcase />
+        <InstitutionalAcceptanceStack />
+        <SunsamaFeatureBento />
         <PacketBreakdownSection />
         <DocumentTypes />
         <ComparisonTable />

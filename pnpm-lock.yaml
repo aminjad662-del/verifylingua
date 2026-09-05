@@ -17,6 +17,9 @@ importers:
       '@google/genai':
         specifier: ^0.2.0
         version: 0.2.0(supports-color@7.2.0)
+      '@gsap/react':
+        specifier: ^2.1.2
+        version: 2.1.2(gsap@3.15.0)(react@19.0.0)
       '@prisma/client':
         specifier: ^6.4.1
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
@@ -74,6 +77,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.4.0
+      gsap:
+        specifier: ^3.15.0
+        version: 3.15.0
       jimp:
         specifier: ^1.6.1
         version: 1.6.1(supports-color@7.2.0)
@@ -501,6 +507,12 @@ packages:
   '@google/genai@0.2.0':
     resolution: {integrity: sha512-r7EiRHSqc6D1lDIMvM4OemjUwPpUbYb9jTxe1eLCiFbooHrmPc6U9z3n56E/iWzigkZmjRh4IC0CMzoB1aql9w==}
     engines: {node: '>=18.0.0'}
+
+  '@gsap/react@2.1.2':
+    resolution: {integrity: sha512-JqliybO1837UcgH2hVOM4VO+38APk3ECNrsuSM4MuXp+rbf+/2IG2K1YJiqfTcXQHH7XlA0m3ykniFYstfq0Iw==}
+    peerDependencies:
+      gsap: ^3.12.5
+      react: '>=17'
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2615,6 +2627,9 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  gsap@3.15.0:
+    resolution: {integrity: sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A==}
+
   gtoken@7.1.0:
     resolution: {integrity: sha512-pCcEwRi+TKpMlxAQObHDQ56KawURgyAf6jtIY046fJ5tIv3zDe/LEIubckAO8fj6JnAxLdmWkUfNyulQ2iKdEw==}
     engines: {node: '>=14.0.0'}
@@ -4320,6 +4335,11 @@ snapshots:
       - encoding
       - supports-color
       - utf-8-validate
+
+  '@gsap/react@2.1.2(gsap@3.15.0)(react@19.0.0)':
+    dependencies:
+      gsap: 3.15.0
+      react: 19.0.0
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -6623,6 +6643,8 @@ snapshots:
   gopd@1.2.0: {}
 
   graceful-fs@4.2.11: {}
+
+  gsap@3.15.0: {}
 
   gtoken@7.1.0(supports-color@7.2.0):
     dependencies:

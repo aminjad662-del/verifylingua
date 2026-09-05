@@ -10,11 +10,17 @@ import {
   UploadCloud,
   FileCheck,
   Award,
-  QrCode,
   CheckCircle2,
   ArrowRight,
   ShieldCheck,
   Zap,
+  Stamp,
+  Lock,
+  QrCode,
+  FileSearch,
+  Layers,
+  Sparkles,
+  Clock,
 } from "lucide-react";
 
 interface StepDetail {
@@ -28,6 +34,7 @@ interface StepDetail {
   previewImage: string;
   details: { label: string; value: string; isGood?: boolean }[];
   summary: string;
+  microCards: { title: string; description: string; icon: React.ComponentType<{ className?: string }> }[];
 }
 
 const STEPS: StepDetail[] = [
@@ -48,6 +55,23 @@ const STEPS: StepDetail[] = [
     ],
     summary:
       "Our AI audit analyzes your scan in seconds to guarantee it meets strict USCIS image clarity standards before linguists begin.",
+    microCards: [
+      {
+        title: "Embossed Seal Discovery",
+        description: "Identifies raised notary stamps and marginal notations so no legal marks are omitted.",
+        icon: Stamp,
+      },
+      {
+        title: "300 DPI Contrast & Glare Audit",
+        description: "Ensures scan resolution satisfies USCIS electronic filing mandates before payment.",
+        icon: FileSearch,
+      },
+      {
+        title: "Guaranteed $24.95 Flat Quote",
+        description: "Exact word and page count calculation with zero post-payment cost surprises.",
+        icon: Zap,
+      },
+    ],
   },
   {
     id: "translation",
@@ -66,6 +90,23 @@ const STEPS: StepDetail[] = [
     ],
     summary:
       "Every document is translated by an accredited human linguist who maintains strict typographic and structural parity with the source document.",
+    microCards: [
+      {
+        title: "OpenXML & PDF Coordinate Lock",
+        description: "Rebuilds translated text inside original cell boundaries, headers, and margins.",
+        icon: Layers,
+      },
+      {
+        title: "Passport Name & Date Locking",
+        description: "Hard-locks spellings against passport records to eliminate 90-day RFE rejections.",
+        icon: Lock,
+      },
+      {
+        title: "Sworn 8 CFR 103.2 Affidavit",
+        description: "Accredited ATA competence declaration signed and bound to every certificate.",
+        icon: ShieldCheck,
+      },
+    ],
   },
   {
     id: "verification",
@@ -84,6 +125,23 @@ const STEPS: StepDetail[] = [
     ],
     summary:
       "Immigration officers and court clerks can instantly scan the live QR code on the certificate to confirm validity and translator credentials.",
+    microCards: [
+      {
+        title: "Public Consular Verification URL",
+        description: "Live QR code resolving to /verify/{code} for instantaneous adjudication checks.",
+        icon: QrCode,
+      },
+      {
+        title: "SHA-256 Cryptographic Ledger",
+        description: "Immutable mathematical hash guaranteeing the document has not been altered.",
+        icon: Sparkles,
+      },
+      {
+        title: "Immediate Round-Trip Download",
+        description: "Translated deliverable delivered immediately in the identical source format.",
+        icon: Clock,
+      },
+    ],
   },
 ];
 
@@ -248,6 +306,31 @@ export function DarkProductHowItWorks() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* 3 Supporting Feature Micro-Cards Beneath the Mockup (Sunsama Reference Pattern) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10 pt-2">
+            {current.microCards.map((card, idx) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={idx}
+                  className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 backdrop-blur-sm hover:bg-white/[0.08] hover:border-brand-300/40 transition-all duration-200"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-brand-300 shrink-0">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white font-display">
+                      {card.title}
+                    </h4>
+                  </div>
+                  <p className="text-xs text-white/60 leading-relaxed pl-10.5">
+                    {card.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

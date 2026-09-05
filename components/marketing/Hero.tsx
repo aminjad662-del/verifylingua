@@ -118,6 +118,10 @@ export function Hero() {
       {/* Subtle SVG Grain Overlay (§3.2.3) */}
       <div className="absolute inset-0 grain-overlay z-0 pointer-events-none" aria-hidden="true" />
 
+      {/* Warm Sunset Atmospheric Ambient Glow (Sunsama Reference Style) */}
+      <div className="pointer-events-none absolute -top-32 right-0 w-[600px] h-[600px] rounded-full bg-brand-500/10 blur-[130px] -z-10" aria-hidden="true" />
+      <div className="pointer-events-none absolute top-48 -left-24 w-[480px] h-[480px] rounded-full bg-brand-100/50 blur-[110px] -z-10" aria-hidden="true" />
+
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-14 lg:gap-10 items-center">
           {/* Left Column (7/5 Asymmetrical Grid): Editorial Value Proposition & Real Translation Artwork */}
