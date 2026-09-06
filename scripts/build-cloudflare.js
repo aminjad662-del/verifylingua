@@ -343,6 +343,13 @@ if (!fs.existsSync(openNextAssets)) copyDirRecursive(DIST_DIR, openNextAssets);
 if (fs.existsSync(OUT_DIR)) fs.rmSync(OUT_DIR, { recursive: true, force: true });
 copyDirRecursive(DIST_DIR, OUT_DIR);
 
-console.log('✅ Synchronized dist/, .open-next/, and out/');
+// Populate .vercel/output/static (Next.js default preset for Cloudflare Pages)
+const VERCEL_STATIC_DIR = path.join(ROOT_DIR, '.vercel', 'output', 'static');
+if (fs.existsSync(VERCEL_STATIC_DIR)) fs.rmSync(VERCEL_STATIC_DIR, { recursive: true, force: true });
+fs.mkdirSync(path.dirname(VERCEL_STATIC_DIR), { recursive: true });
+copyDirRecursive(DIST_DIR, VERCEL_STATIC_DIR);
+
+console.log('✅ Synchronized dist/, .open-next/, out/, and .vercel/output/static/');
 console.log('🎉 Cloudflare Pages artifact assembly complete! Ready for zero-config deployment.');
+
 
