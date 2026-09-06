@@ -13,13 +13,13 @@ The repository includes pre-configured Cloudflare files:
 
 ---
 
-## 2. Resolving Cloudflare Pages "Error 522 Connection Timed Out"
+## 2. Why All Past Deployments Failed in Cloudflare Pages
 
-Error 522 happens when Cloudflare's edge proxy cannot establish a connection to an origin server. Because Cloudflare Pages is an edge-first static & worker environment (NOT a Node.js origin server like EC2 or Heroku), pointing Pages to `.open-next` or `.next` leaves Cloudflare looking for a non-existent origin server.
-
-**The Fix:**
-1. Our build pipeline compiles all 95 pages and packages them into `dist/` with a high-performance `_worker.js` edge router.
-2. In Cloudflare Pages, set the **Build output directory** to **`dist`**.
+In the Cloudflare dashboard, all past deployments failed with a red warning icon due to three specific platform conflicts:
+1. **Node.js Version Default**: Cloudflare Pages defaults to Node 18.17.1 or Node 12 if unspecified. Next.js 15 requires Node >= 18.18.0. **Fixed** by adding `.node-version` and `.nvmrc` pinned to `20.18.0`.
+2. **pnpm Lockfile Version 9**: Cloudflare Pages defaults to pnpm 8, which cannot parse `pnpm-lock.yaml` v9. **Fixed** by declaring `"packageManager": "pnpm@9.15.0"` in `package.json`.
+3. **Wrangler JSONC Memory Recursion**: `wrangler.jsonc` caused esbuild to attempt recursive bundle packaging of `dist` into `dist`, crashing with `fatal error: out of memory allocating heap arena map`. **Fixed** by removing `wrangler.jsonc` and using clean `wrangler.toml`.
+4. **Prerender Worker Stability**: Next.js parallel build workers on Windows/CI can exceed stack limits. **Fixed** by adding `experimental: { workerThreads: false, cpus: 1 }` to `next.config.ts`.
 
 ---
 
