@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cloudflare Pages Build Script for VerifyLingua
  *
  * Assembles Next.js build output into a production-ready Cloudflare Pages
@@ -325,4 +325,24 @@ async function handleApiRequest(request, pathname, env) {
 fs.writeFileSync(path.join(DIST_DIR, '_worker.js'), workerScript, 'utf8');
 console.log('✅ Generated dist/_worker.js (Cloudflare Pages Edge Router)');
 
-console.log('🎉 Cloudflare Pages artifact assembly complete! Ready in dist/');
+// 8. Mirror dist/ to .open-next/ and out/ for 100% dashboard compatibility
+const OPEN_NEXT_DIR = path.join(ROOT_DIR, '.open-next');
+const OUT_DIR = path.join(ROOT_DIR, 'out');
+
+console.log('🔄 Mirroring dist/ to .open-next/ and out/ for dashboard compatibility...');
+
+// Populate .open-next
+if (fs.existsSync(OPEN_NEXT_DIR)) fs.rmSync(OPEN_NEXT_DIR, { recursive: true, force: true });
+copyDirRecursive(DIST_DIR, OPEN_NEXT_DIR);
+// In .open-next, ensure worker.js exists as well as _worker.js
+fs.copyFileSync(path.join(DIST_DIR, '_worker.js'), path.join(OPEN_NEXT_DIR, 'worker.js'));
+const openNextAssets = path.join(OPEN_NEXT_DIR, 'assets');
+if (!fs.existsSync(openNextAssets)) copyDirRecursive(DIST_DIR, openNextAssets);
+
+// Populate out
+if (fs.existsSync(OUT_DIR)) fs.rmSync(OUT_DIR, { recursive: true, force: true });
+copyDirRecursive(DIST_DIR, OUT_DIR);
+
+console.log('✅ Synchronized dist/, .open-next/, and out/');
+console.log('🎉 Cloudflare Pages artifact assembly complete! Ready for zero-config deployment.');
+
