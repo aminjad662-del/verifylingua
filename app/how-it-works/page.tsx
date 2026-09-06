@@ -1,10 +1,14 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { HowItWorks as HowItWorksSection } from "@/components/marketing/HowItWorks";
+import { TranslationCinematicShowcase } from "@/components/marketing/TranslationCinematicShowcase";
+import { DiagnosticComparisonCards } from "@/components/marketing/DiagnosticComparisonCards";
+import { DarkProductHowItWorks } from "@/components/marketing/DarkProductHowItWorks";
+import { InstitutionalAcceptanceStack } from "@/components/marketing/InstitutionalAcceptanceStack";
 import { RejectionMoatSection } from "@/components/marketing/RejectionMoatSection";
+import { FAQSection } from "@/components/marketing/FAQSection";
 import { BottomCTA } from "@/components/marketing/BottomCTA";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, CheckCircle2, QrCode, Lock, Clock, FileCheck2, ArrowRight } from "lucide-react";
+import { ShieldCheck, Clock, FileCheck2, QrCode, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -27,18 +31,24 @@ export default function HowItWorksPage() {
             </h1>
 
             <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
-              Discover how our pre-payment AI vision triage, passport name-locking, and public verification portal guarantee your application succeeds on the first attempt.
+              Discover how our pre-payment AI vision triage, 1:1 layout preservation engine, and public QR verification portal guarantee your application succeeds on the first attempt.
             </p>
           </div>
         </section>
 
-        {/* 4-Step Flow */}
-        <HowItWorksSection />
+        {/* 1. Interactive Flagship Coordinate & Layout Showcase */}
+        <TranslationCinematicShowcase />
 
-        {/* 6 Rejection Moats */}
-        <RejectionMoatSection />
+        {/* 2. Side-by-Side Diagnostic Comparison */}
+        <DiagnosticComparisonCards />
 
-        {/* Detailed Timeline Breakdown */}
+        {/* 3. Deep Product Engineering Walkthrough (with 3-step micro-cards) */}
+        <DarkProductHowItWorks />
+
+        {/* 4. Tabular Institutional Acceptance Stack */}
+        <InstitutionalAcceptanceStack />
+
+        {/* 5. Deterministic Turnaround Schedule */}
         <section className="py-20 md:py-28 bg-surface border-b border-border/60 px-6">
           <div className="max-w-5xl mx-auto space-y-12">
             <div className="text-center space-y-3">
@@ -95,9 +105,9 @@ export default function HowItWorksPage() {
             </div>
 
             <div className="text-center pt-4">
-              <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md">
+              <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-full text-base font-bold shadow-md bg-brand-500 hover:bg-brand-600 text-white">
                 <Link href="/order/triage">
-                  Start your certified translation
+                  Start your certified translation ($24.95/page)
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
@@ -105,7 +115,13 @@ export default function HowItWorksPage() {
           </div>
         </section>
 
-        {/* Bottom CTA */}
+        {/* 6. 6 Rejection Moats */}
+        <RejectionMoatSection />
+
+        {/* 7. Synthesia 2-Column Sticky Legal FAQ */}
+        <FAQSection />
+
+        {/* 8. Bottom CTA */}
         <BottomCTA />
       </main>
       <Footer />

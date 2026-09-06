@@ -7,6 +7,8 @@ import { Footer } from "@/components/layout/Footer";
 import { ComparisonTable } from "@/components/marketing/ComparisonTable";
 import { FAQSection } from "@/components/marketing/FAQSection";
 import { BottomCTA } from "@/components/marketing/BottomCTA";
+import { InstitutionalAcceptanceStack } from "@/components/marketing/InstitutionalAcceptanceStack";
+import { AcceptanceNetworkBanner } from "@/components/marketing/AcceptanceNetworkBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -296,6 +298,12 @@ export default function PricingPage() {
             </div>
           </div>
         </section>
+
+        {/* Institutional Acceptance Directory */}
+        <InstitutionalAcceptanceStack />
+
+        {/* Acceptance Network Across 50 States */}
+        <AcceptanceNetworkBanner />
 
         {/* Incumbent Comparison Matrix */}
         <ComparisonTable />
