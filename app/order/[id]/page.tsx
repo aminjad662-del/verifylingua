@@ -13,6 +13,7 @@ import {
   QrCode,
   MessageSquare,
   Send,
+  ExternalLink,
 } from "lucide-react";
 
 interface OrderEventItem {
@@ -161,6 +162,28 @@ function OrderTrackingContent() {
             </Link>
           </Button>
         </div>
+      </div>
+
+      {/* Proofing Studio Callout Card */}
+      <div className="p-6 md:p-8 rounded-[28px] bg-brand-50/80 border-2 border-brand-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-brand-200 text-xs font-mono font-bold text-brand-700">
+            <span className="w-2 h-2 rounded-full bg-status-success inline-block animate-pulse" />
+            <span>Interactive Proofing Studio Ready</span>
+          </div>
+          <h3 className="text-lg font-bold text-brand-ink font-display">
+            Inspect &amp; Approve Translation Draft Before Official Sealing
+          </h3>
+          <p className="text-xs text-text-muted max-w-2xl leading-relaxed">
+            Review your document side-by-side with the original scan. Verify that all personal names and dates match your USCIS filings, or click any sentence to request instant line-item revisions.
+          </p>
+        </div>
+        <Button asChild className="h-11 px-5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs gap-2 shrink-0 shadow-sm">
+          <Link href={`/order/${publicCode}/proof`}>
+            <span>Open Proofing Studio</span>
+            <ExternalLink className="w-4 h-4" />
+          </Link>
+        </Button>
       </div>
 
       {/* 7-Stage Visual Step Tracker */}
