@@ -15,11 +15,13 @@ The repository includes pre-configured Cloudflare files:
 
 ## 2. Why All Past Deployments Failed in Cloudflare Pages
 
-In the Cloudflare dashboard, all past deployments failed with a red warning icon due to three specific platform conflicts:
-1. **Node.js Version Default**: Cloudflare Pages defaults to Node 18.17.1 or Node 12 if unspecified. Next.js 15 requires Node >= 18.18.0. **Fixed** by adding `.node-version` and `.nvmrc` pinned to `20.18.0`.
+In the Cloudflare dashboard, deployments encountered specific platform configurations:
+1. **Node.js Version Default**: Cloudflare Pages defaults to Node 18.17.1 or Node 12 if unspecified. Next.js 15 requires Node >= 18.18.0. **Fixed** by setting `.node-version` and `.nvmrc` to `22.16.0` (LTS) and setting `NODE_VERSION = "22.16.0"` in `wrangler.toml`.
 2. **pnpm Lockfile Version 9**: Cloudflare Pages defaults to pnpm 8, which cannot parse `pnpm-lock.yaml` v9. **Fixed** by declaring `"packageManager": "pnpm@9.15.0"` in `package.json`.
 3. **Wrangler JSONC Memory Recursion**: `wrangler.jsonc` caused esbuild to attempt recursive bundle packaging of `dist` into `dist`, crashing with `fatal error: out of memory allocating heap arena map`. **Fixed** by removing `wrangler.jsonc` and using clean `wrangler.toml`.
 4. **Prerender Worker Stability**: Next.js parallel build workers on Windows/CI can exceed stack limits. **Fixed** by adding `experimental: { workerThreads: false, cpus: 1 }` to `next.config.ts`.
+5. **Output directory "dist" not found**: When Cloudflare Pages uses the Next.js preset, it runs `npx next build` directly. Previously, `scripts/build-cloudflare.js` only ran as part of `npm run build`, leaving `dist/` unpopulated after `npx next build`. **Fixed** by attaching an automatic lifecycle hook in `next.config.ts` (`process.on("exit")` and `process.on("beforeExit")`) and `"postbuild"` script in `package.json`. Now, whenever `next build` or `npx next build` finishes, it automatically generates `dist/`, `_worker.js`, `_routes.json`, `_headers`, and mirrors to `.vercel/output/static/`.
+6. **Wrangler vars inheritance warning**: Cloudflare warned that top-level `vars` are not inherited by `[env.production]`. **Fixed** by adding `[env.production.vars]` and `pages_build_output_dir = "dist"` directly under `[env.production]`.
 
 ---
 
