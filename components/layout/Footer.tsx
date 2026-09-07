@@ -44,7 +44,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 text-sm">
           {/* Column 1: Services */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-white/50 font-bold">Services</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-white/50 font-bold">Services & Enterprise</h3>
             <ul className="space-y-2.5 text-white/80">
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
@@ -52,23 +52,28 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/counsel" className="hover:text-white transition-colors font-medium text-brand-300">
+                  CounselDesk™ Law Firm Portal
+                </Link>
+              </li>
+              <li>
+                <Link href="/defense/rfe" className="hover:text-white transition-colors font-medium text-status-warning">
+                  USCIS RFE Defense Shield
+                </Link>
+              </li>
+              <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  Notarized Translation
+                  Notarized & Court Translation
+                </Link>
+              </li>
+              <li>
+                <Link href="/admin/shipping" className="hover:text-white transition-colors">
+                  Physical Mail & FedEx Overnight
                 </Link>
               </li>
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
                   Academic Evaluation (WES)
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing" className="hover:text-white transition-colors">
-                  Court & Legal Translations
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing" className="hover:text-white transition-colors">
-                  Apostille Authentication
                 </Link>
               </li>
             </ul>
@@ -158,6 +163,16 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/order/VL-DEMO1/proof" className="hover:text-white transition-colors">
+                  Interactive Proofing Studio™
+                </Link>
+              </li>
+              <li>
+                <Link href="/translator/workbench/VL-DEMO1" className="hover:text-white transition-colors">
+                  Linguist Studio™ CAT Workbench
+                </Link>
+              </li>
+              <li>
                 <Link href="/use-cases" className="hover:text-white transition-colors">
                   Filing Use Cases & Guidelines
                 </Link>
@@ -165,11 +180,6 @@ export function Footer() {
               <li>
                 <Link href="/guides" className="hover:text-white transition-colors">
                   USCIS Legal Knowledge Hub
-                </Link>
-              </li>
-              <li>
-                <Link href="/dev/tokens" className="hover:text-white transition-colors">
-                  Design System & Tokens
                 </Link>
               </li>
               <li className="pt-3 border-t border-white/10">

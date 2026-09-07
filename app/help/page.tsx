@@ -99,6 +99,28 @@ export default function HelpPage() {
                     </Link>
                   </div>
                 </Card>
+
+                <Card className="p-6 rounded-2xl bg-status-warning/10 border border-status-warning/40 flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-status-warning/20 flex items-center justify-center text-status-warning shrink-0">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-bold text-brand-ink">USCIS RFE Defense Shield</h3>
+                      <Badge variant="warning" className="text-[10px]">
+                        4-Hr Emergency SLA
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-text-muted">
+                      Received a Form I-797E? Upload your notice for automated objection classification and a free Supplemental Sworn Re-Affidavit.
+                    </p>
+                    <Button asChild size="sm" className="mt-2 text-xs font-bold rounded-xl gap-1.5 bg-status-warning text-black hover:bg-status-warning/90">
+                      <Link href="/defense/rfe">
+                        Launch RFE Defense Portal →
+                      </Link>
+                    </Button>
+                  </div>
+                </Card>
               </div>
             </div>
 

@@ -20,8 +20,8 @@ export default function OrderLayout({
 }) {
   const pathname = usePathname();
 
-  // If on order details tracking page e.g. /order/VL-1234
-  const isOrderDetails = pathname.match(/^\/order\/[a-zA-Z0-9_-]+$/) && !FUNNEL_STEPS.some(s => s.path === pathname);
+  // If on order details tracking page e.g. /order/VL-1234 or proofing studio
+  const isOrderDetails = (pathname.match(/^\/order\/[a-zA-Z0-9_-]+$/) || pathname.includes("/proof")) && !FUNNEL_STEPS.some(s => s.path === pathname);
 
   const currentStep = FUNNEL_STEPS.find((s) => pathname.startsWith(s.path))?.step || 1;
 

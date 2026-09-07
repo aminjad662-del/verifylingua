@@ -230,16 +230,37 @@ export default {
         return response;
       }
 
+      // Fallback for dynamic client-side order proofing studio: /order/:id/proof
+      if (pathname.includes('/proof')) {
+        const proofFallback = new URL('/order/VL-DEMO1/proof/index.html', request.url);
+        response = await env.ASSETS.fetch(new Request(proofFallback, request));
+        if (response.status !== 404) return response;
+      }
+
       // Fallback for dynamic client-side order tracking: /order/:id
       if (pathname.startsWith('/order/')) {
-        const orderFallback = new URL('/order/checkout/index.html', request.url);
+        const orderFallback = new URL('/order/VL-DEMO1/index.html', request.url);
         response = await env.ASSETS.fetch(new Request(orderFallback, request));
+        if (response.status !== 404) return response;
+      }
+
+      // Fallback for dynamic linguist CAT workbench: /translator/workbench/:id
+      if (pathname.startsWith('/translator/workbench/')) {
+        const workbenchFallback = new URL('/translator/workbench/VL-DEMO1/index.html', request.url);
+        response = await env.ASSETS.fetch(new Request(workbenchFallback, request));
+        if (response.status !== 404) return response;
+      }
+
+      // Fallback for dynamic admin order workspace: /admin/orders/:id
+      if (pathname.startsWith('/admin/orders/')) {
+        const adminFallback = new URL('/admin/orders/VL-DEMO1/index.html', request.url);
+        response = await env.ASSETS.fetch(new Request(adminFallback, request));
         if (response.status !== 404) return response;
       }
 
       // Fallback for dynamic certificate verification: /verify/:code
       if (pathname.startsWith('/verify/')) {
-        const verifyFallback = new URL('/verify/index.html', request.url);
+        const verifyFallback = new URL('/verify/demo/index.html', request.url);
         response = await env.ASSETS.fetch(new Request(verifyFallback, request));
         if (response.status !== 404) return response;
       }
@@ -290,6 +311,143 @@ async function handleApiRequest(request, pathname, env) {
         documentType: 'Certified Translation',
         standards: ['USCIS 8 CFR 103.2(b)(3)', 'ATA Certified Standards'],
         hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+      }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Order Proofing API
+  if (pathname.includes('/proof')) {
+    return new Response(JSON.stringify({
+      success: true,
+      order: {
+        publicCode: 'VL-DEMO1',
+        status: 'PROOFING',
+        sourceLang: 'Spanish',
+        targetLang: 'English',
+        receivingParty: 'USCIS',
+        total: 24.95,
+        translator: {
+          name: 'Elena V.',
+          credentials: 'ATA Certified #271892'
+        }
+      },
+      segments: [
+        { id: 'seg-1', page: 1, section: 'HEADER', sourceText: 'ESTADOS UNIDOS MEXICANOS - ACTA DE NACIMIENTO', translatedText: 'UNITED MEXICAN STATES - BIRTH CERTIFICATE', isLockedTerm: true, lockedTermType: 'GOVERNMENT_BODY' },
+        { id: 'seg-2', page: 1, section: 'REGISTRY', sourceText: 'OFICIALIA 01 DEL REGISTRO CIVIL DE GUADALAJARA', translatedText: 'OFFICE 01 OF THE CIVIL REGISTRY OF GUADALAJARA', isLockedTerm: true, lockedTermType: 'REGISTRY_OFFICE' },
+        { id: 'seg-3', page: 1, section: 'PERSON', sourceText: 'NOMBRE DEL REGISTRADO: CARLOS EDUARDO MENDOZA MORALES', translatedText: 'NAME OF REGISTERED PERSON: CARLOS EDUARDO MENDOZA MORALES', isLockedTerm: true, lockedTermType: 'PROPER_NAME' },
+        { id: 'seg-4', page: 1, section: 'DATE', sourceText: 'FECHA DE NACIMIENTO: 14 DE MARZO DE 1994', translatedText: 'DATE OF BIRTH: MARCH 14, 1994', isLockedTerm: true, lockedTermType: 'DATE' },
+        { id: 'seg-5', page: 1, section: 'CERTIFICATION', sourceText: 'DOY FE QUE LA PRESENTE ES COPIA FIEL SACADA DE SU ORIGINAL', translatedText: 'I ATTEST THAT THIS IS A TRUE AND ACCURATE COPY OF THE ORIGINAL', isLockedTerm: false }
+      ],
+      lockedGlossary: [
+        { term: 'CARLOS EDUARDO MENDOZA MORALES', kind: 'Proper Name (Applicant)', reason: 'Matched to USCIS Form I-130 Petitioner record', verifiedInTranslation: true },
+        { term: 'MARCH 14, 1994', kind: 'Date of Birth', reason: 'USCIS Standard MM/DD/YYYY format verified', verifiedInTranslation: true }
+      ],
+      revisions: []
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // CounselDesk Matters API
+  if (pathname === '/api/counsel/matters') {
+    return new Response(JSON.stringify({
+      success: true,
+      stats: { totalMatters: 3, readyCount: 1, activeCount: 2, totalPages: 11 },
+      matters: [
+        {
+          id: 'mat-1',
+          matterNumber: '2026-IMM-042',
+          clientName: 'Hernandez Family',
+          alienNumber: 'A098-765-432',
+          filingType: 'I-130 / I-485 Concurrent Adjustment',
+          status: 'READY_TO_FILE',
+          ordersCount: 3,
+          orders: [
+            { publicCode: 'VL-8921-XQ', documentType: 'Birth Certificate (Lead Applicant)', status: 'APPROVED', pageCount: 2 },
+            { publicCode: 'VL-8922-XR', documentType: 'Marriage Certificate', status: 'APPROVED', pageCount: 2 },
+            { publicCode: 'VL-8923-XS', documentType: 'Police Clearance Record', status: 'APPROVED', pageCount: 1 }
+          ]
+        },
+        {
+          id: 'mat-2',
+          matterNumber: '2026-IMM-058',
+          clientName: 'Alejandro Chen',
+          alienNumber: 'A214-889-102',
+          filingType: 'EB-2 National Interest Waiver (NIW)',
+          status: 'ACTIVE',
+          ordersCount: 2,
+          orders: [
+            { publicCode: 'VL-9104-MN', documentType: 'PhD Diploma & Degree Transcripts', status: 'IN_TRANSLATION', pageCount: 4 },
+            { publicCode: 'VL-9105-MO', documentType: 'Patent Grant & Abstract', status: 'APPROVED', pageCount: 2 }
+          ]
+        }
+      ]
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Translator Workbench API
+  if (pathname.includes('/translator/workbench/')) {
+    return new Response(JSON.stringify({
+      success: true,
+      job: {
+        publicCode: 'VL-DEMO1',
+        documentType: 'Birth Certificate / Acta de Nacimiento',
+        sourceLang: 'Spanish',
+        targetLang: 'English',
+        pages: 1,
+        words: 245,
+        deadline: 'Tomorrow at 9:00 AM EST',
+        receivingParty: 'USCIS'
+      },
+      segments: [
+        { id: 'w-seg-1', section: 'Header', sourceText: 'ESTADOS UNIDOS MEXICANOS - ACTA DE NACIMIENTO', targetText: 'UNITED MEXICAN STATES - BIRTH CERTIFICATE', locked: true, status: 'VERIFIED' },
+        { id: 'w-seg-2', section: 'Civil Registry', sourceText: 'OFICIALIA 01 DEL REGISTRO CIVIL DE GUADALAJARA', targetText: 'OFFICE 01 OF THE CIVIL REGISTRY OF GUADALAJARA', locked: true, status: 'VERIFIED' },
+        { id: 'w-seg-3', section: 'Applicant Name', sourceText: 'NOMBRE: CARLOS EDUARDO MENDOZA MORALES', targetText: 'NAME: CARLOS EDUARDO MENDOZA MORALES', locked: true, status: 'TRANSLATED' },
+        { id: 'w-seg-4', section: 'Birth Date & Place', sourceText: 'FECHA: 14 DE MARZO DE 1994 EN GUADALAJARA JALISCO', targetText: 'DATE: MARCH 14, 1994 IN GUADALAJARA JALISCO', locked: true, status: 'TRANSLATED' },
+        { id: 'w-seg-5', section: 'Certification', sourceText: 'DOY FE QUE LA PRESENTE ES COPIA FIEL SACADA DE SU ORIGINAL', targetText: 'I ATTEST THAT THIS IS A TRUE AND ACCURATE COPY OF THE ORIGINAL', locked: false, status: 'TRANSLATED' }
+      ],
+      lockedTerms: [
+        { term: 'CARLOS EDUARDO MENDOZA MORALES', kind: 'Proper Name', matched: true },
+        { term: 'MARCH 14, 1994', kind: 'Birth Date', matched: true }
+      ]
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Shipping Rates API
+  if (pathname === '/api/shipping/rates') {
+    return new Response(JSON.stringify({
+      success: true,
+      options: [
+        { id: 'usps_certified', name: 'USCIS Certified First Class (Tracking + Return Receipt)', cost: 9.95, estimatedDays: '2-3 Business Days' },
+        { id: 'usps_priority', name: 'USPS Priority Legal Envelope', cost: 19.95, estimatedDays: '1-2 Business Days' },
+        { id: 'fedex_overnight', name: 'FedEx Priority Overnight (Pre-10:30 AM Delivery)', cost: 39.95, estimatedDays: 'Next Business Morning' }
+      ]
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Defense RFE API
+  if (pathname === '/api/defense/rfe') {
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        rfeTrackingNumber: 'RFE-USCIS-9021',
+        rootCause: 'Omission of marginal registry seal translation',
+        remedy: 'Supplemental Sworn Re-Affidavit with Complete Notarial Stamp Audit',
+        actionRequired: 'Download and sign attached Supplemental Re-Affidavit',
+        turnaroundHours: 4
       }
     }), {
       status: 200,

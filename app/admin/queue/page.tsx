@@ -100,9 +100,19 @@ export default function AdminQueuePage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
+            <Button asChild variant="outline" size="sm" className="h-8 text-xs rounded-xl gap-1.5 border-border">
+              <Link href="/admin/shipping">
+                Shipping Fulfillment
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="h-8 text-xs rounded-xl gap-1.5 border-border">
+              <Link href="/translator/workbench/VL-DEMO1">
+                Linguist Studio™
+              </Link>
+            </Button>
+            <div className="flex items-center gap-2 text-xs font-semibold text-text-muted pl-2 border-l border-border">
               <span className="w-2 h-2 rounded-full bg-status-success inline-block"></span>
-              <span>Linguist Active: Elena V. (ATA No. 271892)</span>
+              <span>Elena V. (ATA No. 271892)</span>
             </div>
           </div>
         </div>
@@ -191,21 +201,28 @@ export default function AdminQueuePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     {isUnassigned ? (
                       <Button asChild size="sm" className="gap-1.5 rounded-xl text-xs font-bold shadow-md">
-                        <Link href={`/admin/orders/${ord.publicCode}?claim=true`}>
+                        <Link href={`/translator/workbench/${ord.publicCode}?claim=true`}>
                           <Check className="w-3.5 h-3.5" />
                           Claim Translation ($24.95/pg)
                         </Link>
                       </Button>
                     ) : (
-                      <Button asChild size="sm" className="gap-1.5 rounded-xl text-xs font-bold shadow-sm">
-                        <Link href={`/admin/orders/${ord.publicCode}`}>
-                          Open Workspace
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                      </Button>
+                      <>
+                        <Button asChild variant="outline" size="sm" className="gap-1 rounded-xl text-xs font-bold border-border">
+                          <Link href={`/admin/orders/${ord.publicCode}`}>
+                            Classic
+                          </Link>
+                        </Button>
+                        <Button asChild size="sm" className="gap-1.5 rounded-xl text-xs font-bold shadow-sm bg-brand-500 hover:bg-brand-600 text-white">
+                          <Link href={`/translator/workbench/${ord.publicCode}`}>
+                            CAT Studio
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
