@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { href: "/pricing", label: "Pricing" },
   { href: "/how-it-works", label: "How it works" },
+  { href: "/counsel", label: "CounselDesk™ (Law Firms)" },
   { href: "/documents", label: "Documents" },
   { href: "/languages", label: "Languages" },
   { href: "/help", label: "Help" },
