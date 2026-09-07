@@ -17,14 +17,27 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const NEXT_DIR = path.join(ROOT_DIR, '.next');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
+const LOCK_FILE = path.join(NEXT_DIR, '.cloudflare-assembled');
 
-console.log('🚀 Starting Cloudflare Pages artifact assembly...');
+function assembleCloudflareAssets() {
+  if (fs.existsSync(LOCK_FILE)) {
+    try {
+      const diff = Date.now() - fs.statSync(LOCK_FILE).mtimeMs;
+      if (diff < 3000 && !process.env.FORCE_ASSEMBLE) {
+        return;
+      }
+    } catch {
+      // ignore
+    }
+  }
 
-// 1. Ensure clean dist directory
-if (fs.existsSync(DIST_DIR)) {
-  fs.rmSync(DIST_DIR, { recursive: true, force: true });
-}
-fs.mkdirSync(DIST_DIR, { recursive: true });
+  console.log('🚀 Starting Cloudflare Pages artifact assembly...');
+
+  // 1. Ensure clean dist directory
+  if (fs.existsSync(DIST_DIR)) {
+    fs.rmSync(DIST_DIR, { recursive: true, force: true });
+  }
+  fs.mkdirSync(DIST_DIR, { recursive: true });
 
 // Helper to copy directory recursively
 function copyDirRecursive(src, dest) {
@@ -349,7 +362,20 @@ if (fs.existsSync(VERCEL_STATIC_DIR)) fs.rmSync(VERCEL_STATIC_DIR, { recursive: 
 fs.mkdirSync(path.dirname(VERCEL_STATIC_DIR), { recursive: true });
 copyDirRecursive(DIST_DIR, VERCEL_STATIC_DIR);
 
-console.log('✅ Synchronized dist/, .open-next/, out/, and .vercel/output/static/');
-console.log('🎉 Cloudflare Pages artifact assembly complete! Ready for zero-config deployment.');
+  console.log('✅ Synchronized dist/, .open-next/, out/, and .vercel/output/static/');
+  console.log('🎉 Cloudflare Pages artifact assembly complete! Ready for zero-config deployment.');
 
+  try {
+    if (fs.existsSync(NEXT_DIR)) {
+      fs.writeFileSync(LOCK_FILE, Date.now().toString(), 'utf8');
+    }
+  } catch {
+    // ignore
+  }
+}
 
+if (require.main === module) {
+  assembleCloudflareAssets();
+}
+
+module.exports = { assembleCloudflareAssets };
