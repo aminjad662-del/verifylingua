@@ -38,3 +38,18 @@ This log records every non-obvious decision made during the elevation and produc
 - **Context**: VerifyLingua supports both production PostgreSQL and offline/local development where a local database might be temporarily unavailable.
 - **Architectural Choice**:
   - Maintain a dual-tier storage strategy (`lib/auth/dev-store.ts` and `lib/jobs/store.ts`): queries write to Prisma PostgreSQL when available, while catching connection errors and falling back seamlessly to an in-memory session/job registry. This ensures all routes, uploads, auth flows, and translations work flawlessly out of the box in local environments.
+
+---
+
+### Decision 5: Reference-Driven Masterpiece Client Dashboard (Spyglass Aesthetic + Emil Kowalski Motion)
+- **Context**: The user instructed an autonomous rebuild of the client dashboard matching the EXACT visual baseline of the provided reference screenshot (Spyglass / Awwwards aesthetic) elevated with world-class micro-interactions and motion physics.
+- **Color Logic & Palette Mapping**:
+  - **Decision**: Adopted a hybrid high-contrast stark monochrome baseline directly from the Spyglass reference (`#0A0A0A` / `bg-neutral-950` dark bento block, crisp off-white `#FAFAFA` canvas, `border-neutral-200` and `border-white/10` 1px dividers), accented with vibrant emerald/lime status pips (`text-emerald-400`, `bg-emerald-500`) for live evidentiary telemetry.
+  - **Rationale**: The stark monochrome contrast elevates the perceived legal authority of VerifyLingua far above consumer translation agencies. While keeping our core brand ink tones, the deep neutral-950 command center creates an unmistakable institutional feeling.
+- **Motion & Interaction Architecture (Emil Kowalski Standard)**:
+  - **Spring Physics**: All interactive state transitions (modals, drawers, hover effects) use calibrated spring physics (`stiffness: 380-450`, `damping: 25-32`, `mass: 0.1`). Banned linear and generic CSS ease-ins.
+  - **Magnetic Buttons**: CTAs utilize `MagneticButton` and `useMagneticHover` hook, translating within 8-9px radius with 0.4x parallax inner text differential, automatically bypassed on touch devices (`pointer: coarse`) and `prefers-reduced-motion`.
+  - **Shared Layout Transitions**: The Order Vault filter tabs use `layoutId="activeVaultTab"` for fluid sliding pill animations across filters (All, Active, Delivered, Proofing).
+  - **Staggered Orchestration**: The dashboard mounts with a sophisticated staggered fade-up container (`staggerChildren: 0.08`, `delayChildren: 0.05`).
+  - **Morphing Action Feedback**: "Download Receipt" and "Download Deliverable" buttons use `MorphingActionButton` to transition dynamically from idle -> loading spinner -> green checkmark bounce -> reset, paired with non-intrusive spring-animated toasts.
+

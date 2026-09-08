@@ -66,10 +66,10 @@ function LinguistStudioContent() {
       try {
         const res = await fetch(`/api/translator/workbench/${publicCode}`);
         const data = await res.json();
-        if (data.success) {
-          setJob(data.job);
-          setSegments(data.segments);
-          setLockedTerms(data.job.lockedTerms || []);
+        if (data && data.success) {
+          if (data.job) setJob(data.job);
+          if (Array.isArray(data.segments)) setSegments(data.segments);
+          setLockedTerms(data.job?.lockedTerms || data.lockedTerms || []);
         }
       } catch (err) {
         console.error("Error loading workbench", err);

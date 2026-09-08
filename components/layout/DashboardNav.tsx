@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldCheck, FileText, FolderLock, Settings, Plus, LogOut, Sun, Moon } from "lucide-react";
+import { ShieldCheck, FileText, FolderLock, Settings, LogOut, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -96,13 +96,6 @@ export function DashboardNav() {
           >
             {isDark ? <Sun className="w-4 h-4 text-status-warning" /> : <Moon className="w-4 h-4" />}
           </button>
-
-          <Button asChild size="sm" className="gap-1.5 rounded-xl font-bold">
-            <Link href="/order/triage">
-              <Plus className="w-4 h-4" />
-              <span>Start Translation</span>
-            </Link>
-          </Button>
 
           <div className="flex items-center gap-2 pl-2 border-l border-border">
             <div

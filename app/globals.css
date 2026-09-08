@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Instrument+Serif:ital@0;1&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -45,6 +46,17 @@
   --color-footer: var(--footer);
   --color-focus-ring: var(--focus-ring);
 
+  --color-sand: var(--sand);
+  --color-sand-warm: var(--sand-warm);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-cta-active: var(--cta-active);
+  --color-trust: var(--trust);
+  --color-trust-bg: var(--trust-bg);
+  --color-trust-border: var(--trust-border);
+
   --color-ink-soft: var(--ink-soft);
   --color-ink-softer: var(--ink-softer);
 
@@ -59,7 +71,7 @@
   --font-heading: var(--font-basier-square), "Basier Square", "BasierSquare", sans-serif;
   --font-body: var(--font-san-francisco), "San Francisco", "SF Pro Text", "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-sans: var(--font-san-francisco), "San Francisco", "SF Pro Text", "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "Playfair Display", "Instrument Serif", "New York", "Didot", "Georgia", "Cambria", serif;
+  --font-serif: "Instrument Serif", "Fraunces", "Playfair Display", "New York", "Didot", "Georgia", "Cambria", serif;
   --font-mono: "Basier Square Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -194,6 +206,18 @@
   --ink-soft:         #2B3147;
   --ink-softer:       #5A6178;
 
+  /* ─── The Notarial Palette (Client Portal & Dashboard) */
+  --sand:              #FAF7F2;
+  --sand-warm:         #F5F0E6;
+  --ink:               #0A2540;
+  --ink-muted:         #4A607A;
+  --cta:               #B45309;
+  --cta-hover:         #92400E;
+  --cta-active:        #78350F;
+  --trust:             #0F7B4F;
+  --trust-bg:          #E7F6EE;
+  --trust-border:      #A3D9BE;
+
   /* ─── Gradients & Textures (§3.2.2) */
   --gradient-hero:      radial-gradient(120% 90% at 50% 0%, #F1F4FF 0%, #FBF9F5 55%, #FFFFFF 100%);
   --gradient-panel:     linear-gradient(168deg, #F4F4FC 0%, #FFFFFF 60%);
@@ -262,6 +286,18 @@
 
   --ink-soft:         #C2CFFA;
   --ink-softer:       #93A8F5;
+
+  /* ─── The Notarial Palette (Dark Mode) */
+  --sand:              #0A111F;
+  --sand-warm:         #111927;
+  --ink:               #F5F7FA;
+  --ink-muted:         #94A3B8;
+  --cta:               #D97706;
+  --cta-hover:         #B45309;
+  --cta-active:        #92400E;
+  --trust:             #10B981;
+  --trust-bg:          #064E3B;
+  --trust-border:      #047857;
 
   --brand-ink:        #F1F4FF;
   --brand-900:        #DCE6FF;

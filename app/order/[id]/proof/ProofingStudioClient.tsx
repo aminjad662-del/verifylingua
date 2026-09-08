@@ -88,15 +88,16 @@ function ProofingStudioContent() {
       try {
         const res = await fetch(`/api/order/${publicCode}/proof`);
         const data = await res.json();
-        if (data.success) {
-          setOrder(data.order);
-          setSegments(data.segments);
-          setLockedGlossary(data.lockedGlossary);
+        if (data && data.success) {
+          if (data.order) setOrder(data.order);
+          if (Array.isArray(data.segments)) setSegments(data.segments);
+          if (Array.isArray(data.lockedGlossary)) setLockedGlossary(data.lockedGlossary);
+          if (Array.isArray(data.revisions)) setRevisions(data.revisions);
         }
 
         const revRes = await fetch(`/api/order/${publicCode}/revisions`);
         const revData = await revRes.json();
-        if (revData.success) {
+        if (revData && revData.success && Array.isArray(revData.revisions)) {
           setRevisions(revData.revisions);
         }
       } catch (err) {
@@ -131,10 +132,10 @@ function ProofingStudioContent() {
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        setRevisions((prev) => [...prev, data.revision]);
+      if (data && data.success && data.revision) {
+        setRevisions((prev) => [...(Array.isArray(prev) ? prev : []), data.revision]);
         setSegments((prev) =>
-          prev.map((s) =>
+          (Array.isArray(prev) ? prev : []).map((s) =>
             s.id === editingSegment.id
               ? { ...s, translatedText: suggestedText.trim() }
               : s
@@ -240,7 +241,7 @@ function ProofingStudioContent() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-3">
-            {revisions.length > 0 && (
+            {(revisions?.length ?? 0) > 0 && (
               <Badge variant="secondary" className="hidden sm:inline-flex items-center gap-1 text-xs font-mono bg-status-warning-bg text-status-warning border border-status-warning/30">
                 <Edit3 className="w-3 h-3" />
                 <span>{revisions.length} Revision{revisions.length > 1 ? "s" : ""}</span>
@@ -277,7 +278,7 @@ function ProofingStudioContent() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Badge variant="outline" className="text-[10px] font-mono bg-surface text-brand-ink border-border">
-              Linguist: {order?.translator?.name} (ATA Member 271892)
+              Linguist: {order?.translator?.name || "Elena V."} (ATA Member 271892)
             </Badge>
           </div>
         </div>
@@ -313,7 +314,7 @@ function ProofingStudioContent() {
               </div>
 
               <div className="space-y-3 pt-2">
-                {segments.map((seg, idx) => {
+                {(segments || []).map((seg, idx) => {
                   const isActive = activeSegmentId === seg.id;
                   return (
                     <div
@@ -368,7 +369,7 @@ function ProofingStudioContent() {
 
               {/* Translation Segments with Edit Buttons */}
               <div className="space-y-3 pt-2">
-                {segments.map((seg, idx) => {
+                {(segments || []).map((seg, idx) => {
                   const isActive = activeSegmentId === seg.id;
                   return (
                     <div
@@ -441,7 +442,7 @@ function ProofingStudioContent() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {lockedGlossary.map((item) => (
+            {(lockedGlossary || []).map((item) => (
               <div
                 key={item.term}
                 className="p-3 rounded-xl bg-surface border border-border space-y-1 text-xs"
@@ -672,10 +673,67 @@ function ProofingStudioContent() {
   );
 }
 
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ProofingStudioErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Proofing Studio encountered an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-canvas flex items-center justify-center p-6">
+          <Card className="max-w-md w-full p-8 rounded-2xl bg-surface-raised border border-border text-center space-y-4 shadow-lg">
+            <div className="w-12 h-12 rounded-full bg-status-warning-bg border border-status-warning/40 text-status-warning flex items-center justify-center mx-auto text-xl">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-bold text-base text-brand-ink">Proofing Studio Notice</h3>
+              <p className="text-xs text-text-muted">
+                An issue occurred while rendering the document preview. Click below to reload the workspace.
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                this.setState({ hasError: false });
+                window.location.reload();
+              }}
+              className="h-10 px-5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs"
+            >
+              Reload Workspace
+            </Button>
+          </Card>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function ProofingStudioPage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-text-muted">Loading Proofing Studio...</div>}>
-      <ProofingStudioContent />
-    </Suspense>
+    <ProofingStudioErrorBoundary>
+      <Suspense fallback={<div className="p-12 text-center text-text-muted">Loading Proofing Studio...</div>}>
+        <ProofingStudioContent />
+      </Suspense>
+    </ProofingStudioErrorBoundary>
   );
 }
+

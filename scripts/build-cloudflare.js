@@ -124,6 +124,20 @@ if (!fs.existsSync(path.join(DIST_DIR, '404.html'))) {
   fs.writeFileSync(path.join(DIST_DIR, '404.html'), notFoundHtml, 'utf8');
 }
 
+// Ensure icon.svg is present in dist
+const iconCandidates = [
+  path.join(NEXT_DIR, 'server', 'app', 'icon.svg.body'),
+  path.join(PUBLIC_DIR, 'icon.svg'),
+  path.join(ROOT_DIR, 'app', 'icon.svg'),
+];
+for (const iconPath of iconCandidates) {
+  if (fs.existsSync(iconPath)) {
+    fs.copyFileSync(iconPath, path.join(DIST_DIR, 'icon.svg'));
+    console.log(`✅ Ensured dist/icon.svg from ${path.basename(iconPath)}`);
+    break;
+  }
+}
+
 // 5. Generate _routes.json for Cloudflare Pages
 const routesConfig = {
   version: 1,
@@ -131,14 +145,12 @@ const routesConfig = {
   exclude: [
     '/_next/static/*',
     '/icon.svg',
+    '/favicon.ico',
     '/robots.txt',
     '/sitemap.xml',
-    '/*.svg',
-    '/*.png',
-    '/*.jpg',
-    '/*.ico',
-    '/*.webp',
-    '/*.avif'
+    '/images/*',
+    '/textures/*',
+    '/fonts/*'
   ]
 };
 fs.writeFileSync(path.join(DIST_DIR, '_routes.json'), JSON.stringify(routesConfig, null, 2), 'utf8');
@@ -210,6 +222,15 @@ export default {
     let response = await env.ASSETS.fetch(request);
     if (response.status !== 404) {
       return response;
+    }
+
+    // Direct asset fallback without query parameters (e.g. /icon.svg?hash)
+    if (pathname === '/icon.svg' || pathname === '/favicon.ico') {
+      const cleanUrl = new URL(pathname, request.url);
+      response = await env.ASSETS.fetch(new Request(cleanUrl, request));
+      if (response.status !== 404) {
+        return response;
+      }
     }
 
     // 4. Clean URL Resolution (e.g. /pricing -> /pricing/index.html or /pricing.html)
@@ -346,6 +367,78 @@ async function handleApiRequest(request, pathname, env) {
         { term: 'MARCH 14, 1994', kind: 'Date of Birth', reason: 'USCIS Standard MM/DD/YYYY format verified', verifiedInTranslation: true }
       ],
       revisions: []
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Order Revisions API
+  if (pathname.includes('/revisions')) {
+    if (method === 'POST') {
+      let body = {};
+      try { body = await request.json(); } catch {}
+      const newRevision = {
+        id: 'rev-' + Math.random().toString(36).substring(2, 9),
+        segmentId: body.segmentId || 'seg-1',
+        originalText: body.originalText || '',
+        suggestedText: (body.suggestedText || '').trim(),
+        reason: body.reason || 'Matches Foreign Passport / USCIS Entry',
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+      };
+      return new Response(JSON.stringify({
+        success: true,
+        revision: newRevision,
+        totalPending: 1
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      revisions: []
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Order Approval API
+  if (pathname.includes('/approve')) {
+    const verifyCode = 'VL-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    return new Response(JSON.stringify({
+      success: true,
+      publicCode: 'VL-DEMO1',
+      verifyCode: verifyCode,
+      status: 'CERTIFIED',
+      downloadUrl: \`/api/certificate/\${verifyCode}/download\`,
+      verificationUrl: \`/verify/\${verifyCode}\`
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Certificate Download API
+  if (pathname.includes('/certificate/') && pathname.includes('/download')) {
+    return new Response('%PDF-1.4 Mock Certified Translation Packet VerifyLingua USCIS Compliant', {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="VerifyLingua-Certified-Translation.pdf"',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+  }
+
+  // Translator Workbench save API
+  if (pathname.includes('/translator/workbench/') && method === 'POST') {
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Draft changes saved successfully'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
