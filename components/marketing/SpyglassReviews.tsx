@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Star, ShieldCheck, CheckCircle2, Quote } from "lucide-react";
+import { Star, ShieldCheck, Quote } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Review {
@@ -56,26 +56,28 @@ export function SpyglassReviews() {
 
   return (
     <section className="relative py-20 sm:py-28 bg-canvas border-b border-border/40">
-      <div className="max-w-7xl mx-auto px-6 space-y-14">
-        {/* Section Header */}
+      <div className="max-w-7xl mx-auto px-6 space-y-12">
+        {/* Section Header matching 'Creative strategists already love Spyglass.' */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border bg-surface text-brand-ink text-xs font-mono font-bold uppercase tracking-wider">
             <ShieldCheck className="w-3.5 h-3.5 text-brand-500" />
             <span>48,000+ Certified Pages Delivered</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-brand-ink font-display">
-            Join hundreds of immigration law firms <br className="hidden sm:inline" />
-            & applicants who rely on VerifyLingua
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-brand-ink font-display leading-[1.08]">
+            Immigration attorneys & filers already <br className="hidden sm:inline" />
+            <span className="font-serif italic font-normal text-brand-900">
+              love VerifyLingua.
+            </span>
           </h2>
 
-          <p className="text-base sm:text-lg text-text-muted">
+          <p className="text-sm sm:text-base text-text-muted">
             0% USCIS rejection rate across more than 90 languages and 140 official document formats.
           </p>
         </div>
 
         {/* 3 Dark Elevated Review Cards Side-by-Side */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
           {REVIEWS.map((review) => (
             <div
               key={review.id}
@@ -125,7 +127,7 @@ export function SpyglassReviews() {
               type="button"
               onClick={() => setActiveDot(idx)}
               className={cn(
-                "h-2 rounded-full transition-all duration-200",
+                "h-2 rounded-full transition-all duration-200 cursor-pointer",
                 activeDot === idx
                   ? "w-6 bg-brand-ink"
                   : "w-2 bg-border-strong hover:bg-brand-ink/40"

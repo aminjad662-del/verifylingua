@@ -59,7 +59,12 @@
   --font-heading: var(--font-basier-square), "Basier Square", "BasierSquare", sans-serif;
   --font-body: var(--font-san-francisco), "San Francisco", "SF Pro Text", "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-sans: var(--font-san-francisco), "San Francisco", "SF Pro Text", "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", "Instrument Serif", "New York", "Didot", "Georgia", "Cambria", serif;
   --font-mono: "Basier Square Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.font-serif {
+  font-family: var(--font-serif), Georgia, Cambria, "Times New Roman", serif !important;
 }
 
 /* Basier Square: loads authentic licensed font files and OS installations (§3.3.1, §3.3.2) */
@@ -464,3 +469,25 @@ input, textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* Continuous Marquee Animation for Legal Document Ticker */
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 42s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+

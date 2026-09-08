@@ -137,11 +137,11 @@ export function Header() {
           <MagneticButton>
             <Button
               asChild
-              className="hidden sm:inline-flex gap-2 rounded-xl h-11 px-5 text-sm font-bold shadow-sm active:scale-[0.97] transition-all duration-200"
+              className="hidden sm:inline-flex gap-2 rounded-full h-10 px-5 text-xs sm:text-sm font-bold bg-brand-ink hover:bg-brand-900 text-white shadow-sm active:scale-[0.97] transition-all duration-200"
             >
               <Link href="/order/triage">
                 Start translation
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </Button>
           </MagneticButton>

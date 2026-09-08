@@ -5,239 +5,198 @@ import Link from "next/link";
 import {
   ShieldCheck,
   CheckCircle2,
-  FileCheck,
-  QrCode,
   Stamp,
   Award,
-  Lock,
   ArrowRight,
-  Layers,
-  Search,
+  FileText,
+  BadgeCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const SAMPLE_DOCS = [
+  {
+    id: "sample-1",
+    tag: "CIVIL STATUS",
+    title: "Mexican Birth Certificate",
+    origin: "CDMX Registro Civil No. 49102",
+    pair: "ES → EN",
+    badge: "USCIS 8 CFR Ready",
+    seal: "REGISTRO CIVIL SELLO",
+    flag: "🇲🇽",
+    visual: (
+      <div className="w-full h-10 rounded border border-amber-600/20 bg-amber-50/60 p-2 flex items-center justify-between text-[9px] font-mono text-amber-900">
+        <span className="font-bold truncate">ACTA DE NACIMIENTO</span>
+        <span className="text-[8px] px-1 py-0.5 rounded bg-amber-100 text-amber-800 font-bold shrink-0">
+          SEAL OK
+        </span>
+      </div>
+    ),
+  },
+  {
+    id: "sample-2",
+    tag: "ACADEMIC",
+    title: "German University Transcript",
+    origin: "LMU München Prüfungsamt",
+    pair: "DE → EN",
+    badge: "WES & ECE Approved",
+    seal: "PRÜFUNGSAMT SIEGEL",
+    flag: "🇩🇪",
+    visual: (
+      <div className="w-full h-10 rounded border border-blue-600/20 bg-blue-50/60 p-2 flex items-center justify-between text-[9px] font-mono text-blue-900">
+        <span className="font-bold truncate">ZEUGNIS LMU</span>
+        <span className="text-[8px] px-1 py-0.5 rounded bg-blue-100 text-blue-800 font-bold shrink-0">
+          180 ECTS
+        </span>
+      </div>
+    ),
+  },
+  {
+    id: "sample-3",
+    tag: "JUDICIAL",
+    title: "Ukrainian Divorce Verdict",
+    origin: "Ministry of Justice Kyiv",
+    pair: "UK → EN",
+    badge: "DOJ Court Sworn",
+    seal: "МІНІСТЕРСТВО ЮСТИЦІЇ",
+    flag: "🇺🇦",
+    visual: (
+      <div className="w-full h-10 rounded border border-indigo-600/20 bg-indigo-50/60 p-2 flex items-center justify-between text-[9px] font-mono text-indigo-900">
+        <span className="font-bold truncate">СУДОВЕ РІШЕННЯ</span>
+        <span className="text-[8px] px-1 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold shrink-0">
+          SWORN
+        </span>
+      </div>
+    ),
+  },
+  {
+    id: "sample-4",
+    tag: "VITAL RECORD",
+    title: "French Marriage Certificate",
+    origin: "Mairie de Paris • Cour d'Appel",
+    pair: "FR → EN",
+    badge: "Hague Apostille",
+    seal: "APOSTILLE LA HAYE",
+    flag: "🇫🇷",
+    visual: (
+      <div className="w-full h-10 rounded border border-rose-600/20 bg-rose-50/60 p-2 flex items-center justify-between text-[9px] font-mono text-rose-900">
+        <span className="font-bold truncate">ACTE DE MARIAGE</span>
+        <span className="text-[8px] px-1 py-0.5 rounded bg-rose-100 text-rose-800 font-bold shrink-0">
+          HAGUE 1961
+        </span>
+      </div>
+    ),
+  },
+];
+
 export function SpyglassDeepBento() {
   return (
-    <section className="relative py-24 sm:py-32 bg-brand-ink text-white overflow-hidden border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-6 relative z-10 space-y-16">
-        {/* Section Header matching "Watch. Search. Shoot." */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-brand-300 text-xs font-mono font-bold uppercase tracking-widest">
-            <Layers className="w-3.5 h-3.5 text-brand-300" />
-            <span>Zero Rejection Methodology</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white font-display">
-            Upload. Verify. Certify.
-          </h2>
-
-          <p className="text-base sm:text-lg text-white/70 leading-relaxed max-w-2xl mx-auto">
-            Three precision layers engineered to eliminate USCIS Requests for Evidence (RFEs) and institutional delays.
-          </p>
-        </div>
-
-        {/* 3 Stacked Feature Showcase Blocks inside deep dark container */}
-        <div className="space-y-8">
-          {/* Block 1: Left Text / Right UI Visual (1:1 Layout Preservation) */}
-          <div className="p-8 sm:p-12 rounded-3xl bg-white/5 border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-5 space-y-4">
-              <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-brand-300 uppercase tracking-wider">
-                <FileCheck className="w-4 h-4" />
-                <span>Layer 01 • Structural Mirroring</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                1:1 Layout-Preserving Typesetting
-              </h3>
-              <p className="text-sm sm:text-base text-white/70 leading-relaxed">
-                Adjudicating officers reject translations when the visual structure does not match the foreign original.
-                VerifyLingua mirrors every table, footnote, barcode, and embossed seal position so cross-referencing takes zero cognitive effort.
-              </p>
-              <ul className="space-y-2 text-xs sm:text-sm text-white/80 pt-2 font-medium">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Exact table coordinates, margins, and stamp placements</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Full transcription of smudged or handwritten seal margins</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Standardized [Seal:], [Signature:], and [Barcode:] annotations</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Right Visual: Side-by-Side Document Comparison Mockup */}
-            <div className="lg:col-span-7 bg-brand-900/80 rounded-2xl p-4 sm:p-6 border border-white/10 space-y-4">
-              <div className="flex items-center justify-between text-xs font-mono pb-3 border-b border-white/10 text-white/60">
-                <span className="flex items-center gap-1.5 text-white/90 font-bold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  Live Layout Inspector
+    <section className="relative py-24 sm:py-32 bg-surface border-b border-border/40">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          {/* Left Column: 4-Card Document Grid inside Muted Container matching Spyglass reference */}
+          <div className="lg:col-span-6 order-2 lg:order-1">
+            <div className="p-6 sm:p-8 rounded-3xl bg-surface-raised border border-border/80 shadow-md space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-border text-xs font-mono">
+                <span className="flex items-center gap-2 font-bold text-brand-ink">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Pre-Vetted Legal Document Standards
                 </span>
-                <span>Original (ES) ↔ Translation (EN)</span>
+                <span className="text-text-subtle">85+ Language Pairs</span>
               </div>
 
+              {/* 2x2 Grid of Document Cards with Visual Miniatures */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                {/* Original Document Mockup */}
-                <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-white/50">
-                    <span>ORIGINAL SOURCE</span>
-                    <span className="text-amber-400">CDMX Registro</span>
-                  </div>
-                  <div className="text-xs font-bold text-white/90">
-                    Acta de Nacimiento No. 49102
-                  </div>
-                  <div className="space-y-1 py-1" aria-hidden="true">
-                    <div className="h-1.5 w-full bg-white/15 rounded" />
-                    <div className="h-1.5 w-4/5 bg-white/15 rounded" />
-                    <div className="h-1.5 w-3/4 bg-white/15 rounded" />
-                  </div>
-                  <div className="p-1.5 rounded border border-amber-500/30 bg-amber-950/30 text-[9px] font-mono text-amber-300 flex items-center justify-between">
-                    <span>SELLO DE AGENCIA</span>
-                    <Stamp className="w-3 h-3" />
-                  </div>
-                </div>
+                {SAMPLE_DOCS.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="p-4 rounded-xl bg-surface border border-border/70 hover:border-brand-500/50 transition-all space-y-3 shadow-sm hover:shadow"
+                  >
+                    <div className="flex items-center justify-between text-[9px] font-mono text-text-subtle">
+                      <span className="font-bold text-brand-500 flex items-center gap-1">
+                        <span>{doc.flag}</span>
+                        <span>{doc.tag}</span>
+                      </span>
+                      <span>{doc.pair}</span>
+                    </div>
 
-                {/* Certified Translation Counterpart */}
-                <div className="p-3.5 rounded-xl bg-white/10 border border-brand-500/40 space-y-2 relative">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-brand-300 font-bold">
-                    <span>CERTIFIED ENGLISH</span>
-                    <span className="text-emerald-400">100% Mirror</span>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-brand-ink line-clamp-1">
+                        {doc.title}
+                      </h4>
+                      <p className="text-[10px] text-text-muted truncate">
+                        {doc.origin}
+                      </p>
+                    </div>
+
+                    {doc.visual}
+
+                    <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[9px] font-mono">
+                      <div className="flex items-center gap-1 font-bold text-emerald-700">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span>{doc.badge}</span>
+                      </div>
+                      <Stamp className="w-3 h-3 text-text-subtle" />
+                    </div>
                   </div>
-                  <div className="text-xs font-bold text-white">
-                    Certified Birth Certificate No. 49102
-                  </div>
-                  <div className="space-y-1 py-1" aria-hidden="true">
-                    <div className="h-1.5 w-full bg-brand-300/30 rounded" />
-                    <div className="h-1.5 w-4/5 bg-brand-300/30 rounded" />
-                    <div className="h-1.5 w-3/4 bg-brand-300/30 rounded" />
-                  </div>
-                  <div className="p-1.5 rounded border border-emerald-500/30 bg-emerald-950/30 text-[9px] font-mono text-emerald-300 flex items-center justify-between">
-                    <span>[Official Seal: Civil Registry CDMX]</span>
-                    <CheckCircle2 className="w-3 h-3" />
-                  </div>
-                </div>
+                ))}
+              </div>
+
+              <div className="pt-2 text-[11px] font-mono text-text-muted flex items-center justify-between">
+                <span>All documents delivered with signed certificate & tamper-proof QR.</span>
+                <Link href="/documents" className="text-brand-500 font-bold hover:underline">
+                  View all 140+ →
+                </Link>
               </div>
             </div>
           </div>
 
-          {/* Block 2: Left UI Visual / Right Text (QR Ledger & Chain of Custody) */}
-          <div className="p-8 sm:p-12 rounded-3xl bg-white/5 border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left Visual: Interactive QR & Cryptographic Ledger */}
-            <div className="lg:col-span-7 order-2 lg:order-1 bg-brand-900/80 rounded-2xl p-6 border border-white/10 space-y-4">
-              <div className="flex items-center justify-between text-xs font-mono pb-3 border-b border-white/10 text-white/60">
-                <span className="flex items-center gap-1.5 text-white/90 font-bold">
-                  <QrCode className="w-4 h-4 text-brand-300" />
-                  Consular Ledger Verification Node
+          {/* Right Column: Editorial Text matching Spyglass reference */}
+          <div className="lg:col-span-6 order-1 lg:order-2 space-y-6 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface-raised text-brand-ink text-xs font-mono font-bold tracking-wider">
+              <span className="text-brand-500">02</span>
+              <span>/</span>
+              <span>IMMIGRATION & COURT BENCHMARK</span>
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-brand-ink leading-[1.06] font-display">
+                Sworn certified compliance, <br />
+                <span className="font-serif italic font-normal text-brand-900 block mt-1">
+                  engineered instead of improvised.
                 </span>
-                <span className="text-emerald-400 font-bold">Active & Valid</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-1">
-                  <span className="text-white/40 text-[10px] block">DOCUMENT ID</span>
-                  <span className="text-white font-bold">VL-2026-8941</span>
-                </div>
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-1">
-                  <span className="text-white/40 text-[10px] block">LEDGER HASH</span>
-                  <span className="text-brand-300 font-bold truncate block">
-                    e7a9f...389c
-                  </span>
-                </div>
-                <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-1">
-                  <span className="text-white/40 text-[10px] block">AUDIT STATUS</span>
-                  <span className="text-emerald-400 font-bold">USCIS Pre-Cleared</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70 flex items-center justify-between">
-                <span>Direct portal scan: Instant officer authentication without phone calls.</span>
-                <Link
-                  href="/verify/demo"
-                  className="text-brand-300 hover:text-white font-bold underline text-xs shrink-0"
-                >
-                  Test Verification Node →
-                </Link>
-              </div>
-            </div>
-
-            {/* Right Text */}
-            <div className="lg:col-span-5 order-1 lg:order-2 space-y-4">
-              <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-brand-300 uppercase tracking-wider">
-                <Lock className="w-4 h-4" />
-                <span>Layer 02 • Cryptographic Custody</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                Tamper-Proof QR Verification Ledger
-              </h3>
-              <p className="text-sm sm:text-base text-white/70 leading-relaxed">
-                Every certificate issued carries an immutable digital identifier and dynamic QR code.
-                Consulates, embassies, and USCIS adjudicators scan the QR code to verify the original certified PDF instantly on our public ledger.
+              </h2>
+              <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+                Federal regulations (8 CFR § 204.2) and EOIR immigration courts require sworn translator competency, formal letterheads, and immutable chain-of-custody.
               </p>
-              <ul className="space-y-2 text-xs sm:text-sm text-white/80 pt-2 font-medium">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Public audit portal accessible 24/7/365</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Zero risk of document tampering or altered records</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Block 3: Left Text / Right UI Visual (Sworn ATA Competency & Notarization) */}
-          <div className="p-8 sm:p-12 rounded-3xl bg-white/5 border border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-5 space-y-4">
-              <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-brand-300 uppercase tracking-wider">
-                <Award className="w-4 h-4" />
-                <span>Layer 03 • Legal Sworn Clause</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                Sworn ATA Certificate of Competency
-              </h3>
-              <p className="text-sm sm:text-base text-white/70 leading-relaxed">
-                Federal regulations (8 CFR § 204.2) mandate a sworn statement certifying the translator&apos;s competency in both languages.
-                Every delivery includes a certified letterhead, ATA active member identifier, and optional electronic wet-ink notarization.
-              </p>
-              <div className="pt-2">
-                <Link
-                  href="/order/triage"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-brand-ink text-sm font-bold hover:bg-white/90 transition-colors"
-                >
-                  <span>Start Certified Translation</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
             </div>
 
-            {/* Right Visual: Sworn Certificate Mockup */}
-            <div className="lg:col-span-7 bg-brand-900/80 rounded-2xl p-6 border border-white/10 space-y-4">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                  <span className="text-xs font-mono font-bold text-white">
-                    CERTIFICATION OF TRANSLATOR COMPETENCE
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold">
-                    8 CFR § 204.2 Compliant
-                  </span>
-                </div>
-                <p className="text-xs text-white/80 italic leading-relaxed">
-                  &ldquo;I hereby certify that I am fluent in both Spanish and English, and that the above is a true, accurate, and complete translation of the official document to the best of my knowledge and belief.&rdquo;
-                </p>
-                <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-mono text-white/60">
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-white">VerifyLingua Legal Certification Board</div>
-                    <div className="text-[10px] text-white/40">ATA Corporate Member No. 27194</div>
-                  </div>
-                  <div className="text-right space-y-0.5">
-                    <div className="text-emerald-400 font-bold">E-Notarized</div>
-                    <div className="text-[10px] text-white/40">State of Delaware Reg. No. 5821</div>
-                  </div>
-                </div>
-              </div>
+            <p className="text-sm text-text-muted leading-relaxed">
+              Every VerifyLingua order is routed to an ATA-credentialed professional translator and independently peer-reviewed. Our digital verification ledger provides embassies and adjudicating officers with instant 24/7 online authentication.
+            </p>
+
+            <ul className="space-y-2.5 text-xs sm:text-sm text-brand-ink font-medium pt-2">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>USCIS 8 CFR § 103.2(b)(3) compliant Certificate of Translator Competency</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Optional state-licensed electronic notarization with wet-ink fidelity</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Immutable SHA-256 ledger hash for instant consular fraud verification</span>
+              </li>
+            </ul>
+
+            <div className="pt-3">
+              <Link
+                href="/order/triage"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-brand-ink hover:bg-brand-900 text-white text-sm font-bold shadow transition-all active:scale-95 group"
+              >
+                <span>Start Certified Translation</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
           </div>
         </div>
