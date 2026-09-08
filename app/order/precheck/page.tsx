@@ -17,7 +17,10 @@ import {
   Globe2,
   Briefcase,
   CheckCircle2,
+  Check,
+  ArrowRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const AGENCY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   USCIS: Building2,
@@ -70,17 +73,17 @@ function PreCheckContent() {
       {/* Step Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Badge variant="default" className="text-xs font-mono font-bold">
+          <Badge variant="default" className="text-xs font-mono font-bold bg-ink text-sand">
             Step 2 of 4
           </Badge>
-          <span className="text-xs font-mono text-brand-500 font-bold uppercase tracking-wider">
-            Acceptance Pre-Check Wizard (§2.1)
+          <span className="text-xs font-mono text-cta font-bold uppercase tracking-wider">
+            Configure Receiving Authority (§2.1)
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">
           Who is Receiving This Document?
         </h1>
-        <p className="text-sm sm:text-base text-text-muted max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base text-ink-muted max-w-3xl leading-relaxed">
           Different institutions have distinct legal certification requirements. We pre-configure your order
           to match your receiving authority&apos;s exact compliance rules.
         </p>
@@ -98,30 +101,40 @@ function PreCheckContent() {
                   key={party.id}
                   type="button"
                   onClick={() => setSelectedAgencyId(party.id)}
-                  className={`p-5 rounded-2xl border text-left transition-all flex flex-col justify-between space-y-4 ${
+                  className={cn(
+                    "relative p-5 rounded-2xl text-left transition-all flex flex-col justify-between space-y-4 cursor-pointer",
                     isSelected
-                      ? "border-brand-500 bg-brand-50/70 shadow-md ring-2 ring-brand-500/20"
-                      : "border-border bg-surface-raised hover:border-brand-300 hover:bg-surface"
-                  }`}
+                      ? "border-[2.5px] border-ink bg-surface-raised shadow-lg ring-1 ring-ink/10 -translate-y-1"
+                      : "border border-border/80 bg-surface-raised/70 hover:border-ink/30 hover:bg-surface-raised"
+                  )}
                 >
+                  {isSelected && (
+                    <div className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-trust text-white flex items-center justify-center shadow-md ring-2 ring-surface-raised z-10">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                  )}
                   <div className="space-y-3">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
                         isSelected
-                          ? "bg-brand-500 text-white"
-                          : "bg-surface text-brand-500 border border-border"
-                      }`}
+                          ? "bg-ink text-sand shadow-sm"
+                          : "bg-surface text-ink-muted border border-border"
+                      )}
                     >
                       <Icon className="w-5 h-5" />
                     </div>
-                    <h3 className="text-base font-bold text-brand-ink leading-snug">
+                    <h3 className="text-base font-bold text-ink leading-snug">
                       {party.name}
                     </h3>
                   </div>
 
                   <Badge
                     variant={isSelected ? "default" : "secondary"}
-                    className="text-[10px] py-0 px-2 self-start"
+                    className={cn(
+                      "text-[10px] py-0 px-2 self-start",
+                      isSelected ? "bg-ink text-sand" : "text-ink-muted"
+                    )}
                   >
                     {party.badgeText}
                   </Badge>
@@ -130,45 +143,45 @@ function PreCheckContent() {
             })}
           </div>
 
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border-2 border-brand-100 shadow-sm space-y-6">
+          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="space-y-1">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-500">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-cta">
                   Compliance Spec Sheet
                 </span>
-                <h3 className="text-xl font-bold text-brand-ink">
+                <h3 className="text-xl font-bold text-ink font-serif">
                   Requirements for {selectedAgency.name}
                 </h3>
               </div>
-              <Badge variant="success" className="text-xs py-1 px-3">
+              <Badge variant="success" className="text-xs py-1 px-3 bg-trust-bg text-trust border border-trust-border">
                 Pre-Configured
               </Badge>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div className="p-4 rounded-2xl bg-surface border border-border space-y-1">
-                <span className="text-xs font-semibold text-text-muted block">
+                <span className="text-xs font-semibold text-ink-muted block">
                   Certification Format
                 </span>
-                <p className="font-bold text-brand-ink flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-status-success" />
+                <p className="font-bold text-ink flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-trust" />
                   Certified Accuracy Certificate (8 CFR 103.2)
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-surface border border-border space-y-1">
-                <span className="text-xs font-semibold text-text-muted block">
+                <span className="text-xs font-semibold text-ink-muted block">
                   Notarization Jurat
                 </span>
-                <p className="font-bold text-brand-ink flex items-center gap-1.5">
+                <p className="font-bold text-ink flex items-center gap-1.5">
                   {selectedAgency.requiresNotarization ? (
                     <>
-                      <CheckCircle2 className="w-4 h-4 text-brand-500" />
+                      <CheckCircle2 className="w-4 h-4 text-cta" />
                       Required (Added to order)
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4 text-status-success" />
+                      <CheckCircle2 className="w-4 h-4 text-trust" />
                       Not Required (Standard certified suffices)
                     </>
                   )}
@@ -176,29 +189,42 @@ function PreCheckContent() {
               </div>
 
               <div className="p-4 rounded-2xl bg-surface border border-border space-y-1">
-                <span className="text-xs font-semibold text-text-muted block">
+                <span className="text-xs font-semibold text-ink-muted block">
                   Seal & Watermark Translation
                 </span>
-                <p className="font-bold text-brand-ink flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-status-success" />
+                <p className="font-bold text-ink flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-trust" />
                   100% Mirror-Formatted
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-surface border border-border space-y-1">
-                <span className="text-xs font-semibold text-text-muted block">
+                <span className="text-xs font-semibold text-ink-muted block">
                   Verification Method
                 </span>
-                <p className="font-bold text-brand-ink flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-status-success" />
+                <p className="font-bold text-ink flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-trust" />
                   Public Cryptographic QR Link
                 </p>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-lavender-50 border border-border text-xs text-text-muted leading-relaxed">
-              <strong className="text-brand-ink font-bold">Summary Specification:</strong>{" "}
+            <div className="p-4 rounded-2xl bg-sand border border-border/80 text-xs text-ink-muted leading-relaxed">
+              <strong className="text-ink font-bold">Summary Specification:</strong>{" "}
               {selectedAgency.specSummary}
+            </div>
+
+            {/* Proximity Principle Action Button */}
+            <div className="pt-2 flex justify-end">
+              <Button
+                variant="cta"
+                size="lg"
+                onClick={handleContinue}
+                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-cta hover:bg-cta-hover active:bg-cta-active text-white font-bold gap-2 shadow-md transition-all active:scale-[0.98]"
+              >
+                <span>Continue to Lock</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </div>
           </Card>
         </div>
@@ -208,7 +234,7 @@ function PreCheckContent() {
           <StickyPriceBar
             pricing={pricing}
             onNext={handleContinue}
-            nextLabel="Continue to Name Lock"
+            nextLabel="Continue to Lock"
           />
         </div>
       </div>

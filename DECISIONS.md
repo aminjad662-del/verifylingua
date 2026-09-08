@@ -72,3 +72,27 @@ This log records every non-obvious decision made during the elevation and produc
   4. **Zero-Timeout Asynchronous State Machine**:
      - Dispatches processing to an async background job with discrete milestone stages (`queued` -> `extracting` -> `translating` -> `reconstructing` -> `ready`). Clients poll `GET /api/translate/status/[jobId]` without long-running HTTP connection timeouts.
 
+---
+
+### Decision 7: Client Tracker State Machine Overhaul, Notarial Palette Enforcement, and Triage Proximity Flow
+- **Context**: The order tracking screen previously presented an overwhelming array of open event logs, chats, and ambiguous buttons, creating high cognitive load and trapping users when their draft was ready for review. In addition, generic SaaS blue buttons failed to convey the seriousness of notarial and legal certification.
+- **Architectural & Design Implementation**:
+  1. **Strict Notarial Legal Palette Enforcement**:
+     - Eliminated generic blue (`#4F46E5`) for primary actions across the funnel and tracking flows.
+     - Added dedicated tokens:
+       - `--cta: #B45309` (Amber/Burnt Orange): strictly reserved for the next single logical step the user must take.
+       - `--sand: #FAF7F2` (Warm Physical Paper): foundational background for documents and workspace.
+       - `--ink: #0A2540` (Deep Navy): authoritative text, card borders, and display elements.
+       - `--trust: #0F7B4F` (Forest Green): certified stamps, verified badges, and quality gates.
+  2. **Tracker State Machine Redesign (`STATE A` vs `STATE B`)**:
+     - **STATE A (TRANSLATING - Read-Only Mode)**: Collapses the lengthy event logs and live translator thread into an accordion (`Audit Trail & Translator Messaging Thread`) closed by default. Displays a central aesthetic pulsing radar and progress bar: *"Your certified linguist Elena V. is actively translating your document."* Eliminates confusing CTAs in favor of an explicit "No action required from you right now" guarantee.
+     - **STATE B (DRAFT READY - Action Required Mode)**: Shifts the entire page atmosphere with a darkened paper focus overlay (`bg-sand-warm/70`), elevating an unmissable amber hero spotlight with a prominent CTA: **`Action Required: Review & Approve Translation`** linking directly to the side-by-side Proofing Studio (`/order/[id]/proof`).
+     - **Framer Motion Layout Transitions**: Smooth spring physics transition between `TRANSLATING` and `DRAFT_READY` states without sudden jumps.
+  3. **Triage Proximity Principle (Upload Step)**:
+     - When AI quality triage flags an anomaly (e.g. flash reflection or glare) requiring user confirmation, the primary "Continue to Configure" button is dynamically anchored directly below the checkbox confirmation rather than stranded in the right sidebar.
+  4. **Pronounced Active State for Receiving Authority Selection (Configure Step)**:
+     - Authority cards (USCIS, Court, DMV, etc.) feature an active `--ink` 2.5px border, subtle elevation lift (`-translate-y-1`), elevated shadow, and an active `--trust` checkmark chip.
+  5. **Funnel Stepper Alignment**:
+     - Standardized global order stepper in `app/order/layout.tsx` to strictly match the actual flow: **Triage -> Configure -> Lock -> Checkout**.
+
+

@@ -19,6 +19,8 @@ const buttonVariants = cva(
           "bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:scale-[0.985] group",
         primary:
           "bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:scale-[0.985] group",
+        cta:
+          "bg-cta text-white shadow-md hover:bg-cta-hover active:bg-cta-active active:scale-[0.985] group font-semibold",
         secondary:
           "bg-canvas text-brand-ink border border-border-strong hover:bg-surface-sunken active:scale-[0.985]",
         outline:

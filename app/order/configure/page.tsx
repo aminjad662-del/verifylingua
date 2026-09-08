@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import {
   Globe2,
   Calendar,
   User,
+  ArrowRight,
 } from "lucide-react";
 
 function ConfigureContent() {
@@ -84,17 +86,17 @@ function ConfigureContent() {
       {/* Step Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Badge variant="default" className="text-xs font-mono font-bold">
+          <Badge variant="default" className="text-xs font-mono font-bold bg-ink text-sand">
             Step 3 of 4
           </Badge>
-          <span className="text-xs font-mono text-brand-500 font-bold uppercase tracking-wider">
-            Language & Name Consistency Lock (§2.3)
+          <span className="text-xs font-mono text-cta font-bold uppercase tracking-wider">
+            Name &amp; Language Lock (§2.3)
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight font-display">
-          Lock In Passport Spellings & Options
+        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">
+          Lock In Passport Spellings &amp; Options
         </h1>
-        <p className="text-sm sm:text-base text-ink-soft max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base text-ink-muted max-w-3xl leading-relaxed">
           USCIS rejects translations when foreign names differ by even one letter from your passport.
           We lock your exact transliteration into the translator workspace to prevent silent RFEs.
         </p>
@@ -104,22 +106,22 @@ function ConfigureContent() {
         {/* Left Column: Form Controls */}
         <div className="lg:col-span-8 space-y-6">
           {/* Language Pair Selector */}
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border space-y-4">
-            <h3 className="text-lg font-bold text-brand-ink flex items-center gap-2">
-              <Globe2 className="w-5 h-5 text-brand-500" />
+          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 space-y-4">
+            <h3 className="text-lg font-bold text-ink flex items-center gap-2 font-display">
+              <Globe2 className="w-5 h-5 text-cta" />
               Language Pair
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="configure-source-lang" className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                <label htmlFor="configure-source-lang" className="text-xs font-bold uppercase tracking-wider text-ink-muted">
                   Source Language (Document)
                 </label>
                 <select
                   id="configure-source-lang"
                   value={sourceLang}
                   onChange={(e) => setSourceLang(e.target.value)}
-                  className="w-full h-12 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full h-12 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-cta"
                 >
                   {POPULAR_LANGUAGES.map((lang) => (
                     <option key={lang.code} value={lang.code}>
@@ -130,14 +132,14 @@ function ConfigureContent() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="configure-target-lang" className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                <label htmlFor="configure-target-lang" className="text-xs font-bold uppercase tracking-wider text-ink-muted">
                   Target Language (Certified Translation)
                 </label>
                 <select
                   id="configure-target-lang"
                   value={targetLang}
                   onChange={(e) => setTargetLang(e.target.value)}
-                  className="w-full h-12 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full h-12 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-cta"
                 >
                   <option value="en">English (USCIS / Standard)</option>
                   {POPULAR_LANGUAGES.filter((l) => l.code !== "en").map((lang) => (
@@ -151,28 +153,28 @@ function ConfigureContent() {
           </Card>
 
           {/* Name & Date Consistency Lock Card (§2.3) */}
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border-2 border-brand-100 shadow-sm space-y-6">
+          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-brand-500" />
-                  <h3 className="text-lg font-bold text-brand-ink">
-                    Passport Name & Date Consistency Lock
+                  <Lock className="w-5 h-5 text-cta" />
+                  <h3 className="text-lg font-bold text-ink font-serif">
+                    Passport Name &amp; Date Consistency Lock
                   </h3>
                 </div>
-                <p className="text-xs text-text-muted">
+                <p className="text-xs text-ink-muted">
                   Hard-locked glossary terms that the translator cannot deviate from.
                 </p>
               </div>
-              <Badge variant="default" className="text-xs py-0.5">
+              <Badge variant="default" className="text-xs py-0.5 bg-ink text-sand">
                 RFE Prevention
               </Badge>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label htmlFor="primary-passport-name" className="text-xs font-bold uppercase tracking-wider text-brand-ink flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-brand-500" />
+                <label htmlFor="primary-passport-name" className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-cta" />
                   Applicant Full Name (Exact Passport Spelling)
                 </label>
                 <Input
@@ -182,14 +184,14 @@ function ConfigureContent() {
                   onChange={(e) => setPrimaryName(e.target.value)}
                   className="font-medium"
                 />
-                <p className="text-[11px] text-text-muted">
+                <p className="text-[11px] text-ink-muted">
                   Copy letter-for-letter from machine-readable passport zone to prevent government mismatch.
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="parent-passport-name" className="text-xs font-bold uppercase tracking-wider text-brand-ink flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-brand-500" />
+                <label htmlFor="parent-passport-name" className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-cta" />
                   Parent / Spouse / Secondary Name (Optional)
                 </label>
                 <Input
@@ -202,15 +204,15 @@ function ConfigureContent() {
               </div>
 
               <div className="space-y-1.5 pt-2">
-                <label htmlFor="date-format-select" className="text-xs font-bold uppercase tracking-wider text-brand-ink flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-brand-500" />
+                <label htmlFor="date-format-select" className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-cta" />
                   Target Date Format Preference
                 </label>
                 <select
                   id="date-format-select"
                   value={dateFormat}
                   onChange={(e) => setDateFormat(e.target.value)}
-                  className="w-full h-12 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full h-12 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-cta"
                 >
                   <option value="MM/DD/YYYY">MM/DD/YYYY (US Standard: e.g. 09/24/1992)</option>
                   <option value="DD/MM/YYYY">DD/MM/YYYY (International: e.g. 24/09/1992)</option>
@@ -223,10 +225,10 @@ function ConfigureContent() {
           {/* Add-On Toggle Rows (§5.2) */}
           <div className="space-y-4">
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-brand-ink">
+              <h3 className="text-lg font-bold text-ink font-display">
                 Recommended Add-Ons
               </h3>
-              <p className="text-xs text-text-muted">
+              <p className="text-xs text-ink-muted">
                 Select additional certifications required for your legal or physical submission.
               </p>
             </div>
@@ -269,6 +271,19 @@ function ConfigureContent() {
                 checked={needsApostille}
                 onCheckedChange={setNeedsApostille}
               />
+            </div>
+
+            {/* Proximity Principle Action Button */}
+            <div className="pt-4 flex justify-end">
+              <Button
+                variant="cta"
+                size="lg"
+                onClick={handleContinue}
+                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-cta hover:bg-cta-hover active:bg-cta-active text-white font-bold gap-2 shadow-md transition-all active:scale-[0.98]"
+              >
+                <span>Continue to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>

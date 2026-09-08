@@ -2,22 +2,34 @@
 
 import * as React from "react";
 import { Suspense } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   ShieldCheck,
-  QrCode,
-  MessageSquare,
-  Send,
-  ExternalLink,
+  CheckCircle2,
+  AlertTriangle,
   FileText,
   Lock,
   Download,
+  ExternalLink,
+  QrCode,
+  MessageSquare,
+  Send,
+  ChevronDown,
+  Clock,
+  ArrowRight,
+  Check,
+  FileClock,
+  Eye,
 } from "lucide-react";
+
+type TrackerStatus = "TRANSLATING" | "DRAFT_READY" | "CERTIFIED";
 
 interface OrderEventItem {
   id: string;
@@ -37,19 +49,35 @@ interface MessageItem {
 
 function OrderTrackingContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const publicCode = (params.id as string) || "VL-DEMO1";
 
-  const [order] = React.useState<any>({
+  // State Machine: TRANSLATING (State A) or DRAFT_READY (State B - Action Required)
+  const initialStatusParam = searchParams.get("state")?.toUpperCase();
+  const [trackerStatus, setTrackerStatus] = React.useState<TrackerStatus>(
+    initialStatusParam === "DRAFT_READY" || initialStatusParam === "READY"
+      ? "DRAFT_READY"
+      : initialStatusParam === "CERTIFIED"
+      ? "CERTIFIED"
+      : "TRANSLATING"
+  );
+
+  // Accordion state: Hide massive logs & chat by default in State A & B
+  const [isLogsAccordionOpen, setIsLogsAccordionOpen] = React.useState(false);
+
+  const [order] = React.useState({
     publicCode,
-    status: "TRANSLATING",
     sourceLang: "Spanish",
     targetLang: "English",
     serviceType: "CERTIFIED",
+    documentName: "Acta_de_Nacimiento_Certified.pdf",
+    checksum: "SHA-256: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
     pageCount: 1,
     total: 24.95,
     promisedAtFormatted: "Tomorrow at 9:00 AM EST",
     translator: {
       name: "Elena V.",
+      initials: "EV",
       languages: ["Spanish", "English"],
       credentials: "ATA Member No. 271892 • Certified Legal Translator",
     },
@@ -64,16 +92,23 @@ function OrderTrackingContent() {
       {
         id: "ev-2",
         type: "ASSIGNED",
-        message: "Assigned to ATA-certified native translator Elena V. Source documents decrypted.",
+        message: "Assigned to ATA-certified native legal linguist Elena V. Source documents decrypted.",
         actor: "SYSTEM",
         createdAt: "Today at 2:18 PM",
       },
       {
         id: "ev-3",
         type: "TRANSLATING",
-        message: "Translation in progress. Passport name lock terms validated in workspace.",
+        message: "Translation in progress. Passport name lock terms validated in translator workbench.",
         actor: "TRANSLATOR: Elena V.",
         createdAt: "Today at 2:30 PM",
+      },
+      {
+        id: "ev-4",
+        type: "DRAFT_COMPLETED",
+        message: "Translation draft completed. Customer proofing review dispatched.",
+        actor: "TRANSLATOR: Elena V.",
+        createdAt: "Today at 3:12 PM",
       },
     ],
   });
@@ -90,7 +125,7 @@ function OrderTrackingContent() {
       id: "m-2",
       senderType: "TRANSLATOR",
       senderName: "Elena V. (Translator)",
-      body: "Hello! I have reviewed your document scan and verified all official stamps. Translation is proceeding smoothly and will be submitted for QA shortly.",
+      body: "Hello! I have reviewed your document scan and verified all official stamps. The translation is proceeding smoothly in strict compliance with USCIS 8 CFR 103.2.",
       createdAt: "2:32 PM",
     },
   ]);
@@ -101,7 +136,7 @@ function OrderTrackingContent() {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    const msg: MessageItem = {
+    const userMsg: MessageItem = {
       id: `m-${Date.now()}`,
       senderType: "CUSTOMER",
       senderName: "You",
@@ -109,7 +144,7 @@ function OrderTrackingContent() {
       createdAt: "Just now",
     };
 
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [...prev, userMsg]);
     setNewMessage("");
 
     setTimeout(() => {
@@ -119,95 +154,404 @@ function OrderTrackingContent() {
           id: `m-rep-${Date.now()}`,
           senderType: "TRANSLATOR",
           senderName: "Elena V. (Translator)",
-          body: "Thank you for the message! I've noted your update and it is incorporated into the draft.",
+          body: "Thank you for reaching out! I have verified your note and it is reflected in the certified draft.",
           createdAt: "Just now",
         },
       ]);
-    }, 1500);
+    }, 1200);
   };
 
   const TRACKER_STEPS = [
     { key: "RECEIVED", label: "Received", done: true },
     { key: "TRIAGED", label: "AI Triaged", done: true },
     { key: "ASSIGNED", label: "Assigned", done: true },
-    { key: "TRANSLATING", label: "Translating", done: true, current: true },
-    { key: "QA", label: "USCIS QA Check", done: false },
-    { key: "CERTIFIED", label: "Certified & QR Issued", done: false },
+    {
+      key: "TRANSLATING",
+      label: "Translating",
+      done: trackerStatus !== "TRANSLATING",
+      current: trackerStatus === "TRANSLATING",
+    },
+    {
+      key: "DRAFT_READY",
+      label: "Draft Review",
+      done: trackerStatus === "CERTIFIED",
+      current: trackerStatus === "DRAFT_READY",
+      actionRequired: trackerStatus === "DRAFT_READY",
+    },
+    {
+      key: "CERTIFIED",
+      label: "Certified & Sealed",
+      done: trackerStatus === "CERTIFIED",
+      current: trackerStatus === "CERTIFIED",
+    },
     { key: "DELIVERED", label: "Delivered", done: false },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Top Banner with Public Code and Status */}
-      <div className="p-6 md:p-8 rounded-[28px] bg-gradient-panel border-2 border-brand-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <motion.div
+      layout
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className={cn(
+        "space-y-8 transition-colors duration-500 rounded-3xl p-2 sm:p-4",
+        trackerStatus === "DRAFT_READY" ? "bg-sand-warm/70" : "bg-transparent"
+      )}
+    >
+      {/* State Machine Simulator Bar for Testing & Autonomous Verification */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-surface-raised border border-border/80 text-xs shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-trust animate-pulse shrink-0" />
+          <span className="font-mono text-ink font-bold text-[11px] uppercase tracking-wider">
+            Tracker State Machine:
+          </span>
+          <span className="text-ink-muted text-[11px]">
+            {trackerStatus === "TRANSLATING"
+              ? "State A (Read-Only Mode)"
+              : "State B (Action Required: Draft Ready)"}
+          </span>
+        </div>
+
+        <div className="inline-flex p-1 rounded-xl bg-sand border border-border/80 gap-1 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setTrackerStatus("TRANSLATING")}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none",
+              trackerStatus === "TRANSLATING"
+                ? "bg-ink text-sand shadow-sm"
+                : "text-ink-muted hover:text-ink"
+            )}
+          >
+            State A: Translating
+          </button>
+          <button
+            type="button"
+            onClick={() => setTrackerStatus("DRAFT_READY")}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none",
+              trackerStatus === "DRAFT_READY"
+                ? "bg-cta text-white shadow-sm ring-2 ring-cta/30"
+                : "text-ink-muted hover:text-ink"
+            )}
+          >
+            State B: Draft Ready (Action Required)
+          </button>
+        </div>
+      </div>
+
+      {/* Top Banner with Public Order ID and High-Level Status */}
+      <div className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-500 bg-surface-raised px-3 py-1 rounded-full border border-brand-100">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-cta bg-sand px-3 py-1 rounded-full border border-border/80">
               Live Order Tracker (§2.5)
             </span>
-            <span className="text-sm font-mono font-black text-brand-ink">
+            <span className="text-sm font-mono font-black text-ink">
               {publicCode}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-brand-ink tracking-tight">
-            Translation in Progress — In Good Hands
+
+          <h1 className="text-2xl sm:text-3xl font-black text-ink tracking-tight font-serif">
+            {trackerStatus === "DRAFT_READY"
+              ? "Draft Completed — Action Required"
+              : "Translation in Progress — In Certified Hands"}
           </h1>
-          <p className="text-xs sm:text-sm text-text-muted">
-            Promised delivery: <strong className="text-brand-ink font-bold">{order.promisedAtFormatted}</strong> (Guaranteed)
+
+          <p className="text-xs sm:text-sm text-ink-muted">
+            Promised delivery: <strong className="text-ink font-bold">{order.promisedAtFormatted}</strong> (100% USCIS Acceptance Guaranteed)
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" asChild size="sm" className="gap-2 rounded-xl">
+          <Button variant="outline" asChild size="sm" className="gap-2 rounded-xl text-ink border-border hover:bg-sand">
             <Link href={`/verify/${publicCode}`}>
-              <QrCode className="w-4 h-4 text-brand-500" />
-              Preview Public Verification
+              <QrCode className="w-4 h-4 text-cta" />
+              <span>Public Verification QR</span>
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* Proofing Studio Callout Card */}
-      <div className="p-6 md:p-8 rounded-[28px] bg-brand-50/80 border-2 border-brand-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-brand-200 text-xs font-mono font-bold text-brand-700">
-            <span className="w-2 h-2 rounded-full bg-status-success inline-block animate-pulse" />
-            <span>Interactive Proofing Studio Ready</span>
-          </div>
-          <h3 className="text-lg font-bold text-brand-ink font-display">
-            Inspect &amp; Approve Translation Draft Before Official Sealing
+      {/* 7-Stage Visual Lifecycle Step Tracker */}
+      <div className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-ink uppercase font-mono tracking-wider">
+            Order Lifecycle Milestones
           </h3>
-          <p className="text-xs text-text-muted max-w-2xl leading-relaxed">
-            Review your document side-by-side with the original scan. Verify that all personal names and dates match your USCIS filings, or click any sentence to request instant line-item revisions.
-          </p>
+          <span className="text-xs font-mono text-ink-muted">
+            Step {trackerStatus === "TRANSLATING" ? "4" : trackerStatus === "DRAFT_READY" ? "5" : "6"} of 7
+          </span>
         </div>
-        <Button asChild className="h-11 px-5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs gap-2 shrink-0 shadow-sm">
-          <Link href={`/order/${publicCode}/proof`}>
-            <span>Open Proofing Studio</span>
-            <ExternalLink className="w-4 h-4" />
-          </Link>
-        </Button>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          {TRACKER_STEPS.map((s) => (
+            <div
+              key={s.key}
+              className={cn(
+                "p-3.5 rounded-2xl border text-center space-y-2 transition-all",
+                s.actionRequired
+                  ? "border-cta bg-sand shadow-md ring-2 ring-cta/30"
+                  : s.current
+                  ? "border-ink bg-sand ring-1 ring-ink/20"
+                  : s.done
+                  ? "border-border bg-surface text-ink"
+                  : "border-border/50 bg-surface/40 text-ink-muted opacity-50"
+              )}
+            >
+              <div
+                className={cn(
+                  "w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-mono font-bold transition-transform",
+                  s.actionRequired
+                    ? "bg-cta text-white animate-pulse"
+                    : s.current
+                    ? "bg-ink text-sand animate-pulse"
+                    : s.done
+                    ? "bg-trust text-white"
+                    : "bg-surface-raised text-ink-muted border border-border"
+                )}
+              >
+                {s.done ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : s.actionRequired ? "!" : "•"}
+              </div>
+              <p
+                className={cn(
+                  "text-xs font-bold truncate",
+                  s.actionRequired
+                    ? "text-cta"
+                    : s.current
+                    ? "text-ink"
+                    : s.done
+                    ? "text-trust"
+                    : "text-ink-muted"
+                )}
+              >
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Uploaded Evidentiary Record & Non-Deletion Protection Card */}
-      <div className="p-6 md:p-8 rounded-[28px] bg-surface-raised border-2 border-border shadow-sm space-y-5">
+      {/* STATE TRANSITION CONTAINER WITH FRAMER MOTION */}
+      <AnimatePresence mode="wait">
+        {trackerStatus === "TRANSLATING" ? (
+          /* =========================================================================
+             STATE A: TRANSLATING (Read-Only Mode)
+             - Central pulsing aesthetic radar / progress bar
+             - "Your certified linguist [Name] is actively translating your document."
+             - Clean "Translating..." status. No confusing CTAs.
+             ========================================================================= */
+          <motion.div
+            key="state-translating"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-6"
+          >
+            {/* Central Pulsing Radar & Progress Hero */}
+            <div className="relative overflow-hidden p-8 sm:p-12 md:p-16 rounded-[32px] bg-surface-raised border border-border/80 shadow-md text-center space-y-6">
+              {/* Subtle ambient paper background decoration */}
+              <div className="absolute inset-0 bg-gradient-to-b from-sand/40 to-transparent pointer-events-none" />
+
+              {/* Pulsing Aesthetic Radar Concentric Rings */}
+              <div className="relative w-36 h-36 mx-auto flex items-center justify-center">
+                {/* Outermost expanding ring */}
+                <motion.div
+                  animate={{ scale: [1, 1.45, 1], opacity: [0.35, 0.05, 0.35] }}
+                  transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+                  className="absolute inset-0 rounded-full border-2 border-trust/40"
+                />
+                {/* Intermediate expanding ring */}
+                <motion.div
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.45, 0.1, 0.45] }}
+                  transition={{ repeat: Infinity, duration: 2.8, delay: 0.4, ease: "easeInOut" }}
+                  className="absolute inset-2 rounded-full border border-trust/30"
+                />
+                {/* Central Linguist Core Badge */}
+                <div className="relative w-20 h-20 rounded-2xl bg-ink text-sand flex flex-col items-center justify-center shadow-xl border border-ink/20 z-10">
+                  <ShieldCheck className="w-8 h-8 text-trust" />
+                  <span className="text-[10px] font-mono font-bold mt-1 text-sand">ATA No. 271892</span>
+                </div>
+              </div>
+
+              {/* Status Header & Primary Text */}
+              <div className="space-y-2 max-w-2xl mx-auto">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sand border border-border text-xs font-mono font-bold text-ink">
+                  <span className="w-2 h-2 rounded-full bg-trust animate-ping" />
+                  <span>Actively Translating • Read-Only Mode</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-ink font-serif tracking-tight">
+                  Your certified linguist {order.translator.name} is actively translating your document.
+                </h2>
+
+                <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
+                  All names, dates, official stamps, and tabular geometry are being mirror-formatted
+                  in accordance with USCIS 8 CFR § 103.2(b)(3) and ATA legal standards.
+                </p>
+              </div>
+
+              {/* Aesthetic Progress Bar & Telemetry */}
+              <div className="max-w-xl mx-auto space-y-3 pt-2">
+                <div className="w-full h-2.5 rounded-full bg-sand overflow-hidden border border-border/80">
+                  <motion.div
+                    initial={{ width: "15%" }}
+                    animate={{ width: ["40%", "72%", "58%", "72%"] }}
+                    transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                    className="h-full bg-trust rounded-full"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-ink-muted font-mono">
+                  <span className="flex items-center gap-1.5 text-trust font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Glossary Lock Terms Active
+                  </span>
+                  <span>Est. Completion: ~3 hours</span>
+                </div>
+              </div>
+
+              {/* Clean Status Guarantee Callout (No confusing CTAs) */}
+              <div className="pt-2">
+                <div className="inline-flex items-center gap-2 text-xs font-semibold text-trust bg-trust-bg border border-trust-border px-4 py-2 rounded-full shadow-sm">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>No action required from you right now. We will alert you the moment the draft is ready for review.</span>
+                </div>
+              </div>
+
+              {/* Quick simulation trigger for user convenience */}
+              <div className="pt-4 border-t border-border/40 max-w-sm mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setTrackerStatus("DRAFT_READY")}
+                  className="text-xs text-ink-muted hover:text-cta font-semibold flex items-center justify-center gap-1.5 mx-auto transition-colors cursor-pointer"
+                >
+                  <Clock className="w-3.5 h-3.5 text-cta" />
+                  <span>Simulate Draft Completion (Fast-Forward)</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          /* =========================================================================
+             STATE B: DRAFT READY (Action Required Mode) — THIS FIXES THE BLOCKER
+             - Page UI changes with focus overlay / dark paper ambiance
+             - Massive unmissable amber CTA: "Action Required: Review & Approve Translation"
+             - Center of attention, not buried in small button
+             ========================================================================= */
+          <motion.div
+            key="state-draft-ready"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-6"
+          >
+            {/* Massive Hero Spotlight Card */}
+            <div className="relative overflow-hidden p-8 sm:p-12 md:p-16 rounded-[36px] bg-surface-raised border-2 border-cta shadow-2xl ring-8 ring-cta/15 text-center space-y-6">
+              {/* Focus Aura overlay */}
+              <div className="absolute inset-0 bg-sand/60 pointer-events-none" />
+
+              {/* Top Attention Pill */}
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-cta text-white text-xs sm:text-sm font-black tracking-wide uppercase shadow-lg animate-pulse">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>Action Required • Translation Draft Ready</span>
+                </div>
+              </div>
+
+              {/* Main Attention Title */}
+              <div className="relative z-10 space-y-3 max-w-2xl mx-auto">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-ink font-serif tracking-tight leading-tight">
+                  Your Translation Draft is Ready for Review
+                </h2>
+                <p className="text-base sm:text-lg text-ink-muted leading-relaxed">
+                  Certified legal linguist <strong className="text-ink font-bold">{order.translator.name}</strong> has finished translating your document.
+                  Before we apply the permanent ATA certification seal and tamper-proof QR code, you must inspect all names and dates.
+                </p>
+              </div>
+
+              {/* THE MASSIVE UNMISSABLE AMBER CTA BUTTON */}
+              <div className="relative z-10 pt-2 pb-2">
+                <motion.div
+                  whileHover={{ scale: 1.025 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-block w-full sm:w-auto"
+                >
+                  <Button
+                    variant="cta"
+                    asChild
+                    size="lg"
+                    className="w-full sm:w-auto min-h-[64px] px-8 sm:px-12 py-5 rounded-2xl bg-cta hover:bg-cta-hover active:bg-cta-active text-white text-lg sm:text-xl font-black tracking-tight shadow-xl hover:shadow-2xl transition-all ring-4 ring-cta/20 flex items-center justify-center gap-3 cursor-pointer"
+                  >
+                    <Link href={`/order/${publicCode}/proof`}>
+                      <Eye className="w-6 h-6 stroke-[2.5]" />
+                      <span>Action Required: Review &amp; Approve Translation</span>
+                      <ArrowRight className="w-6 h-6 stroke-[2.5]" />
+                    </Link>
+                  </Button>
+                </motion.div>
+
+                <p className="text-xs text-ink-muted mt-3 font-medium">
+                  Takes ~2 minutes • Side-by-side verification • Free line-item revision requests with 1 click
+                </p>
+              </div>
+
+              {/* Feature Highlights Grid for Confidence */}
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left max-w-3xl mx-auto pt-4 border-t border-border/70">
+                <div className="p-4 rounded-2xl bg-surface border border-border/80 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-ink font-mono uppercase">
+                    <CheckCircle2 className="w-4 h-4 text-trust" />
+                    <span>Side-by-Side View</span>
+                  </div>
+                  <p className="text-xs text-ink-muted">
+                    Original scan and English translation displayed side-by-side for instant visual comparison.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-surface border border-border/80 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-ink font-mono uppercase">
+                    <CheckCircle2 className="w-4 h-4 text-trust" />
+                    <span>Names Hard-Locked</span>
+                  </div>
+                  <p className="text-xs text-ink-muted">
+                    Applicant and parent passport spellings verified against USCIS RFE databases.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-surface border border-border/80 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-bold text-ink font-mono uppercase">
+                    <CheckCircle2 className="w-4 h-4 text-trust" />
+                    <span>Instant Approval</span>
+                  </div>
+                  <p className="text-xs text-ink-muted">
+                    Approve immediately to download your certified PDF with signed notary affidavit and QR link.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Uploaded Evidentiary Record & Cryptographic Non-Deletion Hold */}
+      <div className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-500 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-sand flex items-center justify-center text-cta shrink-0 border border-border/80">
               <FileText className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-brand-ink">
+                <h3 className="text-base font-bold text-ink">
                   Uploaded Evidentiary Record
                 </h3>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-status-success/10 text-status-success border border-status-success/20">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-trust-bg text-trust border border-trust-border">
                   <Lock className="w-2.5 h-2.5 mr-0.5" />
-                  Protected • Non-Deletion Hold
+                  Permanent Non-Deletion Hold
                 </span>
               </div>
-              <p className="text-xs text-text-muted">
-                Permanent Vault Retention (§ 204.2) • Cryptographically Locked &amp; Backed Up
+              <p className="text-xs text-ink-muted">
+                Permanent Vault Retention (8 CFR § 103.2) • Cryptographically Locked &amp; Backed Up
               </p>
             </div>
           </div>
@@ -217,17 +561,18 @@ function OrderTrackingContent() {
               variant="outline"
               size="sm"
               asChild
-              className="h-9 px-4 rounded-xl text-xs gap-1.5 font-bold hover:bg-surface-sunken"
+              className="h-9 px-4 rounded-xl text-xs gap-1.5 font-bold border-border text-ink hover:bg-sand"
             >
               <a href={`/api/order/${publicCode}/original`} download>
-                <Download className="w-3.5 h-3.5 text-brand-500" />
-                <span>Download Original File</span>
+                <Download className="w-3.5 h-3.5 text-cta" />
+                <span>Download Original</span>
               </a>
             </Button>
             <Button
               size="sm"
               asChild
-              className="h-9 px-4 rounded-xl text-xs gap-1.5 font-bold bg-brand-500 hover:bg-brand-600 text-white"
+              variant="cta"
+              className="h-9 px-4 rounded-xl text-xs gap-1.5 font-bold bg-cta hover:bg-cta-hover text-white"
             >
               <Link href={`/order/${publicCode}/proof`}>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -239,192 +584,198 @@ function OrderTrackingContent() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-text-muted">Document Name</span>
-            <p className="font-bold text-brand-ink truncate font-mono">sample_birth_cert.pdf</p>
+            <span className="text-[10px] uppercase font-mono tracking-wider text-ink-muted">Document Name</span>
+            <p className="font-bold text-ink truncate font-mono">{order.documentName}</p>
           </div>
           <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-text-muted">Integrity Checksum</span>
-            <p className="font-bold text-brand-ink font-mono text-[11px] truncate">SHA-256: e3b0c442...92427a</p>
+            <span className="text-[10px] uppercase font-mono tracking-wider text-ink-muted">Integrity Checksum</span>
+            <p className="font-bold text-ink font-mono text-[11px] truncate">{order.checksum}</p>
           </div>
           <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-text-muted">Retention Policy</span>
-            <p className="font-bold text-status-success font-mono">Retained for 365 Days (Cannot Delete)</p>
+            <span className="text-[10px] uppercase font-mono tracking-wider text-ink-muted">Retention Policy</span>
+            <p className="font-bold text-trust font-mono">Retained Permanently (Cannot Purge)</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-text-muted bg-lavender-50/60 p-3 rounded-xl border border-brand-100">
-          <ShieldCheck className="w-4 h-4 text-brand-500 shrink-0" />
+        <div className="flex items-center gap-2 text-[11px] text-ink-muted bg-sand p-3.5 rounded-xl border border-border/80">
+          <ShieldCheck className="w-4 h-4 text-trust shrink-0" />
           <span>
-            <strong>Non-Deletion Guarantee:</strong> Under 8 CFR § 103.2 and § 204.2 USCIS evidentiary regulations, your uploaded source files are retained permanently in your private 256-bit encrypted vault and cannot be purged or deleted during active review or legal filing.
+            <strong className="text-ink font-bold">Evidentiary Guarantee:</strong> Under 8 CFR § 103.2 and § 204.2 USCIS evidentiary regulations, your uploaded source files are retained permanently in your private 256-bit encrypted vault and cannot be purged during active review.
           </span>
         </div>
       </div>
 
-      {/* 7-Stage Visual Step Tracker */}
-      <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border space-y-6">
-        <h3 className="text-base font-bold text-brand-ink">
-          Order Lifecycle Milestones
-        </h3>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          {TRACKER_STEPS.map((s, idx) => (
-            <div
-              key={s.key}
-              className={`p-3.5 rounded-2xl border text-center space-y-2 transition-all ${
-                s.current
-                  ? "border-brand-500 bg-brand-50/80 ring-2 ring-brand-500/20"
-                  : s.done
-                  ? "border-border bg-surface text-brand-ink"
-                  : "border-border/60 bg-surface/50 text-text-muted opacity-60"
-              }`}
-            >
-              <div
-                className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-mono font-bold ${
-                  s.current
-                    ? "bg-brand-500 text-white animate-pulse"
-                    : s.done
-                    ? "bg-status-success text-white"
-                    : "bg-border text-text-muted"
-                }`}
-              >
-                {s.done ? "✓" : idx + 1}
-              </div>
-              <p className="text-xs font-bold truncate">{s.label}</p>
+      {/* COLLAPSIBLE ACCORDION FOR MASSIVE EVENT LOGS & DIRECT CHAT
+          Per Specification: Hide massive logs and chat by default in a collapsible accordion
+          to prevent cognitive overload while keeping them 100% accessible. */}
+      <div className="rounded-[28px] bg-surface-raised border border-border/80 overflow-hidden shadow-sm transition-all">
+        <button
+          type="button"
+          onClick={() => setIsLogsAccordionOpen((prev) => !prev)}
+          className="w-full p-6 md:p-7 flex items-center justify-between text-left hover:bg-sand/60 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sand flex items-center justify-center text-cta border border-border/80 shrink-0">
+              <FileClock className="w-5 h-5" />
             </div>
-          ))}
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Assigned Linguist & In-Thread Messaging */}
-        <div className="lg:col-span-7 space-y-6">
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-500">
-                Assigned Certified Linguist
-              </span>
-              <Badge variant="default" className="text-[10px]">ATA Member Verified</Badge>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-500 text-xl font-bold font-mono">
-                EV
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-brand-ink">{order.translator.name}</h3>
-                <p className="text-xs text-text-muted">{order.translator.credentials}</p>
-                <p className="text-xs text-brand-500 font-semibold">
-                  Spanish → English Legal Specialist
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border-2 border-brand-100 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-border pb-3">
+            <div>
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-brand-500" />
-                <h3 className="text-lg font-bold text-brand-ink">
-                  Direct Translation Thread
+                <h3 className="text-base font-bold text-ink font-display">
+                  Audit Trail &amp; Translator Messaging Thread
                 </h3>
+                <Badge variant="secondary" className="text-[10px] bg-sand border-border text-ink-muted">
+                  {order.events.length} Events • {messages.length} Messages
+                </Badge>
               </div>
-              <span className="text-xs text-status-success font-semibold flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-status-success inline-block"></span>
-                Translator Active
-              </span>
+              <p className="text-xs text-ink-muted">
+                {isLogsAccordionOpen
+                  ? "Click to collapse audit records and translator communication"
+                  : "Collapsed by default to keep focus on tracking. Click to inspect timestamped logs and direct chat."}
+              </p>
             </div>
+          </div>
 
-            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-              {messages.map((m) => {
-                const isMe = m.senderType === "CUSTOMER";
-                const isSys = m.senderType === "SYSTEM";
-                return (
-                  <div
-                    key={m.id}
-                    className={`flex flex-col ${
-                      isMe ? "items-end" : "items-start"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 text-[10px] text-text-muted mb-1 px-1">
-                      <span className="font-bold">{m.senderName}</span>
-                      <span>•</span>
-                      <span>{m.createdAt}</span>
-                    </div>
-                    <div
-                      className={`p-3.5 rounded-2xl text-sm leading-relaxed max-w-md ${
-                        isMe
-                          ? "bg-brand-500 text-white rounded-br-none"
-                          : isSys
-                          ? "bg-lavender-50 text-brand-ink border border-border"
-                          : "bg-surface text-brand-ink border border-border rounded-bl-none"
-                      }`}
-                    >
-                      {m.body}
-                    </div>
-                  </div>
-                );
-              })}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-cta hidden sm:inline">
+              {isLogsAccordionOpen ? "Hide Audit Records" : "View Audit Records"}
+            </span>
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full bg-sand flex items-center justify-center text-ink transition-transform duration-200 border border-border/80",
+                isLogsAccordionOpen && "rotate-180"
+              )}
+            >
+              <ChevronDown className="w-4 h-4" />
             </div>
+          </div>
+        </button>
 
-            <form onSubmit={handleSendMessage} className="flex gap-2 pt-2 border-t border-border">
-              <Input
-                placeholder="Ask your translator a question or provide notes..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="h-11 rounded-xl"
-              />
-              <Button type="submit" size="sm" className="h-11 px-4 rounded-xl gap-1.5 shrink-0">
-                <Send className="w-4 h-4" />
-                <span>Send</span>
-              </Button>
-            </form>
-          </Card>
-        </div>
-
-        {/* Right Column: Event Log */}
-        <div className="lg:col-span-5 space-y-6">
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border space-y-4">
-            <h3 className="text-base font-bold text-brand-ink">
-              Timestamped Event Log
-            </h3>
-
-            <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-              {order.events.map((ev: OrderEventItem) => (
-                <div key={ev.id} className="flex items-start gap-3 relative">
-                  <div className="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center text-[10px] shrink-0 z-10">
-                    ✓
-                  </div>
-                  <div className="space-y-0.5 flex-1">
-                    <p className="text-xs font-bold text-brand-ink">{ev.message}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-text-muted font-mono">
-                      <span>{ev.actor}</span>
-                      <span>•</span>
-                      <span>{ev.createdAt}</span>
+        {/* Expanded Accordion Body */}
+        <AnimatePresence>
+          {isLogsAccordionOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="border-t border-border p-6 md:p-8 bg-sand/30"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left Sub-Column: Direct Translation Thread */}
+                <div className="lg:col-span-7 space-y-6">
+                  <Card className="p-6 rounded-[24px] bg-surface-raised border border-border/80 space-y-4">
+                    <div className="flex items-center justify-between border-b border-border pb-3">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5 text-cta" />
+                        <h3 className="text-base font-bold text-ink font-display">
+                          Direct Communication with Elena V.
+                        </h3>
+                      </div>
+                      <span className="text-xs text-trust font-semibold flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-trust inline-block"></span>
+                        Linguist Active
+                      </span>
                     </div>
+
+                    <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                      {messages.map((m) => {
+                        const isMe = m.senderType === "CUSTOMER";
+                        const isSys = m.senderType === "SYSTEM";
+                        return (
+                          <div
+                            key={m.id}
+                            className={cn("flex flex-col", isMe ? "items-end" : "items-start")}
+                          >
+                            <div className="flex items-center gap-1.5 text-[10px] text-ink-muted mb-1 px-1">
+                              <span className="font-bold text-ink">{m.senderName}</span>
+                              <span>•</span>
+                              <span>{m.createdAt}</span>
+                            </div>
+                            <div
+                              className={cn(
+                                "p-3.5 rounded-2xl text-sm leading-relaxed max-w-md",
+                                isMe
+                                  ? "bg-cta text-white rounded-br-none shadow-sm"
+                                  : isSys
+                                  ? "bg-sand text-ink border border-border"
+                                  : "bg-surface text-ink border border-border rounded-bl-none shadow-sm"
+                              )}
+                            >
+                              {m.body}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <form onSubmit={handleSendMessage} className="flex gap-2 pt-2 border-t border-border">
+                      <Input
+                        placeholder="Ask your linguist a question or submit notes..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="h-11 rounded-xl"
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="cta"
+                        className="h-11 px-4 rounded-xl gap-1.5 shrink-0 bg-cta hover:bg-cta-hover text-white font-bold"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>Send</span>
+                      </Button>
+                    </form>
+                  </Card>
+                </div>
+
+                {/* Right Sub-Column: Timestamped Audit Trail Log */}
+                <div className="lg:col-span-5 space-y-6">
+                  <Card className="p-6 rounded-[24px] bg-surface-raised border border-border/80 space-y-4">
+                    <h3 className="text-base font-bold text-ink font-display">
+                      Cryptographic Timestamped Audit Log
+                    </h3>
+
+                    <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+                      {order.events.map((ev: OrderEventItem) => (
+                        <div key={ev.id} className="flex items-start gap-3 relative">
+                          <div className="w-6 h-6 rounded-full bg-ink text-sand flex items-center justify-center text-[10px] shrink-0 z-10 shadow-sm font-mono font-bold">
+                            ✓
+                          </div>
+                          <div className="space-y-0.5 flex-1">
+                            <p className="text-xs font-bold text-ink">{ev.message}</p>
+                            <div className="flex items-center gap-2 text-[10px] text-ink-muted font-mono">
+                              <span>{ev.actor}</span>
+                              <span>•</span>
+                              <span>{ev.createdAt}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+
+                  <div className="p-5 rounded-2xl bg-sand border border-border/80 space-y-2 text-xs text-ink-muted">
+                    <div className="flex items-center gap-2 text-ink font-bold">
+                      <ShieldCheck className="w-4 h-4 text-trust" />
+                      <span>USCIS 8 CFR 103.2(b)(3) Competence Certification</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      Every order includes an ATA sworn statement of translator competence, wet/electronic signature, and public cryptographic SHA-256 verification.
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-
-          <div className="p-6 rounded-[28px] bg-gradient-panel border border-brand-100 space-y-3 text-xs text-text-muted">
-            <div className="flex items-center gap-2 text-brand-ink font-bold">
-              <ShieldCheck className="w-5 h-5 text-brand-500" />
-              <span>USCIS 8 CFR 103.2(b)(3) Compliance</span>
-            </div>
-            <p className="leading-relaxed">
-              Your Certificate of Accuracy will include an ATA statement of competence, translator signature, and cryptographic SHA-256 hash.
-            </p>
-          </div>
-        </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export default function OrderTrackingPage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-text-muted">Loading live tracker...</div>}>
+    <Suspense fallback={<div className="p-12 text-center text-ink-muted">Loading live tracker...</div>}>
       <OrderTrackingContent />
     </Suspense>
   );

@@ -57,6 +57,15 @@
   --color-trust-bg: var(--trust-bg);
   --color-trust-border: var(--trust-border);
 
+  --color-brand-sand: var(--sand);
+  --color-brand-sand-warm: var(--sand-warm);
+  --color-brand-cta: var(--cta);
+  --color-brand-cta-hover: var(--cta-hover);
+  --color-brand-cta-active: var(--cta-active);
+  --color-brand-trust: var(--trust);
+  --color-brand-trust-bg: var(--trust-bg);
+  --color-brand-trust-border: var(--trust-border);
+
   --color-ink-soft: var(--ink-soft);
   --color-ink-softer: var(--ink-softer);
 
@@ -155,7 +164,7 @@
 
 :root {
   /* ─── Ink: headings, dark bands, footer (§3.2.1) */
-  --brand-ink:        #080A1F;
+  --brand-ink:        #0A2540;
   --brand-900:        #0D1130;
   --brand-800:        #151B44;
   --brand-700:        #24307F;

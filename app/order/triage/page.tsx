@@ -20,6 +20,7 @@ import {
   Info,
   Download,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { calculatePricing } from "@/lib/pricing";
 
@@ -228,17 +229,17 @@ function TriageContent() {
       {/* Step Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Badge variant="default" className="text-xs font-mono font-bold">
+          <Badge variant="default" className="text-xs font-mono font-bold bg-ink text-sand">
             Step 1 of 4
           </Badge>
-          <span className="text-xs font-mono text-brand-500 font-bold uppercase tracking-wider">
+          <span className="text-xs font-mono text-cta font-bold uppercase tracking-wider">
             Pre-Payment Document Quality Triage (§2.2)
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight font-display">
-          Upload & Verify Document Readability
+        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">
+          Upload &amp; Verify Document Readability
         </h1>
-        <p className="text-sm sm:text-base text-ink-soft max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base text-ink-muted max-w-3xl leading-relaxed">
           Before taking payment, our AI vision model inspects your upload for illegible handwriting,
           cropped seals, and missing pages — preventing post-payment rejections and delays.
         </p>
@@ -381,15 +382,30 @@ function TriageContent() {
                 )}
 
                 {findings.length === 0 ? (
-                  <div className="p-5 rounded-2xl bg-status-success/10 border border-status-success/20 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-status-success shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-bold text-brand-ink">
-                        Document Passed Quality Triage with 100% Readability
-                      </p>
-                      <p className="text-xs text-text-muted leading-relaxed">
-                        All stamps, seals, signatures, and body text are crisp and eligible for USCIS certified translation.
-                      </p>
+                  <div className="p-6 rounded-2xl bg-trust-bg border border-trust-border space-y-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-trust shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold text-ink font-display">
+                          Document Passed Quality Triage with 100% Readability
+                        </p>
+                        <p className="text-xs text-ink-muted leading-relaxed">
+                          All stamps, seals, signatures, and body text are crisp and eligible for USCIS certified translation.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Proximity Principle: Primary Continue CTA dynamically positioned below result */}
+                    <div className="pt-1">
+                      <Button
+                        variant="cta"
+                        size="lg"
+                        onClick={handleContinue}
+                        className="w-full sm:w-auto h-12 px-8 rounded-xl bg-cta hover:bg-cta-hover active:bg-cta-active text-white font-bold gap-2 shadow-md transition-all active:scale-[0.98]"
+                      >
+                        <span>Continue to Configure</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -414,7 +430,7 @@ function TriageContent() {
                           )}
                           <div className="space-y-1 flex-1">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-bold text-brand-ink">{f.title}</p>
+                              <p className="text-sm font-bold text-ink">{f.title}</p>
                               <Badge
                                 variant={f.severity === "BLOCK" ? "danger" : "warning"}
                                 className="text-[10px] py-0"
@@ -422,16 +438,16 @@ function TriageContent() {
                                 {f.severity}
                               </Badge>
                             </div>
-                            <p className="text-xs text-text-muted leading-relaxed">{f.message}</p>
-                            <p className="text-xs text-brand-ink font-semibold pt-1">
+                            <p className="text-xs text-ink-muted leading-relaxed">{f.message}</p>
+                            <p className="text-xs text-ink font-semibold pt-1">
                               💡 Re-shoot Tip: {f.reshootTip}
                             </p>
                           </div>
                         </div>
 
                         {f.severity === "WARN" && (
-                          <div className="pt-2 border-t border-status-warning/20 flex items-center justify-between">
-                            <label className="text-xs text-brand-ink font-medium flex items-center gap-2 cursor-pointer">
+                          <div className="pt-3 border-t border-status-warning/20 space-y-3">
+                            <label className="text-xs text-ink font-semibold flex items-center gap-2.5 cursor-pointer select-none">
                               <input
                                 type="checkbox"
                                 checked={acknowledgedWarnings[f.id] || false}
@@ -441,10 +457,30 @@ function TriageContent() {
                                     [f.id]: e.target.checked,
                                   }))
                                 }
-                                className="rounded text-brand-500 focus:ring-brand-500"
+                                className="w-4 h-4 rounded text-cta focus:ring-cta border-border"
                               />
-                              I confirm text is readable; proceed with this scan
+                              <span>I confirm text is readable; proceed with this scan</span>
                             </label>
+
+                            {/* Proximity Principle: Primary Continue CTA dynamically positioned immediately below that checkbox */}
+                            <div className="pt-2">
+                              <Button
+                                variant="cta"
+                                size="lg"
+                                onClick={handleContinue}
+                                disabled={!acknowledgedWarnings[f.id]}
+                                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-cta hover:bg-cta-hover active:bg-cta-active text-white font-bold gap-2 shadow-md transition-all active:scale-[0.98] disabled:opacity-50"
+                              >
+                                <span>Continue to Configure</span>
+                                <ArrowRight className="w-4 h-4" />
+                              </Button>
+                              {!acknowledgedWarnings[f.id] && (
+                                <p className="text-[11px] text-ink-muted mt-1.5 flex items-center gap-1">
+                                  <Info className="w-3.5 h-3.5 text-status-warning shrink-0" />
+                                  Confirm readability above to proceed to configure receiving authority.
+                                </p>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -455,10 +491,10 @@ function TriageContent() {
             )}
           </Card>
 
-          <div className="p-5 rounded-2xl bg-lavender-50 border border-border flex items-start gap-3 text-xs text-text-muted">
-            <Info className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
+          <div className="p-5 rounded-2xl bg-surface-raised border border-border/70 flex items-start gap-3 text-xs text-ink-muted">
+            <Info className="w-5 h-5 text-cta shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong className="text-brand-ink font-bold">Why we triage before payment:</strong> Competitors like RushTranslate and ImmiTranslate take your payment first, and issue a refund or delay your file days later when a translator discovers handwriting issues. We prevent delays upfront.
+              <strong className="text-ink font-bold">Why we triage before payment:</strong> Competitors like RushTranslate and ImmiTranslate take your payment first, and issue a refund or delay your file days later when a translator discovers handwriting issues. We prevent delays upfront.
             </p>
           </div>
         </div>
@@ -468,13 +504,26 @@ function TriageContent() {
           <StickyPriceBar
             pricing={pricing}
             onNext={handleContinue}
-            nextLabel="Continue to Pre-Check"
-            disabled={!uploadedFile || hasBlockingFindings || isAnalyzing}
+            nextLabel="Continue to Configure"
+            disabled={
+              !uploadedFile ||
+              hasBlockingFindings ||
+              isAnalyzing ||
+              (findings.some((f) => f.severity === "WARN") &&
+                !findings
+                  .filter((f) => f.severity === "WARN")
+                  .every((f) => acknowledgedWarnings[f.id]))
+            }
             blockReason={
               !uploadedFile
                 ? "Please upload a document to proceed"
                 : hasBlockingFindings
                 ? "Please fix blocking triage issue before continuing"
+                : findings.some((f) => f.severity === "WARN") &&
+                  !findings
+                    .filter((f) => f.severity === "WARN")
+                    .every((f) => acknowledgedWarnings[f.id])
+                ? "Please confirm document readability above to continue"
                 : undefined
             }
           />

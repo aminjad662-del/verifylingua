@@ -28,28 +28,28 @@ export function StickyPriceBar({
       <div className="hidden lg:block w-80 shrink-0 sticky top-24">
         <div className="rounded-[28px] border-2 border-border bg-surface-raised p-6 shadow-xl space-y-6">
           <div className="space-y-1">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-brand-500">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cta">
               Live Order Estimate
             </span>
-            <h3 className="text-xl font-black text-brand-ink tracking-tight">
+            <h3 className="text-xl font-black text-ink tracking-tight font-display">
               Order Summary
             </h3>
           </div>
 
           <div className="space-y-3 text-sm border-y border-border py-4">
             <div className="flex items-center justify-between">
-              <span className="text-text-muted">
+              <span className="text-ink-muted">
                 {pricing.serviceType === "CERTIFIED" ? "Certified Base" : "Standard Base"} ({pricing.pageCount} {pricing.pageCount === 1 ? "page" : "pages"})
               </span>
-              <span className="font-mono font-bold text-brand-ink">
+              <span className="font-mono font-bold text-ink">
                 {formatCurrency(pricing.basePrice)}
               </span>
             </div>
 
             {pricing.isExpedited && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">Expedited 12h (+60%)</span>
-                <span className="font-mono font-bold text-brand-ink">
+                <span className="text-ink-muted">Expedited 12h (+60%)</span>
+                <span className="font-mono font-bold text-ink">
                   +{formatCurrency(pricing.expeditedFee)}
                 </span>
               </div>
@@ -57,8 +57,8 @@ export function StickyPriceBar({
 
             {pricing.needsNotarization && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">Notarization Certificate</span>
-                <span className="font-mono font-bold text-brand-ink">
+                <span className="text-ink-muted">Notarization Certificate</span>
+                <span className="font-mono font-bold text-ink">
                   +{formatCurrency(pricing.notarizationFee)}
                 </span>
               </div>
@@ -66,8 +66,8 @@ export function StickyPriceBar({
 
             {pricing.needsHardCopy && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">Hard Copy & Postage</span>
-                <span className="font-mono font-bold text-brand-ink">
+                <span className="text-ink-muted">Hard Copy & Postage</span>
+                <span className="font-mono font-bold text-ink">
                   +{formatCurrency(pricing.hardCopyFee)}
                 </span>
               </div>
@@ -75,8 +75,8 @@ export function StickyPriceBar({
 
             {pricing.needsApostille && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">Apostille Authentication</span>
-                <span className="font-mono font-bold text-brand-ink">
+                <span className="text-ink-muted">Apostille Authentication</span>
+                <span className="font-mono font-bold text-ink">
                   +{formatCurrency(pricing.apostilleFee)}
                 </span>
               </div>
@@ -84,15 +84,15 @@ export function StickyPriceBar({
           </div>
 
           {/* Guaranteed Promised Delivery Time (§2.4) */}
-          <div className="p-3.5 rounded-2xl bg-lavender-50 border border-border/80 space-y-1">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-brand-500 uppercase tracking-wide">
+          <div className="p-3.5 rounded-2xl bg-sand border border-border/80 space-y-1">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-cta uppercase tracking-wide">
               <Clock className="w-3.5 h-3.5" />
               <span>Promised Delivery Date</span>
             </div>
-            <p suppressHydrationWarning className="text-sm font-black text-brand-ink font-mono">
+            <p suppressHydrationWarning className="text-sm font-black text-ink font-mono">
               {pricing.promisedAtFormatted}
             </p>
-            <p className="text-[10px] text-text-muted">
+            <p className="text-[10px] text-ink-muted">
               Factor in 2x/day notary batching & local timezone.
             </p>
           </div>
@@ -114,10 +114,11 @@ export function StickyPriceBar({
 
             {onNext && (
               <Button
+                variant="cta"
                 size="lg"
                 onClick={onNext}
                 disabled={disabled}
-                className="w-full h-12 rounded-xl text-sm font-bold gap-2 shadow-md"
+                className="w-full h-12 rounded-xl text-sm font-bold gap-2 shadow-md bg-cta hover:bg-cta-hover active:bg-cta-active text-white"
               >
                 {nextLabel}
                 <ArrowRight className="w-4 h-4" />
@@ -125,8 +126,8 @@ export function StickyPriceBar({
             )}
 
             <div className="text-center">
-              <span className="text-[11px] text-status-success font-semibold flex items-center justify-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="text-[11px] text-trust font-semibold flex items-center justify-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-trust" />
                 100% USCIS Acceptance Guarantee
               </span>
             </div>
@@ -139,22 +140,23 @@ export function StickyPriceBar({
         <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
           <div className="space-y-0.5">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-text-muted">Total:</span>
-              <span className="text-xl font-black text-brand-ink font-mono">
+              <span className="text-xs font-bold text-ink-muted">Total:</span>
+              <span className="text-xl font-black text-ink font-mono">
                 {formatCurrency(pricing.total)}
               </span>
             </div>
-            <p suppressHydrationWarning className="text-[11px] font-mono text-brand-500 font-semibold truncate max-w-[170px]">
+            <p suppressHydrationWarning className="text-[11px] font-mono text-cta font-semibold truncate max-w-[170px]">
               Ready {pricing.promisedAtFormatted}
             </p>
           </div>
 
           {onNext && (
             <Button
+              variant="cta"
               size="default"
               onClick={onNext}
               disabled={disabled}
-              className="h-11 px-5 rounded-xl text-sm font-bold gap-1.5 shadow-md shrink-0"
+              className="h-11 px-5 rounded-xl text-sm font-bold gap-1.5 shadow-md shrink-0 bg-cta hover:bg-cta-hover active:bg-cta-active text-white"
             >
               {nextLabel}
               <ArrowRight className="w-4 h-4" />

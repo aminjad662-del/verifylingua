@@ -126,17 +126,17 @@ function CheckoutContent() {
       {/* Step Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Badge variant="default" className="text-xs font-mono font-bold">
+          <Badge variant="default" className="text-xs font-mono font-bold bg-ink text-sand">
             Step 4 of 4
           </Badge>
-          <span className="text-xs font-mono text-brand-500 font-bold uppercase tracking-wider">
-            Secure Guest Checkout (§5.2)
+          <span className="text-xs font-mono text-cta font-bold uppercase tracking-wider">
+            Secure Checkout &amp; Guarantee (§5.2)
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-ink tracking-tight">
-          Authorize Order & Start Translation
+        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">
+          Authorize Order &amp; Start Translation
         </h1>
-        <p className="text-sm sm:text-base text-text-muted max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base text-ink-muted max-w-3xl leading-relaxed">
           No password or upfront registration required. Your order will be assigned to a certified translator
           immediately upon payment authorization.
         </p>
@@ -153,19 +153,19 @@ function CheckoutContent() {
           )}
 
           {/* Guest Delivery Information */}
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border space-y-5">
+          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 space-y-5">
             <div className="space-y-1">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-500">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-cta">
                 Delivery Destination
               </span>
-              <h3 className="text-xl font-bold text-brand-ink">
+              <h3 className="text-xl font-bold text-ink font-serif">
                 Where should we send your signed certified PDF?
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="checkout-email" className="text-xs font-bold uppercase tracking-wider text-brand-ink">
+                <label htmlFor="checkout-email" className="text-xs font-bold uppercase tracking-wider text-ink">
                   Email Address (Primary Delivery) *
                 </label>
                 <Input
@@ -179,7 +179,7 @@ function CheckoutContent() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="checkout-phone" className="text-xs font-bold uppercase tracking-wider text-brand-ink">
+                <label htmlFor="checkout-phone" className="text-xs font-bold uppercase tracking-wider text-ink">
                   Mobile Number (SMS / WhatsApp Alerts)
                 </label>
                 <Input
@@ -194,29 +194,29 @@ function CheckoutContent() {
           </Card>
 
           {/* Payment Card Inputs */}
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border-2 border-brand-100 shadow-sm space-y-6">
+          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-brand-500" />
-                  <h3 className="text-xl font-bold text-brand-ink">
+                  <CreditCard className="w-5 h-5 text-cta" />
+                  <h3 className="text-xl font-bold text-ink font-serif">
                     Payment Method
                   </h3>
                 </div>
-                <p className="text-xs text-text-muted">
+                <p className="text-xs text-ink-muted">
                   All transactions are 256-bit encrypted. We never store raw card numbers.
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-text-muted font-mono">
-                <Lock className="w-3.5 h-3.5 text-brand-500" />
+              <div className="flex items-center gap-1.5 text-xs text-trust font-mono font-semibold">
+                <Lock className="w-3.5 h-3.5 text-trust" />
                 <span>Stripe Verified</span>
               </div>
             </div>
 
             <form onSubmit={handleProcessOrder} className="space-y-4">
               <div className="space-y-1.5">
-                <label htmlFor="checkout-cardholder" className="text-xs font-bold uppercase tracking-wider text-brand-ink">
+                <label htmlFor="checkout-cardholder" className="text-xs font-bold uppercase tracking-wider text-ink">
                   Cardholder Name
                 </label>
                 <Input
@@ -229,7 +229,7 @@ function CheckoutContent() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="checkout-cardnum" className="text-xs font-bold uppercase tracking-wider text-brand-ink">
+                <label htmlFor="checkout-cardnum" className="text-xs font-bold uppercase tracking-wider text-ink">
                   Card Number
                 </label>
                 <Input
@@ -244,7 +244,7 @@ function CheckoutContent() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label htmlFor="checkout-expiry" className="text-xs font-bold uppercase tracking-wider text-brand-ink">
+                  <label htmlFor="checkout-expiry" className="text-xs font-bold uppercase tracking-wider text-ink">
                     Expiry Date
                   </label>
                   <Input
@@ -258,7 +258,7 @@ function CheckoutContent() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="checkout-cvc" className="text-xs font-bold uppercase tracking-wider text-brand-ink">
+                  <label htmlFor="checkout-cvc" className="text-xs font-bold uppercase tracking-wider text-ink">
                     CVC / CVV
                   </label>
                   <Input
@@ -275,10 +275,11 @@ function CheckoutContent() {
 
               <div className="pt-2">
                 <Button
+                  variant="cta"
                   size="lg"
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full h-14 rounded-2xl text-base font-bold gap-2 shadow-md"
+                  className="w-full h-14 rounded-2xl text-base font-bold gap-2 shadow-md bg-cta hover:bg-cta-hover active:bg-cta-active text-white"
                 >
                   {isProcessing ? (
                     "Authorizing Payment..."
@@ -292,8 +293,8 @@ function CheckoutContent() {
             </form>
           </Card>
 
-          <div className="p-5 rounded-2xl bg-brand-50 border border-brand-100 flex items-center gap-3 text-xs text-brand-ink">
-            <ShieldCheck className="w-5 h-5 text-status-success shrink-0" />
+          <div className="p-5 rounded-2xl bg-surface-raised border border-border/80 flex items-center gap-3 text-xs text-ink">
+            <ShieldCheck className="w-5 h-5 text-trust shrink-0" />
             <p className="leading-relaxed">
               <strong>100% USCIS Acceptance Guarantee:</strong> Your payment is protected by our full-refund pledge. If your translation is rejected for any translation defect, we redo it free and refund your order completely.
             </p>
