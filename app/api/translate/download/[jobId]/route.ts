@@ -33,7 +33,8 @@ export async function GET(
     }
 
     // Validate download token
-    const token = req.nextUrl.searchParams.get("token");
+    const url = req.nextUrl || new URL(req.url, "http://localhost:3000");
+    const token = url.searchParams.get("token");
     if (token && token !== job.downloadToken) {
       return NextResponse.json(
         { error: "Invalid or expired download authorization token." },

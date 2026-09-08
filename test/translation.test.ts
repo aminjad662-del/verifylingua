@@ -320,6 +320,53 @@ describe("High-Fidelity Document Translation Pipeline", () => {
       expect(textWidth).toBeLessThanOrEqual(targetBoxWidth);
     });
 
+    it("DoD 3b: full end-to-end API roundtrip from upload to poll to download", async () => {
+      const { POST: uploadPost } = await import("@/app/api/translate/upload/route");
+      const { GET: downloadGet } = await import("@/app/api/translate/download/[jobId]/route");
+
+      const uploadReq = new Request("http://localhost:3000/api/translate/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: "sample_birth_cert.pdf",
+          sourceLang: "es",
+          targetLang: "en",
+          fileBase64: pdfBuffer.toString("base64"),
+        }),
+      });
+
+      const uploadRes = await uploadPost(uploadReq as any);
+      expect([200, 202]).toContain(uploadRes.status);
+      const uploadJson = await uploadRes.json();
+      expect(uploadJson.success).toBe(true);
+      expect(uploadJson.jobId).toBeDefined();
+
+      // Wait for async processing to reach ready state
+      const { getTranslationJob } = await import("@/lib/translation/store");
+      let job = getTranslationJob(uploadJson.jobId);
+      let waitAttempts = 0;
+      while (job && job.status !== "ready" && waitAttempts < 40) {
+        await new Promise((r) => setTimeout(r, 50));
+        job = getTranslationJob(uploadJson.jobId);
+        waitAttempts++;
+      }
+
+      expect(job?.status).toBe("ready");
+
+      // Verify download endpoint
+      const downloadReq = new Request(
+        `http://localhost:3000/api/translate/download/${job!.id}?token=${job!.downloadToken}`
+      );
+      const downloadRes = await downloadGet(downloadReq as any, {
+        params: Promise.resolve({ jobId: job!.id }),
+      });
+      expect(downloadRes.status).toBe(200);
+      expect(downloadRes.headers.get("Content-Type")).toBe("application/pdf");
+      expect(downloadRes.headers.get("X-VerifyLingua-Quality-Gate")).toBe("PASSED");
+      const fileBytes = await downloadRes.arrayBuffer();
+      expect(fileBytes.byteLength).toBeGreaterThan(1000);
+    });
+
     it("supports Arabic (RTL) bidirectional script rendering without encoding errors", async () => {
       // PDF with Arabic target language
       const pdfAr = await translatePdf(pdfBuffer, {
