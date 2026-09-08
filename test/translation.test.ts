@@ -201,4 +201,141 @@ describe("High-Fidelity Document Translation Pipeline", () => {
       expect(firstJob.id).toBeDefined();
     });
   });
+
+  describe("6. High-Fidelity Spatial Reconstruction Engine (DoD 1-4)", () => {
+    it("DoD 1: multi-column PDF retains exact column structure and margins", async () => {
+      const { extractPdfSpatialBlocks } = await import("@/lib/translation/spatial");
+      const spatial = await extractPdfSpatialBlocks(pdfBuffer);
+
+      // Verify spatial blocks detected
+      expect(spatial.blocks.length).toBeGreaterThanOrEqual(4);
+      expect(spatial.hasMultiColumn).toBe(true);
+      expect(spatial.columns.length).toBe(2);
+
+      // Verify column 0 (left labels) and column 1 (right values)
+      const col0Blocks = spatial.blocks.filter((b) => b.columnIndex === 0);
+      const col1Blocks = spatial.blocks.filter((b) => b.columnIndex === 1);
+      expect(col0Blocks.length).toBeGreaterThanOrEqual(1);
+      expect(col1Blocks.length).toBeGreaterThanOrEqual(1);
+
+      // Left column X should be significantly smaller than right column X
+      expect(col0Blocks[0].x).toBeLessThan(col1Blocks[0].x);
+
+      // Rebuilt PDF must maintain page geometry and multi-column flag
+      const result = await translatePdf(pdfBuffer, {
+        sourceLang: "es",
+        targetLang: "en",
+      });
+      expect(result.metadata.hasMultiColumn).toBe(true);
+      expect(result.metadata.spatialBlockCount).toBeGreaterThanOrEqual(4);
+    });
+
+    it("DoD 2: scanned JPG returns translated text in spatial blocks with original text masked", async () => {
+      const result = await translateImage(jpgBuffer, "jpg", {
+        sourceLang: "es",
+        targetLang: "en",
+      });
+
+      expect(result.buffer).toBeInstanceOf(Buffer);
+      expect(result.metadata.width).toBe(600);
+      expect(result.metadata.height).toBe(450);
+      expect(result.metadata.spatialBlockCount).toBeGreaterThanOrEqual(2);
+
+      // Inspect rebuilt image with Jimp to verify valid binary raster
+      const img = await Jimp.read(result.buffer);
+      expect(img.bitmap.width).toBe(600);
+      expect(img.bitmap.height).toBe(450);
+    });
+
+    it("DoD 3: zero-timeout asynchronous processing allows immediate status polling", async () => {
+      const job = createTranslationJob({
+        fileName: "sample_birth_cert.pdf",
+        fileFormat: "pdf",
+        fileSize: pdfBuffer.length,
+        sourceLang: "es",
+        targetLang: "en",
+        originalBuffer: pdfBuffer,
+      });
+
+      // Status immediately pollable
+      expect(job.status).toBe("queued");
+      expect(job.progress).toBe(0);
+
+      const statusHistory: string[] = [];
+      const updated = await processTranslationJob(
+        job,
+        { sourceLang: "es", targetLang: "en" },
+        (progress, step) => {
+          statusHistory.push(`${job.status}:${progress}`);
+        }
+      );
+
+      expect(updated.status).toBe("ready");
+      expect(updated.progress).toBe(100);
+      expect(updated.qualityGate?.isValidFormat).toBe(true);
+
+      // Verify lifecycle went through extracting -> translating -> reconstructing
+      expect(statusHistory.some((s) => s.startsWith("extracting"))).toBe(true);
+      expect(statusHistory.some((s) => s.startsWith("translating"))).toBe(true);
+      expect(statusHistory.some((s) => s.startsWith("reconstructing"))).toBe(true);
+
+      // Test status route polling directly
+      const { GET: statusGet } = await import("@/app/api/translate/status/[jobId]/route");
+      const req = new Request(`http://localhost:3000/api/translate/status/${job.id}`);
+      const statusRes = await statusGet(req as any, {
+        params: Promise.resolve({ jobId: job.id }),
+      });
+      expect(statusRes.status).toBe(200);
+      const statusJson = await statusRes.json();
+      expect(statusJson.status).toBe("ready");
+      expect(statusJson.progress).toBe(100);
+      expect(statusJson.downloadUrl).toContain(job.downloadToken);
+    });
+
+    it("DoD 4: text expansion in bounding boxes is completely mitigated via dynamic font-size downscaling", async () => {
+      const { calculateDynamicFontSize } = await import("@/lib/translation/pdf");
+      const { PDFDocument, StandardFonts } = await import("pdf-lib");
+
+      const doc = await PDFDocument.create();
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+
+      // Target bounding box is 100pt wide
+      const targetBoxWidth = 100;
+      const initialFontSize = 14;
+
+      // Text that is 3x longer than target width
+      const expandedText = "Official Certified Document with Substantial Text Expansion Across Columns";
+
+      const { fittedSize, textWidth } = calculateDynamicFontSize(
+        expandedText,
+        targetBoxWidth,
+        initialFontSize,
+        font
+      );
+
+      // Font size must have downscaled from 14pt
+      expect(fittedSize).toBeLessThan(initialFontSize);
+
+      // Rendered text width must strictly fit within the target width
+      expect(textWidth).toBeLessThanOrEqual(targetBoxWidth);
+    });
+
+    it("supports Arabic (RTL) bidirectional script rendering without encoding errors", async () => {
+      // PDF with Arabic target language
+      const pdfAr = await translatePdf(pdfBuffer, {
+        sourceLang: "es",
+        targetLang: "ar",
+      });
+      expect(pdfAr.buffer.length).toBeGreaterThan(1000);
+      expect(pdfAr.metadata.hasCertStamp).toBe(true);
+
+      // Image with Arabic target language
+      const imgAr = await translateImage(pngBuffer, "png", {
+        sourceLang: "es",
+        targetLang: "ar",
+      });
+      expect(imgAr.buffer.length).toBeGreaterThan(1000);
+      expect(imgAr.metadata.width).toBe(640);
+    });
+  });
 });

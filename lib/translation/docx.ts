@@ -1,4 +1,4 @@
-﻿import JSZip from "jszip";
+import JSZip from "jszip";
 import { translateText } from "./translator";
 import { TranslationOptions } from "./types";
 
@@ -45,39 +45,51 @@ export async function translateDocx(
       hasTables = true;
     }
 
-    // Replace text inside <w:t> tags
-    // Handles <w:t>...</w:t> and <w:t xml:space="preserve">...</w:t>
+    // Extract text runs inside <w:t> tags
     const regex = /(<w:t(?:\s+[^>]*)?>)([\s\S]*?)(<\/w:t>)/g;
-    const matches: { full: string; open: string; text: string; close: string }[] = [];
+    const matches: { id: string; full: string; open: string; text: string; close: string }[] = [];
     let match;
+    let nodeIdx = 0;
 
     while ((match = regex.exec(xmlContent)) !== null) {
-      matches.push({
-        full: match[0],
-        open: match[1],
-        text: match[2],
-        close: match[3],
-      });
-    }
-
-    // Translate each text piece while keeping XML entities safe
-    let updatedXml = xmlContent;
-    for (const m of matches) {
-      const rawText = decodeXmlEntities(m.text);
+      const rawText = decodeXmlEntities(match[2]);
       if (rawText.trim().length > 0) {
-        textNodeCount++;
-        wordCount += rawText.trim().split(/\s+/).length;
-
-        const translated = await translateText(rawText, options);
-        const encoded = encodeXmlEntities(translated);
-        const replacement = `${m.open}${encoded}${m.close}`;
-
-        // Safe replace
-        updatedXml = updatedXml.replace(m.full, replacement);
+        matches.push({
+          id: `docx_${filePath.replace(/[^a-zA-Z0-9]/g, "_")}_${nodeIdx++}`,
+          full: match[0],
+          open: match[1],
+          text: rawText,
+          close: match[3],
+        });
       }
     }
 
-    zip.file(filePath, updatedXml);
+    if (matches.length > 0) {
+      // Translate all runs contextually in structured blocks
+      const { translateStructuredBlocks } = await import("./translator");
+      const translationMap = await translateStructuredBlocks(
+        matches.map((m) => ({
+          id: m.id,
+          text: m.text,
+          context: `OpenXML document run in ${filePath}`,
+        })),
+        options
+      );
+
+      let updatedXml = xmlContent;
+      for (const m of matches) {
+        textNodeCount++;
+        wordCount += m.text.trim().split(/\s+/).length;
+
+        const translated = translationMap.get(m.id) || m.text;
+        const encoded = encodeXmlEntities(translated);
+        const replacement = `${m.open}${encoded}${m.close}`;
+
+        updatedXml = updatedXml.replace(m.full, replacement);
+      }
+
+      zip.file(filePath, updatedXml);
+    }
   }
 
   const outputBuffer = await zip.generateAsync({

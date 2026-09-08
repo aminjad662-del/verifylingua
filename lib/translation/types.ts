@@ -1,12 +1,39 @@
-﻿export type DocumentFormat = "pdf" | "docx" | "png" | "jpg";
+export type DocumentFormat = "pdf" | "docx" | "png" | "jpg";
 
 export type JobStatus =
   | "queued"
   | "extracting"
   | "translating"
   | "rebuilding"
+  | "reconstructing"
   | "ready"
   | "failed";
+
+export interface SpatialTextBlock {
+  id: string;
+  text: string;
+  translatedText?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  page: number;
+  fontSize: number;
+  fontFamily?: string;
+  color?: { r: number; g: number; b: number } | string;
+  columnIndex?: number;
+  isRtl?: boolean;
+  confidence?: number;
+  originalWidth?: number;
+  renderedFontSize?: number;
+}
+
+export interface StructuredTranslationBlock {
+  id: string;
+  text: string;
+  context?: string;
+  isRtl?: boolean;
+}
 
 export interface BoundingBox {
   x: number;

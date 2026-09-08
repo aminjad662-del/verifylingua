@@ -1,4 +1,4 @@
-﻿import crypto from "crypto";
+import crypto from "crypto";
 import {
   DocumentFormat,
   TranslationJob,
@@ -111,16 +111,20 @@ export async function processTranslationJob(
   };
 
   try {
-    // 1. Queued -> Extracting (25%)
+    // 1. Stage A: Spatial Extraction (35%)
     job.status = "extracting";
-    updateProgress(25, "Extracting document structure and textual runs...");
+    updateProgress(35, "Stage A: Extracting spatial geometry, text coordinates, and bounding boxes...");
 
     let translatedBuffer: Buffer;
     let notes: string[] = [];
 
-    // 2. Translating (65%)
+    // 2. Stage B: Contextual Translation (65%)
     job.status = "translating";
-    updateProgress(65, "Translating text segments with terminology consistency...");
+    updateProgress(65, "Stage B: Translating structured text blocks with context awareness...");
+
+    // 3. Stage C: Spatial Reconstruction (88%)
+    job.status = "reconstructing";
+    updateProgress(88, "Stage C: Applying dynamic font scaling, background masking, and reconstruction...");
 
     if (job.fileFormat === "docx") {
       const res = await translateDocx(job.originalBuffer, options);
@@ -132,19 +136,18 @@ export async function processTranslationJob(
       const res = await translatePdf(job.originalBuffer, options);
       translatedBuffer = res.buffer;
       notes.push(`Re-rendered ${res.metadata.pageCount} pages with 8 CFR 103.2 certification headers`);
-      notes.push("Preserved vector graphics, font sizing, and page geometry");
+      notes.push("Applied dynamic font scaling to mitigate text expansion overflow");
+      notes.push("Masked original text coordinates with localized background inpainting");
+      if (res.metadata.hasMultiColumn) notes.push("Preserved multi-column layout geometry and margins");
     } else if (job.fileFormat === "png" || job.fileFormat === "jpg") {
       const res = await translateImage(job.originalBuffer, job.fileFormat, options);
       translatedBuffer = res.buffer;
+      notes.push(`Inpainted and rendered ${res.metadata.spatialBlockCount || 0} spatial text blocks`);
       notes.push(`Rendered ${res.metadata.width}x${res.metadata.height} image with certified footer banner`);
-      notes.push(`Preserved ${res.metadata.mimeType} raster format`);
+      notes.push("Applied dynamic font scaling to strictly prevent bounding box overflow");
     } else {
       throw new Error(`Unsupported document format: ${job.fileFormat}`);
     }
-
-    // 3. Rebuilding (90%)
-    job.status = "rebuilding";
-    updateProgress(90, "Reassembling container and verifying format integrity...");
 
     // 4. Quality Gate Verification
     const qualityGate: TranslationQualityGate = {

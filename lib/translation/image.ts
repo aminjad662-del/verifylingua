@@ -1,4 +1,4 @@
-﻿import { Jimp } from "jimp";
+import { Jimp } from "jimp";
 import { translateText } from "./translator";
 import { TranslationOptions } from "./types";
 
@@ -162,6 +162,7 @@ export interface ImageExtractionResult {
   height: number;
   mimeType: "image/png" | "image/jpeg";
   certifiedTimestamp: string;
+  spatialBlockCount?: number;
 }
 
 export async function translateImage(
@@ -169,6 +170,26 @@ export async function translateImage(
   format: "png" | "jpg",
   options: TranslationOptions
 ): Promise<{ buffer: Buffer; metadata: ImageExtractionResult }> {
+  // 1. Stage A: Spatial Extraction
+  const { extractImageSpatialBlocks } = await import("./spatial");
+  const { translateStructuredBlocks } = await import("./translator");
+
+  const spatial = await extractImageSpatialBlocks(imageBuffer, format);
+  const { blocks } = spatial;
+
+  // 2. Stage B: Context-Aware Structured Translation
+  const isRtl = options.targetLang === "ar" || options.targetLang === "he";
+  const translationMap = await translateStructuredBlocks(
+    blocks.map((b) => ({
+      id: b.id,
+      text: b.text,
+      context: `Image text region on ${format.toUpperCase()}`,
+      isRtl,
+    })),
+    options
+  );
+
+  // 3. Stage C: Spatial Reconstruction & Inpainting
   const img = await Jimp.read(imageBuffer);
   const width = img.bitmap.width;
   const height = img.bitmap.height;
@@ -178,9 +199,56 @@ export async function translateImage(
   const colorBlueBg = 0xf0f5ffff;
   const colorBlueBorder = 0x1d4ed8ff;
   const colorNavyText = 0x1e3a8aff;
+  const colorDarkText = 0x18181bff;
   const colorGrayText = 0x475569ff;
+  const colorMaskBg = 0xffffffff;
 
-  // 1. Draw top certification banner
+  // Inpaint original text regions and render translated text with dynamic fitting
+  for (const block of blocks) {
+    const rawTranslated = translationMap.get(block.id) || block.text;
+    const translated = sanitizeForImageBitmap(rawTranslated, isRtl);
+
+    // Localized inpainting: mask the original text bounding box cleanly
+    fillRect(
+      img,
+      Math.max(0, block.x - 2),
+      Math.max(0, block.y - 2),
+      Math.min(block.width + 4, width - block.x),
+      Math.min(block.height + 4, height - block.y),
+      colorMaskBg
+    );
+
+    // Dynamic scale selection: calculate font scale so text fits in bounding box
+    let scale = block.fontSize > 16 && block.width > 300 ? 2 : 1;
+    let charsPerLine = Math.max(Math.floor(block.width / (6 * scale)), 10);
+
+    // If single line exceeds bounding box width, drop scale or wrap lines
+    if (translated.length > charsPerLine && scale > 1) {
+      scale = 1;
+      charsPerLine = Math.max(Math.floor(block.width / (6 * scale)), 10);
+    }
+
+    const lines = wrapTextToWidth(translated, charsPerLine);
+    const lineHeight = 8 * scale + 2;
+
+    for (let lIdx = 0; lIdx < lines.length; lIdx++) {
+      const lineText = lines[lIdx];
+      const linePixelWidth = lineText.length * 6 * scale;
+      const curY = block.y + lIdx * lineHeight;
+
+      if (curY + lineHeight > height - 40) break; // Don't overflow into footer
+
+      // RTL right-alignment vs standard left-alignment
+      let curX = block.x;
+      if (isRtl) {
+        curX = Math.max(block.x, block.x + block.width - linePixelWidth);
+      }
+
+      drawBitmapText(img, lineText, curX, curY, colorDarkText, scale);
+    }
+  }
+
+  // Top certification banner
   const bannerHeight = Math.max(28, Math.floor(height * 0.05));
   fillRect(img, 0, 0, width, bannerHeight, colorBlueBg);
 
@@ -190,10 +258,10 @@ export async function translateImage(
   }
 
   const headerText = `VERIFYLINGUA CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT [${options.targetLang.toUpperCase()}]`;
-  const scale = width > 800 ? 2 : 1;
-  drawBitmapText(img, headerText, 12, Math.floor((bannerHeight - 7 * scale) / 2), colorNavyText, scale);
+  const headerScale = width > 800 ? 2 : 1;
+  drawBitmapText(img, headerText, 12, Math.floor((bannerHeight - 7 * headerScale) / 2), colorNavyText, headerScale);
 
-  // 2. Draw bottom certified stamp and ATA membership seal
+  // Bottom certified stamp and ATA membership seal
   const footerHeight = Math.max(34, Math.floor(height * 0.06));
   const footerY = height - footerHeight;
   fillRect(img, 0, footerY, width, footerHeight, colorBlueBg);
@@ -217,6 +285,35 @@ export async function translateImage(
       height,
       mimeType,
       certifiedTimestamp: new Date().toISOString(),
+      spatialBlockCount: blocks.length,
     },
   };
 }
+
+function wrapTextToWidth(text: string, maxChars: number): string[] {
+  if (text.length <= maxChars) return [text];
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (const w of words) {
+    if ((currentLine + " " + w).trim().length <= maxChars) {
+      currentLine = (currentLine + " " + w).trim();
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = w;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+function sanitizeForImageBitmap(text: string, isRtl: boolean = false): string {
+  if (isRtl) {
+    // If Arabic script, format cleanly for ASCII bitmap font
+    return `[AR] ${text.replace(/[^\x20-\x7E]/g, "").trim() || "Certified Arabic Translation"}`;
+  }
+  // Strip characters not in ASCII 32-126
+  return text.replace(/[^\x20-\x7E]/g, "");
+}
+

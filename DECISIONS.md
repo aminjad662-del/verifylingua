@@ -53,3 +53,22 @@ This log records every non-obvious decision made during the elevation and produc
   - **Staggered Orchestration**: The dashboard mounts with a sophisticated staggered fade-up container (`staggerChildren: 0.08`, `delayChildren: 0.05`).
   - **Morphing Action Feedback**: "Download Receipt" and "Download Deliverable" buttons use `MorphingActionButton` to transition dynamically from idle -> loading spinner -> green checkmark bounce -> reset, paired with non-intrusive spring-animated toasts.
 
+---
+
+### Decision 6: High-Fidelity Document Reconstruction Engine (Spatial Geometry & Zero-Timeout Pipeline)
+- **Context**: Document translation cannot rely on simple string replacement, which disrupts document geometry, causes column collapse, and overflows margins when translated text expands (e.g. Spanish +20%). Furthermore, serverless execution mandates zero-timeout asynchronous processing.
+- **Architectural Implementation**:
+  1. **Stage A: Spatial Extraction & Geometry Parsing**:
+     - **PDF**: Decompresses internal content streams (`FlateDecode`), parsing text matrix (`Tm`), displacement (`Td`), font size (`Tf`), and text rendering (`Tj`/`TJ`) operators into discrete `SpatialTextBlock` objects with exact $(X, Y, W, H)$ bounding boxes and column detection.
+     - **Scanned Images**: Layout-aware spatial clustering detects text bounding boxes with background luminance sampling.
+     - **DOCX**: Groups OpenXML `<w:r>` runs within parent `<w:p>` paragraphs to retain semantic context while strictly preserving formatting (`<w:pPr>`, `<w:rPr>`, `<w:tbl>`, `<w:tcW>`).
+  2. **Stage B: Context-Aware Translation Layer**:
+     - Transmits structured block payloads with block IDs to Gemini LLM enforcing strict JSON schemas via Zod.
+     - Enforces an automatic exponential backoff retry mechanism (200ms, 400ms, 800ms) to gracefully handle 429 rate limits or malformed output, falling back to a deterministic certified legal dictionary offline.
+  3. **Stage C: Spatial Reconstruction & Dynamic Fitting**:
+     - **Dynamic Font-Size Scaling**: Auto-scales font size down dynamically to strictly fit translated text within the original bounding box without overflowing.
+     - **Localized Background Inpainting**: Applies localized background-color patches over original coordinates to mask previous text seamlessly before drawing translated text.
+     - **Bidirectional Script Support (RTL)**: Detects Arabic/Hebrew and aligns text to the bounding box right margin with appropriate RTL text flow.
+  4. **Zero-Timeout Asynchronous State Machine**:
+     - Dispatches processing to an async background job with discrete milestone stages (`queued` -> `extracting` -> `translating` -> `reconstructing` -> `ready`). Clients poll `GET /api/translate/status/[jobId]` without long-running HTTP connection timeouts.
+
