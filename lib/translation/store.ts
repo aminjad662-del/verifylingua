@@ -1,14 +1,31 @@
-﻿import crypto from "crypto";
+import crypto from "crypto";
 import { TranslationJob } from "./types";
 
 declare global {
   // eslint-disable-next-line no-var
   var __translationJobs: Map<string, TranslationJob> | undefined;
+  // eslint-disable-next-line no-var
+  var __translationJobsCleanupStarted: boolean | undefined;
 }
 
 const jobsMap: Map<string, TranslationJob> =
   globalThis.__translationJobs ?? new Map<string, TranslationJob>();
 globalThis.__translationJobs = jobsMap;
+
+// TTL auto-purge: remove expired jobs every hour (24h retention window)
+// Guard prevents duplicate intervals in Next.js hot-reload development
+if (!globalThis.__translationJobsCleanupStarted) {
+  globalThis.__translationJobsCleanupStarted = true;
+  setInterval(() => {
+    const now = Date.now();
+    for (const [id, job] of jobsMap.entries()) {
+      const expiresAt = new Date(job.tokenExpiresAt).getTime();
+      if (now > expiresAt) {
+        jobsMap.delete(id);
+      }
+    }
+  }, 60 * 60 * 1000); // Run every hour
+}
 
 export function createTranslationJob(params: {
   fileName: string;
