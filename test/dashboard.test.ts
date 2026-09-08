@@ -73,4 +73,28 @@ describe("Customer Dashboard & Onboarding Tests (Phase 6)", () => {
     expect(res.headers.get("content-type")).toBe("application/pdf");
     expect(res.headers.get("content-disposition")).toContain("VerifyLingua-Consolidated-Invoices-2026.pdf");
   });
+
+  it("streams uploaded evidentiary original document via /api/order/[id]/original with non-deletion guarantee headers", async () => {
+    const { GET } = await import("@/app/api/order/[id]/original/route");
+    const { NextRequest } = await import("next/server");
+
+    const req = new NextRequest("http://localhost:3000/api/order/VL-DEMO1/original");
+    const res = await GET(req, { params: Promise.resolve({ id: "VL-DEMO1" }) });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("application/pdf");
+    expect(res.headers.get("x-verifylingua-vault")).toBe("PERMANENT-RETENTION-ACTIVE");
+    expect(res.headers.get("x-verifylingua-policy")).toBe("CANNOT-DELETE-ACTIVE-REVIEW");
+    expect(res.headers.get("x-verifylingua-compliance")).toBe("8-CFR-204.2-EVIDENTIARY-HOLD");
+    expect(res.headers.get("content-disposition")).toContain("original_VL-DEMO1_evidence.pdf");
+
+    const fileBytes = new Uint8Array(await res.arrayBuffer());
+    expect(fileBytes.length).toBeGreaterThan(500);
+    // PDF Magic Bytes: %PDF
+    expect(fileBytes[0]).toBe(0x25);
+    expect(fileBytes[1]).toBe(0x50);
+    expect(fileBytes[2]).toBe(0x44);
+    expect(fileBytes[3]).toBe(0x46);
+  });
 });
+

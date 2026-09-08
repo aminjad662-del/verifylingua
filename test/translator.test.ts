@@ -106,4 +106,50 @@ describe("Linguist Studio™ Translator & Notary Workbench Suite (Stage 3)", () 
     expect(validData.status).toBe("QA");
     expect(validData.message).toContain("validated under 8 CFR");
   });
+
+  it("4. verifies DeepL neural translation integration and free-tier API routing", async () => {
+    const { callDeepLTranslation, callDeepLBatchTranslation } = await import(
+      "@/lib/translation/translator"
+    );
+
+    // Test with mock fetch to verify payload & authorization header
+    const originalFetch = global.fetch;
+    let interceptedUrl = "";
+    let interceptedHeaders: any = {};
+    let interceptedBody: any = {};
+
+    global.fetch = async (url: any, init: any) => {
+      interceptedUrl = url.toString();
+      interceptedHeaders = init.headers;
+      interceptedBody = JSON.parse(init.body);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          translations: [{ text: "CERTIFICATE OF LIVE BIRTH" }],
+        }),
+      } as any;
+    };
+
+    try {
+      const translated = await callDeepLTranslation(
+        "ACTA DE NACIMIENTO",
+        { sourceLang: "es", targetLang: "en" },
+        "7dbfa8c2-d1fc-4453-940a-4cfda3861f97:fx"
+      );
+
+      expect(translated).toBe("CERTIFICATE OF LIVE BIRTH");
+      // Must route to free tier API because of :fx suffix
+      expect(interceptedUrl).toBe("https://api-free.deepl.com/v2/translate");
+      expect(interceptedHeaders["Authorization"]).toBe(
+        "DeepL-Auth-Key 7dbfa8c2-d1fc-4453-940a-4cfda3861f97:fx"
+      );
+      // Target lang for English must map to EN-US
+      expect(interceptedBody.target_lang).toBe("EN-US");
+      expect(interceptedBody.source_lang).toBe("ES");
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
 });
+

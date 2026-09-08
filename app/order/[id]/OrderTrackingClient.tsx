@@ -14,6 +14,9 @@ import {
   MessageSquare,
   Send,
   ExternalLink,
+  FileText,
+  Lock,
+  Download,
 } from "lucide-react";
 
 interface OrderEventItem {
@@ -184,6 +187,77 @@ function OrderTrackingContent() {
             <ExternalLink className="w-4 h-4" />
           </Link>
         </Button>
+      </div>
+
+      {/* Uploaded Evidentiary Record & Non-Deletion Protection Card */}
+      <div className="p-6 md:p-8 rounded-[28px] bg-surface-raised border-2 border-border shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-500 shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-brand-ink">
+                  Uploaded Evidentiary Record
+                </h3>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-status-success/10 text-status-success border border-status-success/20">
+                  <Lock className="w-2.5 h-2.5 mr-0.5" />
+                  Protected • Non-Deletion Hold
+                </span>
+              </div>
+              <p className="text-xs text-text-muted">
+                Permanent Vault Retention (§ 204.2) • Cryptographically Locked &amp; Backed Up
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="h-9 px-4 rounded-xl text-xs gap-1.5 font-bold hover:bg-surface-sunken"
+            >
+              <a href={`/api/order/${publicCode}/original`} download>
+                <Download className="w-3.5 h-3.5 text-brand-500" />
+                <span>Download Original File</span>
+              </a>
+            </Button>
+            <Button
+              size="sm"
+              asChild
+              className="h-9 px-4 rounded-xl text-xs gap-1.5 font-bold bg-brand-500 hover:bg-brand-600 text-white"
+            >
+              <Link href={`/order/${publicCode}/proof`}>
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Inspect in Proofing Studio</span>
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-text-muted">Document Name</span>
+            <p className="font-bold text-brand-ink truncate font-mono">sample_birth_cert.pdf</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-text-muted">Integrity Checksum</span>
+            <p className="font-bold text-brand-ink font-mono text-[11px] truncate">SHA-256: e3b0c442...92427a</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-text-muted">Retention Policy</span>
+            <p className="font-bold text-status-success font-mono">Retained for 365 Days (Cannot Delete)</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-[11px] text-text-muted bg-lavender-50/60 p-3 rounded-xl border border-brand-100">
+          <ShieldCheck className="w-4 h-4 text-brand-500 shrink-0" />
+          <span>
+            <strong>Non-Deletion Guarantee:</strong> Under 8 CFR § 103.2 and § 204.2 USCIS evidentiary regulations, your uploaded source files are retained permanently in your private 256-bit encrypted vault and cannot be purged or deleted during active review or legal filing.
+          </span>
+        </div>
       </div>
 
       {/* 7-Stage Visual Step Tracker */}

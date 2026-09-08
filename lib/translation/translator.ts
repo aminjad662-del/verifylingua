@@ -101,9 +101,20 @@ export async function translateText(
     }
   }
 
-  // 3. If Gemini API key is configured, call LLM with strict translation prompt
+  // 3. Check DeepL Neural Translation API
+  const deeplKey = process.env.DEEPL_API_KEY;
+  if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && !process.env.VITEST) {
+    try {
+      const translated = await callDeepLTranslation(trimmed, options, deeplKey);
+      if (translated) return translated;
+    } catch {
+      // Fall through to Gemini or deterministic dictionary
+    }
+  }
+
+  // 4. If Gemini API key is configured, call LLM with strict translation prompt
   const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey && apiKey !== "mock" && apiKey.length > 10) {
+  if (apiKey && apiKey !== "mock" && apiKey.length > 10 && !process.env.VITEST) {
     try {
       const translated = await callGeminiTranslation(trimmed, options, apiKey);
       if (translated) return translated;
@@ -112,7 +123,7 @@ export async function translateText(
     }
   }
 
-  // 4. Deterministic certified mock/offline translation engine (maintains exact formatting)
+  // 5. Deterministic certified mock/offline translation engine (maintains exact formatting)
   return mockTranslateDeterministic(trimmed, options.sourceLang, options.targetLang);
 }
 
@@ -130,7 +141,7 @@ export async function translateBatch(
 /**
  * Stage B: Context-Aware Structured Translation Layer.
  * Groups spatial text blocks to preserve full paragraph context,
- * sends structured JSON payload to LLM with schema enforcement,
+ * translates via DeepL Neural Engine or Gemini LLM with schema enforcement,
  * and handles 429 rate limits via exponential backoff.
  */
 export async function translateStructuredBlocks(
@@ -140,7 +151,8 @@ export async function translateStructuredBlocks(
   const resultMap = new Map<string, string>();
   if (blocks.length === 0) return resultMap;
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const deeplKey = process.env.DEEPL_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
 
   // Chunk blocks into semantic batches of up to 15 blocks
   const CHUNK_SIZE = 15;
@@ -149,8 +161,28 @@ export async function translateStructuredBlocks(
 
     let chunkTranslations: { id: string; translatedText: string }[] | null = null;
 
-    if (apiKey && apiKey !== "mock" && apiKey.length > 10) {
-      chunkTranslations = await callGeminiStructuredBatch(chunk, options, apiKey);
+    // 1. Try DeepL Neural Translation
+    if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && !process.env.VITEST) {
+      try {
+        const deeplResults = await callDeepLBatchTranslation(
+          chunk.map((b) => b.text),
+          options,
+          deeplKey
+        );
+        if (deeplResults && deeplResults.length === chunk.length) {
+          chunkTranslations = chunk.map((b, idx) => ({
+            id: b.id,
+            translatedText: deeplResults[idx],
+          }));
+        }
+      } catch {
+        // Fall through to Gemini or offline dictionary
+      }
+    }
+
+    // 2. Fall back to Gemini structured LLM
+    if (!chunkTranslations && geminiKey && geminiKey !== "mock" && geminiKey.length > 10 && !process.env.VITEST) {
+      chunkTranslations = await callGeminiStructuredBatch(chunk, options, geminiKey);
     }
 
     if (chunkTranslations && chunkTranslations.length > 0) {
@@ -158,7 +190,7 @@ export async function translateStructuredBlocks(
         resultMap.set(item.id, item.translatedText);
       }
     } else {
-      // Offline / deterministic fallback
+      // 3. Offline / deterministic fallback
       for (const b of chunk) {
         let translated = await translateText(b.text, options);
 
@@ -173,6 +205,83 @@ export async function translateStructuredBlocks(
   }
 
   return resultMap;
+}
+
+export async function callDeepLTranslation(
+  text: string,
+  options: TranslationOptions,
+  apiKey: string
+): Promise<string | null> {
+  const results = await callDeepLBatchTranslation([text], options, apiKey);
+  return results && results.length > 0 ? results[0] : null;
+}
+
+export async function callDeepLBatchTranslation(
+  texts: string[],
+  options: TranslationOptions,
+  apiKey: string
+): Promise<string[] | null> {
+  const isFree = apiKey.endsWith(":fx");
+  const endpoint = isFree
+    ? "https://api-free.deepl.com/v2/translate"
+    : "https://api.deepl.com/v2/translate";
+
+  const targetLang = mapToDeepLLang(options.targetLang);
+  const payload: any = {
+    text: texts,
+    target_lang: targetLang,
+  };
+
+  if (options.sourceLang) {
+    const src = options.sourceLang.toUpperCase().split("-")[0];
+    if (["EN", "ES", "FR", "DE", "IT", "PT", "NL", "PL", "RU", "JA", "ZH", "AR"].includes(src)) {
+      payload.source_lang = src;
+    }
+  }
+
+  // Legal formality for supported target languages
+  if (["DE", "ES", "FR", "IT", "JA", "NL", "PL", "PT", "RU"].includes(targetLang.slice(0, 2))) {
+    payload.formality = "prefer_more";
+  }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `DeepL-Auth-Key ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 429) {
+        await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
+        continue;
+      }
+
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (Array.isArray(data.translations)) {
+        return data.translations.map((t: any) => t.text);
+      }
+      return null;
+    } catch {
+      if (attempt === 2) return null;
+      await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
+    }
+  }
+
+  return null;
+}
+
+function mapToDeepLLang(lang: string): string {
+  const code = (lang || "en").toLowerCase();
+  if (code === "en" || code === "en-us") return "EN-US";
+  if (code === "en-gb") return "EN-GB";
+  if (code === "pt-br") return "PT-BR";
+  if (code === "pt" || code === "pt-pt") return "PT-PT";
+  return code.toUpperCase();
 }
 
 async function callGeminiStructuredBatch(
