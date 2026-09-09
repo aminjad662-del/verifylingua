@@ -70,6 +70,8 @@ export interface TranslationQualityGate {
   byteSize: number;
   verifiedAt: string;
   notes: string[];
+  /** True when spatial layout was fully reconstructed; false when fallback text-only PDF was used */
+  layoutPreserved: boolean;
 }
 
 export interface TranslationJob {
@@ -90,6 +92,8 @@ export interface TranslationJob {
   tokenExpiresAt: string;
   qualityGate?: TranslationQualityGate;
   error?: string;
+  /** Mirrors qualityGate.layoutPreserved — false signals the fallback text-only PDF was served */
+  layoutPreserved?: boolean;
 }
 
 export interface TranslationOptions {

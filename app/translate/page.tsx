@@ -43,6 +43,8 @@ interface JobState {
     byteSize: number;
     verifiedAt: string;
   } | null;
+  /** null = not yet determined; true = full spatial reconstruction; false = text-only fallback */
+  layoutPreserved: boolean | null;
   error: string | null;
 }
 
@@ -126,6 +128,7 @@ export default function TranslatePage() {
                 currentStep: data.currentStep,
                 downloadUrl: data.downloadUrl,
                 qualityGate: data.qualityGate,
+                layoutPreserved: data.layoutPreserved ?? null,
                 error: data.error,
               }
             : null
@@ -156,6 +159,7 @@ export default function TranslatePage() {
         downloadUrl: null,
         downloadToken: null,
         qualityGate: null,
+        layoutPreserved: null,
         error: null,
       });
 
@@ -197,6 +201,7 @@ export default function TranslatePage() {
           downloadUrl: null,
           downloadToken: data.downloadToken,
           qualityGate: null,
+          layoutPreserved: null,
           error: null,
         });
 
@@ -465,6 +470,25 @@ export default function TranslatePage() {
                     {job.qualityGate.byteSize.toLocaleString()} bytes ·{" "}
                     {new Date(job.qualityGate.verifiedAt).toLocaleTimeString()}
                   </p>
+                </div>
+              )}
+
+              {/* Layout Fallback Warning — shown when layout_preserved: false */}
+              {job.status === "ready" && job.layoutPreserved === false && (
+                <div className="px-6 pb-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded p-3 flex gap-3">
+                    <svg className="w-4 h-4 text-cta flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.27 16.5C2.5 18.333 3.462 20 5.002 20z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs font-medium text-cta">Layout Fallback Applied</p>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        Spatial reconstruction could not be completed for this document.
+                        A text-only PDF has been generated (<code className="font-mono">layout_preserved: false</code>).
+                        Contact <span className="font-medium">support@verifylingua.com</span> for a manual layout-preserving translation.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 

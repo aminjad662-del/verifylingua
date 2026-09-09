@@ -35,6 +35,7 @@ export async function GET(
           ? `/api/translate/download/${job.id}?token=${job.downloadToken}`
           : null,
       qualityGate: job.qualityGate || null,
+      layoutPreserved: job.layoutPreserved ?? null,
       error: job.error || null,
     });
   } catch (err: any) {

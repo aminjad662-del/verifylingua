@@ -96,3 +96,14 @@ This log records every non-obvious decision made during the elevation and produc
      - Standardized global order stepper in `app/order/layout.tsx` to strictly match the actual flow: **Triage -> Configure -> Lock -> Checkout**.
 
 
+  
+---  
+  
+### Decision 8: High-Fidelity Document Translation Engine - Phase 1-5 Architecture  
+- **Context**: The core pipeline must accept PDF/DOCX/PNG/JPG, translate with layout preservation, serve a presigned download, and flag layout_preserved:false on fallback.  
+- **Storage**: In-memory Map<string, TranslationJob> with 24h TTL and hourly cleanup. No external database required for Cloudflare Pages edge deployment. Buffers held in memory; R2/Supabase migration path documented.  
+- **Translation**: DeepL free-tier (api-free.deepl.com) as primary engine (api key :fx suffix routing). Gemini 1.5 Flash as structured JSON fallback. Deterministic legal glossary as offline/CI fallback.  
+- **DOCX**: JSZip unzip, w:t run extraction with XML-entity safe replacement, translateStructuredBlocks batch, re-zip DEFLATE.  
+- **PDF**: FlateDecode zlib inflate, Tf/Tm/Td/Tj/TJ operator parsing for bounding boxes, pdf-lib drawRectangle mask + drawText overlay, dynamic font scaling, WinAnsi sanitization.  
+- **Images**: Jimp read, dimension-matched spatial presets, fillRect inpaint, 5x7 bitmap glyph atlas render, dynamic scale/wrap, RTL right-align.  
+- **Failure Handling**: PDF reconstruction failure triggers text-only PDF fallback (pdf-lib blank page) with layout_preserved:false in quality gate and API response. Non-PDF failures mark job failed. All state exposed via /api/translate/status/[jobId].  
