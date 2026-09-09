@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { validateInputFile, processTranslationJob } from "@/lib/translation/pipeline";
 import { createTranslationJob, updateTranslationJob } from "@/lib/translation/store";
 

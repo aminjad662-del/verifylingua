@@ -19,54 +19,56 @@ export const processDocumentWorkflow = inngest.createFunction(
       return { id: j.id, sourceKey: j.sourceKey, targetLanguage: j.targetLanguage, filename: j.sourceFilename };
     });
 
-    const sourceBuffer = await step.run("load-source-buffer", async () => {
-      return await getObject(job.sourceKey);
-    });
-
     // Step 2: Classify Document
     const classification = await step.run("classify-document", async () => {
+      const buf = await getObject(job.sourceKey);
       await updatePersistentJob(job.id, {
         status: "classifying",
-        currentStep: "Classifying document format, layout, and complexity…",
+        currentStep: "Classifying document format, layout, and complexityâ€¦",
         progress: 20,
       });
       return await autonomousDocumentAgent.classifyDocument({
-        buffer: sourceBuffer,
+        buffer: buf,
         filename: job.filename,
         targetLanguage: job.targetLanguage,
       });
     });
 
-    // Step 3: Extract & Translate Document
+    // Step 3: Extract, Translate, Reconstruct & Persist Output
+    const outputKey = `outputs/${job.id}/translated_${job.filename}`;
     const translationResult = await step.run("translate-and-reconstruct", async () => {
+      const buf = await getObject(job.sourceKey);
       await updatePersistentJob(job.id, {
         status: "translating",
-        currentStep: `Translating content using ${classification.selectedProvider} engine…`,
+        currentStep: `Translating content using ${classification.selectedProvider} engineâ€¦`,
         progress: 50,
       });
 
-      return await autonomousDocumentAgent.processDocument({
-        buffer: sourceBuffer,
+      const processed = await autonomousDocumentAgent.processDocument({
+        buffer: buf,
         filename: job.filename,
         targetLang: job.targetLanguage,
       });
+
+      await putObject(outputKey, processed.translatedBuffer, classification.mimeType);
+
+      return {
+        outputKey,
+        providerUsed: processed.providerUsed,
+        fidelityScore: processed.fidelityScore,
+        issues: processed.issues,
+        warnings: processed.warnings,
+      };
     });
 
-    // Step 4: Persist Output
-    const outputKey = `outputs/${job.id}/translated_${job.filename}`;
-    await step.run("store-output", async () => {
-      await putObject(outputKey, translationResult.translatedBuffer, classification.mimeType);
-      return { outputKey };
-    });
-
-    // Step 5: Finalize Job
+    // Step 4: Finalize Job
     await step.run("finalize-job", async () => {
       const hasWarnings = translationResult.warnings.length > 0;
       await updatePersistentJob(job.id, {
         status: hasWarnings ? "completed_with_warnings" : "completed",
         currentStep: "Document translation, layout reconstruction, and QA certified.",
         progress: 100,
-        outputKey,
+        outputKey: translationResult.outputKey,
         provider: translationResult.providerUsed,
         fidelityScore: translationResult.fidelityScore.overallScore,
         fidelityBreakdown: translationResult.fidelityScore,
@@ -94,7 +96,7 @@ export async function executeAutonomousDocumentPipeline(jobId: string): Promise<
 
       await updatePersistentJob(jobId, {
         status: "classifying",
-        currentStep: "Analyzing document format, density, and language structure…",
+        currentStep: "Analyzing document format, density, and language structureâ€¦",
         progress: 15,
         startedAt: new Date().toISOString(),
       });
@@ -103,7 +105,7 @@ export async function executeAutonomousDocumentPipeline(jobId: string): Promise<
 
       await updatePersistentJob(jobId, {
         status: "extracting",
-        currentStep: "Extracting geometric text runs, bounding boxes, and reading order…",
+        currentStep: "Extracting geometric text runs, bounding boxes, and reading orderâ€¦",
         progress: 35,
       });
 

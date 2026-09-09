@@ -1,4 +1,4 @@
-﻿# Project Status Report (STATUS.md)
+# Project Status Report (STATUS.md)
 
 **Project:** VerifyLingua Elevation & Production Document Translation Engine  
 **Current Status:** All Phases Complete (Phase 0, Phase 1, Phase 2, Phase 3)  

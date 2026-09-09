@@ -4,14 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __memoryGlossaries: Map<string, any> | undefined;
-}
-
-const memoryGlossaries =
-  globalThis.__memoryGlossaries ?? new Map<string, any>();
-globalThis.__memoryGlossaries = memoryGlossaries;
+import { memoryGlossaries } from "@/lib/glossary/store";
 
 export async function PUT(
   req: NextRequest,

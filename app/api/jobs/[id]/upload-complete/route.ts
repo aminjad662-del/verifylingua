@@ -51,7 +51,7 @@ export async function POST(
 
     await updatePersistentJob(id, {
       status: "uploaded",
-      currentStep: "Upload confirmed. Triggering autonomous translation pipeline…",
+      currentStep: "Upload confirmed. Triggering autonomous translation pipelineâ€¦",
       progress: 10,
     });
 

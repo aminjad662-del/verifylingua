@@ -2,38 +2,38 @@
 
 ---
 
-## Stage 10: High-Fidelity Document Translation Engine (Phases 1–5)
+## Stage 10: High-Fidelity Document Translation Engine (Phases 1â€“5)
 
-**Status:** COMPLETE — All 5 phases implemented, tested, and deployed.
+**Status:** COMPLETE â€” All 5 phases implemented, tested, and deployed.
 
-### Phase 1 — Ingestion & Storage Pipeline
-- app/api/translate/upload/route.ts — Accepts multipart/form-data and JSON base64. Magic-byte MIME validation.
-- lib/translation/store.ts — In-memory Map with 24h TTL. Hourly setInterval auto-purge.
-- lib/translation/pipeline.ts — validateInputFile(): PDF(%PDF), PNG(8-byte sig), JPG(FF D8 FF), DOCX(PK header). 50MB cap enforced.
+### Phase 1 â€” Ingestion & Storage Pipeline
+- app/api/translate/upload/route.ts â€” Accepts multipart/form-data and JSON base64. Magic-byte MIME validation.
+- lib/translation/store.ts â€” In-memory Map with 24h TTL. Hourly setInterval auto-purge.
+- lib/translation/pipeline.ts â€” validateInputFile(): PDF(%PDF), PNG(8-byte sig), JPG(FF D8 FF), DOCX(PK header). 50MB cap enforced.
 
-### Phase 2 — DOCX Engine (XML Parsing)
-- lib/translation/docx.ts — JSZip unzip, targets word/document.xml, header/footer/footnotes. Extracts w:t text runs, batch-translates via translateStructuredBlocks(), re-injects XML-encoded translations, re-zips DEFLATE.
-- lib/translation/spatial.ts/groupDocxParagraphRuns() — Groups w:r runs into w:p paragraphs for contextual translation.
+### Phase 2 â€” DOCX Engine (XML Parsing)
+- lib/translation/docx.ts â€” JSZip unzip, targets word/document.xml, header/footer/footnotes. Extracts w:t text runs, batch-translates via translateStructuredBlocks(), re-injects XML-encoded translations, re-zips DEFLATE.
+- lib/translation/spatial.ts/groupDocxParagraphRuns() â€” Groups w:r runs into w:p paragraphs for contextual translation.
 
-### Phase 3 — Image Engine (Real Tesseract.js OCR)
+### Phase 3 â€” Image Engine (Real Tesseract.js OCR)
 - Installed tesseract.js 7.0.0 WASM engine.
-- lib/translation/spatial.ts/extractImageSpatialBlocks() — Real character recognition, =1200px 300-DPI pre-scaling, 40% confidence threshold, Y-centroid baseline line grouping, RTL auto-detection.
-- lib/translation/image.ts — Inpainting, dynamic font scaling, RTL right-alignment, certified footer banner.
+- lib/translation/spatial.ts/extractImageSpatialBlocks() â€” Real character recognition, =1200px 300-DPI pre-scaling, 40% confidence threshold, Y-centroid baseline line grouping, RTL auto-detection.
+- lib/translation/image.ts â€” Inpainting, dynamic font scaling, RTL right-alignment, certified footer banner.
 
-### Phase 4 — PDF Engine (Coordinate Mapping)
-- lib/translation/spatial.ts/extractPdfSpatialBlocks() — zlib.inflateSync() FlateDecode stream parser, Tf/Tm/Td/Tj/TJ extraction.
-- lib/translation/pdf.ts/translatePdf() — pdf-lib background masking, dynamic font scaling, WinAnsi sanitization, 8 CFR 103.2 certification headers.
+### Phase 4 â€” PDF Engine (Coordinate Mapping)
+- lib/translation/spatial.ts/extractPdfSpatialBlocks() â€” zlib.inflateSync() FlateDecode stream parser, Tf/Tm/Td/Tj/TJ extraction.
+- lib/translation/pdf.ts/translatePdf() â€” pdf-lib background masking, dynamic font scaling, WinAnsi sanitization, 8 CFR 103.2 certification headers.
 
-### Phase 5 — Webhooks & Client Polling
-- app/api/translate/status/[jobId]/route.ts — Polling endpoint with quality gate & layout fallback metadata.
-- app/api/translate/download/[jobId]/route.ts — Token-validated stream.
-- app/translate/page.tsx — Dropzone, polling, Framer Motion progress bar, certified download button.
+### Phase 5 â€” Webhooks & Client Polling
+- app/api/translate/status/[jobId]/route.ts â€” Polling endpoint with quality gate & layout fallback metadata.
+- app/api/translate/download/[jobId]/route.ts â€” Token-validated stream.
+- app/translate/page.tsx â€” Dropzone, polling, Framer Motion progress bar, certified download button.
 
 ---
 
 ## Stage 11: Autonomous High-Fidelity Document Translation SaaS Platform
 
-**Status:** COMPLETE — Fully implemented, zero-regression verified, and connected to existing UI.
+**Status:** COMPLETE â€” Fully implemented, zero-regression verified, and connected to existing UI.
 
 ### 1. Database Schema Extension (Prisma)
 - Added `Organization`, `TranslationJob`, `TranslationSegment`, `TranslationVersion`, `ProviderJob`, `QAResult`, `QAIssue`, `Glossary`, `UsageEvent`, `Subscription`, and `AuditEvent` to `prisma/schema.prisma`.
@@ -50,7 +50,7 @@
 - `lib/providers/gemini/index.ts`: Structured JSON translation and semantic QA validation.
 
 ### 4. Multi-Vector Fidelity Engine (`lib/fidelity/index.ts`)
-- Computes authentic 0–100 Fidelity Score across 6 weighted vectors:
+- Computes authentic 0â€“100 Fidelity Score across 6 weighted vectors:
   - Layout (30%)
   - Text Coverage (25%)
   - Page Count (15%)
@@ -94,6 +94,6 @@
 - Verified 0 raw hex violations with `node scripts/check-raw-hex.js`.
 
 ### 10. Verification Results (Stage 11)
-- Vitest: **88 / 88 tests passing (15 test files)** — 0 regressions across entire codebase.
+- Vitest: **88 / 88 tests passing (15 test files)** â€” 0 regressions across entire codebase.
 - check-raw-hex.js: **0 hex violations**.
-- All Phase 1–15 DoD criteria fully satisfied.
+- All Phase 1â€“15 DoD criteria fully satisfied.

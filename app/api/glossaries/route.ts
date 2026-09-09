@@ -5,25 +5,7 @@ import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
-interface MemoryGlossary {
-  id: string;
-  userId?: string | null;
-  name: string;
-  sourceLang: string;
-  targetLang: string;
-  terms: { id: string; sourceText: string; requiredTarget: string; locked: boolean }[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __memoryGlossaries: Map<string, MemoryGlossary> | undefined;
-}
-
-const memoryGlossaries =
-  globalThis.__memoryGlossaries ?? new Map<string, MemoryGlossary>();
-globalThis.__memoryGlossaries = memoryGlossaries;
+import { memoryGlossaries, MemoryGlossary } from "@/lib/glossary/store";
 
 export async function GET(req: NextRequest) {
   try {

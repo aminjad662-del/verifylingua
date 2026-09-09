@@ -141,9 +141,9 @@ export class DeepLProvider implements TranslationProvider {
           "UNIVERSIDAD NACIONAL AUTONOMA": "??????? ??????? ????????",
         },
         es: {
-          "CERTIFIED TRANSLATION": "TRADUCCIÓN CERTIFICADA",
+          "CERTIFIED TRANSLATION": "TRADUCCIÃ“N CERTIFICADA",
           "BIRTH CERTIFICATE": "CERTIFICADO DE NACIMIENTO",
-          "REPUBLIC": "REPÚBLICA",
+          "REPUBLIC": "REPÃšBLICA",
           "MINISTRY OF FOREIGN AFFAIRS": "MINISTERIO DE ASUNTOS EXTERIORES",
           "CIVIL REGISTRY": "REGISTRO CIVIL",
           "Full Name": "Nombre Completo",
@@ -152,15 +152,15 @@ export class DeepLProvider implements TranslationProvider {
           "Nationality": "Nacionalidad",
         },
         fr: {
-          "CERTIFIED TRANSLATION": "TRADUCTION CERTIFIÉE CONFORME",
+          "CERTIFIED TRANSLATION": "TRADUCTION CERTIFIÃ‰E CONFORME",
           "BIRTH CERTIFICATE": "ACTE DE NAISSANCE",
-          "REPUBLIC": "RÉPUBLIQUE",
-          "MINISTRY OF FOREIGN AFFAIRS": "MINISTÈRE DES AFFAIRES ÉTRANGÈRES",
-          "CIVIL REGISTRY": "ÉTAT CIVIL",
-          "Full Name": "Nom et Prénoms",
+          "REPUBLIC": "RÃ‰PUBLIQUE",
+          "MINISTRY OF FOREIGN AFFAIRS": "MINISTÃˆRE DES AFFAIRES Ã‰TRANGÃˆRES",
+          "CIVIL REGISTRY": "Ã‰TAT CIVIL",
+          "Full Name": "Nom et PrÃ©noms",
           "Date of Birth": "Date de Naissance",
           "Place of Birth": "Lieu de Naissance",
-          "Nationality": "Nationalité",
+          "Nationality": "NationalitÃ©",
         },
       };
 

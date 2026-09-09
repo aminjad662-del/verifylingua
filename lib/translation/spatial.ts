@@ -312,7 +312,9 @@ export async function extractImageSpatialBlocks(
 
       // ── Word-level block extraction with confidence filtering ──────────────
       const MIN_CONFIDENCE = 40; // discard noise / artifacts
-      const rawWords = data.words ?? [];
+      const rawWords: Array<{ text: string; confidence: number; bbox: { x0: number; y0: number; x1: number; y1: number } }> =
+        (data as any).words ??
+        (data.blocks?.flatMap((b) => b.paragraphs.flatMap((p) => p.lines.flatMap((l) => l.words))) ?? []);
 
       // Build raw word list with bounding boxes from the (potentially scaled)
       // OCR run, then scale coordinates back to original image dimensions

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import Link from "next/link";
 import { ShieldCheck, CheckCircle2, Building2, GraduationCap, Landmark, Globe, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
