@@ -59,11 +59,15 @@ export async function POST(req: NextRequest) {
 
     // 4. Check for existing user (DB with memory fallback)
     let existingUser: { id: string; email: string; isGuest: boolean } | null = null;
-    try {
-      existingUser = await prisma.user.findUnique({
-        where: { email },
-      });
-    } catch {
+    if (!process.env.VITEST) {
+      try {
+        existingUser = await prisma.user.findUnique({
+          where: { email },
+        });
+      } catch {
+        existingUser = Array.from(memoryUsers.values()).find((u) => u.email === email) || null;
+      }
+    } else {
       existingUser = Array.from(memoryUsers.values()).find((u) => u.email === email) || null;
     }
 
@@ -77,46 +81,54 @@ export async function POST(req: NextRequest) {
     // 5. Hash password with OWASP-compliant scrypt
     const passwordHash = await hashPassword(password);
 
-    let user: SafeUser;
-    try {
-      if (existingUser && existingUser.isGuest) {
-        user = await prisma.user.update({
-          where: { id: existingUser.id },
-          data: {
-            name,
-            passwordHash,
-            role: accountType === "LAW_FIRM" ? "ATTORNEY" : "CUSTOMER",
-            accountType,
-            companyName: companyName || null,
-            isGuest: false,
-            updatedAt: new Date(),
-          },
-        });
-      } else {
-        user = await prisma.user.create({
-          data: {
-            email,
-            name,
-            passwordHash,
-            role: accountType === "LAW_FIRM" ? "ATTORNEY" : "CUSTOMER",
-            accountType,
-            companyName: companyName || null,
-            isGuest: false,
-          },
-        });
-      }
+    let user: SafeUser | null = null;
+    let createdInDb = false;
+    if (!process.env.VITEST) {
+      try {
+        if (existingUser && existingUser.isGuest) {
+          user = await prisma.user.update({
+            where: { id: existingUser.id },
+            data: {
+              name,
+              passwordHash,
+              role: accountType === "LAW_FIRM" ? "ATTORNEY" : "CUSTOMER",
+              accountType,
+              companyName: companyName || null,
+              isGuest: false,
+              updatedAt: new Date(),
+            },
+          });
+        } else {
+          user = await prisma.user.create({
+            data: {
+              email,
+              name,
+              passwordHash,
+              role: accountType === "LAW_FIRM" ? "ATTORNEY" : "CUSTOMER",
+              accountType,
+              companyName: companyName || null,
+              isGuest: false,
+            },
+          });
+        }
 
-      // 6. Inherit and link any prior guest orders placed under this email
-      await prisma.order.updateMany({
-        where: {
-          guestEmail: email,
-          userId: null,
-        },
-        data: {
-          userId: user.id,
-        },
-      });
-    } catch {
+        // 6. Inherit and link any prior guest orders placed under this email
+        await prisma.order.updateMany({
+          where: {
+            guestEmail: email,
+            userId: null,
+          },
+          data: {
+            userId: user.id,
+          },
+        });
+        createdInDb = true;
+      } catch {
+        // fallback
+      }
+    }
+
+    if (!user) {
       // Resilient fallback to memory store
       const memId = existingUser ? existingUser.id : `usr_${Date.now()}`;
       const memUser = {

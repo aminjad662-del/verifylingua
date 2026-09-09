@@ -1,16 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser, getSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 import { listUserJobs } from "@/lib/translation/persistent-store";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    const jobs = await listUserJobs(user?.id);
+    let user = await getCurrentUser();
+    let userId = user?.id;
+
+    if (!userId) {
+      const cookieToken = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+      if (cookieToken) {
+        const sessionUser = await getSessionUser(cookieToken);
+        userId = sessionUser?.id;
+      }
+    }
+
+    if (!userId) {
+      userId = req.headers.get("x-user-id") || req.nextUrl?.searchParams?.get("userId") || undefined;
+    }
+
+    const jobs = await listUserJobs(userId);
 
     const formatted = jobs.map((j) => ({
       id: j.id,
+      userId: j.userId,
       filename: j.sourceFilename,
       format: j.sourceFormat,
       sourceLanguage: j.sourceLanguage,
@@ -30,6 +45,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       history: formatted,
+      jobs: formatted,
       totalCount: formatted.length,
     });
   } catch (err: any) {

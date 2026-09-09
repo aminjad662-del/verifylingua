@@ -19,21 +19,19 @@ export class ProviderRouter {
     targetLanguage: string;
     complexity?: "low" | "medium" | "high";
   }): TranslationProvider {
-    const target = params.targetLanguage.toLowerCase();
+    // Gemini 3.1 Pro is primary for context-aware structured document translation
+    if (this.gemini.isAvailable()) {
+      return this.gemini;
+    }
 
-    // DeepL is top-tier for legal Latin & Arabic documents
+    // DeepL is primary fallback
     if (this.deepl.isAvailable()) {
       return this.deepl;
     }
 
-    // Azure Translator for structured XML and Asian/African languages
+    // Azure Translator for structured XML
     if (this.azure.isAvailable()) {
       return this.azure;
-    }
-
-    // Gemini for complex reasoning and layout-aware tag retention
-    if (this.gemini.isAvailable()) {
-      return this.gemini;
     }
 
     // Google Translate fallback
@@ -41,20 +39,20 @@ export class ProviderRouter {
       return this.google;
     }
 
-    // Default to DeepL provider (which includes certified legal dictionary fallback)
-    return this.deepl;
+    return this.gemini;
   }
 
   /**
-   * Translates batch with automatic resilient failover chain
+   * Translates batch with automatic resilient failover chain:
+   * Gemini 3.1 Pro (Primary) -> DeepL (Fallback) -> Azure -> Google
    */
   async translateWithFallback(
     input: BatchTranslationInput,
     preferredProviderName?: string
   ): Promise<{ results: BatchTranslationResult[]; providerUsed: string }> {
     const providers: TranslationProvider[] = [
-      this.deepl,
       this.gemini,
+      this.deepl,
       this.azure,
       this.google,
     ];

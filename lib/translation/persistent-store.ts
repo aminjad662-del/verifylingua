@@ -4,6 +4,8 @@ import { putObject, getObject } from "../storage";
 import { FidelityScoreBreakdown, FidelityIssue } from "../fidelity";
 
 export type PersistentJobStatus =
+  | "queued"
+  | "rendering"
   | "created"
   | "uploading"
   | "uploaded"
@@ -44,7 +46,7 @@ export interface PersistentTranslationJob {
   providerJobId?: string | null;
   fidelityScore?: number | null;
   fidelityBreakdown?: FidelityScoreBreakdown | null;
-  issues?: FidelityIssue[];
+  issues?: (FidelityIssue | string)[];
   warnings?: string[];
   errorCode?: string | null;
   errorMessage?: string | null;
@@ -74,10 +76,12 @@ export async function createPersistentJob(params: {
   sourceLang?: string;
   targetLang: string;
   fileBuffer?: Buffer;
+  sizeBytes?: number;
+  sourceKey?: string;
 }): Promise<PersistentTranslationJob> {
   const id = `job_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
   const downloadToken = crypto.randomBytes(24).toString("hex");
-  const sourceKey = `sources/${id}/${params.filename}`;
+  const sourceKey = params.sourceKey || `sources/${id}/${params.filename}`;
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   const now = new Date().toISOString();
 
@@ -243,7 +247,7 @@ export async function listUserJobs(userId?: string | null): Promise<PersistentTr
   const all = Array.from(memoryJobs.values());
   if (userId) {
     return all
-      .filter((j) => j.userId === userId || !j.userId)
+      .filter((j) => j.userId === userId)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
   return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

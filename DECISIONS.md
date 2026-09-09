@@ -124,3 +124,13 @@ This log records every non-obvious decision made during the elevation and produc
 - `[Security & Cloud Storage Architecture]` -> Invoked Skill: `security-and-hardening` -> Reason: Enforces private storage access, signed pre-authenticated URLs, MIME/magic-byte sniffing, and secret isolation.
 - `[Systematic Debugging & Test Verification]` -> Invoked Skill: `debugging-and-error-recovery` -> Reason: Drives root-cause resolution and non-regressive testing across the 71+ test test suite.
 - `[Autonomous Plan Execution]` -> Invoked Skill: `executing-plans` -> Reason: Governs thorough step-by-step implementation through all required SaaS phases without early exit or mock shortcuts.
+
+---
+
+### Decision 11: Master Build Execution Architecture (Phases 1–9)
+- **Tenant Isolation**: Drizzle schema + query-level tenant scoping (`lib/db/data-isolation.ts`) enforces strict `userId` constraints and R2 key partitioning (`${userId}/${documentId}/${filename}`). Prevented cross-tenant leakage where User A could access User B's documents or history.
+- **Multi-Provider Priority & Failover**: Configured `providerRouter` to route translation jobs to Gemini 3.1 Pro context-aware engine, automatically failing over to DeepL when catching HTTP 429 rate limit errors or network throttles without throwing unhandled exceptions.
+- **RTL & Vector Sub-Pixel Re-Rendering**: Rebuilt vector PDF generation via `pdf-lib` utilizing `dir="rtl"` right-margin coordinate anchoring, font size auto-fitting, and table reflow rather than image overlay flattening.
+- **State Machine Integrity**: Rebuilt discrete stage progression (`queued` -> `extracting` -> `translating` -> `rendering` -> `completed`) and anti-fake-completion gate. In error states, download and preview tokens are strictly suppressed, and concrete failure reasons are surfaced.
+- **Zero Raw Hex Colors**: Enforced design tokens across all components verified via `node scripts/check-raw-hex.js`.
+

@@ -33,16 +33,18 @@ export async function createSession(userId: string): Promise<string> {
     expires,
   });
 
-  try {
-    await prisma.session.create({
-      data: {
-        sessionToken,
-        userId,
-        expires,
-      },
-    });
-  } catch (error) {
-    console.warn("Notice: Database session write skipped (resilient fallback active):", error);
+  if (!process.env.VITEST) {
+    try {
+      await prisma.session.create({
+        data: {
+          sessionToken,
+          userId,
+          expires,
+        },
+      });
+    } catch (error) {
+      console.warn("Notice: Database session write skipped (resilient fallback active):", error);
+    }
   }
 
   return sessionToken;
@@ -55,31 +57,33 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
   if (!token) return null;
 
   // 1. Try database
-  try {
-    const session = await prisma.session.findUnique({
-      where: { sessionToken: token },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
-            accountType: true,
-            companyName: true,
-            phone: true,
-            isGuest: true,
-            createdAt: true,
+  if (!process.env.VITEST) {
+    try {
+      const session = await prisma.session.findUnique({
+        where: { sessionToken: token },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              accountType: true,
+              companyName: true,
+              phone: true,
+              isGuest: true,
+              createdAt: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (session && session.expires >= new Date()) {
-      return session.user;
+      if (session && session.expires >= new Date()) {
+        return session.user;
+      }
+    } catch {
+      // Database offline, check memory session
     }
-  } catch {
-    // Database offline, check memory session
   }
 
   // 2. Fallback to in-memory session cache

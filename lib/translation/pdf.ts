@@ -241,7 +241,7 @@ export function calculateDynamicFontSize(
  * If text contains Arabic script, represents it in standard certified
  * transliteration so pdf-lib does not encounter encoding exceptions.
  */
-function sanitizeForPdfWinAnsi(text: string, isRtl: boolean = false): string {
+export function sanitizeForPdfWinAnsi(text: string, isRtl: boolean = false): string {
   // Check for Arabic characters (0x0600 - 0x06FF)
   const hasArabic = /[\u0600-\u06FF]/.test(text);
   if (hasArabic) {
