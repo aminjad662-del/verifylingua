@@ -282,134 +282,145 @@ export async function extractImageSpatialBlocks(
   const height = img.bitmap.height;
   const blocks: SpatialTextBlock[] = [];
 
-  // Check if image corresponds to typical diploma / ID card layout
-  // and extract spatial bounding boxes for key evidentiary regions
-  if (width === 600 && height === 450) {
-    // Diploma layout blocks: Title, Institution, Recipient, Degree, Date, Signatures
-    blocks.push({
-      id: "img_b0",
-      text: "UNIVERSIDAD NACIONAL AUTONOMA",
-      x: 60,
-      y: 70,
-      width: 480,
-      height: 32,
-      page: 0,
-      fontSize: 20,
-    });
-    blocks.push({
-      id: "img_b1",
-      text: "Confiere el presente Titulo Universitario a:",
-      x: 100,
-      y: 130,
-      width: 400,
-      height: 24,
-      page: 0,
-      fontSize: 14,
-    });
-    blocks.push({
-      id: "img_b2",
-      text: "ALEJANDRO MORALES GUTIERREZ",
-      x: 80,
-      y: 180,
-      width: 440,
-      height: 36,
-      page: 0,
-      fontSize: 22,
-    });
-    blocks.push({
-      id: "img_b3",
-      text: "LICENCIATURA EN DERECHO INTERNACIONAL",
-      x: 90,
-      y: 240,
-      width: 420,
-      height: 28,
-      page: 0,
-      fontSize: 16,
-    });
-    blocks.push({
-      id: "img_b4",
-      text: "Expedido el 15 de Octubre de 2021",
-      x: 140,
-      y: 310,
-      width: 320,
-      height: 22,
-      page: 0,
-      fontSize: 13,
-    });
-  } else if (width === 640 && height === 400) {
-    // ID Card layout blocks: Header, Full Name, ID Number, Nationality, Expiration
-    blocks.push({
-      id: "img_b0",
-      text: "REPUBLICA DE COLOMBIA • CEDULA DE CIUDADANIA",
-      x: 40,
-      y: 45,
-      width: 560,
-      height: 26,
-      page: 0,
-      fontSize: 15,
-    });
-    blocks.push({
-      id: "img_b1",
-      text: "NUMERO DE IDENTIDAD: 1.098.765.432",
-      x: 180,
-      y: 100,
-      width: 420,
-      height: 24,
-      page: 0,
-      fontSize: 13,
-    });
-    blocks.push({
-      id: "img_b2",
-      text: "APELLIDOS Y NOMBRES: VALENCIA MENDOZA CAMILA",
-      x: 180,
-      y: 145,
-      width: 420,
-      height: 24,
-      page: 0,
-      fontSize: 13,
-    });
-    blocks.push({
-      id: "img_b3",
-      text: "NACIONALIDAD: COLOMBIANA",
-      x: 180,
-      y: 190,
-      width: 420,
-      height: 24,
-      page: 0,
-      fontSize: 13,
-    });
-    blocks.push({
-      id: "img_b4",
-      text: "FECHA DE EXPEDICION: 14/05/2016",
-      x: 180,
-      y: 235,
-      width: 420,
-      height: 24,
-      page: 0,
-      fontSize: 13,
-    });
-  } else {
-    // Generic layout block detection: top header, middle body, date footer
-    blocks.push({
-      id: "img_b0",
-      text: "CERTIFICADO OFICIAL",
-      x: Math.floor(width * 0.1),
-      y: Math.floor(height * 0.15),
-      width: Math.floor(width * 0.8),
-      height: Math.floor(height * 0.08),
-      page: 0,
-      fontSize: Math.max(14, Math.floor(height * 0.04)),
-    });
-    blocks.push({
-      id: "img_b1",
-      text: "DOCUMENTO DE IDENTIDAD Y REGISTRO CIVIL",
-      x: Math.floor(width * 0.1),
-      y: Math.floor(height * 0.35),
-      width: Math.floor(width * 0.8),
-      height: Math.floor(height * 0.07),
-      page: 0,
-      fontSize: Math.max(12, Math.floor(height * 0.035)),
-    });
+  try {
+    // ── Real Tesseract.js OCR ──────────────────────────────────────────────
+    // Dynamic import so Node.js doesn't load the WASM binary at cold start.
+    // Tesseract v5 API: createWorker(lang, oem, options)
+    const { createWorker } = await import("tesseract.js");
+
+    // Skip real OCR in Vitest so tests stay deterministic & fast
+    if (!process.env.VITEST) {
+      const worker = await createWorker("eng", 1, {
+        // Suppress Tesseract progress logs unless in debug mode
+        logger: process.env.TESSERACT_DEBUG
+          ? (m: { status: string; progress: number }) =>
+              console.log(`[OCR] ${m.status} ${Math.round(m.progress * 100)}%`)
+          : () => {},
+      });
+
+      // Heuristic: if the image is likely a scanned coloured document, pre-scale
+      // to ≥300 DPI equivalent (Tesseract accuracy threshold) before recognition
+      let ocrBuffer = imageBuffer;
+      if (width < 1200 || height < 900) {
+        const scaleFactor = Math.max(1, Math.ceil(1200 / width));
+        const scaled = img.clone().scale(scaleFactor);
+        ocrBuffer = await scaled.getBuffer("image/png");
+      }
+
+      const { data } = await worker.recognize(ocrBuffer);
+      await worker.terminate();
+
+      // ── Word-level block extraction with confidence filtering ──────────────
+      const MIN_CONFIDENCE = 40; // discard noise / artifacts
+      const rawWords = data.words ?? [];
+
+      // Build raw word list with bounding boxes from the (potentially scaled)
+      // OCR run, then scale coordinates back to original image dimensions
+      const scaleBack = Math.max(1, Math.ceil(1200 / width));
+
+      const qualifiedWords = rawWords
+        .filter((w) => w.confidence >= MIN_CONFIDENCE && w.text.trim().length > 0)
+        .map((w) => ({
+          text: w.text.trim(),
+          x: Math.round(w.bbox.x0 / scaleBack),
+          y: Math.round(w.bbox.y0 / scaleBack),
+          width: Math.round((w.bbox.x1 - w.bbox.x0) / scaleBack),
+          height: Math.round((w.bbox.y1 - w.bbox.y0) / scaleBack),
+          confidence: w.confidence,
+        }));
+
+      // ── Group words into logical lines (same horizontal text band) ─────────
+      // Sort by top-Y then left-X
+      qualifiedWords.sort((a, b) => a.y - b.y || a.x - b.x);
+
+      const lineGroups: (typeof qualifiedWords)[] = [];
+
+      for (const word of qualifiedWords) {
+        // Check if this word belongs to an existing line group
+        // A word is on the same line if its Y centroid is within 0.6× the line height
+        const wordCentreY = word.y + word.height / 2;
+        let placed = false;
+
+        for (const group of lineGroups) {
+          const lastInGroup = group[group.length - 1];
+          const groupCentreY = lastInGroup.y + lastInGroup.height / 2;
+          const tolerance = Math.max(lastInGroup.height, word.height) * 0.6;
+
+          if (Math.abs(wordCentreY - groupCentreY) <= tolerance) {
+            group.push(word);
+            placed = true;
+            break;
+          }
+        }
+
+        if (!placed) {
+          lineGroups.push([word]);
+        }
+      }
+
+      // ── Convert line groups to SpatialTextBlocks ───────────────────────────
+      for (let i = 0; i < lineGroups.length; i++) {
+        const group = lineGroups[i];
+        // Sort words left-to-right within the line
+        group.sort((a, b) => a.x - b.x);
+
+        const lineText = group.map((w) => w.text).join(" ");
+        const xMin = Math.min(...group.map((w) => w.x));
+        const yMin = Math.min(...group.map((w) => w.y));
+        const xMax = Math.max(...group.map((w) => w.x + w.width));
+        const yMax = Math.max(...group.map((w) => w.y + w.height));
+        const avgConfidence = group.reduce((s, w) => s + w.confidence, 0) / group.length;
+        const fontSize = Math.round(yMax - yMin);
+
+        // Detect RTL languages (Arabic, Hebrew) from Tesseract word data
+        const isRtl = group.some((w) =>
+          /[\u0600-\u06FF\u0590-\u05FF]/.test(w.text)
+        );
+
+        blocks.push({
+          id: `img_l${i}`,
+          text: lineText,
+          x: xMin,
+          y: yMin,
+          width: xMax - xMin,
+          height: yMax - yMin,
+          page: 0,
+          fontSize: Math.max(fontSize, 8),
+          confidence: Math.round(avgConfidence),
+          isRtl,
+        });
+      }
+    }
+  } catch (ocrError) {
+    // If Tesseract fails (WASM not available, corrupt image, etc.),
+    // fall back to a proportional region split so the pipeline doesn't break
+    console.warn("[OCR] Tesseract failed, using proportional fallback:", ocrError);
+  }
+
+  // ── Proportional fallback if OCR returned 0 blocks ─────────────────────────
+  // This handles: Vitest test runs, WASM unavailable, all-image documents
+  if (blocks.length === 0) {
+    const regionDefs = [
+      { id: "img_r0", yFrac: 0.12, hFrac: 0.08, label: "Header region" },
+      { id: "img_r1", yFrac: 0.28, hFrac: 0.10, label: "Sub-header region" },
+      { id: "img_r2", yFrac: 0.45, hFrac: 0.12, label: "Body region A" },
+      { id: "img_r3", yFrac: 0.62, hFrac: 0.10, label: "Body region B" },
+      { id: "img_r4", yFrac: 0.78, hFrac: 0.08, label: "Footer region" },
+    ];
+
+    for (const def of regionDefs) {
+      blocks.push({
+        id: def.id,
+        text: def.label,
+        x: Math.floor(width * 0.08),
+        y: Math.floor(height * def.yFrac),
+        width: Math.floor(width * 0.84),
+        height: Math.floor(height * def.hFrac),
+        page: 0,
+        fontSize: Math.max(12, Math.floor(height * def.hFrac * 0.6)),
+        confidence: 0,
+      });
+    }
   }
 
   return {

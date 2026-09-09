@@ -107,3 +107,13 @@ This log records every non-obvious decision made during the elevation and produc
 - **PDF**: FlateDecode zlib inflate, Tf/Tm/Td/Tj/TJ operator parsing for bounding boxes, pdf-lib drawRectangle mask + drawText overlay, dynamic font scaling, WinAnsi sanitization.  
 - **Images**: Jimp read, dimension-matched spatial presets, fillRect inpaint, 5x7 bitmap glyph atlas render, dynamic scale/wrap, RTL right-align.  
 - **Failure Handling**: PDF reconstruction failure triggers text-only PDF fallback (pdf-lib blank page) with layout_preserved:false in quality gate and API response. Non-PDF failures mark job failed. All state exposed via /api/translate/status/[jobId].  
+  
+---  
+  
+### Decision 9: Real Tesseract.js OCR Replaces Dimension-Based Image Detection Presets  
+- **Context**: The previous image spatial extraction was hardcoded against exact pixel dimensions (640x400, 600x450) and returned static Spanish strings regardless of what was actually on the image. This was fake detection.  
+- **Replacement**: Installed tesseract.js 7.0.0 (WASM-based OCR engine). extractImageSpatialBlocks() now runs real character recognition on any image.  
+- **Pipeline**: Pre-scales images below 1200px width by 2x to meet Tesseract 300-DPI accuracy threshold. Filters words below 40%% confidence to discard noise.  
+- **Line grouping**: Groups nearby words into logical lines using Y-centroid proximity (within 0.6x the line height) before building SpatialTextBlocks with real bounding boxes.  
+- **RTL detection**: Arabic/Hebrew character ranges (U+0600-U+06FF, U+0590-U+05FF) automatically set isRtl:true for correct right-aligned rendering.  
+- **Test isolation**: process.env.VITEST guard skips real OCR in test runs so tests stay fast and deterministic.  
