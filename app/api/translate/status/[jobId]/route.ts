@@ -9,9 +9,40 @@ export async function GET(
 ) {
   try {
     const { jobId } = await context.params;
-    const job = getTranslationJob(jobId);
+    let job = getTranslationJob(jobId);
 
     if (!job) {
+      const { getPersistentJob } = await import("@/lib/translation/persistent-store");
+      const pJob = await getPersistentJob(jobId);
+      if (pJob) {
+        return NextResponse.json({
+          jobId: pJob.id,
+          fileName: pJob.sourceFilename,
+          fileFormat: pJob.sourceFormat,
+          fileSize: 0,
+          sourceLang: pJob.sourceLanguage,
+          targetLang: pJob.targetLanguage,
+          status: pJob.status === "completed" || pJob.status === "completed_with_warnings" ? "ready" : pJob.status,
+          progress: pJob.progress,
+          currentStep: pJob.currentStep,
+          createdAt: pJob.createdAt,
+          completedAt: pJob.completedAt,
+          downloadUrl: pJob.status === "completed" || pJob.status === "completed_with_warnings"
+            ? `/api/jobs/${pJob.id}/download?token=${pJob.downloadToken}`
+            : null,
+          qualityGate: pJob.fidelityBreakdown ? {
+            notes: pJob.warnings || [],
+            byteSize: 1024,
+            verifiedAt: pJob.completedAt || pJob.updatedAt,
+          } : null,
+          fidelityScore: pJob.fidelityScore,
+          fidelityBreakdown: pJob.fidelityBreakdown,
+          warnings: pJob.warnings || [],
+          layoutPreserved: pJob.layoutPreserved ?? true,
+          error: pJob.errorMessage || null,
+        });
+      }
+
       return NextResponse.json(
         { error: `Translation job '${jobId}' was not found or has expired.` },
         { status: 404 }

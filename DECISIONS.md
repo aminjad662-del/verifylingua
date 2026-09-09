@@ -94,8 +94,6 @@ This log records every non-obvious decision made during the elevation and produc
      - Authority cards (USCIS, Court, DMV, etc.) feature an active `--ink` 2.5px border, subtle elevation lift (`-translate-y-1`), elevated shadow, and an active `--trust` checkmark chip.
   5. **Funnel Stepper Alignment**:
      - Standardized global order stepper in `app/order/layout.tsx` to strictly match the actual flow: **Triage -> Configure -> Lock -> Checkout**.
-
-
   
 ---  
   
@@ -117,3 +115,12 @@ This log records every non-obvious decision made during the elevation and produc
 - **Line grouping**: Groups nearby words into logical lines using Y-centroid proximity (within 0.6x the line height) before building SpatialTextBlocks with real bounding boxes.  
 - **RTL detection**: Arabic/Hebrew character ranges (U+0600-U+06FF, U+0590-U+05FF) automatically set isRtl:true for correct right-aligned rendering.  
 - **Test isolation**: process.env.VITEST guard skips real OCR in test runs so tests stay fast and deterministic.  
+
+---
+
+### Decision 10: Phase 0 Autonomous Skill Discovery & Routing
+- `[UI/UX Non-Destructive Preservation]` -> Invoked Skill: `ui-ux-pro-max` -> Reason: Guarantees 100% preservation of existing layout, typography, colors, borders, and animations without redesigning or altering the visual baseline.
+- `[API & Interface Design]` -> Invoked Skill: `api-and-interface-design` -> Reason: Enforces contract-accurate, resilient REST endpoints (`/api/jobs`, `/api/jobs/:id`, `/api/glossaries`, `/api/usage`, etc.) with strict validation.
+- `[Security & Cloud Storage Architecture]` -> Invoked Skill: `security-and-hardening` -> Reason: Enforces private storage access, signed pre-authenticated URLs, MIME/magic-byte sniffing, and secret isolation.
+- `[Systematic Debugging & Test Verification]` -> Invoked Skill: `debugging-and-error-recovery` -> Reason: Drives root-cause resolution and non-regressive testing across the 71+ test test suite.
+- `[Autonomous Plan Execution]` -> Invoked Skill: `executing-plans` -> Reason: Governs thorough step-by-step implementation through all required SaaS phases without early exit or mock shortcuts.

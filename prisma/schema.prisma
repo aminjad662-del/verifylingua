@@ -92,6 +92,14 @@ model User {
   matters       Matter[]
   accounts      Account[]
   sessions      Session[]
+
+  organizationId  String?
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
+  translationJobs TranslationJob[]
+  glossaries      Glossary[]
+  usageEvents     UsageEvent[]
+  subscription    Subscription?
+  auditEvents     AuditEvent[]
 }
 
 model Account {
@@ -169,7 +177,7 @@ model Order {
 
 model Document {
   id            String          @id @default(cuid())
-  orderId       String
+  orderId       String?
   fileName      String
   s3Key         String
   mimeType      String
@@ -180,8 +188,9 @@ model Document {
   sha256        String?
   createdAt     DateTime        @default(now())
 
-  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  findings      TriageFinding[]
+  order           Order?           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  findings        TriageFinding[]
+  translationJobs TranslationJob[]
 
   @@index([orderId])
 }
@@ -202,16 +211,19 @@ model TriageFinding {
 
 model GlossaryTerm {
   id             String       @id @default(cuid())
-  orderId        String
+  orderId        String?
+  glossaryId     String?
   sourceText     String
   requiredTarget String
   kind           GlossaryKind @default(NAME)
   locked         Boolean      @default(true)
   createdAt      DateTime     @default(now())
 
-  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order          Order?       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  glossary       Glossary?    @relation(fields: [glossaryId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+  @@index([glossaryId])
 }
 
 model AddOn {
@@ -315,4 +327,219 @@ model Matter {
 
   @@index([userId])
   @@index([matterNumber])
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  tier        String   @default("STARTER") // FREE, STARTER, PRO, BUSINESS
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  glossaries  Glossary[]
+}
+
+model TranslationJob {
+  id              String    @id @default(cuid())
+  userId          String?
+  documentId      String?
+  sourceKey       String
+  outputKey       String?
+  previewKey      String?
+  sourceFilename  String
+  sourceFormat    String
+  sourceMimeType  String
+  sourceLanguage  String
+  targetLanguage  String
+  status          String    @default("created") // created, uploading, uploaded, classifying, extracting, translation_queued, translating, reconstructing, qa, repairing, rendering_preview, completed, completed_with_warnings, failed, cancelled, expired, deleted
+  currentStep     String    @default("Job initialized")
+  progress        Int       @default(0)
+  pageCount       Int       @default(1)
+  wordCount       Int       @default(0)
+  characterCount  Int       @default(0)
+  provider        String    @default("azure")
+  providerJobId   String?
+  fidelityScore   Float?
+  errorCode       String?
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  startedAt       DateTime?
+  completedAt     DateTime?
+  expiresAt       DateTime?
+
+  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  document        Document?           @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  segments        TranslationSegment[]
+  versions        TranslationVersion[]
+  providerJobs    ProviderJob[]
+  qaResults       QAResult[]
+
+  @@index([userId])
+  @@index([documentId])
+  @@index([status])
+}
+
+model TranslationSegment {
+  id             String    @id @default(cuid())
+  jobId          String
+  segmentIndex   Int
+  sourceText     String
+  translatedText String?
+  context        String?
+  pageNumber     Int       @default(1)
+  x              Float?
+  y              Float?
+  width          Float?
+  height         Float?
+  fontSize       Float?
+  fontFamily     String?
+  isRtl          Boolean   @default(false)
+  status         String    @default("pending") // pending, translated, repaired, approved
+
+  job            TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([segmentIndex])
+}
+
+model TranslationVersion {
+  id            String    @id @default(cuid())
+  jobId         String
+  versionNumber Int       @default(1)
+  outputKey     String
+  fidelityScore Float?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  job           TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+}
+
+model ProviderJob {
+  id             String    @id @default(cuid())
+  jobId          String
+  provider       String    // azure, google, deepl, gemini
+  externalJobId  String?
+  status         String    @default("submitted") // submitted, in_progress, completed, failed
+  requestPayload Json?
+  responsePayload Json?
+  error          String?
+  latencyMs      Int?
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  job            TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([provider])
+}
+
+model QAResult {
+  id              String    @id @default(cuid())
+  jobId           String
+  stage           String    // structural, visual, semantic, final
+  passed          Boolean   @default(true)
+  fidelityScore   Float     @default(100.0)
+  layoutScore     Float     @default(100.0)
+  typographyScore Float     @default(100.0)
+  coverageScore   Float     @default(100.0)
+  tablesScore     Float     @default(100.0)
+  imagesScore     Float     @default(100.0)
+  rtlScore        Float     @default(100.0)
+  metrics         Json?
+  createdAt       DateTime  @default(now())
+
+  job             TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  issues          QAIssue[]
+
+  @@index([jobId])
+}
+
+model QAIssue {
+  id             String    @id @default(cuid())
+  qaResultId     String
+  type           String    // TEXT_OVERFLOW, TEXT_COLLISION, MISSING_TEXT, DUPLICATE_TEXT, FONT_FALLBACK, TABLE_OVERFLOW, RTL_ERROR, IMAGE_DAMAGE, LAYOUT_SHIFT, STRUCTURE_ERROR
+  severity       String    @default("medium") // low, medium, high, critical
+  page           Int       @default(1)
+  segmentId      String?
+  message        String
+  autoRepaired   Boolean   @default(false)
+  repairAttempts Int       @default(0)
+  createdAt      DateTime  @default(now())
+
+  qaResult       QAResult  @relation(fields: [qaResultId], references: [id], onDelete: Cascade)
+
+  @@index([qaResultId])
+  @@index([type])
+}
+
+model Glossary {
+  id             String       @id @default(cuid())
+  userId         String?
+  organizationId String?
+  name           String
+  sourceLang     String       @default("en")
+  targetLang     String       @default("ar")
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  terms          GlossaryTerm[]
+
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model UsageEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  eventType   String   // TRANSLATION_PAGE, OCR_PAGE, QA_CHECK, REPAIR_PASS
+  units       Int      @default(1)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventType])
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  plan                 String    @default("FREE") // FREE, STARTER, PRO, BUSINESS
+  status               String    @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELLED, TRIALING
+  pageQuota            Int       @default(10)
+  pagesUsed            Int       @default(0)
+  currentPeriodStart   DateTime  @default(now())
+  currentPeriodEnd     DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id           String   @id @default(cuid())
+  userId       String?
+  action       String   // JOB_CREATED, JOB_UPLOADED, TRANSLATION_COMPLETED, FILE_DOWNLOADED, QUOTA_EXCEEDED, GLOSSARY_UPDATED
+  resourceType String   // TranslationJob, Document, Glossary, Subscription
+  resourceId   String?
+  ipAddress    String?
+  userAgent    String?
+  details      Json?
+  createdAt    DateTime @default(now())
+
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
 }
