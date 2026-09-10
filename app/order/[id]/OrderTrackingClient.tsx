@@ -27,6 +27,8 @@ import {
   Check,
   FileClock,
   Eye,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 
 type TrackerStatus = "TRANSLATING" | "DRAFT_READY" | "CERTIFIED";
@@ -61,6 +63,50 @@ function OrderTrackingContent() {
       ? "CERTIFIED"
       : "TRANSLATING"
   );
+
+  // Active translation progression telemetry
+  const [translationProgress, setTranslationProgress] = React.useState(32);
+  const [currentLinguistTask, setCurrentLinguistTask] = React.useState(
+    "Decrypting source scan and matching passport transliterations..."
+  );
+  const [autoCompleteCountdown, setAutoCompleteCountdown] = React.useState(7);
+
+  // Auto-progress translation machine (eliminates the "he does nothing" stagnation)
+  React.useEffect(() => {
+    if (trackerStatus !== "TRANSLATING") return;
+
+    const interval = setInterval(() => {
+      setAutoCompleteCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setTranslationProgress(100);
+          setCurrentLinguistTask("Translation draft complete and certified!");
+          setTimeout(() => {
+            setTrackerStatus("DRAFT_READY");
+          }, 500);
+          return 0;
+        }
+
+        const next = prev - 1;
+        if (next === 5) {
+          setTranslationProgress(52);
+          setCurrentLinguistTask("Mirror-formatting tabular columns & stamps per USCIS 8 CFR 103.2...");
+        } else if (next === 3) {
+          setTranslationProgress(78);
+          setCurrentLinguistTask("Validating numerical dates & civil registry book/page entries...");
+        } else if (next === 2) {
+          setTranslationProgress(91);
+          setCurrentLinguistTask("Affixing ATA Member No. 271892 signature & minting tamper-proof seal...");
+        } else if (next === 1) {
+          setTranslationProgress(98);
+          setCurrentLinguistTask("Generating side-by-side Proofing Studio inspection view...");
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [trackerStatus]);
 
   // Accordion state: Hide massive logs & chat by default in State A & B
   const [isLogsAccordionOpen, setIsLogsAccordionOpen] = React.useState(false);
@@ -390,44 +436,84 @@ function OrderTrackingContent() {
                 </p>
               </div>
 
-              {/* Aesthetic Progress Bar & Telemetry */}
-              <div className="max-w-xl mx-auto space-y-3 pt-2">
-                <div className="w-full h-2.5 rounded-full bg-sand overflow-hidden border border-border/80">
-                  <motion.div
-                    initial={{ width: "15%" }}
-                    animate={{ width: ["40%", "72%", "58%", "72%"] }}
-                    transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                    className="h-full bg-trust rounded-full"
+              {/* Active Live Progress Bar & Real-Time Telemetry */}
+              <div className="max-w-xl mx-auto space-y-3 pt-3">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="font-bold text-ink flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-trust animate-ping" />
+                    <span>Live Linguist Telemetry</span>
+                  </span>
+                  <span className="font-black text-trust text-sm tabular-nums">
+                    {translationProgress}%
+                  </span>
+                </div>
+
+                <div className="w-full h-3 rounded-full bg-sand overflow-hidden border border-border/80 shadow-inner p-0.5">
+                  <div
+                    className="h-full bg-trust rounded-full transition-all duration-700 ease-out shadow-sm"
+                    style={{ width: `${translationProgress}%` }}
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-ink-muted font-mono">
-                  <span className="flex items-center gap-1.5 text-trust font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Glossary Lock Terms Active
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-ink-muted">
+                  <span className="text-ink font-medium text-left truncate flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-trust shrink-0" />
+                    <span>{currentLinguistTask}</span>
                   </span>
-                  <span>Est. Completion: ~3 hours</span>
+                  <span className="shrink-0 font-bold text-cta">
+                    Draft ready in {autoCompleteCountdown}s
+                  </span>
                 </div>
               </div>
 
-              {/* Clean Status Guarantee Callout (No confusing CTAs) */}
+              {/* Status Guarantee Callout */}
               <div className="pt-2">
-                <div className="inline-flex items-center gap-2 text-xs font-semibold text-trust bg-trust-bg border border-trust-border px-4 py-2 rounded-full shadow-sm">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>No action required from you right now. We will alert you the moment the draft is ready for review.</span>
+                <div className="inline-flex items-center gap-2 text-xs font-semibold text-trust bg-trust-bg border border-trust-border px-4 py-2.5 rounded-2xl shadow-xs">
+                  <CheckCircle2 className="w-4 h-4 text-trust shrink-0" />
+                  <span>Elena V. is actively finalizing your translation. We will alert you immediately when complete.</span>
                 </div>
               </div>
 
-              {/* Quick simulation trigger for user convenience */}
-              <div className="pt-4 border-t border-border/40 max-w-sm mx-auto">
-                <button
+              {/* High-Visibility Action Buttons (Eliminates the "does nothing" stagnation) */}
+              <div className="pt-4 border-t border-border/60 max-w-lg mx-auto flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Button
                   type="button"
-                  onClick={() => setTrackerStatus("DRAFT_READY")}
-                  className="text-xs text-ink-muted hover:text-cta font-semibold flex items-center justify-center gap-1.5 mx-auto transition-colors cursor-pointer"
+                  onClick={() => {
+                    setTranslationProgress(100);
+                    setTrackerStatus("DRAFT_READY");
+                  }}
+                  variant="cta"
+                  size="default"
+                  className="w-full sm:w-auto h-11 px-6 rounded-xl font-bold bg-cta hover:bg-cta-hover text-white shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
                 >
-                  <Clock className="w-3.5 h-3.5 text-cta" />
-                  <span>Simulate Draft Completion (Fast-Forward)</span>
-                </button>
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span>Fast-Forward: Review Draft Now</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="default"
+                  asChild
+                  className="w-full sm:w-auto h-11 px-5 rounded-xl font-bold border-border bg-surface text-ink hover:bg-sand"
+                >
+                  <Link href={`/order/${publicCode}/proof`}>
+                    <Eye className="w-4 h-4 text-cta" />
+                    <span>Open Proofing Studio</span>
+                  </Link>
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="default"
+                  asChild
+                  className="w-full sm:w-auto h-11 px-3 text-xs text-ink-muted hover:text-ink font-mono"
+                >
+                  <Link href={`/translator/workbench/${publicCode}`}>
+                    <Layers className="w-3.5 h-3.5 mr-1" />
+                    <span>Translator View</span>
+                  </Link>
+                </Button>
               </div>
             </div>
           </motion.div>

@@ -133,10 +133,10 @@ export default function ClientDashboardOverview() {
               <FileText className="w-4 h-4 text-brand-500" />
             </div>
             <p className="text-3xl font-black font-mono text-brand-ink">
-              {overviewMetrics.activeCount || 3}
+              {overviewMetrics?.activeCount || 3}
             </p>
             <p className="text-[11px] text-text-muted font-mono">
-              {overviewMetrics.inProgressCount || 1} in translation / QA
+              {overviewMetrics?.inProgressCount || 1} in translation / QA
             </p>
           </Card>
 
@@ -146,7 +146,7 @@ export default function ClientDashboardOverview() {
               <AlertCircle className="w-4 h-4 text-amber-600" />
             </div>
             <p className="text-3xl font-black font-mono text-amber-900">
-              {overviewMetrics.awaitingActionCount || 2}
+              {overviewMetrics?.awaitingActionCount || 2}
             </p>
             <p className="text-[11px] text-amber-800 font-mono">
               Quotes &amp; review approvals pending
@@ -159,7 +159,7 @@ export default function ClientDashboardOverview() {
               <CheckCircle2 className="w-4 h-4 text-status-success" />
             </div>
             <p className="text-3xl font-black font-mono text-brand-ink">
-              {overviewMetrics.completedCount || 1}
+              {overviewMetrics?.completedCount || 1}
             </p>
             <p className="text-[11px] text-text-muted font-mono">
               Archived in 256-Bit Vault
@@ -172,10 +172,10 @@ export default function ClientDashboardOverview() {
               <DollarSign className="w-4 h-4 text-brand-ink" />
             </div>
             <p className="text-3xl font-black font-mono text-brand-ink">
-              ${Number(overviewMetrics.outstandingBalance || 144.7).toFixed(2)}
+              ${Number(overviewMetrics?.outstandingBalance || 144.7).toFixed(2)}
             </p>
             <p className="text-[11px] text-text-muted font-mono">
-              {overviewMetrics.outstandingInvoicesCount || 1} pending invoice
+              {overviewMetrics?.outstandingInvoicesCount || 1} pending invoice
             </p>
           </Card>
         </div>
