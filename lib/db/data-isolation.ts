@@ -327,3 +327,25 @@ class IsolatedDataRepository {
 }
 
 export const isolatedDb = new IsolatedDataRepository();
+
+export function createScopedDataClient(userId: string) {
+  return {
+    userId,
+    listDocuments: () => isolatedDb.listUserDocuments(userId),
+    getDocument: (docId: string) => isolatedDb.getDocumentById(userId, docId),
+    createDocument: (data: Parameters<IsolatedDataRepository["createDocument"]>[1]) =>
+      isolatedDb.createDocument(userId, data),
+    listJobs: () => isolatedDb.listUserJobs(userId),
+    getJob: (jobId: string) => isolatedDb.getJobById(userId, jobId),
+    createJob: (data: Parameters<IsolatedDataRepository["createJob"]>[1]) =>
+      isolatedDb.createJob(userId, data),
+    getRetentionSettings: () => isolatedDb.getRetentionSettings(userId),
+    updateRetentionSettings: (settings: Parameters<IsolatedDataRepository["updateRetentionSettings"]>[1]) =>
+      isolatedDb.updateRetentionSettings(userId, settings),
+    listJobEvents: (jobId: string) => isolatedDb.listJobEvents(userId, jobId),
+    recordJobEvent: (jobId: string, status: string, message: string, metadata?: any) =>
+      isolatedDb.recordJobEvent(userId, jobId, status, message, metadata),
+  };
+}
+
+export type ScopedDataClient = ReturnType<typeof createScopedDataClient>;
