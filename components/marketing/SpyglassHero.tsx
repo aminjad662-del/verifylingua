@@ -137,8 +137,8 @@ export function SpyglassHero() {
                 </span>
               </h1>
               <p className="text-base sm:text-lg text-text-muted leading-relaxed max-w-xl">
-                USCIS, courts, and consulates reject uncertified translations every day.
-                VerifyLingua delivers court-admissible, notarized translations with cryptographic verification in under 12 hours.
+                Precision automated document processing that strictly preserves your original layout, tables, and typography.
+                VerifyLingua delivers court-admissible, notarized translations with cryptographic verification in minutes, not days.
               </p>
             </div>
 

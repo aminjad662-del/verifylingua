@@ -638,7 +638,7 @@ export default function TranslatePage() {
             VerifyLingua · ATA Member No. 278190 · 8 CFR 103.2 Compliant
           </p>
           <p className="text-xs text-ink/30 font-mono">
-            Files auto-purged after 24 hours
+            Evidentiary hold active · Retention configurable in Settings
           </p>
         </div>
       </div>

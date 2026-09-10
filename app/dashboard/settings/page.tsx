@@ -27,10 +27,39 @@ export default function SettingsPage() {
   // Preferences
   const [emailNotify, setEmailNotify] = React.useState(true);
   const [smsNotify, setSmsNotify] = React.useState(true);
-  const [autoPurge, setAutoPurge] = React.useState(true);
+  const [autoPurge, setAutoPurge] = React.useState(false); // Default is keep indefinitely (opt-in)
 
-  const handleSave = (e: React.FormEvent) => {
+  React.useEffect(() => {
+    async function loadRetention() {
+      try {
+        const res = await fetch("/api/settings/retention");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.settings) {
+            setAutoPurge(!!data.settings.autoDeleteEnabled);
+          }
+        }
+      } catch {
+        // use default state
+      }
+    }
+    loadRetention();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/settings/retention", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          autoDeleteEnabled: autoPurge,
+          retentionDays: 90,
+        }),
+      });
+    } catch {
+      // silent catch
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
