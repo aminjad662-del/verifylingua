@@ -218,10 +218,28 @@ export default {
       return handleApiRequest(request, pathname, env);
     }
 
+    // 0. Explicit root index resolution
+    if (pathname === '/' || pathname === '') {
+      try {
+        const rootRes = await env.ASSETS.fetch(request);
+        if (rootRes && rootRes.status !== 404) return rootRes;
+      } catch {}
+      try {
+        const rootUrl = new URL('/index.html', request.url);
+        const rootRes2 = await env.ASSETS.fetch(new Request(rootUrl, request));
+        if (rootRes2 && rootRes2.status !== 404) return rootRes2;
+      } catch {}
+    }
+
     // 3. Try direct asset fetch first (exact match)
-    let response = await env.ASSETS.fetch(request);
-    if (response.status !== 404) {
-      return response;
+    let response;
+    try {
+      response = await env.ASSETS.fetch(request);
+      if (response && response.status !== 404) {
+        return response;
+      }
+    } catch {
+      // Fall through to clean URL resolution
     }
 
     // Direct asset fallback without query parameters (e.g. /icon.svg?hash)

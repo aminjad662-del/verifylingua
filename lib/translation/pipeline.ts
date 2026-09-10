@@ -135,7 +135,11 @@ export async function processTranslationJob(
     } else if (job.fileFormat === "pdf") {
       const res = await translatePdf(job.originalBuffer, options);
       translatedBuffer = res.buffer;
-      notes.push(`Re-rendered ${res.metadata.pageCount} pages with 8 CFR 103.2 certification headers`);
+      if (options.serviceTier === "automated") {
+        notes.push(`Re-rendered ${res.metadata.pageCount} pages with automated translation disclaimer`);
+      } else {
+        notes.push(`Re-rendered ${res.metadata.pageCount} pages with 8 CFR 103.2 certification headers`);
+      }
       notes.push("Applied dynamic font scaling to mitigate text expansion overflow");
       notes.push("Masked original text coordinates with localized background inpainting");
       if (res.metadata.hasMultiColumn) notes.push("Preserved multi-column layout geometry and margins");
@@ -143,7 +147,11 @@ export async function processTranslationJob(
       const res = await translateImage(job.originalBuffer, job.fileFormat, options);
       translatedBuffer = res.buffer;
       notes.push(`Inpainted and rendered ${res.metadata.spatialBlockCount || 0} spatial text blocks`);
-      notes.push(`Rendered ${res.metadata.width}x${res.metadata.height} image with certified footer banner`);
+      if (options.serviceTier === "automated") {
+        notes.push(`Rendered ${res.metadata.width}x${res.metadata.height} image with uncertified automated footer`);
+      } else {
+        notes.push(`Rendered ${res.metadata.width}x${res.metadata.height} image with certified footer banner`);
+      }
       notes.push("Applied dynamic font scaling to strictly prevent bounding box overflow");
     } else {
       throw new Error(`Unsupported document format: ${job.fileFormat}`);

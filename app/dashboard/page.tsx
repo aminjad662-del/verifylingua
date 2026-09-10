@@ -1,185 +1,434 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "motion/react";
+import Link from "next/link";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Footer } from "@/components/layout/Footer";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { TelemetryStream, RealTranslationJob } from "@/components/dashboard/TelemetryStream";
-import { OrderVault } from "@/components/dashboard/OrderVault";
-import { OrderDrawer, OrderDetail } from "@/components/dashboard/OrderDrawer";
-import { LegalToolkitBento } from "@/components/dashboard/LegalToolkitBento";
-import { ToastContainer } from "@/components/dashboard/ToastNotification";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  FileText,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  PlusCircle,
+  UploadCloud,
+  FileSpreadsheet,
+  HelpCircle,
+  ArrowRight,
+  ShieldCheck,
+  Search,
+  MessageSquare,
+  DollarSign,
+  Sparkles,
+  ChevronRight,
+  FolderLock,
+  Eye,
+} from "lucide-react";
 
-const INITIAL_ORDERS: OrderDetail[] = [
-  {
-    id: "ord-1",
-    publicCode: "VL-7X9K2",
-    documentName: "Acta de Nacimiento (Certified Birth Certificate)",
-    matterNumber: "Matter #USCIS-I485-8910 (Hernandez Adjustment)",
-    sourceLang: "Spanish",
-    targetLang: "English",
-    status: "TRANSLATING",
-    statusLabel: "In Translation",
-    pages: 1,
-    total: 24.95,
-    promisedAt: "Tomorrow at 9:00 AM EST",
-    translator: "Elena V. (ATA Member No. 271892)",
-    verifyCode: "CERT-7X9K2-4821",
-    sha256Hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  },
-  {
-    id: "ord-2",
-    publicCode: "VL-3M8Q1",
-    documentName: "Título Universitario (Bachelor of Laws Degree)",
-    matterNumber: "Matter #WES-EVAL-3920 (Academic Equivalency)",
-    sourceLang: "Spanish",
-    targetLang: "English",
-    status: "DELIVERED",
-    statusLabel: "Certified & Delivered",
-    pages: 2,
-    total: 49.90,
-    promisedAt: "Delivered Aug 28, 2026",
-    translator: "Carlos M. (ATA Member No. 194820)",
-    verifyCode: "CERT-3M8Q1-9014",
-    sha256Hash: "7a9b2c8f0d1e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
-  },
-  {
-    id: "ord-3",
-    publicCode: "VL-DEMO1",
-    documentName: "Certificado de Matrimonio (Marriage Certificate)",
-    matterNumber: "Matter #I-130-PETITION-4412 (Spousal Visa)",
-    sourceLang: "Spanish",
-    targetLang: "English",
-    status: "PROOFING",
-    statusLabel: "Proofing Studio Ready",
-    pages: 2,
-    total: 49.90,
-    promisedAt: "Ready for Customer Review",
-    translator: "Elena V. (ATA Member No. 271892)",
-    verifyCode: "VL-CERT-8921",
-    sha256Hash: "c18a9e0f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e",
-  },
-  {
-    id: "ord-4",
-    publicCode: "VL-9104-MN",
-    documentName: "Constancia de Antecedentes No Penales (Police Clearance)",
-    matterNumber: "Matter #EOIR-DEFENSE-1092 (Court Exhibit B)",
-    sourceLang: "Spanish",
-    targetLang: "English",
-    status: "DELIVERED",
-    statusLabel: "Court Sealed & Delivered",
-    pages: 1,
-    total: 24.95,
-    promisedAt: "Delivered Sep 02, 2026",
-    translator: "Tariq A. (ATA Member No. 310984)",
-    verifyCode: "CERT-9104-MN-8812",
-    sha256Hash: "f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3",
-  },
-];
+export default function ClientDashboardOverview() {
+  const [orders, setOrders] = React.useState<any[]>([]);
+  const [overviewMetrics, setOverviewMetrics] = React.useState<any>({
+    activeCount: 3,
+    awaitingActionCount: 2,
+    inProgressCount: 1,
+    completedCount: 1,
+    outstandingInvoicesCount: 1,
+    outstandingBalance: 144.70,
+  });
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState("ALL");
+  const [loading, setLoading] = React.useState(true);
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.05,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring" as const,
-      stiffness: 400,
-      damping: 30,
-    },
-  },
-};
-
-export default function DashboardPage() {
-  const [realJobs, setRealJobs] = React.useState<RealTranslationJob[]>([]);
-  const [loadingJobs, setLoadingJobs] = React.useState(true);
-  const [selectedOrder, setSelectedOrder] = React.useState<OrderDetail | null>(null);
-
-  const fetchJobs = React.useCallback(async () => {
+  const fetchDashboardData = React.useCallback(async () => {
     try {
-      const res = await fetch("/api/translate/jobs");
-      if (res.ok) {
-        const data = await res.json();
-        setRealJobs(data.jobs || []);
+      const [overviewRes, ordersRes] = await Promise.all([
+        fetch("/api/dashboard/overview"),
+        fetch("/api/dashboard/orders"),
+      ]);
+
+      if (overviewRes.ok) {
+        const ovData = await overviewRes.json();
+        setOverviewMetrics(ovData.metrics);
+      }
+      if (ordersRes.ok) {
+        const ordData = await ordersRes.json();
+        setOrders(ordData.orders || []);
       }
     } catch (err) {
-      console.warn("Failed to fetch translation jobs:", err);
+      console.warn("Failed to load dashboard data:", err);
     } finally {
-      setLoadingJobs(false);
+      setLoading(false);
     }
   }, []);
 
   React.useEffect(() => {
-    fetchJobs();
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
-    // Poll every 4 seconds for live engine updates
-    const interval = setInterval(() => {
-      fetchJobs();
-    }, 4000);
+  const filteredOrders = orders.filter((o) => {
+    const matchesSearch =
+      o.publicCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.serviceType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.sourceLang?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.targetLangs?.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (o.matterNumber && o.matterNumber.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    return () => clearInterval(interval);
-  }, [fetchJobs]);
+    if (statusFilter === "ALL") return matchesSearch;
+    if (statusFilter === "ACTION_REQUIRED") {
+      return (
+        matchesSearch &&
+        (o.status === "CLIENT_REVIEW" || o.status === "QUOTE_SENT" || o.status === "PAYMENT_PENDING")
+      );
+    }
+    if (statusFilter === "IN_TRANSLATION") {
+      return matchesSearch && (o.status === "IN_TRANSLATION" || o.status === "QUALITY_REVIEW");
+    }
+    if (statusFilter === "COMPLETED") {
+      return matchesSearch && o.status === "COMPLETED";
+    }
+    return matchesSearch;
+  });
+
+  const actionRequiredOrders = orders.filter(
+    (o) => o.status === "CLIENT_REVIEW" || o.status === "QUOTE_SENT" || o.status === "PAYMENT_PENDING"
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-text">
       <DashboardNav />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-12"
-        >
-          {/* 1. Spyglass-Style Editorial Hero Header */}
-          <motion.div variants={itemVariants}>
-            <DashboardHeader />
-          </motion.div>
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Editorial Welcome Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-mono text-text-muted mb-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-status-success" />
+              <span>APEX IMMIGRATION LAW GROUP ? ENCRYPTED CLIENT PORTAL</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-ink tracking-tight">
+              Translation Operations Workspace
+            </h1>
+            <p className="text-xs sm:text-sm text-text-muted mt-1">
+              Manage certified legal translations, monitor sworn ATA linguist workflows, and approve official filings.
+            </p>
+          </div>
 
-          {/* 2. Dark Command Center / Telemetry Stream */}
-          <motion.div variants={itemVariants}>
-            <TelemetryStream
-              jobs={realJobs}
-              onRefresh={fetchJobs}
-              loading={loadingJobs}
-            />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <Button asChild size="lg" className="rounded-xl font-bold bg-brand-500 hover:bg-brand-600 text-white gap-2 shadow-sm">
+              <Link href="/dashboard/request">
+                <PlusCircle className="w-4 h-4" />
+                Start Translation Request
+              </Link>
+            </Button>
+          </div>
+        </div>
 
-          {/* 3. Interactive Evidentiary Order Vault */}
-          <motion.div variants={itemVariants}>
-            <OrderVault
-              orders={INITIAL_ORDERS}
-              onSelectOrder={(ord) => setSelectedOrder(ord)}
-            />
-          </motion.div>
+        {/* 4 Summary KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-5 rounded-2xl border border-border bg-surface-raised space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+              <span>Active Orders</span>
+              <FileText className="w-4 h-4 text-brand-500" />
+            </div>
+            <p className="text-3xl font-black font-mono text-brand-ink">
+              {overviewMetrics.activeCount || 3}
+            </p>
+            <p className="text-[11px] text-text-muted font-mono">
+              {overviewMetrics.inProgressCount || 1} in translation / QA
+            </p>
+          </Card>
 
-          {/* 4. Spyglass "Plus the rest of the toolkit" Bento */}
-          <motion.div variants={itemVariants}>
-            <LegalToolkitBento />
-          </motion.div>
-        </motion.div>
+          <Card className="p-5 rounded-2xl border border-status-warning/30 bg-status-warning-bg/40 space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono text-amber-800">
+              <span>Awaiting Your Action</span>
+              <AlertCircle className="w-4 h-4 text-amber-600" />
+            </div>
+            <p className="text-3xl font-black font-mono text-amber-900">
+              {overviewMetrics.awaitingActionCount || 2}
+            </p>
+            <p className="text-[11px] text-amber-800 font-mono">
+              Quotes &amp; review approvals pending
+            </p>
+          </Card>
+
+          <Card className="p-5 rounded-2xl border border-border bg-surface-raised space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+              <span>Completed Deliveries</span>
+              <CheckCircle2 className="w-4 h-4 text-status-success" />
+            </div>
+            <p className="text-3xl font-black font-mono text-brand-ink">
+              {overviewMetrics.completedCount || 1}
+            </p>
+            <p className="text-[11px] text-text-muted font-mono">
+              Archived in 256-Bit Vault
+            </p>
+          </Card>
+
+          <Card className="p-5 rounded-2xl border border-border bg-surface-raised space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+              <span>Outstanding Invoices</span>
+              <DollarSign className="w-4 h-4 text-brand-ink" />
+            </div>
+            <p className="text-3xl font-black font-mono text-brand-ink">
+              ${Number(overviewMetrics.outstandingBalance || 144.7).toFixed(2)}
+            </p>
+            <p className="text-[11px] text-text-muted font-mono">
+              {overviewMetrics.outstandingInvoicesCount || 1} pending invoice
+            </p>
+          </Card>
+        </div>
+
+        {/* Quick Actions Bar */}
+        <div className="p-4 rounded-2xl border border-border bg-surface flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <span className="text-text-muted font-semibold uppercase tracking-wider pl-2">
+            Quick Actions:
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 h-9">
+              <Link href="/dashboard/request">
+                <PlusCircle className="w-3.5 h-3.5 text-brand-500" />
+                New Request
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 h-9">
+              <Link href="/dashboard/documents">
+                <FolderLock className="w-3.5 h-3.5 text-brand-ink" />
+                Upload Documents
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 h-9">
+              <Link href="/dashboard/request?mode=quote">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-status-success" />
+                Request Custom Quote
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 h-9">
+              <Link href="/dashboard/billing">
+                <DollarSign className="w-3.5 h-3.5 text-amber-600" />
+                View Invoices
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Action Required Callout Banner */}
+        {actionRequiredOrders.length > 0 && (
+          <div className="p-5 rounded-2xl border border-amber-200 bg-amber-50/70 space-y-3">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <h2 className="text-sm font-bold text-amber-950 font-mono">
+                Action Required on {actionRequiredOrders.length} Order(s)
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {actionRequiredOrders.map((ord) => (
+                <div
+                  key={ord.id}
+                  className="p-3.5 rounded-xl border border-amber-200/80 bg-white flex items-center justify-between gap-4 shadow-sm"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-xs text-brand-ink">
+                        {ord.publicCode}
+                      </span>
+                      <Badge variant="warning" className="text-[10px] font-mono">
+                        {ord.status.replace(/_/g, " ")}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-text-muted">
+                      {ord.sourceLang} ? {ord.targetLangs?.join(", ")} ({ord.serviceType})
+                    </p>
+                  </div>
+                  <Button asChild size="sm" className="rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs shrink-0">
+                    <Link href={`/dashboard/orders/${ord.publicCode}`}>
+                      Review Now
+                      <ArrowRight className="w-3 h-3 ml-1" />
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Orders Table Section */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-brand-ink">
+                All Orders &amp; Workflows
+              </h2>
+              <p className="text-xs text-text-muted">
+                Search and track active translation dossiers, legal affidavits, and certificates.
+              </p>
+            </div>
+
+            {/* Filter Tabs & Search */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                <input
+                  type="text"
+                  placeholder="Search code, language, matter..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 pl-9 pr-3 rounded-xl border border-border bg-surface text-xs text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-brand-500 w-48 sm:w-64"
+                />
+              </div>
+
+              <div className="flex items-center rounded-xl border border-border bg-surface p-0.5 text-xs font-mono">
+                <button
+                  onClick={() => setStatusFilter("ALL")}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    statusFilter === "ALL"
+                      ? "bg-brand-500 text-white font-bold"
+                      : "text-text-muted hover:text-brand-ink"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setStatusFilter("ACTION_REQUIRED")}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    statusFilter === "ACTION_REQUIRED"
+                      ? "bg-brand-500 text-white font-bold"
+                      : "text-text-muted hover:text-brand-ink"
+                  }`}
+                >
+                  Needs Action
+                </button>
+                <button
+                  onClick={() => setStatusFilter("IN_TRANSLATION")}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    statusFilter === "IN_TRANSLATION"
+                      ? "bg-brand-500 text-white font-bold"
+                      : "text-text-muted hover:text-brand-ink"
+                  }`}
+                >
+                  In Translation
+                </button>
+                <button
+                  onClick={() => setStatusFilter("COMPLETED")}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    statusFilter === "COMPLETED"
+                      ? "bg-brand-500 text-white font-bold"
+                      : "text-text-muted hover:text-brand-ink"
+                  }`}
+                >
+                  Completed
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="rounded-2xl border border-border bg-surface-raised overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-border bg-surface text-[11px] font-mono text-text-muted uppercase tracking-wider">
+                  <tr>
+                    <th className="p-4">Order Code</th>
+                    <th className="p-4">Matter / Subject</th>
+                    <th className="p-4">Language Pair</th>
+                    <th className="p-4">Service</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Delivery ETA</th>
+                    <th className="p-4 text-right">Total</th>
+                    <th className="p-4 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-xs font-mono text-text-muted">
+                        No orders match the selected search or filter criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredOrders.map((ord) => (
+                      <tr key={ord.id} className="hover:bg-surface/50 transition-colors">
+                        <td className="p-4 font-mono font-bold text-brand-ink">
+                          <Link
+                            href={`/dashboard/orders/${ord.publicCode}`}
+                            className="hover:underline flex items-center gap-1"
+                          >
+                            {ord.publicCode}
+                          </Link>
+                        </td>
+                        <td className="p-4">
+                          <p className="font-semibold text-text truncate max-w-xs">
+                            {ord.matterNumber || "Standard Filing"}
+                          </p>
+                          <p className="text-[11px] text-text-muted">
+                            {ord.uploadedFiles?.length || 1} file(s) ? {ord.pageCount} page(s)
+                          </p>
+                        </td>
+                        <td className="p-4 font-mono">
+                          {ord.sourceLang} ? {ord.targetLangs?.join(", ")}
+                        </td>
+                        <td className="p-4">
+                          <span className="inline-block px-2 py-0.5 rounded bg-brand-50 text-brand-600 font-mono text-[10px] font-semibold border border-brand-100">
+                            {ord.serviceType}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <Badge
+                            variant={
+                              ord.status === "COMPLETED"
+                                ? "success"
+                                : ord.status === "CLIENT_REVIEW" || ord.status === "QUOTE_SENT"
+                                ? "warning"
+                                : "default"
+                            }
+                            className="text-[10px] font-mono uppercase"
+                          >
+                            {ord.status.replace(/_/g, " ")}
+                          </Badge>
+                        </td>
+                        <td className="p-4 font-mono text-text-muted text-[11px]">
+                          {ord.status === "COMPLETED"
+                            ? "Delivered"
+                            : new Date(ord.promisedAt).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                        </td>
+                        <td className="p-4 text-right font-mono font-bold text-brand-ink">
+                          ${ord.total.toFixed(2)}
+                        </td>
+                        <td className="p-4 text-center">
+                          <Button asChild variant="outline" size="sm" className="rounded-lg h-7 px-2.5 text-[11px] gap-1">
+                            <Link href={`/dashboard/orders/${ord.publicCode}`}>
+                              <Eye className="w-3 h-3 text-text-muted" />
+                              View
+                            </Link>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Security & Regulatory Compliance Footer Banner */}
+        <div className="p-5 rounded-2xl border border-brand-100 bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono text-text-muted">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-brand-500 shrink-0" />
+            <span>USCIS 8 CFR 103.2 Guaranteed Acceptance ? ATA Corporate Member ? AES-256 Storage</span>
+          </div>
+          <Link href="/help" className="text-brand-500 hover:underline flex items-center gap-1">
+            <HelpCircle className="w-3.5 h-3.5" />
+            Translation Compliance Guide
+          </Link>
+        </div>
       </main>
-
-      {/* Spring-Animated Slide-Over Record Inspector Drawer */}
-      <OrderDrawer
-        order={selectedOrder}
-        onClose={() => setSelectedOrder(null)}
-      />
-
-      {/* Toast Notification Container */}
-      <ToastContainer />
 
       <Footer />
     </div>

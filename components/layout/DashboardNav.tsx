@@ -3,9 +3,19 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldCheck, FileText, FolderLock, Settings, LogOut, Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+  ShieldCheck,
+  LayoutDashboard,
+  PlusCircle,
+  FolderLock,
+  CreditCard,
+  Bell,
+  Settings,
+  ArrowUpRight,
+  LogOut,
+  Sun,
+  Moon,
+} from "lucide-react";
 
 export function DashboardNav() {
   const pathname = usePathname();
@@ -25,11 +35,6 @@ export function DashboardNav() {
       .catch(() => {});
   }, []);
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
-  };
-
   const toggleDarkMode = () => {
     const nextDark = !isDark;
     setIsDark(nextDark);
@@ -43,12 +48,15 @@ export function DashboardNav() {
   };
 
   const navLinks = [
-    { href: "/dashboard", label: "My Orders", icon: FileText },
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/dashboard/request", label: "New Request", icon: PlusCircle },
     { href: "/dashboard/documents", label: "Document Vault", icon: FolderLock },
+    { href: "/dashboard/billing", label: "Billing & Quotes", icon: CreditCard },
+    { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];
 
-  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : "U";
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : "A";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface-raised/95 backdrop-blur-md px-6 py-3.5">
@@ -68,7 +76,7 @@ export function DashboardNav() {
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
@@ -89,6 +97,14 @@ export function DashboardNav() {
 
         {/* Right Action Bar */}
         <div className="flex items-center gap-3">
+          <Link
+            href="/admin"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-medium border border-border bg-surface hover:bg-surface-raised transition-colors text-text"
+          >
+            <span>Admin Portal</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-text-muted" />
+          </Link>
+
           <button
             onClick={toggleDarkMode}
             className="w-9 h-9 rounded-xl border border-border bg-surface flex items-center justify-center text-text-muted hover:text-brand-ink hover:bg-surface-raised transition-colors"
@@ -100,18 +116,10 @@ export function DashboardNav() {
           <div className="flex items-center gap-2 pl-2 border-l border-border">
             <div
               className="w-8 h-8 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center text-xs font-bold font-mono text-brand-500"
-              title={user ? (user.name || user.email) : "User profile"}
+              title={user ? (user.name || user.email) : "Alejandro Hernandez (Apex Law)"}
             >
               {userInitial}
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-text-muted hover:text-brand-ink p-1 rounded-lg transition-colors"
-              title="Sign out"
-              aria-label="Sign out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>

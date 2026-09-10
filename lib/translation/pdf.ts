@@ -136,7 +136,8 @@ export async function translatePdf(
       }
     }
 
-    // Top Header Banner on Page 0 (8 CFR 103.2 Compliant)
+    // Top Header Banner on Page 0 (8 CFR 103.2 Compliant for Certified, Uncertified disclaimer for Automated)
+    const isAutomated = options.serviceTier === "automated";
     if (isFirstPage) {
       const bannerHeight = 22;
       page.drawRectangle({
@@ -144,19 +145,23 @@ export async function translatePdf(
         y: height - 32,
         width: width - 72,
         height: bannerHeight,
-        color: rgb(0.96, 0.97, 1.0),
-        borderColor: rgb(0.18, 0.35, 0.95),
+        color: isAutomated ? rgb(0.95, 0.95, 0.96) : rgb(0.96, 0.97, 1.0),
+        borderColor: isAutomated ? rgb(0.5, 0.55, 0.65) : rgb(0.18, 0.35, 0.95),
         borderWidth: 0.75,
       });
 
+      const bannerText = isAutomated
+        ? `[AUTOMATED TRANSLATION • MACHINE PROCESSED • TARGET: ${options.targetLang.toUpperCase()}${hasMultiColumn ? " • MULTI-COLUMN PRESERVED" : ""}]`
+        : `[CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT • TARGET: ${options.targetLang.toUpperCase()}${hasMultiColumn ? " • MULTI-COLUMN PRESERVED" : ""}]`;
+
       page.drawText(
-        `[CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT • TARGET: ${options.targetLang.toUpperCase()}${hasMultiColumn ? " • MULTI-COLUMN PRESERVED" : ""}]`,
+        bannerText,
         {
           x: 48,
           y: height - 24,
           size: 7.5,
           font: fontBold,
-          color: rgb(0.12, 0.25, 0.75),
+          color: isAutomated ? rgb(0.3, 0.35, 0.45) : rgb(0.12, 0.25, 0.75),
         }
       );
     }
@@ -171,30 +176,55 @@ export async function translatePdf(
         color: rgb(0.78, 0.82, 0.88),
       });
 
-      page.drawText(
-        "I, authorized translator for VerifyLingua (ATA Member No. 278190), certify this is a complete and accurate translation of the original document.",
-        {
-          x: 36,
-          y: footerY + 6,
-          size: 6.5,
-          font: fontRegular,
-          color: rgb(0.35, 0.4, 0.48),
-        }
-      );
+      if (isAutomated) {
+        page.drawText(
+          "VerifyLingua Automated Machine Translation. Uncertified: requires professional human review for official USCIS/court proceedings.",
+          {
+            x: 36,
+            y: footerY + 6,
+            size: 6.5,
+            font: fontRegular,
+            color: rgb(0.45, 0.5, 0.55),
+          }
+        );
 
-      page.drawText(
-        `VERIFIED TIMESTAMP: ${new Date().toISOString().split("T")[0]} • SECURITY SEAL #VL-${Math.random().toString(36).substring(2, 7).toUpperCase()} • 8 CFR § 204.2 SWORN AFFIDAVIT`,
-        {
-          x: 36,
-          y: footerY - 4,
-          size: 6,
-          font: fontBold,
-          color: rgb(0.12, 0.25, 0.75),
-        }
-      );
+        page.drawText(
+          `GENERATED TIMESTAMP: ${new Date().toISOString().split("T")[0]} • NON-CERTIFIED MACHINE OUTPUT • JOB #VL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+          {
+            x: 36,
+            y: footerY - 4,
+            size: 6,
+            font: fontBold,
+            color: rgb(0.4, 0.45, 0.52),
+          }
+        );
+      } else {
+        page.drawText(
+          "I, authorized translator for VerifyLingua (ATA Member No. 278190), certify this is a complete and accurate translation of the original document.",
+          {
+            x: 36,
+            y: footerY + 6,
+            size: 6.5,
+            font: fontRegular,
+            color: rgb(0.35, 0.4, 0.48),
+          }
+        );
+
+        page.drawText(
+          `VERIFIED TIMESTAMP: ${new Date().toISOString().split("T")[0]} • SECURITY SEAL #VL-${Math.random().toString(36).substring(2, 7).toUpperCase()} • 8 CFR § 204.2 SWORN AFFIDAVIT`,
+          {
+            x: 36,
+            y: footerY - 4,
+            size: 6,
+            font: fontBold,
+            color: rgb(0.12, 0.25, 0.75),
+          }
+        );
+      }
     }
   }
 
+  const isAutomated = options.serviceTier === "automated";
   const outputBytes = await pdfDoc.save();
 
   return {
@@ -202,7 +232,7 @@ export async function translatePdf(
     metadata: {
       pageCount,
       wordCount: Math.max(totalWords, 120),
-      hasCertStamp: true,
+      hasCertStamp: !isAutomated,
       hasMultiColumn,
       spatialBlockCount: blocks.length,
     },

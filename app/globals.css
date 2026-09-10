@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Instrument+Serif:ital@0;1&display=swap");
+/* Google Fonts (Fraunces + Instrument Serif) loaded via <link> in layout.tsx head — not here,
+   because CSS @import url() is render-blocking and delays the entire stylesheet on static edges. */
 @import "tailwindcss";
 
 @theme {
@@ -536,3 +537,14 @@ input, textarea {
   animation-play-state: paused;
 }
 
+/* Page transition keyframe (used by app/template.tsx — CSS animation avoids blank page on slow hydration) */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

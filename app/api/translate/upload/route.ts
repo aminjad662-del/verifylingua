@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     let fileBuffer: Buffer | null = null;
     let sourceLang = "es";
     let targetLang = "en";
+    let serviceTier: "automated" | "professional" | "certified" = "automated";
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -28,11 +29,13 @@ export async function POST(req: NextRequest) {
 
       sourceLang = (formData.get("sourceLang") as string) || "es";
       targetLang = (formData.get("targetLang") as string) || "en";
+      serviceTier = ((formData.get("serviceTier") as string) as any) || "automated";
     } else if (contentType.includes("application/json")) {
       const body = await req.json();
       fileName = body.fileName || "document.pdf";
       sourceLang = body.sourceLang || "es";
       targetLang = body.targetLang || "en";
+      serviceTier = body.serviceTier || "automated";
 
       if (body.fileBase64) {
         fileBuffer = Buffer.from(body.fileBase64, "base64");
@@ -71,12 +74,14 @@ export async function POST(req: NextRequest) {
       targetLang,
       originalBuffer: fileBuffer,
     });
+    job.serviceTier = serviceTier;
 
     // 3. Kick off asynchronous layout-preserving translation
     processTranslationJob(job, {
       sourceLang,
       targetLang,
-      register: "certified_legal",
+      serviceTier,
+      register: serviceTier === "automated" ? "general" : "certified_legal",
     })
       .then((updated) => {
         updateTranslationJob(updated);

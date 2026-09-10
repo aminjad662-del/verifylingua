@@ -248,32 +248,40 @@ export async function translateImage(
     }
   }
 
-  // Top certification banner
+  const isAutomated = options.serviceTier === "automated";
+  // Top certification/automated banner
   const bannerHeight = Math.max(28, Math.floor(height * 0.05));
-  fillRect(img, 0, 0, width, bannerHeight, colorBlueBg);
+  fillRect(img, 0, 0, width, bannerHeight, isAutomated ? 0xf4f4f5ff : colorBlueBg);
 
   // Border line below banner
+  const bannerBorderColor = isAutomated ? 0x71717aff : colorBlueBorder;
   for (let x = 0; x < width; x++) {
-    img.setPixelColor(colorBlueBorder, x, bannerHeight - 1);
+    img.setPixelColor(bannerBorderColor, x, bannerHeight - 1);
   }
 
-  const headerText = `VERIFYLINGUA CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT [${options.targetLang.toUpperCase()}]`;
+  const headerText = isAutomated
+    ? `VERIFYLINGUA AUTOMATED TRANSLATION • MACHINE PROCESSED [${options.targetLang.toUpperCase()}]`
+    : `VERIFYLINGUA CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT [${options.targetLang.toUpperCase()}]`;
   const headerScale = width > 800 ? 2 : 1;
-  drawBitmapText(img, headerText, 12, Math.floor((bannerHeight - 7 * headerScale) / 2), colorNavyText, headerScale);
+  drawBitmapText(img, headerText, 12, Math.floor((bannerHeight - 7 * headerScale) / 2), isAutomated ? colorDarkText : colorNavyText, headerScale);
 
   // Bottom certified stamp and ATA membership seal
   const footerHeight = Math.max(34, Math.floor(height * 0.06));
   const footerY = height - footerHeight;
-  fillRect(img, 0, footerY, width, footerHeight, colorBlueBg);
+  fillRect(img, 0, footerY, width, footerHeight, isAutomated ? 0xf4f4f5ff : colorBlueBg);
 
   for (let x = 0; x < width; x++) {
-    img.setPixelColor(colorBlueBorder, x, footerY);
+    img.setPixelColor(bannerBorderColor, x, footerY);
   }
 
-  const footerLine1 = "Certified Translation • ATA Member No. 278190 • Tamper-Evident Record";
-  const footerLine2 = `Verified: ${new Date().toISOString().split("T")[0]} • Code: #VL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  const footerLine1 = isAutomated
+    ? "Automated Machine Translation • Uncertified for Legal/Immigration Proceedings"
+    : "Certified Translation • ATA Member No. 278190 • Tamper-Evident Record";
+  const footerLine2 = isAutomated
+    ? `Generated: ${new Date().toISOString().split("T")[0]} • Non-Certified Machine Output • Job: #VL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+    : `Verified: ${new Date().toISOString().split("T")[0]} • Code: #VL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-  drawBitmapText(img, footerLine1, 12, footerY + 6, colorNavyText, 1);
+  drawBitmapText(img, footerLine1, 12, footerY + 6, isAutomated ? colorDarkText : colorNavyText, 1);
   drawBitmapText(img, footerLine2, 12, footerY + 18, colorGrayText, 1);
 
   const outputBuffer = await img.getBuffer(mimeType as any);

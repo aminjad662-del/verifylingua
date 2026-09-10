@@ -1,34 +1,29 @@
 "use client";
 
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
 
 /**
  * App Router Page Transition template (§3.5.5).
- * - Enter: opacity 0 -> 1, translateY 10px -> 0, --dur-page (420ms), --ease-out-quart.
- * - Exit: opacity -> 0, translateY -8px, --dur-fast (150ms).
+ * Uses CSS animation instead of JS initial={opacity:0} to avoid blank page
+ * on Cloudflare Pages when JS hydration is delayed or slow.
+ * - Enter: CSS @keyframes page-enter — opacity 0->1, translateY 12px->0, 380ms ease-out.
  * - Completely bypassed under prefers-reduced-motion.
- * - Persistent elements (sticky bars, progress indicators) are outside template.
+ * - Page content is ALWAYS visible in SSR HTML (no opacity:0 in initial render).
  */
 export default function Template({ children }: { children: React.ReactNode }) {
   const shouldReduceMotion = useReducedMotion();
 
-  if (shouldReduceMotion) {
-    return <>{children}</>;
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{
-        duration: 0.42, // --dur-page: 420ms per §3.5.1
-        ease: [0.25, 1, 0.5, 1], // --ease-out-quart per §3.5.1
-      }}
+    <div
       className="w-full flex-1 flex flex-col"
+      style={
+        shouldReduceMotion
+          ? undefined
+          : { animation: "page-enter 0.38s cubic-bezier(0.25,1,0.5,1) both" }
+      }
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

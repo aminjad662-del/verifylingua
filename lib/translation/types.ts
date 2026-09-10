@@ -94,12 +94,15 @@ export interface TranslationJob {
   error?: string;
   /** Mirrors qualityGate.layoutPreserved — false signals the fallback text-only PDF was served */
   layoutPreserved?: boolean;
+  serviceTier?: "automated" | "professional" | "certified";
 }
 
 export interface TranslationOptions {
   sourceLang: string;
   targetLang: string;
+  serviceTier?: "automated" | "professional" | "certified";
   glossary?: Record<string, string>;
   register?: "certified_legal" | "academic" | "general";
   preservePlaceholders?: boolean;
 }
+

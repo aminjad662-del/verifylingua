@@ -46,3 +46,5 @@ agent
 agent/
 .claude
 skills-lock.json
+
+*.traineddata

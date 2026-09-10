@@ -6,6 +6,7 @@ pages_build_output_dir = "dist"
 [vars]
 NEXT_TELEMETRY_DISABLED = "1"
 NODE_VERSION = "22.16.0"
+NODE_OPTIONS = "--max-old-space-size=4096"
 
 [env.production]
 name = "verifylingua"
@@ -16,3 +17,4 @@ pages_build_output_dir = "dist"
 [env.production.vars]
 NEXT_TELEMETRY_DISABLED = "1"
 NODE_VERSION = "22.16.0"
+NODE_OPTIONS = "--max-old-space-size=4096"
