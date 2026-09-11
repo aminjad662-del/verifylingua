@@ -20,7 +20,7 @@ import {
 export function DashboardNav() {
   const pathname = usePathname();
   const [isDark, setIsDark] = React.useState(false);
-  const [user, setUser] = React.useState<{ name: string | null; email: string } | null>(null);
+  const [user, setUser] = React.useState<{ name: string | null; email: string; role?: string } | null>(null);
 
   React.useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -97,13 +97,15 @@ export function DashboardNav() {
 
         {/* Right Action Bar */}
         <div className="flex items-center gap-3">
-          <Link
-            href="/admin"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-medium border border-border bg-surface hover:bg-surface-raised transition-colors text-text"
-          >
-            <span>Admin Portal</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-text-muted" />
-          </Link>
+          {user?.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-medium border border-border bg-surface hover:bg-surface-raised transition-colors text-text"
+            >
+              <span>Admin Portal</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-text-muted" />
+            </Link>
+          )}
 
           <button
             onClick={toggleDarkMode}
