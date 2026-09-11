@@ -177,6 +177,16 @@ export async function POST(req: NextRequest) {
       maxAge: SESSION_MAX_AGE_SECONDS,
     });
 
+    response.cookies.set({
+      name: "vl_role",
+      value: user.role || "CUSTOMER",
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_MAX_AGE_SECONDS,
+    });
+
     return response;
   } catch (error: unknown) {
     console.error("Registration error:", error);

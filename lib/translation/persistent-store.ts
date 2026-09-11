@@ -253,6 +253,8 @@ export async function listUserJobs(userId?: string | null): Promise<PersistentTr
   return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+export const getAllJobs = listUserJobs;
+
 export async function deletePersistentJob(id: string): Promise<boolean> {
   memoryJobs.delete(id);
   try {

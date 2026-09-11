@@ -4,23 +4,14 @@ const fs = require('fs');
 
 process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ''} --max-old-space-size=4096`.trim();
 
+const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 console.log('📦 Step 1: Generating Prisma Client...');
-spawnSync('npx', ['prisma', 'generate'], { stdio: 'inherit', shell: true });
+spawnSync(npxCmd, ['prisma', 'generate'], { stdio: 'inherit' });
 
 console.log('⚡ Step 2: Running Next.js build with 4GB heap...');
-let nextBin;
-try {
-  nextBin = require.resolve('next/dist/bin/next');
-} catch {
-  nextBin = path.join(__dirname, '..', 'node_modules', 'next', 'dist', 'bin', 'next');
-}
-
-const buildRes = spawnSync(process.execPath, ['--max-old-space-size=4096', nextBin, 'build'], { 
+const buildRes = spawnSync(npxCmd, ['next', 'build'], { 
   stdio: 'inherit',
-  env: {
-    ...process.env,
-    NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --max-old-space-size=4096`.trim()
-  }
+  env: process.env,
 });
 
 if (buildRes.status !== 0) {

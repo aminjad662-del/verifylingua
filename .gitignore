@@ -39,12 +39,12 @@ yarn-error.log*
 next-env.d.ts
 
 # external skills and agents
-ui-ux-pro-max-skill-main
-.agents
-.agent
-agent
-agent/
-.claude
-skills-lock.json
+/ui-ux-pro-max-skill-main/
+/.agents/
+/.agent/
+/agent/
+/.claude/
+/skills-lock.json
+!lib/agent/
 
 *.traineddata
