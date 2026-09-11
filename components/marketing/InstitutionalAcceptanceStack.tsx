@@ -65,20 +65,20 @@ const INSTITUTION_ROWS = [
 
 export function InstitutionalAcceptanceStack() {
   return (
-    <section className="py-20 md:py-32 bg-surface border-b border-border/60">
+    <section className="py-20 md:py-32 bg-surface dark:bg-canvas border-b border-border/60 dark:border-white/10">
       <div className="max-w-7xl mx-auto px-6 space-y-12">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/50 bg-brand-50/80 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4 text-brand-500" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/50 bg-brand-50/80 text-brand-500 dark:border-brand-400/30 dark:bg-brand-500/10 dark:text-brand-300 text-xs font-mono font-bold uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4 text-brand-500 dark:text-brand-400" />
             <span>Universal Institutional Acceptance</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink dark:text-white tracking-tight font-display">
             All Your Receiving Institutions, Accepted.
           </h2>
 
-          <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
+          <p className="text-base sm:text-lg text-ink-soft dark:text-slate-300 leading-relaxed">
             Every document is certified to the precise legal standard of your receiving agency — with sworn affidavits, ATA translator credentials, and live digital verification.
           </p>
         </div>
@@ -90,24 +90,24 @@ export function InstitutionalAcceptanceStack() {
             return (
               <div
                 key={row.id}
-                className="p-6 md:p-8 rounded-[var(--r-xl)] bg-surface-raised border border-border/80 hover:border-brand-500/40 hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+                className="p-6 md:p-8 rounded-[var(--r-xl)] bg-surface-raised dark:bg-slate-900/80 border border-border/80 dark:border-white/10 hover:border-brand-500/40 dark:hover:border-white/25 hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
               >
                 {/* Category & Description */}
                 <div className="space-y-2 lg:max-w-md">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-500 shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-white/10 flex items-center justify-center text-brand-500 dark:text-brand-300 shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-base sm:text-lg font-bold text-brand-ink font-display">
+                      <h3 className="text-base sm:text-lg font-bold text-brand-ink dark:text-white font-display">
                         {row.category}
                       </h3>
-                      <span className="text-xs font-mono font-semibold text-brand-500">
+                      <span className="text-xs font-mono font-semibold text-brand-500 dark:text-brand-400">
                         {row.statute}
                       </span>
                     </div>
                   </div>
-                  <p className="text-xs sm:text-sm text-text-muted leading-relaxed pl-13">
+                  <p className="text-xs sm:text-sm text-text-muted dark:text-slate-400 leading-relaxed pl-13">
                     {row.description}
                   </p>
                 </div>
@@ -117,12 +117,12 @@ export function InstitutionalAcceptanceStack() {
                   {row.agencies.map((agency, i) => (
                     <div
                       key={i}
-                      className="px-3.5 py-2 rounded-xl bg-surface border border-border/80 flex items-center gap-2 shadow-2xs hover:border-brand-500/30 transition-colors"
+                      className="px-3.5 py-2 rounded-xl bg-surface dark:bg-white/5 border border-border/80 dark:border-white/10 flex items-center gap-2 shadow-2xs hover:border-brand-500/30 dark:hover:border-white/20 transition-colors"
                     >
-                      <span className="text-xs font-bold text-brand-ink font-mono">
+                      <span className="text-xs font-bold text-brand-ink dark:text-white font-mono">
                         {agency.name}
                       </span>
-                      <span className="text-[10px] text-text-muted uppercase font-medium">
+                      <span className="text-[10px] text-text-muted dark:text-slate-400 uppercase font-medium">
                         {agency.type}
                       </span>
                     </div>
@@ -135,7 +135,7 @@ export function InstitutionalAcceptanceStack() {
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>{row.acceptanceRate}</span>
                   </Badge>
-                  <span className="text-[11px] text-text-muted font-mono">
+                  <span className="text-[11px] text-text-muted dark:text-slate-400 font-mono">
                     Free Redo + Refund
                   </span>
                 </div>

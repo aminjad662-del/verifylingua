@@ -68,12 +68,12 @@ const THREAT_CARDS: ThreatCard[] = [
 
 export function SpyglassDarkMatrix() {
   return (
-    <section className="relative py-20 sm:py-28 bg-canvas text-brand-ink overflow-hidden">
+    <section className="relative py-20 sm:py-28 bg-canvas text-brand-ink dark:text-white overflow-hidden transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-6">
         {/* Dark Container Box matching Spyglass reference */}
-        <div className="relative rounded-3xl p-8 sm:p-12 md:p-16 bg-brand-ink text-white border border-white/10 shadow-2xl overflow-hidden space-y-12 sm:space-y-16">
+        <div className="relative rounded-3xl p-8 sm:p-12 md:p-16 bg-brand-ink dark:bg-surface-raised text-white border border-white/10 shadow-2xl overflow-hidden space-y-12 sm:space-y-16">
           {/* Ambient lighting highlight */}
-          <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-72 bg-brand-500/10 blur-[130px]" />
+          <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-72 bg-brand-500/10 dark:bg-brand-500/20 blur-[130px]" />
 
           {/* Section Header */}
           <div className="text-center space-y-4 max-w-3xl mx-auto relative z-10">

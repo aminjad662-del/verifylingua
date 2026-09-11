@@ -10,9 +10,9 @@ export function SpyglassPreFooterCTA() {
     <section className="relative pt-16 pb-0 overflow-hidden bg-canvas">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Obsidian Dark Pill Container matching Spyglass reference */}
-        <div className="relative rounded-3xl p-10 sm:p-16 md:p-20 bg-brand-ink text-white border border-white/10 text-center space-y-8 overflow-hidden shadow-2xl">
+        <div className="relative rounded-3xl p-10 sm:p-16 md:p-20 bg-brand-ink dark:bg-slate-950 text-white border border-white/10 dark:border-white/15 text-center space-y-8 overflow-hidden shadow-2xl">
           {/* Subtle Ambient Glow */}
-          <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-500/20 blur-[120px]" />
+          <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-500/20 dark:bg-rose-500/20 blur-[120px]" />
 
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 text-brand-300 text-xs font-mono font-bold uppercase tracking-widest">
@@ -37,7 +37,7 @@ export function SpyglassPreFooterCTA() {
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/order/triage"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-white hover:bg-white/90 text-brand-ink text-base font-bold shadow-xl transition-all duration-200 active:scale-95 group"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-white hover:bg-white/90 text-brand-ink text-base font-bold shadow-xl dark:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-all duration-200 active:scale-95 group"
             >
               <span>Start Certified Translation</span>
               <ArrowRight className="w-5 h-5 text-brand-ink group-hover:translate-x-1 transition-transform" />
@@ -64,7 +64,7 @@ export function SpyglassPreFooterCTA() {
 
       {/* Massive Subtle Watermark Typography matching Spyglass reference in lowercase */}
       <div className="relative w-full overflow-hidden select-none pointer-events-none pt-12 -mb-8 sm:-mb-14 text-center">
-        <span className="block text-[6rem] sm:text-[10rem] md:text-[15rem] lg:text-[18rem] font-black tracking-tighter lowercase text-brand-ink/[0.04] leading-none whitespace-nowrap font-display">
+        <span className="block text-[6rem] sm:text-[10rem] md:text-[15rem] lg:text-[18rem] font-black tracking-tighter lowercase text-brand-ink/[0.04] dark:text-white/[0.05] leading-none whitespace-nowrap font-display">
           verifylingua
         </span>
       </div>

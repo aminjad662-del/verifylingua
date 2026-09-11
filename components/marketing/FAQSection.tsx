@@ -51,30 +51,30 @@ const FAQS = [
 
 export function FAQSection() {
   return (
-    <section className="py-20 md:py-32 bg-canvas border-b border-border/60">
+    <section className="py-20 md:py-32 bg-canvas border-b border-border/60 dark:border-white/10">
       <div className="max-w-7xl mx-auto px-6">
         {/* Synthesia 2-Column Minimalist Layout (Reference media_1788643404727.jpg) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column (Sticky 4-col Sidebar) */}
           <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 dark:border-brand-400/30 dark:bg-brand-500/10 dark:text-brand-300 text-xs font-mono font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Compliance &amp; Legal FAQ</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-ink tracking-tight font-display leading-[1.08]">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-ink dark:text-white tracking-tight font-display leading-[1.08]">
               Frequently Asked Questions
             </h2>
 
-            <p className="text-base text-ink-soft leading-relaxed">
+            <p className="text-base text-ink-soft dark:text-slate-300 leading-relaxed">
               Have questions about federal immigration standards, notary mandates, or document formatting?
               Here is everything you need to know.
             </p>
 
             {/* Support Callout Box */}
-            <div className="p-6 rounded-2xl bg-surface-raised border border-border/80 space-y-4 shadow-sm">
+            <div className="p-6 rounded-2xl bg-surface-raised dark:bg-slate-900/80 border border-border/80 dark:border-white/10 space-y-4 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-brand-100 bg-white shadow-sm shrink-0">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-brand-100 dark:border-white/10 bg-white shadow-sm shrink-0">
                   <Image
                     src="/images/step-human-cert-3d.jpg"
                     alt="ATA Certified Compliance Specialist"
@@ -86,22 +86,22 @@ export function FAQSection() {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
-                    <span className="text-xs font-mono font-bold text-brand-ink">Linguists Online</span>
+                    <span className="text-xs font-mono font-bold text-brand-ink dark:text-white">Linguists Online</span>
                   </div>
-                  <p className="text-xs text-ink-softer">Average response &lt;2 mins</p>
+                  <p className="text-xs text-ink-softer dark:text-slate-400">Average response &lt;2 mins</p>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-brand-ink font-display">Have a unique document?</h4>
-                <p className="text-xs text-ink-soft">
+                <h4 className="text-sm font-bold text-brand-ink dark:text-white font-display">Have a unique document?</h4>
+                <p className="text-xs text-ink-soft dark:text-slate-400">
                   Our certified compliance specialists are available 24/7 to review your scan before ordering.
                 </p>
               </div>
 
               <Link
                 href="/help"
-                className="inline-flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100/80 text-brand-500 text-xs font-bold transition-colors"
+                className="inline-flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-brand-50 dark:bg-brand-500/20 hover:bg-brand-100/80 dark:hover:bg-brand-500/30 text-brand-500 dark:text-brand-300 text-xs font-bold transition-colors"
               >
                 <span>Ask Compliance Specialist</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -111,13 +111,13 @@ export function FAQSection() {
 
           {/* Right Column (Expandable Accordion 8-col) */}
           <div className="lg:col-span-8 space-y-4">
-            <Accordion type="single" collapsible defaultValue="item-0" className="w-full divide-y divide-border/60">
+            <Accordion type="single" collapsible defaultValue="item-0" className="w-full divide-y divide-border/60 dark:divide-white/10">
               {FAQS.map((faq, idx) => (
-                <AccordionItem key={idx} value={`item-${idx}`} className="py-2 border-b border-border/60">
-                  <AccordionTrigger className="text-left font-bold text-lg sm:text-xl font-display text-brand-ink hover:text-brand-500 hover:no-underline py-4">
+                <AccordionItem key={idx} value={`item-${idx}`} className="py-2 border-b border-border/60 dark:border-white/10">
+                  <AccordionTrigger className="text-left font-bold text-lg sm:text-xl font-display text-brand-ink dark:text-white hover:text-brand-500 dark:hover:text-brand-300 hover:no-underline py-4">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-sm sm:text-base text-ink-soft leading-relaxed pt-1 pb-6 pr-4">
+                  <AccordionContent className="text-sm sm:text-base text-ink-soft dark:text-slate-300 leading-relaxed pt-1 pb-6 pr-4">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>

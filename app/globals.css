@@ -279,68 +279,82 @@
   --space-unit:     4px;
 }
 
-/* ─── Hand-tuned Dark Mode (§3.1.2 #10, §3.2.3) */
+/* ─── Hand-tuned Dark Mode (§3.1.2 #10, §3.2.3) — Tuned to Reference Grade */
 .dark {
-  --canvas:           #080A1F;
-  --surface:          #0D1130;
-  --surface-warm:     #12173B;
-  --surface-raised:   #151B44;
-  --surface-sunken:   #050614;
-  --border:           #1E275E;
-  --border-strong:    #2D3985;
-  --text:             #F1F4FF;
-  --text-muted:       #93A8F5;
-  --text-subtle:      #6480EE;
-  --footer:           #050614;
-  --focus-ring:       #6480EE;
+  --canvas:           #030712;
+  --surface:          #0B0F19;
+  --surface-warm:     #0F1424;
+  --surface-raised:   #111827;
+  --surface-sunken:   #02040A;
+  --border:           rgba(255, 255, 255, 0.08);
+  --border-strong:    rgba(255, 255, 255, 0.16);
+  --text:             #F8FAFC;
+  --text-muted:       #94A3B8;
+  --text-subtle:      #64748B;
+  --footer:           #02040A;
+  --focus-ring:       #38BDF8;
 
-  --ink-soft:         #C2CFFA;
-  --ink-softer:       #93A8F5;
+  --ink-soft:         #E2E8F0;
+  --ink-softer:       #94A3B8;
 
   /* ─── The Notarial Palette (Dark Mode) */
-  --sand:              #0A111F;
-  --sand-warm:         #111927;
-  --ink:               #F5F7FA;
+  --sand:              #030712;
+  --sand-warm:         #0B0F19;
+  --ink:               #F8FAFC;
   --ink-muted:         #94A3B8;
-  --cta:               #D97706;
-  --cta-hover:         #B45309;
-  --cta-active:        #92400E;
+  --cta:               #F59E0B;
+  --cta-hover:         #D97706;
+  --cta-active:        #B45309;
   --trust:             #10B981;
-  --trust-bg:          #064E3B;
-  --trust-border:      #047857;
+  --trust-bg:          rgba(16, 185, 129, 0.12);
+  --trust-border:      rgba(16, 185, 129, 0.3);
 
-  --brand-ink:        #F1F4FF;
-  --brand-900:        #DCE6FF;
-  --brand-800:        #C2CFFA;
-  --brand-700:        #93A8F5;
-  --brand-500:        #3D57DB;
-  --brand-300:        #24307F;
-  --brand-100:        #151B44;
-  --brand-50:         #0D1130;
+  --brand-ink:        #0B0F19;
+  --brand-900:        #111827;
+  --brand-800:        #1E293B;
+  --brand-700:        #334155;
+  --brand-600:        #2563EB;
+  --brand-500:        #3B82F6;
+  --brand-400:        #60A5FA;
+  --brand-300:        #93C5FD;
+  --brand-200:        #BFDBFE;
+  --brand-100:        #1E293B;
+  --brand-50:         #0B0F19;
 
-  --lavender-100:     #151B44;
-  --lavender-50:      #0D1130;
-  --peach-100:        #2E1B19;
-  --sky-100:          #112542;
-  --parchment-50:     #12173B;
+  --lavender-100:     #111827;
+  --lavender-50:      #0B0F19;
+  --peach-100:        #1F1315;
+  --sky-100:          #081A2F;
+  --parchment-50:     #0B0F19;
 
   /* Re-verified contrast for dark mode status tokens */
   --status-success:    #34D399;
-  --status-info:       #60A5FA;
+  --status-info:       #38BDF8;
   --status-warning:    #FBBF24;
   --status-danger:     #F87171;
-  --status-success-bg: #064E3B;
-  --status-warning-bg: #78350F;
-  --status-danger-bg:  #7F1D1D;
+  --status-success-bg: rgba(52, 211, 153, 0.12);
+  --status-warning-bg: rgba(251, 191, 36, 0.12);
+  --status-danger-bg:  rgba(248, 113, 113, 0.12);
 
-  --shadow-sm:   0 1px 2px rgba(0,0,0,.3);
-  --shadow-md:   0 4px 12px rgba(0,0,0,.45);
-  --shadow-lg:   0 8px 24px rgba(0,0,0,.6);
-  --shadow-seal: 0 2px 14px rgba(201,154,71,.25);
+  --shadow-sm:   0 1px 2px rgba(0,0,0,.6);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.7);
+  --shadow-lg:   0 12px 32px rgba(0,0,0,.85);
+  --shadow-seal: 0 2px 16px rgba(201,154,71,.25);
 
-  --gradient-hero:      radial-gradient(100% 120% at 50% 0%, #151B44 0%, #0D1130 50%, #080A1F 100%);
-  --gradient-panel:     linear-gradient(168deg, #151B44 0%, #0D1130 100%);
-  --gradient-dark-band: radial-gradient(90% 140% at 50% -20%, #151B44 0%, #080A1F 80%);
+  --gradient-hero:      radial-gradient(120% 120% at 50% 10%, rgba(30, 58, 138, 0.35) 0%, rgba(6, 182, 212, 0.12) 40%, rgba(3, 7, 18, 0) 75%);
+  --gradient-panel:     linear-gradient(168deg, #111827 0%, #0B0F19 100%);
+  --gradient-dark-band: radial-gradient(90% 140% at 50% -20%, #111827 0%, #030712 80%);
+}
+
+/* Ensure headings with text-brand-ink adapt to crisp white in night mode without breaking dark backgrounds */
+.dark .text-brand-ink {
+  color: #F8FAFC !important;
+}
+.dark .bg-brand-ink {
+  background-color: #0B0F19 !important;
+}
+.dark .border-brand-ink {
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 /* ─── Global Reset & Typography Binding */
@@ -438,9 +452,11 @@ h1, h2, h3, h4, h5, h6, [id] {
 }
 
 .dark .glass {
-  background: rgba(13, 17, 48, 0.78);
+  background: rgba(3, 7, 18, 0.78);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom-color: rgba(45, 57, 133, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
 }
 
 @supports not (backdrop-filter: blur(1px)) {
@@ -463,6 +479,17 @@ h1, h2, h3, h4, h5, h6, [id] {
 .bg-gradient-dark-band { background-image: var(--gradient-dark-band); }
 .bg-gradient-seal { background-image: var(--gradient-seal); }
 .bg-gradient-subtle { background-image: var(--gradient-subtle); }
+
+/* Night Mode Atmospheric Radial Glows matching reference */
+.dark-radial-hero {
+  background: radial-gradient(120% 120% at 50% 20%, rgba(30, 58, 138, 0.28) 0%, rgba(6, 182, 212, 0.09) 35%, transparent 70%);
+}
+.dark-radial-ruby {
+  background: radial-gradient(circle at 50% 50%, rgba(225, 29, 72, 0.2) 0%, rgba(244, 63, 94, 0.06) 40%, transparent 70%);
+}
+.dark-radial-studio {
+  background: radial-gradient(circle at 50% 40%, rgba(99, 102, 241, 0.22) 0%, rgba(6, 182, 212, 0.08) 45%, transparent 75%);
+}
 
 /* ─── 8. Print Stylesheet (§3.8 #8) */
 @media print {
