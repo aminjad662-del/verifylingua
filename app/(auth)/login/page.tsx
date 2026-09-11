@@ -2,7 +2,7 @@ import * as React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { ShieldCheck, Lock } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Sign In | VerifyLingua Certified Translations",
@@ -11,54 +11,79 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-canvas text-brand-ink flex flex-col justify-between">
-      {/* Top Banner & Header */}
-      <div className="border-b border-border/60 bg-surface-raised/80 backdrop-blur px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-500 text-white shadow-sm transition-transform group-hover:scale-105">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-extrabold tracking-tight text-brand-ink font-display">
-                Verify<span className="text-brand-500">Lingua</span>
-              </span>
-              <span className="text-[9px] uppercase font-bold tracking-widest text-text-muted">
-                Certified Translations
-              </span>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <Lock className="w-3.5 h-3.5 text-status-success" />
-            <span className="hidden sm:inline">256-Bit SSL Encrypted Session</span>
-          </div>
-        </div>
+    <div className="min-h-screen relative overflow-x-hidden bg-neutral-50/50 flex flex-col justify-between selection:bg-brand-500/20 selection:text-brand-ink">
+      {/* Dynamic Emerald Glass Ribbon Background Wave */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
+        <img
+          src="/images/auth-glass-wave.jpg"
+          alt="Emerald fluid glass ribbon"
+          className="w-full h-full object-cover object-center opacity-85 scale-105"
+        />
+        {/* Ambient radial lighting layer for optimal text contrast */}
+        <div className="absolute inset-0 bg-radial from-white/30 via-white/10 to-transparent" />
       </div>
 
-      {/* Main Container */}
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md bg-surface rounded-2xl border border-border-strong shadow-sm p-6 sm:p-8">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-brand-ink font-display">
-              Sign in to your vault
-            </h1>
-            <p className="text-xs text-text-muted mt-1.5">
-              Access your certified translation certificates, active orders, and notarized records.
-            </p>
+      {/* Top Navigation Bar */}
+      <header className="relative z-20 w-full px-6 py-5 max-w-7xl mx-auto flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-500 text-white shadow-sm transition-transform group-hover:scale-105">
+            <ShieldCheck className="w-4 h-4" />
           </div>
+          <span className="text-xl font-bold tracking-tight text-neutral-900 font-display">
+            Verify<span className="text-brand-500">Lingua</span>
+          </span>
+        </Link>
 
-          <React.Suspense fallback={<div className="h-48 flex items-center justify-center text-text-muted text-sm">Loading sign in...</div>}>
+        {/* Center Nav Links */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-600">
+          <Link href="/services" className="hover:text-neutral-900 transition-colors">
+            Services
+          </Link>
+          <Link href="/uscis-translation-requirements" className="hover:text-neutral-900 transition-colors">
+            USCIS Standards
+          </Link>
+          <Link href="/pricing" className="hover:text-neutral-900 transition-colors">
+            Pricing
+          </Link>
+          <Link href="/faq" className="hover:text-neutral-900 transition-colors">
+            FAQ
+          </Link>
+        </nav>
+
+        {/* Right Nav Actions */}
+        <div className="flex items-center gap-5">
+          <Link
+            href="/register"
+            className="text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
+          >
+            Create account
+          </Link>
+          <Link
+            href="/order"
+            className="h-10 px-5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-center shadow-sm transition-all active:scale-[0.985]"
+          >
+            Get Started
+          </Link>
+        </div>
+      </header>
+
+      {/* Main Container with Floating Frosted Glass Card */}
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12 relative z-10">
+        <div className="w-full max-w-[460px] bg-white/80 backdrop-blur-2xl border border-white/90 shadow-[0_32px_80px_-16px_rgba(20,40,28,0.14),0_0_0_1px_rgba(255,255,255,0.85)] rounded-[32px] p-6 sm:p-9 relative">
+          <React.Suspense
+            fallback={
+              <div className="h-48 flex items-center justify-center text-text-muted text-sm font-sans">
+                Loading sign in...
+              </div>
+            }
+          >
             <LoginForm />
           </React.Suspense>
         </div>
       </main>
 
-      {/* Footer Minimal */}
-      <footer className="border-t border-border py-6 px-6 text-center text-xs text-text-muted">
+      {/* Minimal Clean Footer */}
+      <footer className="relative z-20 py-5 px-6 text-center text-xs text-neutral-500 font-sans">
         <p>© {new Date().getFullYear()} VerifyLingua LLC. All rights reserved. Encrypted under 256-bit TLS.</p>
       </footer>
     </div>

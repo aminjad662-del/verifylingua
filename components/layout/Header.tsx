@@ -10,7 +10,7 @@ import { PRODUCT_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/app", label: "Workspace" },
   { href: "/pricing", label: "Pricing" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/counsel", label: "CounselDesk™ (Law Firms)" },

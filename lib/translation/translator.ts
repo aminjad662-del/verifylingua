@@ -101,9 +101,11 @@ export async function translateText(
     }
   }
 
+  const shouldBypassTestMock = Boolean(options.bypassTestMock || process.env.FORCE_LIVE_TRANSLATION === "true");
+
   // 3. Check DeepL Neural Translation API
   const deeplKey = process.env.DEEPL_API_KEY;
-  if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && !process.env.VITEST) {
+  if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
     try {
       const translated = await callDeepLTranslation(trimmed, options, deeplKey);
       if (translated) return translated;
@@ -114,7 +116,7 @@ export async function translateText(
 
   // 4. If Gemini API key is configured, call LLM with strict translation prompt
   const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey && apiKey !== "mock" && apiKey.length > 10 && !process.env.VITEST) {
+  if (apiKey && apiKey !== "mock" && apiKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
     try {
       const translated = await callGeminiTranslation(trimmed, options, apiKey);
       if (translated) return translated;

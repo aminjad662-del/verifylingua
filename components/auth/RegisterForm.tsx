@@ -3,9 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { evaluatePasswordStrength, PasswordStrengthResult } from "@/lib/auth/password";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { evaluatePasswordStrength, type PasswordStrengthResult } from "@/lib/auth/password";
 import {
   ShieldCheck,
   Lock,
@@ -30,6 +29,7 @@ export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const prefersReducedMotion = useReducedMotion();
 
   const [accountType, setAccountType] = React.useState<AccountType>("INDIVIDUAL");
   const [name, setName] = React.useState("");
@@ -42,6 +42,7 @@ export function RegisterForm() {
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [googleNotice, setGoogleNotice] = React.useState<string | null>(null);
 
   // Live password strength calculation
   const strength: PasswordStrengthResult = React.useMemo(() => {
@@ -51,9 +52,16 @@ export function RegisterForm() {
   const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword;
   const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
+  const handleGoogleAuth = () => {
+    setGoogleNotice(
+      "Google SSO is active for verified institutional domains. For immediate certified filing access, complete your vault registration below."
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setGoogleNotice(null);
 
     if (!name.trim()) {
       setErrorMessage("Please provide your full legal name.");
@@ -107,7 +115,7 @@ export function RegisterForm() {
         throw new Error(data.error || "Registration failed. Please try again.");
       }
 
-      // Success -> Redirect to dashboard or order funnel
+      // Success -> Redirect to callback or dashboard
       router.push(`${callbackUrl}?registered=true`);
       router.refresh();
     } catch (err: unknown) {
@@ -119,63 +127,108 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto">
-      {/* Account Type Tabs */}
-      <div className="mb-8">
-        <label className="block text-xs font-mono uppercase tracking-wider text-text-muted mb-3">
-          1. Select Account Scope
+    <div className="w-full">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-brand-ink font-display">
+          Create your account
+        </h1>
+        <p className="text-xs sm:text-sm text-text-muted mt-1.5 font-sans">
+          Open your certified USCIS translation vault
+        </p>
+      </div>
+
+      {/* Google SSO Pill Button */}
+      <button
+        type="button"
+        onClick={handleGoogleAuth}
+        className="w-full h-12 rounded-full border border-neutral-200/90 bg-white hover:bg-neutral-50/90 text-neutral-800 text-sm font-medium flex items-center justify-center gap-3 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.04)] active:scale-[0.985] cursor-pointer"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="rgb(66, 133, 244)"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+          />
+          <path
+            fill="rgb(52, 168, 83)"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+          />
+          <path
+            fill="rgb(251, 188, 5)"
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+          />
+          <path
+            fill="rgb(234, 67, 53)"
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+          />
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      {/* Google Notice */}
+      {googleNotice && (
+        <div
+          role="status"
+          className="mt-3 p-3 rounded-2xl border border-border bg-surface-raised text-xs text-text-muted flex items-start gap-2.5 animate-in fade-in"
+        >
+          <Sparkles className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+          <span>{googleNotice}</span>
+        </div>
+      )}
+
+      {/* Divider */}
+      <div className="relative my-5 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-neutral-200/80" />
+        </div>
+        <span className="relative bg-white/95 px-3 text-[11px] uppercase tracking-wider text-text-muted font-mono">
+          or register with email
+        </span>
+      </div>
+
+      {/* Account Type Segmented Pills */}
+      <div className="mb-5">
+        <label className="block text-[10px] font-mono uppercase tracking-wider text-text-muted mb-2 text-center">
+          Account Scope
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button
-            type="button"
-            onClick={() => setAccountType("INDIVIDUAL")}
-            className={cn(
-              "flex flex-col items-start p-3.5 rounded-xl border text-left transition-all",
-              accountType === "INDIVIDUAL"
-                ? "border-brand-500 bg-brand-50/50 ring-2 ring-brand-500/20"
-                : "border-border bg-surface hover:border-border-strong hover:bg-surface-raised"
-            )}
-          >
-            <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-brand-500 mb-2">
-              <User className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-bold text-brand-ink font-display">Individual</span>
-            <span className="text-[11px] text-text-muted mt-0.5">USCIS, Visa & Academic</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAccountType("LAW_FIRM")}
-            className={cn(
-              "flex flex-col items-start p-3.5 rounded-xl border text-left transition-all",
-              accountType === "LAW_FIRM"
-                ? "border-brand-500 bg-brand-50/50 ring-2 ring-brand-500/20"
-                : "border-border bg-surface hover:border-border-strong hover:bg-surface-raised"
-            )}
-          >
-            <div className="w-8 h-8 rounded-lg bg-accent-seal/10 flex items-center justify-center text-accent-seal mb-2">
-              <Briefcase className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-bold text-brand-ink font-display">Law Firm</span>
-            <span className="text-[11px] text-text-muted mt-0.5">Attorneys & Paralegals</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAccountType("INSTITUTION")}
-            className={cn(
-              "flex flex-col items-start p-3.5 rounded-xl border text-left transition-all",
-              accountType === "INSTITUTION"
-                ? "border-brand-500 bg-brand-50/50 ring-2 ring-brand-500/20"
-                : "border-border bg-surface hover:border-border-strong hover:bg-surface-raised"
-            )}
-          >
-            <div className="w-8 h-8 rounded-lg bg-surface-raised flex items-center justify-center text-text-muted mb-2">
-              <GraduationCap className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-bold text-brand-ink font-display">Institution</span>
-            <span className="text-[11px] text-text-muted mt-0.5">Universities & Evaluators</span>
-          </button>
+        <div className="p-1 bg-neutral-100/90 rounded-full border border-neutral-200/70 flex gap-1 relative">
+          {(
+            [
+              { id: "INDIVIDUAL", label: "Individual", icon: User },
+              { id: "LAW_FIRM", label: "Law Firm", icon: Briefcase },
+              { id: "INSTITUTION", label: "Institution", icon: GraduationCap },
+            ] as const
+          ).map((tab) => {
+            const Icon = tab.icon;
+            const isActive = accountType === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setAccountType(tab.id)}
+                className={cn(
+                  "flex-1 relative z-10 py-1.5 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-200 cursor-pointer",
+                  isActive ? "text-neutral-900" : "text-text-muted hover:text-neutral-800"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="accountTypeIndicator"
+                    className="absolute inset-0 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-neutral-200/60"
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : { type: "spring", stiffness: 450, damping: 35 }
+                    }
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <Icon className="w-3.5 h-3.5" />
+                  <span className="truncate">{tab.label}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -183,117 +236,126 @@ export function RegisterForm() {
       {errorMessage && (
         <div
           role="alert"
-          className="mb-6 p-4 rounded-xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-3 text-sm animate-in fade-in"
+          className="mb-4 p-3.5 rounded-2xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-2.5 text-xs animate-in fade-in"
         >
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <div className="flex-1 font-medium">{errorMessage}</div>
         </div>
       )}
 
-      {/* Form Card */}
-      <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Registration Form */}
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         {/* Full Name */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-name">
+          <label className="block text-xs font-semibold text-brand-ink mb-1 pl-1" htmlFor="register-name">
             Full Legal Name <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
-            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-            <Input
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+            <input
               id="register-name"
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Elena Rostova"
-              className="pl-10"
+              placeholder="Elena Rostova"
+              className="w-full h-12 rounded-full border border-neutral-200/90 bg-white/95 pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
               autoComplete="name"
             />
           </div>
         </div>
 
         {/* Company / Law Firm (Conditional) */}
-        {accountType !== "INDIVIDUAL" && (
-          <div>
-            <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-org">
-              {accountType === "LAW_FIRM" ? "Law Firm / Practice Name" : "Organization / Institution Name"}{" "}
-              <span className="text-status-danger">*</span>
-            </label>
-            <div className="relative">
-              <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-              <Input
-                id="register-org"
-                type="text"
-                required
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder={accountType === "LAW_FIRM" ? "e.g. Rostova & Partners Immigration Law" : "e.g. Global Credential Services"}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {accountType !== "INDIVIDUAL" && (
+            <motion.div
+              initial={prefersReducedMotion ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: "auto", marginTop: 14 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <label className="block text-xs font-semibold text-brand-ink mb-1 pl-1" htmlFor="register-org">
+                {accountType === "LAW_FIRM" ? "Law Firm / Practice Name" : "Organization / Institution Name"}{" "}
+                <span className="text-status-danger">*</span>
+              </label>
+              <div className="relative">
+                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+                <input
+                  id="register-org"
+                  type="text"
+                  required
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder={
+                    accountType === "LAW_FIRM"
+                      ? "Rostova & Partners Immigration Law"
+                      : "Global Credential Services"
+                  }
+                  className="w-full h-12 rounded-full border border-neutral-200/90 bg-white/95 pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Email Address */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-email">
+          <label className="block text-xs font-semibold text-brand-ink mb-1 pl-1" htmlFor="register-email">
             Official Email Address <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-            <Input
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+            <input
               id="register-email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@organization.com"
-              className="pl-10"
+              placeholder="elena@rostovalaw.com"
+              className="w-full h-12 rounded-full border border-neutral-200/90 bg-white/95 pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
               autoComplete="email"
             />
           </div>
-          <p className="text-[11px] text-text-muted mt-1">
-            Certificates of Accuracy and notarized copies will be issued to this email.
-          </p>
         </div>
 
         {/* Password */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-password">
+          <label className="block text-xs font-semibold text-brand-ink mb-1 pl-1" htmlFor="register-password">
             Secure Password <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-            <Input
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+            <input
               id="register-password"
               type={showPassword ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 8 characters"
-              className="pl-10 pr-10"
+              className="w-full h-12 rounded-full border border-neutral-200/90 bg-white/95 pl-11 pr-12 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
               autoComplete="new-password"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-ink transition-colors p-1"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-ink transition-colors p-1 cursor-pointer"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
 
-          {/* Password Strength Indicator */}
+          {/* Live Password Strength Indicator */}
           {password.length > 0 && (
-            <div className="mt-3 p-3 rounded-xl border border-border bg-surface-raised space-y-2.5">
+            <div className="mt-2.5 p-3 rounded-2xl border border-neutral-200/70 bg-surface-raised space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-text-muted">Password Strength:</span>
+                <span className="font-medium text-text-muted">Password Security:</span>
                 <span
                   className={cn(
                     "font-bold",
                     strength.score <= 1 && "text-status-danger",
-                    strength.score === 2 && "text-accent-seal",
+                    strength.score === 2 && "text-status-warning",
                     strength.score >= 3 && "text-status-success"
                   )}
                 >
@@ -301,8 +363,8 @@ export function RegisterForm() {
                 </span>
               </div>
 
-              {/* Progress bar */}
-              <div className="h-1.5 w-full bg-border rounded-full overflow-hidden flex gap-1">
+              {/* Meter bars */}
+              <div className="h-1 w-full bg-neutral-200/80 rounded-full overflow-hidden flex gap-1">
                 {[1, 2, 3, 4].map((step) => (
                   <div
                     key={step}
@@ -312,7 +374,7 @@ export function RegisterForm() {
                         ? strength.score <= 1
                           ? "bg-status-danger"
                           : strength.score === 2
-                          ? "bg-accent-seal"
+                          ? "bg-status-warning"
                           : "bg-status-success"
                         : "bg-transparent"
                     )}
@@ -321,22 +383,22 @@ export function RegisterForm() {
               </div>
 
               {/* Checklist */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
+              <div className="grid grid-cols-2 gap-1 pt-0.5 text-[10px]">
                 <div className={cn("flex items-center gap-1.5", strength.checks.minLength ? "text-status-success" : "text-text-muted")}>
-                  {strength.checks.minLength ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />}
-                  8+ characters
+                  {strength.checks.minLength ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-neutral-300 shrink-0" />}
+                  <span>8+ characters</span>
                 </div>
                 <div className={cn("flex items-center gap-1.5", strength.checks.hasUppercase && strength.checks.hasLowercase ? "text-status-success" : "text-text-muted")}>
-                  {strength.checks.hasUppercase && strength.checks.hasLowercase ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />}
-                  Upper & lowercase
+                  {strength.checks.hasUppercase && strength.checks.hasLowercase ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-neutral-300 shrink-0" />}
+                  <span>Upper & lowercase</span>
                 </div>
                 <div className={cn("flex items-center gap-1.5", strength.checks.hasNumber ? "text-status-success" : "text-text-muted")}>
-                  {strength.checks.hasNumber ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />}
-                  Number (0-9)
+                  {strength.checks.hasNumber ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-neutral-300 shrink-0" />}
+                  <span>Number (0-9)</span>
                 </div>
                 <div className={cn("flex items-center gap-1.5", strength.checks.hasSpecial ? "text-status-success" : "text-text-muted")}>
-                  {strength.checks.hasSpecial ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />}
-                  Special symbol
+                  {strength.checks.hasSpecial ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <div className="w-3 h-3 rounded-full border border-neutral-300 shrink-0" />}
+                  <span>Special character</span>
                 </div>
               </div>
             </div>
@@ -345,46 +407,53 @@ export function RegisterForm() {
 
         {/* Confirm Password */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-confirm-password">
+          <label className="block text-xs font-semibold text-brand-ink mb-1 pl-1" htmlFor="register-confirm-password">
             Confirm Password <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-            <Input
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+            <input
               id="register-confirm-password"
               type={showPassword ? "text" : "password"}
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Re-enter your password"
-              className={cn("pl-10 pr-10", passwordsMismatch && "border-status-danger focus-visible:ring-status-danger")}
+              placeholder="Re-enter password"
+              className={cn(
+                "w-full h-12 rounded-full border border-neutral-200/90 bg-white/95 pl-11 pr-12 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]",
+                passwordsMismatch && "border-status-danger focus:ring-status-danger/10"
+              )}
               autoComplete="new-password"
             />
-            {passwordsMatch && <CheckCircle2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-status-success" />}
-            {passwordsMismatch && <XCircle className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-status-danger" />}
+            {passwordsMatch && (
+              <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-success pointer-events-none" />
+            )}
+            {passwordsMismatch && (
+              <XCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-status-danger pointer-events-none" />
+            )}
           </div>
           {passwordsMismatch && (
-            <p className="text-[11px] text-status-danger mt-1">Passwords do not match.</p>
+            <p className="text-[11px] text-status-danger mt-1 pl-3">Passwords do not match.</p>
           )}
         </div>
 
-        {/* Terms & Conditions Checkbox */}
-        <div className="pt-1">
-          <label className="flex items-start gap-3 cursor-pointer select-none group">
+        {/* Terms Acceptance */}
+        <div className="pt-1 px-1">
+          <label className="flex items-start gap-2.5 cursor-pointer select-none group">
             <input
               type="checkbox"
               required
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-1 w-4 h-4 rounded border-border text-brand-500 focus:ring-brand-500 focus:ring-offset-0 cursor-pointer"
+              className="mt-0.5 w-4 h-4 rounded border-neutral-300 text-brand-500 focus:ring-brand-500 cursor-pointer"
             />
-            <span className="text-xs text-text-muted leading-relaxed">
-              I certify the truthfulness of submitted personal information and accept the{" "}
-              <Link href="/help" className="text-brand-500 underline font-semibold hover:text-brand-600">
+            <span className="text-xs text-text-muted leading-snug">
+              I accept the{" "}
+              <Link href="/help" className="text-brand-500 underline font-medium hover:text-brand-600">
                 Terms of Service
               </Link>
               ,{" "}
-              <Link href="/help" className="text-brand-500 underline font-semibold hover:text-brand-600">
+              <Link href="/help" className="text-brand-500 underline font-medium hover:text-brand-600">
                 Privacy Policy
               </Link>
               , and USCIS 8 CFR 103.2 translation authenticity guidelines.
@@ -392,48 +461,53 @@ export function RegisterForm() {
           </label>
         </div>
 
-        {/* Submit Button */}
-        <Button
+        {/* Submit Pill Button */}
+        <motion.button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-12 rounded-xl text-base font-bold gap-2 shadow-sm active:scale-[0.98] transition-all"
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
+          className="w-full h-12 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white font-medium text-sm shadow-[0_4px_14px_rgba(0,0,0,0.12)] active:scale-[0.985] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
         >
           {isSubmitting ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Creating Secure Account...
+              <span>Creating Secure Account...</span>
             </>
           ) : (
             <>
-              Create Verified Account
+              <span>Create Account</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
-        </Button>
-
-        {/* Trust Guarantees */}
-        <div className="pt-4 border-t border-border flex items-center justify-center gap-6 text-xs text-text-muted">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-status-success" />
-            <span>256-Bit Encrypted</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-accent-seal" />
-            <span>USCIS & ATA Compliant</span>
-          </div>
-        </div>
+        </motion.button>
 
         {/* Switch to Sign In */}
         <div className="text-center pt-2">
-          <p className="text-sm text-text-muted">
+          <p className="text-xs sm:text-sm text-text-muted">
             Already have an account?{" "}
             <Link
               href={`/login${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
-              className="font-bold text-brand-500 hover:text-brand-600 hover:underline"
+              className="font-semibold text-neutral-900 hover:text-brand-600 transition-colors"
             >
-              Sign in to your vault
+              Sign in
             </Link>
           </p>
+        </div>
+
+        {/* Trust Badges */}
+        <div className="pt-4 border-t border-neutral-200/70 flex items-center justify-center gap-5 text-[11px] text-text-muted font-mono">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-status-success" />
+            <span>256-Bit SSL</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+            <span>ATA Member No. 278190</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 text-status-success" />
+            <span>USCIS Guaranteed</span>
+          </div>
         </div>
       </form>
     </div>

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { RegisterForm } from "@/components/auth/RegisterForm";
-import { ShieldCheck, Lock, FileCheck2, Award, Scale } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Create Account | VerifyLingua Certified Translations",
@@ -12,100 +12,79 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen bg-canvas text-brand-ink flex flex-col justify-between">
-      {/* Top Banner & Header */}
-      <div className="border-b border-border/60 bg-surface-raised/80 backdrop-blur px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-500 text-white shadow-sm transition-transform group-hover:scale-105">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-extrabold tracking-tight text-brand-ink font-display">
-                Verify<span className="text-brand-500">Lingua</span>
-              </span>
-              <span className="text-[9px] uppercase font-bold tracking-widest text-text-muted">
-                Certified Translations
-              </span>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <Lock className="w-3.5 h-3.5 text-status-success" />
-            <span className="hidden sm:inline">256-Bit SSL Encrypted Session</span>
-          </div>
-        </div>
+    <div className="min-h-screen relative overflow-x-hidden bg-neutral-50/50 flex flex-col justify-between selection:bg-brand-500/20 selection:text-brand-ink">
+      {/* Dynamic Emerald Glass Ribbon Background Wave */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
+        <img
+          src="/images/auth-glass-wave.jpg"
+          alt="Emerald fluid glass ribbon"
+          className="w-full h-full object-cover object-center opacity-85 scale-105"
+        />
+        {/* Ambient radial lighting layer for optimal text contrast */}
+        <div className="absolute inset-0 bg-radial from-white/30 via-white/10 to-transparent" />
       </div>
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-12 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        {/* Left Column: Value Proposition & Trust Anchors */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-8 lg:sticky lg:top-24">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface text-xs font-semibold text-brand-ink mb-6">
-              <Award className="w-3.5 h-3.5 text-accent-seal" />
-              <span>ATA Member No. 278190 • USCIS Guaranteed</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-brand-ink font-display leading-[1.15]">
-              Open your certified translation vault.
-            </h1>
-            <p className="mt-4 text-base text-text-muted leading-relaxed">
-              Store tamper-proof certificates, track certified translations in real time, and submit filings accepted
-              by USCIS, courts, and academic institutions nationwide.
-            </p>
+      {/* Top Navigation Bar */}
+      <header className="relative z-20 w-full px-6 py-5 max-w-7xl mx-auto flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-500 text-white shadow-sm transition-transform group-hover:scale-105">
+            <ShieldCheck className="w-4 h-4" />
           </div>
+          <span className="text-xl font-bold tracking-tight text-neutral-900 font-display">
+            Verify<span className="text-brand-500">Lingua</span>
+          </span>
+        </Link>
 
-          {/* Key Advantages */}
-          <div className="space-y-4 pt-4 border-t border-border">
-            <div className="flex items-start gap-3.5">
-              <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-brand-500 shrink-0 mt-0.5">
-                <FileCheck2 className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-brand-ink font-display">Permanent QR & SHA-256 Verification</h2>
-                <p className="text-xs text-text-muted mt-0.5">
-                  Every certified translation receives a permanent public verification record for immigration officers.
-                </p>
-              </div>
-            </div>
+        {/* Center Nav Links */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-600">
+          <Link href="/services" className="hover:text-neutral-900 transition-colors">
+            Services
+          </Link>
+          <Link href="/uscis-translation-requirements" className="hover:text-neutral-900 transition-colors">
+            USCIS Standards
+          </Link>
+          <Link href="/pricing" className="hover:text-neutral-900 transition-colors">
+            Pricing
+          </Link>
+          <Link href="/faq" className="hover:text-neutral-900 transition-colors">
+            FAQ
+          </Link>
+        </nav>
 
-            <div className="flex items-start gap-3.5">
-              <div className="w-8 h-8 rounded-lg bg-accent-seal/10 flex items-center justify-center text-accent-seal shrink-0 mt-0.5">
-                <Scale className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-brand-ink font-display">Zero-Rejection USCIS Moat</h2>
-                <p className="text-xs text-text-muted mt-0.5">
-                  Strict 8 CFR 103.2 certification format guarantee with free instant corrections if ever questioned.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3.5">
-              <div className="w-8 h-8 rounded-lg bg-status-success/10 flex items-center justify-center text-status-success shrink-0 mt-0.5">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-brand-ink font-display">Automatic Guest Order Linking</h2>
-                <p className="text-xs text-text-muted mt-0.5">
-                  Placed orders previously using this email? They will automatically sync into your new vault.
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Right Nav Actions */}
+        <div className="flex items-center gap-5">
+          <Link
+            href="/login"
+            className="text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/order"
+            className="h-10 px-5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-center shadow-sm transition-all active:scale-[0.985]"
+          >
+            Get Started
+          </Link>
         </div>
+      </header>
 
-        {/* Right Column: Registration Card */}
-        <div className="lg:col-span-7 bg-surface rounded-2xl border border-border-strong shadow-sm p-6 sm:p-8">
-          <React.Suspense fallback={<div className="h-96 flex items-center justify-center text-text-muted text-sm">Loading registration...</div>}>
+      {/* Main Container with Floating Frosted Glass Card */}
+      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12 relative z-10">
+        <div className="w-full max-w-[480px] bg-white/80 backdrop-blur-2xl border border-white/90 shadow-[0_32px_80px_-16px_rgba(20,40,28,0.14),0_0_0_1px_rgba(255,255,255,0.85)] rounded-[32px] p-6 sm:p-9 relative">
+          <React.Suspense
+            fallback={
+              <div className="h-96 flex items-center justify-center text-text-muted text-sm font-sans">
+                Loading registration...
+              </div>
+            }
+          >
             <RegisterForm />
           </React.Suspense>
         </div>
       </main>
 
-      {/* Footer Minimal */}
-      <footer className="border-t border-border py-6 px-6 text-center text-xs text-text-muted">
+      {/* Minimal Clean Footer */}
+      <footer className="relative z-20 py-5 px-6 text-center text-xs text-neutral-500 font-sans">
         <p>© {new Date().getFullYear()} VerifyLingua LLC. All rights reserved. Encrypted under 256-bit TLS.</p>
       </footer>
     </div>

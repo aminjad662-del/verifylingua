@@ -6,12 +6,13 @@ process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ''} --max-old-space-si
 
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 console.log('📦 Step 1: Generating Prisma Client...');
-spawnSync(npxCmd, ['prisma', 'generate'], { stdio: 'inherit' });
+spawnSync(npxCmd, ['prisma', 'generate'], { stdio: 'inherit', shell: true });
 
 console.log('⚡ Step 2: Running Next.js build with 4GB heap...');
 const buildRes = spawnSync(npxCmd, ['next', 'build'], { 
   stdio: 'inherit',
   env: process.env,
+  shell: true,
 });
 
 if (buildRes.status !== 0) {

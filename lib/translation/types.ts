@@ -104,5 +104,6 @@ export interface TranslationOptions {
   glossary?: Record<string, string>;
   register?: "certified_legal" | "academic" | "general";
   preservePlaceholders?: boolean;
+  bypassTestMock?: boolean;
 }
 
