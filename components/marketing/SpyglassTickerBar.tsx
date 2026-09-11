@@ -44,7 +44,7 @@ const TICKER_DOCS: TickerDoc[] = [
     badge: "WES Compliant",
     sealText: "LMU MÜNCHEN SIEGEL",
     sealColor: "text-blue-400 border-blue-500/30 bg-blue-950/40",
-    slug: "/documents/academic-transcript",
+    slug: "/documents/transcript",
   },
   {
     id: "tk-3",
@@ -83,7 +83,7 @@ const TICKER_DOCS: TickerDoc[] = [
     badge: "DOJ EOIR Sworn",
     sealText: "МІНІСТЕРСТВО ЮСТИЦІЇ",
     sealColor: "text-blue-400 border-blue-500/30 bg-blue-950/40",
-    slug: "/documents/court-record",
+    slug: "/documents/court-order",
   },
   {
     id: "tk-6",
@@ -109,7 +109,7 @@ const TICKER_DOCS: TickerDoc[] = [
     badge: "NACES Approved",
     sealText: "中华人民共和国公证处",
     sealColor: "text-rose-400 border-rose-500/30 bg-rose-950/40",
-    slug: "/documents/diploma-and-degree",
+    slug: "/documents/academic-diploma",
   },
   {
     id: "tk-8",
@@ -122,7 +122,7 @@ const TICKER_DOCS: TickerDoc[] = [
     badge: "Court Admissible",
     sealText: "NOTARÍA 14 DE BOGOTÁ",
     sealColor: "text-amber-400 border-amber-500/30 bg-amber-950/40",
-    slug: "/documents/court-record",
+    slug: "/documents/court-order",
   },
   {
     id: "tk-9",
@@ -135,7 +135,7 @@ const TICKER_DOCS: TickerDoc[] = [
     badge: "USCIS I-693",
     sealText: "COLEGIO MÉDICOS",
     sealColor: "text-emerald-400 border-emerald-500/30 bg-emerald-950/40",
-    slug: "/documents/medical-record",
+    slug: "/documents/medical-records",
   },
   {
     id: "tk-10",

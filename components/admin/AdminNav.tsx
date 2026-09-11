@@ -6,19 +6,19 @@ import { usePathname } from "next/navigation";
 import {
   ShieldCheck,
   LayoutDashboard,
-  FileCheck2,
-  Calculator,
-  Users2,
-  Building2,
+  Layers,
+  Users,
+  Building,
   CheckCheck,
+  Languages,
+  BookOpen,
   CreditCard,
-  MessageSquare,
-  BarChart3,
+  Activity,
+  FileSearch,
   Settings,
   ArrowUpRight,
   Sun,
   Moon,
-  LogOut,
 } from "lucide-react";
 
 export function AdminNav() {
@@ -42,15 +42,16 @@ export function AdminNav() {
   };
 
   const navLinks = [
-    { href: "/admin", label: "Executive", icon: LayoutDashboard },
-    { href: "/admin/orders", label: "Orders", icon: FileCheck2 },
-    { href: "/admin/quotes", label: "Quotes & Pricing", icon: Calculator },
-    { href: "/admin/translators", label: "Translators", icon: Users2 },
-    { href: "/admin/clients", label: "Clients & Orgs", icon: Building2 },
-    { href: "/admin/qa", label: "QA Gates", icon: CheckCheck },
-    { href: "/admin/finance", label: "Finance", icon: CreditCard },
-    { href: "/admin/support", label: "Support", icon: MessageSquare },
-    { href: "/admin/reports", label: "Reports", icon: BarChart3 },
+    { href: "/admin", label: "Executive", icon: LayoutDashboard, exact: true },
+    { href: "/admin/jobs", label: "Jobs Queue", icon: Layers },
+    { href: "/admin/reviews", label: "QA & Reviews", icon: CheckCheck },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/organizations", label: "Organizations", icon: Building },
+    { href: "/admin/languages", label: "Languages", icon: Languages },
+    { href: "/admin/glossaries", label: "Glossaries", icon: BookOpen },
+    { href: "/admin/billing", label: "Billing", icon: CreditCard },
+    { href: "/admin/system-health", label: "Health", icon: Activity },
+    { href: "/admin/audit-log", label: "Audit Log", icon: FileSearch },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
@@ -68,21 +69,24 @@ export function AdminNav() {
                 Verify<span className="text-brand-500">Lingua</span>
               </span>
               <span className="ml-2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-50 text-brand-500 font-bold border border-brand-100">
-                ADMIN
+                ADMIN CONSOLE
               </span>
             </div>
           </Link>
 
           {/* Nav Links */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href !== "/admin" && pathname.startsWith(link.href));
+              const isActive = link.exact
+                ? pathname === link.href
+                : pathname.startsWith(link.href);
+
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
                     isActive
                       ? "bg-brand-50 text-brand-500 font-bold border border-brand-100"
                       : "text-text-muted hover:text-brand-ink hover:bg-surface"
@@ -99,10 +103,10 @@ export function AdminNav() {
         {/* Right Tools */}
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard"
+            href="/app"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium border border-border bg-surface hover:bg-surface-raised transition-colors text-text"
           >
-            <span>Client View</span>
+            <span>Client Workspace</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-text-muted" />
           </Link>
 

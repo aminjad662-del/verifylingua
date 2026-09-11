@@ -173,6 +173,11 @@ const headersContent = `
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
 
+# RSC Payloads - Component tree updates
+/*.rsc
+  Content-Type: text/x-component
+  Cache-Control: public, max-age=0, must-revalidate
+
 # Global security and caching headers for all routes (ensures clean URLs like /dashboard revalidate)
 /*
   Cache-Control: public, max-age=0, must-revalidate
@@ -252,9 +257,31 @@ export default {
       }
     }
 
+    // 3b. React Server Component (RSC) Payload Resolution (e.g. ?_rsc=... or RSC: 1 header)
+    const isRsc = url.searchParams.has('_rsc') || request.headers.get('rsc') === '1';
+    if (isRsc && !pathname.includes('.')) {
+      const cleanPath = pathname.replace(/\\/+$/, '');
+      const rscCandidates = [
+        cleanPath === '' ? '/index.rsc' : \`\${cleanPath}.rsc\`,
+        \`\${cleanPath}/index.rsc\`
+      ];
+      for (const candidate of rscCandidates) {
+        try {
+          const rscUrl = new URL(candidate, request.url);
+          const rscRes = await env.ASSETS.fetch(new Request(rscUrl, request));
+          if (rscRes && rscRes.status !== 404) {
+            const resHeaders = new Headers(rscRes.headers);
+            resHeaders.set('Content-Type', 'text/x-component');
+            resHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate');
+            return new Response(rscRes.body, { status: 200, headers: resHeaders });
+          }
+        } catch {}
+      }
+    }
+
     // 4. Clean URL Resolution (e.g. /pricing -> /pricing/index.html or /pricing.html)
     if (!pathname.includes('.')) {
-      const cleanPath = pathname.replace(/\\/+$/, '');
+      const cleanPath = pathname.replace(/\/+$/, '');
 
       // Try /route/index.html
       const indexPath = new URL(\`\${cleanPath}/index.html\`, request.url);
