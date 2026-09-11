@@ -1,23 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllOrders, createOrder } from "@/lib/dashboard/store";
-import { getCurrentUser } from "@/lib/auth/session";
 
 export async function GET(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search")?.toLowerCase();
   const status = searchParams.get("status");
 
   let orders = getAllOrders();
-
-  // Non-admins only see their own orders
-  if (user.role !== "ADMIN") {
-    orders = orders.filter(o => o.clientId === user.id);
-  }
 
   if (search) {
     orders = orders.filter(

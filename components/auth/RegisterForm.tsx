@@ -107,12 +107,8 @@ export function RegisterForm() {
         throw new Error(data.error || "Registration failed. Please try again.");
       }
 
-      // Success -> Redirect to admin or dashboard depending on role
-      if (data.user?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push(`${callbackUrl}?registered=true`);
-      }
+      // Success -> Redirect to dashboard or order funnel
+      router.push(`${callbackUrl}?registered=true`);
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";

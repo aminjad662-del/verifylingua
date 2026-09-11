@@ -1,19 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAllOrders } from "@/lib/dashboard/store";
-import { getCurrentUser } from "@/lib/auth/session";
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  let orders = getAllOrders();
-
-  if (user.role !== "ADMIN") {
-    orders = orders.filter(o => o.clientId === user.id);
-  }
-
+  const orders = getAllOrders();
   const activeOrders = orders.filter(
     (o) => o.status !== "COMPLETED" && o.status !== "CANCELLED" && o.status !== "ARCHIVED"
   );

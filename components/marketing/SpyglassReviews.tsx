@@ -55,23 +55,23 @@ export function SpyglassReviews() {
   const [activeDot, setActiveDot] = React.useState(0);
 
   return (
-    <section className="relative py-20 sm:py-28 bg-canvas border-b border-border/40 dark:border-white/10">
+    <section className="relative py-20 sm:py-28 bg-canvas border-b border-border/40">
       <div className="max-w-7xl mx-auto px-6 space-y-12">
         {/* Section Header matching 'Creative strategists already love Spyglass.' */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border bg-surface dark:bg-white/5 dark:border-white/15 text-brand-ink dark:text-slate-200 text-xs font-mono font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-3.5 h-3.5 text-brand-500 dark:text-brand-400" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border bg-surface text-brand-ink text-xs font-mono font-bold uppercase tracking-wider">
+            <ShieldCheck className="w-3.5 h-3.5 text-brand-500" />
             <span>48,000+ Certified Pages Delivered</span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-brand-ink dark:text-white font-display leading-[1.08]">
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-brand-ink font-display leading-[1.08]">
             Immigration attorneys & filers already <br className="hidden sm:inline" />
-            <span className="font-serif italic font-normal text-brand-900 dark:text-brand-300">
+            <span className="font-serif italic font-normal text-brand-900">
               love VerifyLingua.
             </span>
           </h2>
 
-          <p className="text-sm sm:text-base text-text-muted dark:text-slate-400">
+          <p className="text-sm sm:text-base text-text-muted">
             0% USCIS rejection rate across more than 90 languages and 140 official document formats.
           </p>
         </div>
@@ -81,7 +81,7 @@ export function SpyglassReviews() {
           {REVIEWS.map((review) => (
             <div
               key={review.id}
-              className="flex flex-col justify-between p-6 sm:p-7 rounded-2xl bg-brand-ink dark:bg-slate-900/90 text-white border border-white/10 dark:border-white/15 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/50 dark:hover:border-white/30"
+              className="flex flex-col justify-between p-6 sm:p-7 rounded-2xl bg-brand-ink text-white border border-white/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/50"
             >
               <div className="space-y-4">
                 {/* Top: Star rating + Quote icon */}
@@ -129,8 +129,8 @@ export function SpyglassReviews() {
               className={cn(
                 "h-2 rounded-full transition-all duration-200 cursor-pointer",
                 activeDot === idx
-                  ? "w-6 bg-brand-ink dark:bg-white"
-                  : "w-2 bg-border-strong dark:bg-white/20 hover:bg-brand-ink/40 dark:hover:bg-white/40"
+                  ? "w-6 bg-brand-ink"
+                  : "w-2 bg-border-strong hover:bg-brand-ink/40"
               )}
               aria-label={`Go to slide ${idx + 1}`}
             />

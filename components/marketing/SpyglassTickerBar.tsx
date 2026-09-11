@@ -180,7 +180,7 @@ const TICKER_DOCS: TickerDoc[] = [
 
 export function SpyglassTickerBar() {
   return (
-    <section className="relative py-16 sm:py-20 bg-brand-ink dark:bg-canvas text-white overflow-hidden border-y border-white/10 transition-colors duration-200">
+    <section className="relative py-16 sm:py-20 bg-brand-ink text-white overflow-hidden border-y border-white/10">
       {/* Background ambient lighting */}
       <div className="pointer-events-none absolute inset-0 bg-radial-gradient from-brand-500/10 via-transparent to-transparent blur-3xl opacity-50" />
 
@@ -201,8 +201,8 @@ export function SpyglassTickerBar() {
         {/* Continuous Horizontal Marquee Container with Slender Portrait Cards */}
         <div className="relative w-full overflow-hidden select-none pt-4">
           {/* Gradient fade edge masks */}
-          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-brand-ink via-brand-ink/80 to-transparent dark:from-canvas dark:via-canvas/80 z-20" />
-          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-brand-ink via-brand-ink/80 to-transparent dark:from-canvas dark:via-canvas/80 z-20" />
+          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-brand-ink via-brand-ink/80 to-transparent z-20" />
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-brand-ink via-brand-ink/80 to-transparent z-20" />
 
           {/* Scrolling Marquee Strip */}
           <div className="animate-marquee gap-4">

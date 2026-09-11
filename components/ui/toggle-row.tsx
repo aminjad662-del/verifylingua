@@ -36,8 +36,8 @@ export function ToggleRow({
       className={cn(
         "flex items-center justify-between p-4 md:p-5 rounded-2xl border transition-all cursor-pointer select-none",
         checked
-          ? "border-brand-500 bg-brand-50/50 dark:bg-brand-500/20 dark:border-brand-400 shadow-sm"
-          : "border-border bg-surface-raised dark:bg-slate-900/60 dark:border-white/10 hover:border-brand-300/60 hover:bg-surface dark:hover:border-white/20 dark:hover:bg-slate-900/90",
+          ? "border-brand-500 bg-brand-50/50 shadow-sm"
+          : "border-border bg-surface-raised hover:border-brand-300/60 hover:bg-surface",
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}
@@ -46,7 +46,7 @@ export function ToggleRow({
         <div className="flex items-center gap-2 flex-wrap">
           <label
             htmlFor={id}
-            className="text-base font-semibold text-brand-ink dark:text-white cursor-pointer"
+            className="text-base font-semibold text-brand-ink cursor-pointer"
           >
             {title}
           </label>
@@ -61,11 +61,11 @@ export function ToggleRow({
             </Badge>
           )}
         </div>
-        <p className="text-sm text-text-muted dark:text-slate-400 leading-normal">{description}</p>
+        <p className="text-sm text-text-muted leading-normal">{description}</p>
       </div>
 
       <div className="flex items-center gap-4 shrink-0">
-        <span className="text-sm md:text-base font-bold text-brand-ink dark:text-white font-mono">
+        <span className="text-sm md:text-base font-bold text-brand-ink font-mono">
           {typeof priceDelta === "number" ? `+${formatCurrency(priceDelta)}` : priceDelta}
         </span>
         <Switch

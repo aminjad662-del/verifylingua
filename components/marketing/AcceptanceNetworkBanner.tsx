@@ -16,26 +16,26 @@ const JURISDICTIONS = [
 
 export function AcceptanceNetworkBanner() {
   return (
-    <section className="py-16 md:py-24 bg-surface dark:bg-canvas border-b border-border/60 dark:border-white/10">
+    <section className="py-16 md:py-24 bg-surface border-b border-border/60">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="rounded-[var(--r-2xl)] bg-gradient-panel dark:bg-slate-900/90 border border-brand-100/80 dark:border-white/15 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-xl text-center space-y-8">
+        <div className="rounded-[var(--r-2xl)] bg-gradient-panel border border-brand-100/80 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-xl text-center space-y-8">
           {/* Subtle Ambient Glow */}
           <div
-            className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full bg-brand-500/10 dark:bg-brand-500/20 blur-[100px]"
+            className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full bg-brand-500/10 blur-[100px]"
             aria-hidden="true"
           />
 
           <div className="max-w-3xl mx-auto space-y-4 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 dark:border-brand-400/30 dark:bg-brand-500/10 dark:text-brand-300 text-xs font-mono font-bold uppercase tracking-wider">
-              <Globe2 className="w-4 h-4 text-brand-500 dark:text-brand-400" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
+              <Globe2 className="w-4 h-4 text-brand-500" />
               <span>National &amp; International Acceptance Network</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink dark:text-white tracking-tight font-display">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
               Filing With Confidence in All 50 States.
             </h2>
 
-            <p className="text-base sm:text-lg text-ink-soft dark:text-slate-300 leading-relaxed">
+            <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
               Every VerifyLingua certified translation meets strict USCIS 8 CFR § 103.2(b)(3), National Visa Center (NVC),
               and Federal Rule of Evidence 902(11) self-authenticating foreign legal standards.
             </p>
@@ -46,15 +46,15 @@ export function AcceptanceNetworkBanner() {
             {JURISDICTIONS.map((j, idx) => (
               <div
                 key={idx}
-                className="p-3.5 rounded-xl bg-surface-raised/90 dark:bg-slate-800/80 border border-border/70 dark:border-white/10 shadow-sm text-left flex flex-col justify-between space-y-2 hover:border-brand-500/40 dark:hover:border-white/25 transition-colors"
+                className="p-3.5 rounded-xl bg-surface-raised/90 border border-border/70 shadow-sm text-left flex flex-col justify-between space-y-2 hover:border-brand-500/40 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <Landmark className="w-4 h-4 text-brand-500 dark:text-brand-400" />
+                  <Landmark className="w-4 h-4 text-brand-500" />
                   <span className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-brand-ink dark:text-white leading-tight">{j.name}</p>
-                  <p className="text-[10px] text-ink-softer dark:text-slate-400 font-mono pt-1">{j.type}</p>
+                  <p className="text-xs font-bold text-brand-ink leading-tight">{j.name}</p>
+                  <p className="text-[10px] text-ink-softer font-mono pt-1">{j.type}</p>
                 </div>
               </div>
             ))}
@@ -68,7 +68,7 @@ export function AcceptanceNetworkBanner() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="h-13 px-6 rounded-full font-bold border-border/80 dark:border-white/20 dark:text-white dark:hover:bg-white/10">
+            <Button asChild variant="outline" size="lg" className="h-13 px-6 rounded-full font-bold border-border/80">
               <Link href="/acceptance-guarantee">
                 Read our 100% USCIS Acceptance Guarantee
               </Link>

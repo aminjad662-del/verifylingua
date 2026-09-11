@@ -46,11 +46,7 @@ export function LoginForm() {
         throw new Error(data.error || "Invalid email or password.");
       }
 
-      if (data.user?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push(callbackUrl);
-      }
+      router.push(callbackUrl);
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Invalid email or password.";

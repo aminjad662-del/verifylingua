@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 
 export function SpyglassStudioPreview() {
   return (
-    <section className="relative py-24 sm:py-32 bg-brand-ink dark:bg-canvas text-white overflow-hidden border-b border-white/10 transition-colors duration-200">
-      {/* Subtle ambient studio spotlight matching Slice 1 */}
-      <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 dark-radial-studio opacity-40 dark:opacity-100 blur-[120px] transition-opacity duration-300" />
+    <section className="relative py-24 sm:py-32 bg-brand-ink text-white overflow-hidden border-b border-white/10">
+      {/* Subtle ambient spotlight */}
+      <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-brand-500/10 blur-[150px]" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
@@ -74,7 +74,7 @@ export function SpyglassStudioPreview() {
 
           {/* Right Column: High-Density Dark Software Studio Preview Window */}
           <div className="lg:col-span-7">
-            <div className="rounded-2xl border border-white/10 dark:border-white/15 bg-brand-900/90 dark:bg-slate-900/90 shadow-2xl dark:shadow-black/80 overflow-hidden text-left">
+            <div className="rounded-2xl border border-white/10 bg-brand-900/90 shadow-2xl overflow-hidden text-left">
               {/* Top Window Titlebar */}
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-white/5 text-[11px] font-mono">
                 <div className="flex items-center gap-2">
