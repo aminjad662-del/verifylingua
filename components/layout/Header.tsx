@@ -5,11 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/ui/magnetic-button";
-import { ShieldCheck, Menu, X, ArrowRight, Globe2 } from "lucide-react";
+import { ShieldCheck, Menu, X, ArrowRight, Globe2, LayoutDashboard } from "lucide-react";
 import { PRODUCT_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/pricing", label: "Pricing" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/counsel", label: "CounselDesk™ (Law Firms)" },
@@ -110,14 +111,21 @@ export function Header() {
             </select>
           </div>
 
+          {/* Prominent Direct Dashboard Button (Always Visible) */}
+          <Button
+            asChild
+            variant="outline"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl h-10 px-3.5 text-xs font-bold border-border bg-surface hover:bg-surface-raised text-brand-ink shadow-sm"
+          >
+            <Link href="/dashboard">
+              <LayoutDashboard className="w-3.5 h-3.5 text-brand-500" />
+              <span>Dashboard</span>
+            </Link>
+          </Button>
+
           {/* Auth State Links */}
           {currentUser ? (
             <div className="hidden sm:flex items-center gap-2">
-              <Button asChild variant="outline" className="rounded-xl h-10 px-3.5 text-xs font-bold border-border">
-                <Link href="/dashboard">
-                  Dashboard
-                </Link>
-              </Button>
               <Button
                 variant="ghost"
                 onClick={handleLogout}
@@ -145,6 +153,19 @@ export function Header() {
               </Link>
             </Button>
           </MagneticButton>
+
+          {/* Quick Mobile Dashboard Button */}
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="md:hidden h-9 px-2.5 rounded-lg text-xs font-bold border-border bg-surface text-brand-ink flex items-center gap-1.5"
+          >
+            <Link href="/dashboard">
+              <LayoutDashboard className="w-3.5 h-3.5 text-brand-500" />
+              <span>Dashboard</span>
+            </Link>
+          </Button>
 
           {/* Mobile Menu Button */}
           <button
@@ -180,13 +201,16 @@ export function Header() {
           </nav>
 
           <div className="pt-4 border-t border-border flex flex-col gap-3">
+            {/* Prominent Direct Dashboard Access */}
+            <Button asChild className="w-full h-11 rounded-xl font-bold bg-brand-500 hover:bg-brand-600 text-white flex items-center justify-center gap-2 shadow-sm">
+              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Go to Client Dashboard</span>
+              </Link>
+            </Button>
+
             {currentUser ? (
               <div className="flex flex-col gap-2">
-                <Button asChild variant="outline" className="w-full h-11 rounded-xl font-bold">
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                    Go to Dashboard
-                  </Link>
-                </Button>
                 <Button
                   variant="ghost"
                   onClick={() => {

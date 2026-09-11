@@ -51,28 +51,28 @@ export function TelemetryStream({ jobs, onRefresh, loading }: TelemetryStreamPro
   const readyJobs = jobs.filter((j) => j.status === "ready");
 
   return (
-    <section aria-labelledby="telemetry-heading" className="relative rounded-[32px] bg-neutral-950 text-white border border-white/10 p-8 sm:p-10 shadow-2xl overflow-hidden space-y-8">
-      {/* Subtle Specular Ambient Top Glow */}
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-emerald-500/10 blur-[100px] pointer-events-none" />
+    <section aria-labelledby="telemetry-heading" className="relative rounded-2xl bg-neutral-950 text-white border border-white/10 p-6 sm:p-8 shadow-xl overflow-hidden space-y-6">
+      {/* Subtle Ambient Top Accent */}
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-36 bg-emerald-500/10 blur-[90px] pointer-events-none" />
 
       {/* Header & Status Indicator */}
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/10">
-        <div className="space-y-2 max-w-2xl">
-          <div className="flex items-center gap-2.5">
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/10">
+        <div className="space-y-1.5 max-w-2xl">
+          <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
             </span>
-            <span id="telemetry-heading" className="font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-              Live Evidentiary Telemetry & Engine Stream
+            <span id="telemetry-heading" className="font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+              Live Translation Engine & Telemetry
             </span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-display">
-            Autonomous layout preservation, <span className="italic font-normal font-serif text-neutral-300">zero government rejection.</span>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
+            Autonomous Layout Preservation Engine
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
-            Every translated document is anchored to strict USCIS 8 CFR § 103.2(b)(3) evidentiary standards with tamper-proof SHA-256 cryptographic verification seals.
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            Real-time optical layout preservation, dual-linguist terminology enforcement, and SHA-256 seal verification.
           </p>
         </div>
 
@@ -80,58 +80,58 @@ export function TelemetryStream({ jobs, onRefresh, loading }: TelemetryStreamPro
           <button
             onClick={onRefresh}
             disabled={loading}
-            className="h-9 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-mono text-neutral-300 flex items-center gap-2 transition-colors disabled:opacity-50"
+            className="h-8 px-3 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-mono text-neutral-300 flex items-center gap-2 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-emerald-400" : ""}`} />
-            <span>Sync Pipeline</span>
+            <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin text-emerald-400" : ""}`} />
+            <span>Sync Engine</span>
           </button>
         </div>
       </div>
 
-      {/* 4 Metric Bento Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 relative z-10">
-        <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+      {/* Compact Engine Status Badges */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
+        <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
-              Acceptance Rate
+              Engine Status
             </span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           </div>
-          <p className="text-3xl font-black text-white font-display tracking-tight">100%</p>
-          <p className="text-[11px] text-neutral-400 font-mono">0 USCIS RFEs on record</p>
+          <p className="text-xl font-black text-white font-display">Operational</p>
+          <p className="text-[10px] text-neutral-400 font-mono">Zero layout collision</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+        <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
               Turnaround SLA
             </span>
-            <Clock className="w-4 h-4 text-brand-300" />
+            <Clock className="w-3.5 h-3.5 text-brand-300" />
           </div>
-          <p className="text-3xl font-black text-white font-display tracking-tight">&lt; 24h</p>
-          <p className="text-[11px] text-neutral-400 font-mono">Guaranteed delivery</p>
+          <p className="text-xl font-black text-white font-display">&lt; 24 Hours</p>
+          <p className="text-[10px] text-neutral-400 font-mono">Guaranteed delivery</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+        <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
-              Vault Security
+              Vault Cipher
             </span>
-            <Lock className="w-4 h-4 text-emerald-400" />
+            <Lock className="w-3.5 h-3.5 text-emerald-400" />
           </div>
-          <p className="text-3xl font-black text-white font-display tracking-tight">256-Bit</p>
-          <p className="text-[11px] text-neutral-400 font-mono">SSE-KMS Encryption</p>
+          <p className="text-xl font-black text-white font-display">SHA-256</p>
+          <p className="text-[10px] text-neutral-400 font-mono">Immutable audit hash</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+        <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
-              Legal Standard
+              Compliance Standard
             </span>
-            <FileCheck2 className="w-4 h-4 text-brand-300" />
+            <FileCheck2 className="w-3.5 h-3.5 text-brand-300" />
           </div>
-          <p className="text-3xl font-black text-white font-display tracking-tight">8 CFR</p>
-          <p className="text-[11px] text-neutral-400 font-mono">Sworn ATA Affidavits</p>
+          <p className="text-xl font-black text-white font-display">8 CFR § 103.2</p>
+          <p className="text-[10px] text-neutral-400 font-mono">Sworn ATA certification</p>
         </div>
       </div>
 

@@ -43,6 +43,21 @@ export default function DashboardPage() {
   const [loadingOrders, setLoadingOrders] = React.useState(true);
 
   const [selectedOrder, setSelectedOrder] = React.useState<OrderDetail | null>(null);
+  const [user, setUser] = React.useState<{ name: string | null; email: string; organizationName?: string } | null>(null);
+
+  const fetchUser = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.authenticated && data.user) {
+          setUser(data.user);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to fetch auth user:", err);
+    }
+  }, []);
 
   const fetchJobs = React.useCallback(async () => {
     try {
@@ -89,6 +104,7 @@ export default function DashboardPage() {
   }, []);
 
   React.useEffect(() => {
+    fetchUser();
     fetchJobs();
     fetchOrders();
 
@@ -98,25 +114,45 @@ export default function DashboardPage() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [fetchJobs, fetchOrders]);
+  }, [fetchUser, fetchJobs, fetchOrders]);
+
+  const handleTrackFiling = React.useCallback(() => {
+    const input = document.getElementById("vault-search-input");
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-text">
       <DashboardNav />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-12"
+          className="space-y-10"
         >
-          {/* 1. Spyglass-Style Editorial Hero Header */}
+          {/* 1. Client Translation Portal Header & Quick Stats */}
           <motion.div variants={itemVariants}>
-            <DashboardHeader />
+            <DashboardHeader
+              user={user}
+              orders={orders}
+              onTrackFiling={handleTrackFiling}
+            />
           </motion.div>
 
-          {/* 2. Dark Command Center / Telemetry Stream */}
+          {/* 2. Interactive Evidentiary Order Vault - FRONT AND CENTER ABOVE THE FOLD */}
+          <motion.div variants={itemVariants}>
+            <OrderVault
+              orders={orders}
+              onSelectOrder={(ord) => setSelectedOrder(ord)}
+            />
+          </motion.div>
+
+          {/* 3. Secondary Engine & Layout Telemetry Stream */}
           <motion.div variants={itemVariants}>
             <TelemetryStream
               jobs={realJobs}
@@ -125,15 +161,7 @@ export default function DashboardPage() {
             />
           </motion.div>
 
-          {/* 3. Interactive Evidentiary Order Vault */}
-          <motion.div variants={itemVariants}>
-            <OrderVault
-              orders={orders}
-              onSelectOrder={(ord) => setSelectedOrder(ord)}
-            />
-          </motion.div>
-
-          {/* 4. Spyglass "Plus the rest of the toolkit" Bento */}
+          {/* 4. Legal Toolkit Bento */}
           <motion.div variants={itemVariants}>
             <LegalToolkitBento />
           </motion.div>

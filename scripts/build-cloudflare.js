@@ -339,6 +339,233 @@ async function handleApiRequest(request, pathname, env) {
     });
   }
 
+  // Current user authentication API
+  if (pathname === '/api/auth/me') {
+    return new Response(JSON.stringify({
+      authenticated: true,
+      user: {
+        id: 'usr-client-demo',
+        name: 'Alejandro Hernandez',
+        email: 'alejandro.hernandez@lawdesk.org',
+        role: 'CLIENT',
+        organizationName: 'Apex Immigration Law Group',
+        orderCount: 4
+      }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Dashboard Orders API
+  if (pathname === '/api/dashboard/orders') {
+    return new Response(JSON.stringify({
+      success: true,
+      orders: [
+        {
+          id: 'ord-1',
+          publicCode: 'VL-7X9K2',
+          clientName: 'Alejandro Hernandez',
+          clientEmail: 'alejandro.hernandez@lawdesk.org',
+          matterNumber: 'Matter #USCIS-I485-8910',
+          serviceType: 'CERTIFIED',
+          sourceLang: 'Spanish',
+          targetLangs: ['English'],
+          status: 'IN_TRANSLATION',
+          priority: 'HIGH',
+          pageCount: 2,
+          wordCount: 480,
+          total: 49.90,
+          receivingParty: 'USCIS',
+          assignedTranslator: 'Elena V. (ATA Member No. 271892)',
+          submittedAt: '2026-09-09T14:20:00Z',
+          promisedAt: '2026-09-12T12:00:00Z',
+          uploadedFiles: [
+            {
+              id: 'f-1',
+              name: 'Acta_Nacimiento_Hernandez.pdf',
+              sizeBytes: 1420500,
+              mimeType: 'application/pdf',
+              sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+            }
+          ],
+          deliveredFiles: []
+        },
+        {
+          id: 'ord-2',
+          publicCode: 'VL-3M8Q1',
+          clientName: 'Alejandro Hernandez',
+          clientEmail: 'alejandro.hernandez@lawdesk.org',
+          matterNumber: 'Matter #USCIS-I485-8910',
+          serviceType: 'CERTIFIED',
+          sourceLang: 'Spanish',
+          targetLangs: ['English'],
+          status: 'PROOFING',
+          priority: 'HIGH',
+          pageCount: 2,
+          wordCount: 520,
+          total: 49.90,
+          receivingParty: 'USCIS',
+          assignedTranslator: 'Elena V. (ATA Member No. 271892)',
+          submittedAt: '2026-09-08T11:00:00Z',
+          promisedAt: '2026-09-11T17:00:00Z',
+          uploadedFiles: [
+            {
+              id: 'f-2',
+              name: 'Certificado_Matrimonio_Apostillado.pdf',
+              sizeBytes: 1850000,
+              mimeType: 'application/pdf',
+              sha256: '7a9b2c8f0d1e3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b'
+            }
+          ],
+          deliveredFiles: []
+        },
+        {
+          id: 'ord-3',
+          publicCode: 'VL-9104-MN',
+          clientName: 'Alejandro Hernandez',
+          clientEmail: 'alejandro.hernandez@lawdesk.org',
+          matterNumber: 'Matter #CLIN-TRIAL-EUROPE',
+          serviceType: 'MEDICAL',
+          sourceLang: 'German',
+          targetLangs: ['English'],
+          status: 'DELIVERED',
+          priority: 'URGENT',
+          pageCount: 4,
+          wordCount: 1650,
+          total: 149.70,
+          receivingParty: 'FDA / USCIS',
+          assignedTranslator: 'Hans K. (Medical Linguist)',
+          submittedAt: '2026-09-07T09:00:00Z',
+          promisedAt: '2026-09-09T18:00:00Z',
+          uploadedFiles: [
+            {
+              id: 'f-3',
+              name: 'Doctoral_Degree_Transcript.pdf',
+              sizeBytes: 2240100,
+              mimeType: 'application/pdf',
+              sha256: '9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e'
+            }
+          ],
+          deliveredFiles: [
+            {
+              id: 'df-3',
+              name: 'Doctoral_Degree_Transcript_Certified.pdf',
+              sizeBytes: 2310500,
+              mimeType: 'application/pdf',
+              sha256: '9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e',
+              verifyCode: 'VL-9104-MN'
+            }
+          ]
+        },
+        {
+          id: 'ord-4',
+          publicCode: 'VL-8923-XS',
+          clientName: 'Alejandro Hernandez',
+          clientEmail: 'alejandro.hernandez@lawdesk.org',
+          matterNumber: 'Matter #USCIS-I485-8910',
+          serviceType: 'LEGAL',
+          sourceLang: 'Spanish',
+          targetLangs: ['English'],
+          status: 'DELIVERED',
+          priority: 'NORMAL',
+          pageCount: 1,
+          wordCount: 220,
+          total: 24.95,
+          receivingParty: 'USCIS',
+          assignedTranslator: 'Elena V. (ATA Member No. 271892)',
+          submittedAt: '2026-09-06T15:30:00Z',
+          promisedAt: '2026-09-08T12:00:00Z',
+          uploadedFiles: [
+            {
+              id: 'f-4',
+              name: 'Constancia_Antecedentes_No_Penales.pdf',
+              sizeBytes: 980200,
+              mimeType: 'application/pdf',
+              sha256: '3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d'
+            }
+          ],
+          deliveredFiles: [
+            {
+              id: 'df-4',
+              name: 'Constancia_Antecedentes_Certified.pdf',
+              sizeBytes: 1040000,
+              mimeType: 'application/pdf',
+              sha256: '3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d',
+              verifyCode: 'VL-8923-XS'
+            }
+          ]
+        }
+      ]
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Translation Jobs API
+  if (pathname === '/api/translate/jobs') {
+    return new Response(JSON.stringify({
+      success: true,
+      jobs: [
+        {
+          id: 'job_active_1',
+          fileName: 'Acta_Nacimiento_Hernandez.pdf',
+          fileFormat: 'pdf',
+          fileSize: 1420500,
+          sourceLang: 'Spanish',
+          targetLang: 'English',
+          status: 'translating',
+          progress: 74,
+          currentStep: 'Linguistic verification & seal alignment',
+          createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
+          qualityGate: {
+            isValidFormat: true,
+            pageCountMatches: true,
+            elementCountMatches: true,
+            checksumMatches: true,
+            byteSize: 1420500,
+            notes: ['USCIS 8 CFR § 103.2 format verified']
+          }
+        },
+        {
+          id: 'job_ready_2',
+          fileName: 'Doctoral_Degree_Transcript.pdf',
+          fileFormat: 'pdf',
+          fileSize: 2240100,
+          sourceLang: 'German',
+          targetLang: 'English',
+          status: 'ready',
+          progress: 100,
+          currentStep: 'Certified packet generated and sealed',
+          createdAt: new Date(Date.now() - 120 * 60000).toISOString(),
+          downloadUrl: '/api/certificate/VL-9104-MN/download'
+        }
+      ],
+      total: 2
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Dashboard Overview Metrics API
+  if (pathname === '/api/dashboard/overview') {
+    return new Response(JSON.stringify({
+      metrics: {
+        activeCount: 2,
+        awaitingActionCount: 1,
+        inProgressCount: 1,
+        completedCount: 2,
+        outstandingInvoicesCount: 0,
+        outstandingBalance: 0
+      }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
   // Verification API
   if (pathname.startsWith('/api/verify/')) {
     const code = pathname.replace('/api/verify/', '').trim().toUpperCase();
