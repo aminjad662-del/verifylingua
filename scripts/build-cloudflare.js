@@ -173,8 +173,9 @@ const headersContent = `
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
 
-# Global security headers for all routes
+# Global security and caching headers for all routes (ensures clean URLs like /dashboard revalidate)
 /*
+  Cache-Control: public, max-age=0, must-revalidate
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
