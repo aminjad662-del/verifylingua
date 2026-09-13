@@ -72,6 +72,16 @@ enum OrderEventType {
   CUSTOMER_ACTION
 }
 
+enum CreditTransactionType {
+  WELCOME_BONUS
+  PACK_PURCHASE
+  SUBSCRIPTION_GRANT
+  JOB_RESERVED
+  JOB_DEDUCTED
+  JOB_RELEASED
+  ADMIN_ADJUSTMENT
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -100,6 +110,12 @@ model User {
   usageEvents     UsageEvent[]
   subscription    Subscription?
   auditEvents     AuditEvent[]
+
+  creditsAvailable   Int                 @default(0)
+  creditsReserved    Int                 @default(0)
+  lifetimePagesUsed  Int                 @default(0)
+  creditTransactions CreditTransaction[]
+  pilotFeedbacks     PilotFeedback[]
 }
 
 model Account {
@@ -378,6 +394,8 @@ model TranslationJob {
   versions        TranslationVersion[]
   providerJobs    ProviderJob[]
   qaResults       QAResult[]
+  creditTransactions CreditTransaction[]
+  pilotFeedbacks     PilotFeedback[]
 
   @@index([userId])
   @@index([documentId])
@@ -545,3 +563,48 @@ model AuditEvent {
   @@index([userId])
   @@index([action])
 }
+
+model CreditTransaction {
+  id              String                @id @default(cuid())
+  userId          String
+  amount          Int
+  balanceAfter    Int
+  type            CreditTransactionType
+  description     String
+  jobId           String?
+  stripePaymentId String?
+  createdAt       DateTime              @default(now())
+
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job             TranslationJob?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([jobId])
+  @@unique([stripePaymentId, type])
+}
+
+model PilotFeedback {
+  id               String   @id @default(cuid())
+  userId           String?
+  jobId            String
+  userRole         String?
+  rating           Int
+  issueTag         String?
+  valueVerdict     String?
+  comment          String?
+  pageCount        Int
+  sourceFormat     String
+  sourceLang       String
+  targetLang       String
+  processingTimeMs Int
+  retryAttempts    Int
+  providerUsed     String
+  createdAt        DateTime @default(now())
+
+  job              TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user             User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([jobId])
+  @@index([rating])
+}
+
