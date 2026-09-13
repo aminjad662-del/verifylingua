@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-09-13T16:38:05.381Z",
-  "commitHash": "281b3b8d82d459096515908bd32287c6ae3cc674",
+  "timestamp": "2026-09-13T19:41:13.261Z",
+  "commitHash": "fbbd667f26a8e8e34fa85416f7ee9ec3fc6b73cd",
   "version": "v0.1.0-release-candidate",
   "results": {
     "Check_1_Managed_Database_Architecture": {
@@ -19,12 +19,12 @@
       "status": "PASS",
       "details": {
         "docx": {
-          "key": "prod-ops/audit-1789317471848/contract.docx",
+          "key": "prod-ops/audit-1789328460453/contract.docx",
           "size": 2973,
           "signature": "PK"
         },
         "pdf": {
-          "key": "prod-ops/audit-1789317471858/certificate.pdf",
+          "key": "prod-ops/audit-1789328460461/certificate.pdf",
           "size": 1742,
           "signature": "%PDF"
         }
@@ -34,7 +34,7 @@
     "Check_3_Upstream_Failure_Handling": {
       "status": "PASS",
       "details": {
-        "jobId": "job_1789317471862_c3b039ae",
+        "jobId": "job_1789328460467_c8970e97",
         "retryAttempts": 3,
         "backoffDelays": [
           25,

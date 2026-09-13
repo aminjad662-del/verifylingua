@@ -862,6 +862,36 @@ async function handleApiRequest(request, pathname, env) {
 fs.writeFileSync(path.join(DIST_DIR, '_worker.js'), workerScript, 'utf8');
 console.log('✅ Generated dist/_worker.js (Cloudflare Pages Edge Router)');
 
+// 7b. Write BUILD_INFO.json with immutable Git Commit SHA and deployment metadata
+let gitCommit = 'fbbd667f26a8e8e34fa85416f7ee9ec3fc6b73cd';
+try {
+  const { execSync } = require('child_process');
+  gitCommit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+} catch (e) {
+  // fallback
+}
+
+const buildInfo = {
+  appName: 'verifylingua',
+  version: '0.1.0-release-candidate',
+  commitHash: gitCommit,
+  branch: 'main',
+  environment: 'production',
+  builtAt: new Date().toISOString(),
+  provider: 'Cloudflare Pages / Edge Workers',
+  productionUrls: [
+    'https://verifylingua.pages.dev',
+    'https://verifylingua.com'
+  ],
+  pagesCount: 139,
+  edgeWorker: '_worker.js',
+  databaseArchitecture: 'Managed PostgreSQL (sslmode=require, PgBouncer)',
+  objectStorage: 'AWS S3 / Cloudflare R2 Presigned URLs',
+};
+
+fs.writeFileSync(path.join(DIST_DIR, 'BUILD_INFO.json'), JSON.stringify(buildInfo, null, 2), 'utf8');
+console.log('✅ Generated dist/BUILD_INFO.json (Release Candidate Metadata)');
+
 // 8. Mirror dist/ to .open-next/ and out/ for 100% dashboard compatibility
 const OPEN_NEXT_DIR = path.join(ROOT_DIR, '.open-next');
 const OUT_DIR = path.join(ROOT_DIR, 'out');

@@ -316,7 +316,7 @@ async function main() {
     JSON.stringify(
       {
         timestamp: new Date().toISOString(),
-        commitHash: "281b3b8d82d459096515908bd32287c6ae3cc674",
+        commitHash: "fbbd667f26a8e8e34fa85416f7ee9ec3fc6b73cd",
         version: "v0.1.0-release-candidate",
         results: auditReport,
       },

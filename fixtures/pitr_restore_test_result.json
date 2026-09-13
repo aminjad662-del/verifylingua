@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "sourceDatabase": "verifylingua",
+  "restoredDatabase": "verifylingua_pitr_restored",
+  "backupDurationMs": 973,
+  "restoreDurationMs": 2130,
+  "backupSizeBytes": 72791,
+  "tableCountVerified": 27,
+  "jobCountVerified": 61,
+  "markerJobRecovered": "pitr_test_job_1789327929602",
+  "timestamp": "2026-09-13T19:32:15.581Z"
+}

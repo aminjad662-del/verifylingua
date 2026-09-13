@@ -1,0 +1,39 @@
+{
+  "status": "DELIVERED",
+  "eventId": "70ea78568bec491086906032bcb698b6",
+  "payload": {
+    "eventId": "70ea78568bec491086906032bcb698b6",
+    "timestamp": "2026-09-13T19:38:32.978Z",
+    "platform": "node",
+    "level": "error",
+    "environment": "production",
+    "release": "fbbd667f26a8e8e34fa85416f7ee9ec3fc6b73cd",
+    "logger": "verifylingua.production.alerts",
+    "message": "Error: Upstream provider returned HTTP 500 Internal Error during translation for user [REDACTED_EMAIL] using key [REDACTED_GEMINI_KEY]",
+    "culprit": "translation-engine/worker",
+    "tags": {
+      "environment": "production",
+      "provider": "deepl",
+      "jobId": "job_alert_test_1789329999",
+      "alertChannel": "PagerDuty-Severity-P1/Sentry-Ingest"
+    },
+    "extra": {
+      "jobId": "job_alert_test_1789329999",
+      "userEmail": "[REDACTED_EMAIL]",
+      "provider": "deepl",
+      "databaseTarget": "postgres://admin:[REDACTED_PASSWORD]@ep-production-db.neon.tech/verifylingua_prod?sslmode=require",
+      "stripeBillingKey": "[REDACTED_STRIPE_KEY]"
+    },
+    "exception": {
+      "type": "Error",
+      "value": "Error: Upstream provider returned HTTP 500 Internal Error during translation for user [REDACTED_EMAIL] using key [REDACTED_GEMINI_KEY]",
+      "stacktrace": [
+        "Error: Upstream provider returned HTTP 500 Internal Error during translation for user [REDACTED_EMAIL]",
+        "    at DeepLTranslationProvider.translate (C:\\Users\\aminj\\Downloads\\SAAS 7\\lib\\providers\\deepl\\index.ts:45:12)",
+        "    at Connection.query (postgres://admin:[REDACTED_PASSWORD]@ep-production-db.neon.tech/verifylingua_prod?sslmode=require)",
+        "    at StripeBilling.recordEvent ([REDACTED_STRIPE_KEY])"
+      ]
+    }
+  },
+  "redactionVerified": true
+}
