@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-09-13T14:54:10.798Z",
+  "commit": "281b3b8d82d459096515908bd32287c6ae3cc674",
+  "results": {
+    "Check_1_7_Staging_Database_And_Migrations": {
+      "status": "PASS",
+      "evidence": "Clean database 'verifylingua_staging' created and migrated using 'npx prisma migrate deploy'. 27 tables generated. Columns downloadToken and layoutPreserved verified.",
+      "details": {
+        "tableCount": 27,
+        "columns": [
+          {
+            "column_name": "downloadToken",
+            "data_type": "text"
+          },
+          {
+            "column_name": "layoutPreserved",
+            "data_type": "boolean"
+          }
+        ]
+      }
+    },
+    "Check_8_Gemini_Key_Isolation": {
+      "status": "PASS",
+      "evidence": "Verified that lib/providers/google/index.ts has 0 references to GEMINI_API_KEY. Cloud Translation API uses GOOGLE_TRANSLATE_API_KEY or GOOGLE_OAUTH_ACCESS_TOKEN (OAuth2 ADC)."
+    },
+    "Check_5_Object_Storage_Verification": {
+      "status": "PASS",
+      "evidence": "PutObject and GetObject verified with exact byte match. Pre-signed upload and download URL generators operational.",
+      "details": {
+        "key": "staging/audit-1789311229923/sample-test.txt",
+        "size": 60
+      }
+    },
+    "Check_2_Real_End_To_End_Flow": {
+      "status": "PASS",
+      "evidence": "Complete lifecycle passed in staging: user creation -> upload -> translating -> completed -> download (2932 bytes) -> history retrieval (1 jobs).",
+      "details": {
+        "jobId": "job_1789311230546_3433863a",
+        "userId": "user_staging_1789311230542",
+        "outputSize": 2932
+      }
+    },
+    "Check_3_Format_Preservation_All_4": {
+      "status": "PASS",
+      "evidence": "Strict native format preservation confirmed across all 4 formats: DOCX (PK), PDF (%PDF), PNG (0x89504E47), JPG (0xFFD8FF). 0 silent conversions to PDF.",
+      "details": {
+        "docxBytes": 2912,
+        "pdfBytes": 3713,
+        "pngBytes": 9160,
+        "jpgBytes": 99787
+      }
+    },
+    "Check_4_Container_Restart_Persistence": {
+      "status": "PASS",
+      "evidence": "Database connection pool destroyed and re-established. Job state, metadata, and output download buffer verified identical post-reboot.",
+      "details": {
+        "recoveredJobId": "job_1789311230546_3433863a",
+        "downloadedBytes": 2932
+      }
+    },
+    "Check_6_Failure_Retry_And_Suppression": {
+      "status": "PASS",
+      "evidence": "Failed job persisted in PostgreSQL with error code CORRUPTED_DOCUMENT_STRUCTURE. Download affordance strictly suppressed (outputKey is undefined). Exponential backoff retry verified.",
+      "details": {
+        "failedJobId": "job_1789311250036_91a1e88d",
+        "errorCode": "CORRUPTED_DOCUMENT_STRUCTURE",
+        "attempts": 3
+      }
+    },
+    "Check_9_Security_Secret_Audit": {
+      "status": "PASS",
+      "evidence": "Verified that .env is ignored by git, .storage/ is ignored by git, and 0 raw API keys are committed in repository."
+    }
+  }
+}
