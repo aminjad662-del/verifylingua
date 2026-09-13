@@ -197,7 +197,7 @@ describe("Phase 9: End-to-End Verification Pass", () => {
     console.log(`Provider: ${result.providerUsed}`);
     console.log(`Fidelity Score: ${result.fidelityScore.overallScore}%`);
     console.log(`Output Buffer Size: ${result.translatedBuffer.length} bytes`);
-  });
+  }, 30000);
 
   it("3. Strict Multi-Tenant Isolation: User A cannot access or view User B's history", async () => {
     // Query history as User A

@@ -59,15 +59,52 @@ export interface PersistentTranslationJob {
   layoutPreserved?: boolean;
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __persistentJobsMap: Map<string, PersistentTranslationJob> | undefined;
+const jobMetadataCache = new Map<
+  string,
+  { issues?: (FidelityIssue | string)[]; warnings?: string[]; fidelityBreakdown?: FidelityScoreBreakdown | null }
+>();
+
+function mapDbToJob(db: any): PersistentTranslationJob {
+  const cached = jobMetadataCache.get(db.id);
+  return {
+    id: db.id,
+    userId: db.userId || null,
+    documentId: db.documentId || null,
+    sourceKey: db.sourceKey,
+    outputKey: db.outputKey || null,
+    previewKey: db.previewKey || null,
+    sourceFilename: db.sourceFilename,
+    sourceFormat: (db.sourceFormat?.toLowerCase() as any) || "pdf",
+    sourceMimeType: db.sourceMimeType || "application/octet-stream",
+    sourceLanguage: db.sourceLanguage,
+    targetLanguage: db.targetLanguage,
+    status: db.status as PersistentJobStatus,
+    currentStep: db.currentStep || "Processing",
+    progress: db.progress || 0,
+    pageCount: db.pageCount || 1,
+    wordCount: db.wordCount || 0,
+    characterCount: db.characterCount || 0,
+    provider: db.provider || "azure",
+    providerJobId: db.providerJobId || null,
+    fidelityScore: db.fidelityScore ?? null,
+    fidelityBreakdown: cached?.fidelityBreakdown ?? null,
+    issues: cached?.issues ?? (db.errorMessage ? [db.errorMessage] : []),
+    warnings: cached?.warnings ?? [],
+    errorCode: db.errorCode || undefined,
+    errorMessage: db.errorMessage || undefined,
+    createdAt: db.createdAt instanceof Date ? db.createdAt.toISOString() : new Date(db.createdAt).toISOString(),
+    updatedAt: db.updatedAt instanceof Date ? db.updatedAt.toISOString() : new Date(db.updatedAt).toISOString(),
+    startedAt: db.startedAt ? (db.startedAt instanceof Date ? db.startedAt.toISOString() : new Date(db.startedAt).toISOString()) : null,
+    completedAt: db.completedAt ? (db.completedAt instanceof Date ? db.completedAt.toISOString() : new Date(db.completedAt).toISOString()) : null,
+    expiresAt: db.expiresAt ? (db.expiresAt instanceof Date ? db.expiresAt.toISOString() : new Date(db.expiresAt).toISOString()) : new Date(Date.now() + 86400000).toISOString(),
+    downloadToken: db.downloadToken || db.id,
+    layoutPreserved: db.layoutPreserved ?? true,
+  };
 }
 
-const memoryJobs =
-  globalThis.__persistentJobsMap ?? new Map<string, PersistentTranslationJob>();
-globalThis.__persistentJobsMap = memoryJobs;
-
+/**
+ * Creates a persistent translation job directly in PostgreSQL via Prisma.
+ */
 export async function createPersistentJob(params: {
   userId?: string | null;
   filename: string;
@@ -82,185 +119,146 @@ export async function createPersistentJob(params: {
   const id = `job_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
   const downloadToken = crypto.randomBytes(24).toString("hex");
   const sourceKey = params.sourceKey || `sources/${id}/${params.filename}`;
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   if (params.fileBuffer) {
     await putObject(sourceKey, params.fileBuffer, params.mimeType);
   }
 
-  const job: PersistentTranslationJob = {
-    id,
-    userId: params.userId || null,
-    sourceKey,
-    sourceFilename: params.filename,
-    sourceFormat: params.format,
-    sourceMimeType: params.mimeType,
-    sourceLanguage: params.sourceLang || "es",
-    targetLanguage: params.targetLang,
-    status: params.fileBuffer ? "uploaded" : "created",
-    currentStep: params.fileBuffer ? "File uploaded and queued for processing" : "Job created, awaiting file upload",
-    progress: params.fileBuffer ? 10 : 0,
-    pageCount: 1,
-    wordCount: 0,
-    characterCount: 0,
-    provider: "azure",
-    createdAt: now,
-    updatedAt: now,
-    expiresAt,
-    downloadToken,
-  };
+  const initialStatus: PersistentJobStatus = params.fileBuffer ? "uploaded" : "created";
+  const initialStep = params.fileBuffer
+    ? "File uploaded and queued for processing"
+    : "Job created, awaiting file upload";
+  const initialProgress = params.fileBuffer ? 10 : 0;
 
-  memoryJobs.set(id, job);
-
-  // Sync to database if reachable and not in Vitest offline mode
-  if (!process.env.VITEST) {
+  let validUserId: string | null = null;
+  if (params.userId) {
     try {
-      await prisma.translationJob.create({
-        data: {
-          id: job.id,
-          userId: job.userId,
-          sourceKey: job.sourceKey,
-          sourceFilename: job.sourceFilename,
-          sourceFormat: job.sourceFormat,
-          sourceMimeType: job.sourceMimeType,
-          sourceLanguage: job.sourceLanguage,
-          targetLanguage: job.targetLanguage,
-          status: job.status,
-          currentStep: job.currentStep,
-          progress: job.progress,
-          pageCount: job.pageCount,
-          provider: job.provider,
-          expiresAt: new Date(job.expiresAt),
+      await prisma.user.upsert({
+        where: { id: params.userId },
+        update: {},
+        create: {
+          id: params.userId,
+          email: `${params.userId}@verifylingua.internal`,
+          name: params.userId,
+          isGuest: false,
         },
       });
+      validUserId = params.userId;
     } catch {
-      // Database connection silent catch (in-memory resilience)
+      validUserId = params.userId;
     }
   }
 
-  return job;
+  const dbJob = await prisma.translationJob.create({
+    data: {
+      id,
+      userId: validUserId,
+      sourceKey,
+      sourceFilename: params.filename,
+      sourceFormat: params.format,
+      sourceMimeType: params.mimeType,
+      sourceLanguage: params.sourceLang || "es",
+      targetLanguage: params.targetLang,
+      status: initialStatus,
+      currentStep: initialStep,
+      progress: initialProgress,
+      pageCount: 1,
+      wordCount: 0,
+      characterCount: 0,
+      provider: "azure",
+      downloadToken,
+      expiresAt,
+      layoutPreserved: true,
+    },
+  });
+
+  return mapDbToJob(dbJob);
 }
 
+/**
+ * Retrieves a persistent translation job directly from PostgreSQL.
+ */
 export async function getPersistentJob(id: string): Promise<PersistentTranslationJob | null> {
-  const memoryJob = memoryJobs.get(id);
-  if (memoryJob) return memoryJob;
+  const dbJob = await prisma.translationJob.findUnique({
+    where: { id },
+    include: {
+      qaResults: {
+        include: { issues: true },
+      },
+    },
+  });
 
-  if (!process.env.VITEST) {
-    try {
-      const dbJob = await prisma.translationJob.findUnique({
-        where: { id },
-        include: {
-          qaResults: {
-            include: { issues: true },
-          },
-        },
-      });
-
-      if (dbJob) {
-        const mapped: PersistentTranslationJob = {
-          id: dbJob.id,
-          userId: dbJob.userId,
-          documentId: dbJob.documentId,
-          sourceKey: dbJob.sourceKey,
-          outputKey: dbJob.outputKey,
-          previewKey: dbJob.previewKey,
-          sourceFilename: dbJob.sourceFilename,
-          sourceFormat: dbJob.sourceFormat as any,
-          sourceMimeType: dbJob.sourceMimeType,
-          sourceLanguage: dbJob.sourceLanguage,
-          targetLanguage: dbJob.targetLanguage,
-          status: dbJob.status as PersistentJobStatus,
-          currentStep: dbJob.currentStep,
-          progress: dbJob.progress,
-          pageCount: dbJob.pageCount,
-          wordCount: dbJob.wordCount,
-          characterCount: dbJob.characterCount,
-          provider: dbJob.provider,
-          providerJobId: dbJob.providerJobId,
-          fidelityScore: dbJob.fidelityScore,
-          errorCode: dbJob.errorCode,
-          errorMessage: dbJob.errorMessage,
-          createdAt: dbJob.createdAt.toISOString(),
-          updatedAt: dbJob.updatedAt.toISOString(),
-          startedAt: dbJob.startedAt?.toISOString() || null,
-          completedAt: dbJob.completedAt?.toISOString() || null,
-          expiresAt: dbJob.expiresAt?.toISOString() || new Date(Date.now() + 86400000).toISOString(),
-          downloadToken: id,
-        };
-        memoryJobs.set(id, mapped);
-        return mapped;
-      }
-    } catch {
-      // Database offline
-    }
-  }
-
-  return null;
+  if (!dbJob) return null;
+  return mapDbToJob(dbJob);
 }
 
+/**
+ * Updates a persistent translation job directly in PostgreSQL.
+ */
 export async function updatePersistentJob(
   id: string,
   updates: Partial<PersistentTranslationJob>
 ): Promise<PersistentTranslationJob | null> {
-  const existing = await getPersistentJob(id);
-  if (!existing) return null;
-
-  const updated: PersistentTranslationJob = {
-    ...existing,
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
-
-  memoryJobs.set(id, updated);
-
-  if (!process.env.VITEST) {
-    try {
-      await prisma.translationJob.update({
-        where: { id },
-        data: {
-          status: updated.status,
-          currentStep: updated.currentStep,
-          progress: updated.progress,
-          pageCount: updated.pageCount,
-          wordCount: updated.wordCount,
-          characterCount: updated.characterCount,
-          provider: updated.provider,
-          providerJobId: updated.providerJobId,
-          fidelityScore: updated.fidelityScore,
-          outputKey: updated.outputKey,
-          previewKey: updated.previewKey,
-          errorCode: updated.errorCode,
-          errorMessage: updated.errorMessage,
-          completedAt: updated.completedAt ? new Date(updated.completedAt) : undefined,
-        },
-      });
-    } catch {
-      // silent catch
-    }
+  const data: any = {};
+  if (updates.status !== undefined) data.status = updates.status;
+  if (updates.currentStep !== undefined) data.currentStep = updates.currentStep;
+  if (updates.progress !== undefined) data.progress = updates.progress;
+  if (updates.pageCount !== undefined) data.pageCount = updates.pageCount;
+  if (updates.wordCount !== undefined) data.wordCount = updates.wordCount;
+  if (updates.characterCount !== undefined) data.characterCount = updates.characterCount;
+  if (updates.provider !== undefined) data.provider = updates.provider;
+  if (updates.providerJobId !== undefined) data.providerJobId = updates.providerJobId;
+  if (updates.fidelityScore !== undefined) data.fidelityScore = updates.fidelityScore;
+  if (updates.outputKey !== undefined) data.outputKey = updates.outputKey;
+  if (updates.previewKey !== undefined) data.previewKey = updates.previewKey;
+  if ("errorCode" in updates) data.errorCode = updates.errorCode ?? null;
+  if ("errorMessage" in updates) data.errorMessage = updates.errorMessage ?? null;
+  if (updates.downloadToken !== undefined) data.downloadToken = updates.downloadToken;
+  if (updates.layoutPreserved !== undefined) data.layoutPreserved = updates.layoutPreserved;
+  if ("completedAt" in updates) {
+    data.completedAt = updates.completedAt ? new Date(updates.completedAt) : null;
+  }
+  if ("startedAt" in updates) {
+    data.startedAt = updates.startedAt ? new Date(updates.startedAt) : null;
   }
 
-  return updated;
+  const existingMeta = jobMetadataCache.get(id) || {};
+  if (updates.issues !== undefined) existingMeta.issues = updates.issues;
+  if (updates.warnings !== undefined) existingMeta.warnings = updates.warnings;
+  if (updates.fidelityBreakdown !== undefined) existingMeta.fidelityBreakdown = updates.fidelityBreakdown;
+  jobMetadataCache.set(id, existingMeta);
+
+  const updated = await prisma.translationJob.update({
+    where: { id },
+    data,
+  });
+
+  return mapDbToJob(updated);
 }
 
+/**
+ * Lists user jobs directly from PostgreSQL, ordered by creation date descending.
+ */
 export async function listUserJobs(userId?: string | null): Promise<PersistentTranslationJob[]> {
-  const all = Array.from(memoryJobs.values());
-  if (userId) {
-    return all
-      .filter((j) => j.userId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }
-  return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const dbJobs = await prisma.translationJob.findMany({
+    where: userId ? { userId } : undefined,
+    orderBy: { createdAt: "desc" },
+  });
+
+  return dbJobs.map(mapDbToJob);
 }
 
 export const getAllJobs = listUserJobs;
 
+/**
+ * Deletes a persistent translation job directly from PostgreSQL.
+ */
 export async function deletePersistentJob(id: string): Promise<boolean> {
-  memoryJobs.delete(id);
   try {
     await prisma.translationJob.delete({ where: { id } });
+    return true;
   } catch {
-    // silent catch
+    return false;
   }
-  return true;
 }

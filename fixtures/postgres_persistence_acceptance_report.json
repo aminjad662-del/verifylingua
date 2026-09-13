@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-09-13T14:08:24.519Z",
+  "results": [
+    {
+      "step": "PostgreSQL Database Connection & Schema Sync",
+      "category": "POSTGRES_PERSISTENCE",
+      "status": "PASS",
+      "evidence": "Connected successfully. Database 'verifylingua' has 27 synchronized tables including TranslationJob.",
+      "details": {
+        "tableCount": 27,
+        "timestamp": "2026-09-13T14:08:05.208Z"
+      }
+    },
+    {
+      "step": "Real Document Upload & PostgreSQL Persistence",
+      "category": "POSTGRES_PERSISTENCE",
+      "status": "PASS",
+      "evidence": "Job job_1789308485395_a5d4f947 stored in PostgreSQL. Status: completed, outputKey: outputs/job_1789308485395_a5d4f947/translated_real_employment_contract.docx, fidelityScore: 98.5.",
+      "details": {
+        "jobId": "job_1789308485395_a5d4f947",
+        "sourceFilename": "real_employment_contract.docx",
+        "status": "completed",
+        "outputKey": "outputs/job_1789308485395_a5d4f947/translated_real_employment_contract.docx"
+      }
+    },
+    {
+      "step": "Failed Job Recording in PostgreSQL",
+      "category": "FAILURE_HANDLING",
+      "status": "PASS",
+      "evidence": "Failed job job_1789308491405_60d15037 persisted with status 'failed', errorCode 'CORRUPTED_DOCUMENT_STRUCTURE', errorMessage 'The uploaded file is not a valid OpenXML package.'.",
+      "details": {
+        "jobId": "job_1789308491405_60d15037",
+        "errorCode": "CORRUPTED_DOCUMENT_STRUCTURE"
+      }
+    },
+    {
+      "step": "Application Restart Recovery (Completed & Failed Jobs)",
+      "category": "RESTART_RECOVERY",
+      "status": "PASS",
+      "evidence": "PostgreSQL connection re-established from cold state. Both completed job (job_1789308485395_a5d4f947) and failed job (job_1789308491405_60d15037) survived restart with complete metadata. Output binary (2924 bytes) retrieved and verified.",
+      "details": {
+        "completedJobStatus": "completed",
+        "failedJobStatus": "failed",
+        "downloadedBytes": 2924
+      }
+    },
+    {
+      "step": "Format Preservation: DOCX -> DOCX",
+      "category": "FORMAT_PRESERVATION",
+      "status": "PASS",
+      "evidence": "Input DOCX (2973 bytes) -> Output DOCX (2914 bytes). Magic bytes PK (0x50, 0x4B) verified."
+    },
+    {
+      "step": "Format Preservation: PDF -> PDF",
+      "category": "FORMAT_PRESERVATION",
+      "status": "PASS",
+      "evidence": "Input PDF (1742 bytes) -> Output PDF (3712 bytes). Magic bytes %PDF verified."
+    },
+    {
+      "step": "Format Preservation: PNG -> PNG",
+      "category": "FORMAT_PRESERVATION",
+      "status": "PASS",
+      "evidence": "Input PNG (1777 bytes) -> Output PNG (9835 bytes). Magic bytes .PNG (0x89, 0x50, 0x4E, 0x47) verified. Zero conversion to PDF."
+    },
+    {
+      "step": "Format Preservation: JPG -> JPG",
+      "category": "FORMAT_PRESERVATION",
+      "status": "PASS",
+      "evidence": "Input JPG (21572 bytes) -> Output JPG (90269 bytes). Magic bytes SOI (0xFF, 0xD8, 0xFF) verified. Zero conversion to PDF."
+    }
+  ]
+}

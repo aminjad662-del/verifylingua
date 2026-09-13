@@ -33,7 +33,6 @@ export default function ProjectRevisionsPage() {
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  // Mock initial revisions
   const [revisions, setRevisions] = React.useState<RevisionItem[]>([
     {
       id: "rev_init_01",
@@ -44,6 +43,18 @@ export default function ProjectRevisionsPage() {
       resolutionNotes: "Middle name locked to passport spelling in OpenXML run #14.",
     },
   ]);
+
+  React.useEffect(() => {
+    if (!id) return;
+    fetch(`/api/order/${id}/revisions`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.revisions && Array.isArray(data.revisions) && data.revisions.length > 0) {
+          setRevisions(data.revisions);
+        }
+      })
+      .catch(() => {});
+  }, [id]);
 
   const handleSubmitRevision = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -12,7 +12,7 @@ export async function GET(
     const { id } = await params;
     const publicCode = id.toUpperCase();
 
-    const stored = orderRevisionsStore.get(publicCode) || [];
+    const stored = orderRevisionsStore.get(publicCode) || orderRevisionsStore.get(id) || [];
     return NextResponse.json({ success: true, revisions: stored });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -28,11 +28,12 @@ export async function POST(
     const publicCode = id.toUpperCase();
     const body = await req.json();
 
-    const { segmentId, originalText, suggestedText, reason } = body;
+    const { segmentId, originalText, suggestedText, notes, reason, priority } = body;
+    const notesText = (suggestedText || notes || "").trim();
 
-    if (!suggestedText || !suggestedText.trim()) {
+    if (!notesText) {
       return NextResponse.json(
-        { error: "Suggested correction text cannot be empty." },
+        { error: "Revision notes or suggested correction text cannot be empty." },
         { status: 400 }
       );
     }
@@ -41,17 +42,21 @@ export async function POST(
       id: "rev-" + Math.random().toString(36).substring(2, 9),
       segmentId: segmentId || "general",
       originalText: originalText || "",
-      suggestedText: suggestedText.trim(),
+      notes: notesText,
+      suggestedText: notesText,
       reason: reason || "User Clarification",
-      status: "PENDING",
+      priority: priority || "NORMAL",
+      status: body.status || "PENDING",
+      requestedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
 
-    const current = orderRevisionsStore.get(publicCode) || [];
+    const current = orderRevisionsStore.get(publicCode) || orderRevisionsStore.get(id) || [];
     current.push(newRevision);
     orderRevisionsStore.set(publicCode, current);
+    orderRevisionsStore.set(id, current);
 
-    // Optionally update order status and append event to Prisma if available
+    // Update order status or translation job version in database
     try {
       const queryPromise = prisma.order.findFirst({
         where: { OR: [{ id }, { publicCode }] },

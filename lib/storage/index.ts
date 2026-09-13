@@ -7,6 +7,10 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+
+const LOCAL_STORAGE_DIR = path.resolve(process.cwd(), ".storage");
 
 // Resilient memory storage fallback when R2/S3 credentials are not configured or in test environments
 const memoryStorage = new Map<
@@ -36,7 +40,9 @@ function getS3Client(): { client: S3Client; bucket: string } | null {
     !accessKeyId ||
     !secretAccessKey ||
     accessKeyId.startsWith("your-") ||
-    secretAccessKey.startsWith("your-")
+    secretAccessKey.startsWith("your-") ||
+    accessKeyId.includes("mock") ||
+    secretAccessKey.includes("mock")
   ) {
     return null;
   }
@@ -133,6 +139,15 @@ export async function putObject(
     }
   }
 
+  // Persist locally to disk
+  try {
+    const filePath = path.join(LOCAL_STORAGE_DIR, key);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, buffer);
+  } catch (err) {
+    // ignore disk write error if any
+  }
+
   // Always retain in fallback cache
   globalStorage.set(key, {
     buffer,
@@ -149,6 +164,22 @@ export async function getObject(key: string): Promise<Buffer> {
   const memoryObj = globalStorage.get(key);
   if (memoryObj) {
     return memoryObj.buffer;
+  }
+
+  // Check disk storage next
+  try {
+    const filePath = path.join(LOCAL_STORAGE_DIR, key);
+    if (fs.existsSync(filePath)) {
+      const diskBuf = fs.readFileSync(filePath);
+      globalStorage.set(key, {
+        buffer: diskBuf,
+        contentType: "application/octet-stream",
+        createdAt: new Date(),
+      });
+      return diskBuf;
+    }
+  } catch {
+    // fall through
   }
 
   const s3 = getS3Client();
@@ -191,6 +222,19 @@ export async function headObject(
     };
   }
 
+  try {
+    const filePath = path.join(LOCAL_STORAGE_DIR, key);
+    if (fs.existsSync(filePath)) {
+      const stat = fs.statSync(filePath);
+      return {
+        size: stat.size,
+        contentType: "application/octet-stream",
+      };
+    }
+  } catch {
+    // fall through
+  }
+
   const s3 = getS3Client();
   if (s3) {
     try {
@@ -216,6 +260,15 @@ export async function headObject(
  */
 export async function deleteObject(key: string): Promise<void> {
   globalStorage.delete(key);
+
+  try {
+    const filePath = path.join(LOCAL_STORAGE_DIR, key);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch {
+    // ignore
+  }
 
   const s3 = getS3Client();
   if (s3) {

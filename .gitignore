@@ -20,6 +20,8 @@
 # misc
 .DS_Store
 *.pem
+.storage/
+.playwright-mcp/
 
 # debug
 npm-debug.log*

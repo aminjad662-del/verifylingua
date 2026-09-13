@@ -101,7 +101,19 @@ export async function executeAutonomousDocumentPipeline(jobId: string): Promise<
         startedAt: new Date().toISOString(),
       });
 
-      const buffer = await getObject(job.sourceKey);
+      let buffer: Buffer;
+      try {
+        buffer = await getObject(job.sourceKey);
+      } catch (storageErr: any) {
+        await updatePersistentJob(jobId, {
+          status: "failed",
+          currentStep: `Processing aborted: source file "${job.sourceFilename}" was not found in storage.`,
+          errorCode: "SOURCE_FILE_NOT_FOUND",
+          errorMessage: `Source file not found in storage: ${job.sourceKey}`,
+          progress: 0,
+        });
+        return;
+      }
 
       await updatePersistentJob(jobId, {
         status: "extracting",
@@ -133,7 +145,7 @@ export async function executeAutonomousDocumentPipeline(jobId: string): Promise<
       const hasWarnings = result.warnings.length > 0;
       await updatePersistentJob(jobId, {
         status: hasWarnings ? "completed_with_warnings" : "completed",
-        currentStep: "Document translation complete and certified for official use.",
+        currentStep: "Document machine translation and layout reconstruction complete.",
         progress: 100,
         outputKey,
         provider: result.providerUsed,
@@ -146,7 +158,9 @@ export async function executeAutonomousDocumentPipeline(jobId: string): Promise<
         layoutPreserved: result.fidelityScore.layoutScore >= 80,
       });
     } catch (err: any) {
-      console.error(`[AutonomousPipeline] Job ${jobId} failed:`, err);
+      if (process.env.NODE_ENV !== "test" && !process.env.VITEST) {
+        console.error(`[AutonomousPipeline] Job ${jobId} failed:`, err);
+      }
       await updatePersistentJob(jobId, {
         status: "failed",
         currentStep: `Pipeline failure: ${err.message || "Unknown error"}`,

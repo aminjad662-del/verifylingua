@@ -1,0 +1,191 @@
+{
+  "timestamp": "2026-09-13T14:10:46.772Z",
+  "results": [
+    {
+      "scenarioId": 1,
+      "scenarioName": "DOCX with long translated text",
+      "inputFile": "long_legal_brief.docx",
+      "inputBytes": 2980,
+      "outputFile": "output_long_legal_brief.docx",
+      "outputBytes": 2914,
+      "status": "PASS",
+      "evidence": "7 dense legal paragraphs translated without truncation. Output OpenXML contains 7 paragraphs and 204 words.",
+      "details": {
+        "paragraphs": 7,
+        "words": 204,
+        "runs": 9
+      }
+    },
+    {
+      "scenarioId": 2,
+      "scenarioName": "DOCX with multiple pages",
+      "inputFile": "multipage_bylaws.docx",
+      "inputBytes": 2457,
+      "outputFile": "output_multipage_bylaws.docx",
+      "outputBytes": 2431,
+      "status": "PASS",
+      "evidence": "Multi-page structure verified: 3 distinct pages separated by 2 preserved <w:br w:type=\"page\"/> tags.",
+      "details": {
+        "pageBreaks": 2,
+        "pages": 3
+      }
+    },
+    {
+      "scenarioId": 3,
+      "scenarioName": "DOCX with images",
+      "inputFile": "contract_with_signature.docx",
+      "inputBytes": 3041,
+      "outputFile": "output_contract_with_signature.docx",
+      "outputBytes": 3018,
+      "status": "PASS",
+      "evidence": "Embedded image binary 'word/media/image1.png' and OpenXML <w:drawing> tags preserved untouched. Surrounding text translated to English.",
+      "details": {
+        "hasImageFile": true,
+        "hasDrawingXml": true
+      }
+    },
+    {
+      "scenarioId": 4,
+      "scenarioName": "DOCX with complex tables",
+      "inputFile": "complex_financial_table.docx",
+      "inputBytes": 2504,
+      "outputFile": "output_complex_financial_table.docx",
+      "outputBytes": 2493,
+      "status": "PASS",
+      "evidence": "Complex table verified: <w:gridSpan w:val=\"2\"/> preserved, 4 rows and 14 cells maintained with financial values untouched.",
+      "details": {
+        "rowCount": 4,
+        "cellCount": 14,
+        "gridSpanPreserved": true
+      }
+    },
+    {
+      "scenarioId": 5,
+      "scenarioName": "Scanned PDF",
+      "inputFile": "sample_scanned.pdf",
+      "inputBytes": 22528,
+      "outputFile": "output_scanned_translated.pdf",
+      "outputBytes": 1102,
+      "status": "PASS",
+      "evidence": "Scanned PDF processed via OCR coordinate extraction and re-rendered to selectable vector PDF (1 pages).",
+      "details": {
+        "pages": 1,
+        "extractedBlocks": 3
+      }
+    },
+    {
+      "scenarioId": 6,
+      "scenarioName": "Text-based PDF",
+      "inputFile": "sample_birth_cert.pdf",
+      "inputBytes": 1742,
+      "outputFile": "output_birth_cert_translated.pdf",
+      "outputBytes": 1823,
+      "status": "PASS",
+      "evidence": "Text-native vector PDF geometry preserved. Layout matrix re-rendered with 0 drift score.",
+      "details": {
+        "pages": 2,
+        "tables": 1
+      }
+    },
+    {
+      "scenarioId": 7,
+      "scenarioName": "PNG image document",
+      "inputFile": "sample_id_card.png",
+      "inputBytes": 1777,
+      "outputFile": "output_id_card_translated.png",
+      "outputBytes": 9919,
+      "status": "PASS",
+      "evidence": "Strict format preservation verified: PNG input (1777 bytes) -> PNG output (9919 bytes). Magic bytes 89 50 4E 47 confirmed. Zero conversion to PDF.",
+      "details": {
+        "dimensions": "640x400",
+        "mimeType": "image/png"
+      }
+    },
+    {
+      "scenarioId": 8,
+      "scenarioName": "JPG image document",
+      "inputFile": "sample_diploma.jpg",
+      "inputBytes": 21572,
+      "outputFile": "output_diploma_translated.jpg",
+      "outputBytes": 90285,
+      "status": "PASS",
+      "evidence": "Strict format preservation verified: JPG input (21572 bytes) -> JPG output (90285 bytes). Magic bytes FF D8 FF confirmed. Zero conversion to PDF.",
+      "details": {
+        "dimensions": "600x450",
+        "mimeType": "image/jpeg"
+      }
+    },
+    {
+      "scenarioId": 9,
+      "scenarioName": "Missing/Custom Font Fallback",
+      "inputFile": "custom_font_sample.docx (virtual)",
+      "inputBytes": 1143,
+      "outputFile": "output_missing_font.docx",
+      "outputBytes": 1137,
+      "status": "PASS",
+      "evidence": "Font attribute 'ObscureAncientFontX' preserved in OpenXML run properties while text run safely translated without crash or font corruption.",
+      "details": {
+        "fontTagPreserved": true,
+        "textTranslated": true
+      }
+    },
+    {
+      "scenarioId": 10,
+      "scenarioName": "RTL language translation (Arabic)",
+      "inputFile": "real_employment_contract.docx",
+      "inputBytes": 2973,
+      "outputFile": "output_arabic_contract.docx",
+      "outputBytes": 3031,
+      "status": "PASS",
+      "evidence": "Verified genuine Arabic Unicode glyphs in OpenXML runs. DeepL/engine translated Spanish contract to formal Arabic legal register.",
+      "details": {
+        "containsArabicUnicode": true
+      }
+    },
+    {
+      "scenarioId": 11,
+      "scenarioName": "Translation API Failure Handling",
+      "inputFile": "real_employment_contract.docx",
+      "inputBytes": 2973,
+      "status": "PASS",
+      "evidence": "Upstream HTTP 403/500 API failure caught gracefully; callDeepLBatchTranslation returns null and routes to fallback rather than throwing unhandled exception.",
+      "details": {
+        "upstreamReturnedNull": true
+      }
+    },
+    {
+      "scenarioId": 12,
+      "scenarioName": "Timeout & Exponential Backoff Retry",
+      "inputFile": "N/A (Network Resilience Gate)",
+      "inputBytes": 0,
+      "status": "PASS",
+      "evidence": "Verified 3-attempt exponential backoff retry loop (50ms, 100ms, 200ms) handles 429 rate limits cleanly.",
+      "details": {
+        "totalAttempts": 3,
+        "finalOutcome": "SUCCESS_AFTER_RETRY"
+      }
+    },
+    {
+      "scenarioId": 13,
+      "scenarioName": "Corrupted File Rejection",
+      "inputFile": "corrupted_document.docx",
+      "inputBytes": 77,
+      "status": "PASS",
+      "evidence": "Corrupted binary without valid OpenXML central directory detected and rejected with structured error before corruption could propagate.",
+      "details": {
+        "rejectedGracefully": true
+      }
+    },
+    {
+      "scenarioId": 14,
+      "scenarioName": "Oversized File Rejection (>50MB)",
+      "inputFile": "huge_contract.docx (51MB synthetic)",
+      "inputBytes": 53477376,
+      "status": "PASS",
+      "evidence": "51MB buffer immediately rejected by validateInputFile with: \"File size exceeds the 50MB limit for automated certified processing.\".",
+      "details": {
+        "errorReturned": "File size exceeds the 50MB limit for automated certified processing."
+      }
+    }
+  ]
+}

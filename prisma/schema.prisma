@@ -369,6 +369,8 @@ model TranslationJob {
   startedAt       DateTime?
   completedAt     DateTime?
   expiresAt       DateTime?
+  downloadToken   String?
+  layoutPreserved Boolean?  @default(true)
 
   user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
   document        Document?           @relation(fields: [documentId], references: [id], onDelete: SetNull)

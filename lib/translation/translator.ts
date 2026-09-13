@@ -163,8 +163,10 @@ export async function translateStructuredBlocks(
 
     let chunkTranslations: { id: string; translatedText: string }[] | null = null;
 
+    const shouldBypassTestMock = Boolean(options.bypassTestMock || process.env.FORCE_LIVE_TRANSLATION === "true");
+
     // 1. Try DeepL Neural Translation
-    if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && !process.env.VITEST) {
+    if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
       try {
         const deeplResults = await callDeepLBatchTranslation(
           chunk.map((b) => b.text),
@@ -183,7 +185,7 @@ export async function translateStructuredBlocks(
     }
 
     // 2. Fall back to Gemini structured LLM
-    if (!chunkTranslations && geminiKey && geminiKey !== "mock" && geminiKey.length > 10 && !process.env.VITEST) {
+    if (!chunkTranslations && geminiKey && geminiKey !== "mock" && geminiKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
       chunkTranslations = await callGeminiStructuredBatch(chunk, options, geminiKey);
     }
 

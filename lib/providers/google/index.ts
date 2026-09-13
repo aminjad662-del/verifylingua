@@ -4,11 +4,15 @@ export class GoogleTranslationProvider implements TranslationProvider {
   name = "google";
 
   private getApiKey(): string | null {
-    return process.env.GOOGLE_TRANSLATE_API_KEY || process.env.GEMINI_API_KEY || null;
+    return process.env.GOOGLE_TRANSLATE_API_KEY || null;
+  }
+
+  private getAuthToken(): string | null {
+    return process.env.GOOGLE_OAUTH_ACCESS_TOKEN || null;
   }
 
   isAvailable(): boolean {
-    return !!this.getApiKey();
+    return !!(this.getApiKey() || this.getAuthToken());
   }
 
   async translateText(input: TranslationInput): Promise<string> {
@@ -23,13 +27,21 @@ export class GoogleTranslationProvider implements TranslationProvider {
 
   async translateBatch(input: BatchTranslationInput): Promise<BatchTranslationResult[]> {
     const apiKey = this.getApiKey();
-    if (!apiKey || process.env.VITEST) {
+    const token = this.getAuthToken();
+    if ((!apiKey && !token) || process.env.VITEST) {
       return input.items.map((i) => ({ id: i.id, text: i.text, confidence: 0.90 }));
     }
 
     try {
       const url = new URL("https://translation.googleapis.com/language/translate/v2");
-      url.searchParams.set("key", apiKey);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+      if (apiKey) {
+        url.searchParams.set("key", apiKey);
+      }
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
 
       const body = {
         q: input.items.map((i) => i.text),
@@ -40,7 +52,7 @@ export class GoogleTranslationProvider implements TranslationProvider {
 
       const res = await fetch(url.toString(), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
 

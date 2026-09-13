@@ -1,0 +1,320 @@
+{
+  "timestamp": "2026-09-12T15:24:32.868Z",
+  "summary": {
+    "inputPath": "C:\\Users\\aminj\\Downloads\\SAAS 7\\fixtures\\real_employment_contract.docx",
+    "inputBytes": 2973,
+    "outputPath": "C:\\Users\\aminj\\Downloads\\SAAS 7\\fixtures\\output_translated_employment_contract.docx",
+    "outputBytes": 2924,
+    "provider": "DeepL Neural API (api-free.deepl.com)",
+    "sourceLanguage": "es",
+    "targetLanguage": "en",
+    "durationMs": 4088,
+    "status": "ready",
+    "defectsFound": 0
+  },
+  "logs": [
+    {
+      "timestamp": "2026-09-12T15:24:20.103Z",
+      "step": "1. Input File Inspection",
+      "details": {
+        "filePath": "C:\\Users\\aminj\\Downloads\\SAAS 7\\fixtures\\real_employment_contract.docx",
+        "fileSize": 2973,
+        "magicBytesHex": "504b0304",
+        "magicBytesAscii": "PK\u0003\u0004",
+        "isValidZipArchive": true,
+        "detectedFormat": "docx",
+        "validationError": null
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:20.400Z",
+      "step": "2. Source Document OpenXML Structure",
+      "details": {
+        "archiveEntries": [
+          "[Content_Types].xml",
+          "_rels/",
+          "_rels/.rels",
+          "word/",
+          "word/_rels/",
+          "word/_rels/document.xml.rels",
+          "word/header1.xml",
+          "word/footer1.xml",
+          "word/document.xml"
+        ],
+        "hasDocumentXml": true,
+        "hasHeader1Xml": true,
+        "hasFooter1Xml": true,
+        "hasTable": true,
+        "tableRowCount": 3,
+        "tableCellCount": 9,
+        "documentRunCount": 17,
+        "headerRunCount": 1,
+        "footerRunCount": 1,
+        "sampleSourceRuns": {
+          "header": "GRUPO TECNOLÓGICO INTERNACIONAL • DEPARTAMENTO LABORAL",
+          "title": "CONTRATO INDIVIDUAL DE TRABAJO A TIEMPO INDETERMINADO",
+          "preamble": "En la ciudad de Madrid, a 15 de febrero de 2026, celebran el presente contrato de trabajo la empresa Innovaciones Digitales S.L. como Empleador, y el Licenciado Alejandro Ramírez como Empleado.",
+          "tableHead": [
+            "El Empleado desempeñará el cargo de Ingeniero Principal de Sistemas con dedicación a tiempo completo.",
+            "CLÁUSULA SEGUNDA: ESTRUCTURA DE COMPENSACIÓN",
+            "Concepto"
+          ],
+          "footer": "Documento Privado y Confidencial • Página 1 de 1"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:20.402Z",
+      "step": "3. Language Selection & Configuration",
+      "details": {
+        "detectedSourceLanguage": "es",
+        "selectedTargetLanguage": "en",
+        "serviceTier": "certified",
+        "provider": "DeepL Neural API (v2)",
+        "endpoint": "https://api-free.deepl.com/v2/translate",
+        "authKeyConfigured": true,
+        "keySuffix": "...f97:fx"
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:24.674Z",
+      "step": "4. Intake & File Storage Staging",
+      "details": {
+        "jobId": "job_1789226660403_ba50b159",
+        "persistentJobId": "job_1789226660406_7f434800",
+        "downloadToken": "cbb35c670380fbb5cb62b421b1245e396ca01f8a84184550",
+        "sourceStorageKey": "sources/job_1789226660403_ba50b159/real_employment_contract.docx",
+        "storedBytes": 2973,
+        "storageParity": true,
+        "initialStatus": "queued",
+        "initialProgress": 0
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:28.763Z",
+      "step": "5. Pipeline Execution & Status Milestones",
+      "details": {
+        "jobId": "job_1789226660403_ba50b159",
+        "finalStatus": "ready",
+        "finalProgress": 100,
+        "durationMs": 4088,
+        "statusTransitions": [
+          {
+            "status": "queued",
+            "progress": 0,
+            "step": "Job initialized and queued for processing",
+            "timestamp": "2026-09-12T15:24:24.675Z"
+          },
+          {
+            "status": "extracting",
+            "progress": 35,
+            "step": "Stage A: Extracting spatial geometry, text coordinates, and bounding boxes...",
+            "timestamp": "2026-09-12T15:24:24.676Z"
+          },
+          {
+            "status": "translating",
+            "progress": 65,
+            "step": "Stage B: Translating structured text blocks with context awareness...",
+            "timestamp": "2026-09-12T15:24:24.676Z"
+          },
+          {
+            "status": "reconstructing",
+            "progress": 88,
+            "step": "Stage C: Applying dynamic font scaling, background masking, and reconstruction...",
+            "timestamp": "2026-09-12T15:24:24.676Z"
+          },
+          {
+            "status": "ready",
+            "progress": 100,
+            "step": "Machine translation and layout reconstruction complete.",
+            "timestamp": "2026-09-12T15:24:28.763Z"
+          }
+        ],
+        "qualityGate": {
+          "isValidFormat": true,
+          "pageCountMatches": true,
+          "elementCountMatches": true,
+          "checksumMatches": true,
+          "byteSize": 2924,
+          "verifiedAt": "2026-09-12T15:24:28.763Z",
+          "notes": [
+            "Processed 19 text runs (137 words)",
+            "Preserved OpenXML table formatting and cell widths",
+            "Preserved header/footer definitions"
+          ],
+          "layoutPreserved": true
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:32.860Z",
+      "step": "6. Output Storage & Persistence",
+      "details": {
+        "outputStorageKey": "outputs/job_1789226660403_ba50b159/translated_real_employment_contract.docx",
+        "localDiskPath": "C:\\Users\\aminj\\Downloads\\SAAS 7\\fixtures\\output_translated_employment_contract.docx",
+        "localOutputSize": 2924,
+        "outputBufferLength": 2924,
+        "persistentJobStatus": "completed",
+        "persistentJobProgress": 100,
+        "persistentJobOutputKey": "outputs/job_1789226660403_ba50b159/translated_real_employment_contract.docx"
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:32.861Z",
+      "step": "7. Download Verification",
+      "details": {
+        "downloadEndpoint": "/api/translate/download/job_1789226660403_ba50b159?token=cbb35c670380fbb5cb62b421b1245e396ca01f8a84184550",
+        "downloadedBytes": 2924,
+        "downloadParity": true,
+        "headers": {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Disposition": "attachment; filename=\"real_employment_contract_translated_en.docx\"",
+          "Content-Length": "2924",
+          "X-VerifyLingua-Quality-Gate": "PASSED"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:32.865Z",
+      "step": "8. OpenXML Architectural Validation & Semantic Pairs",
+      "details": {
+        "archiveFilesIntact": [
+          "[Content_Types].xml",
+          "_rels/",
+          "_rels/.rels",
+          "word/",
+          "word/_rels/",
+          "word/_rels/document.xml.rels",
+          "word/header1.xml",
+          "word/footer1.xml",
+          "word/document.xml"
+        ],
+        "structuralIntegrity": {
+          "tablePreserved": true,
+          "rowCountMatch": true,
+          "rowCount": 3,
+          "cellCountMatch": true,
+          "cellCount": 9,
+          "boldPreserved": true,
+          "italicPreserved": true,
+          "alignmentPreserved": true
+        },
+        "totalRunsTranslated": 19,
+        "translatedPairs": [
+          {
+            "element": "Header (word/header1.xml)",
+            "spanishSource": "GRUPO TECNOLÓGICO INTERNACIONAL • DEPARTAMENTO LABORAL",
+            "englishTranslated": "INTERNATIONAL TECHNOLOGY GROUP • LABOR DEPARTMENT"
+          },
+          {
+            "element": "Document Run #1",
+            "spanishSource": "CONTRATO INDIVIDUAL DE TRABAJO A TIEMPO INDETERMINADO",
+            "englishTranslated": "INDIVIDUAL EMPLOYMENT CONTRACT FOR AN INDEFINITE TERM"
+          },
+          {
+            "element": "Document Run #2",
+            "spanishSource": "En la ciudad de Madrid, a 15 de febrero de 2026, celebran el presente contrato de trabajo la empresa Innovaciones Digitales S.L. como Empleador, y el Licenciado Alejandro Ramírez como Empleado.",
+            "englishTranslated": "In the city of Madrid, on February 15, 2026, this employment contract is entered into by Innovaciones Digitales S.L. as the Employer and Alejandro Ramírez, B.A., as the Employee."
+          },
+          {
+            "element": "Document Run #3",
+            "spanishSource": "CLÁUSULA PRIMERA: CARGO Y FUNCIONES",
+            "englishTranslated": "ARTICLE ONE: POSITION AND DUTIES"
+          },
+          {
+            "element": "Document Run #4",
+            "spanishSource": "El Empleado desempeñará el cargo de Ingeniero Principal de Sistemas con dedicación a tiempo completo.",
+            "englishTranslated": "The employee will serve as a Senior Systems Engineer on a full-time basis."
+          },
+          {
+            "element": "Document Run #5",
+            "spanishSource": "CLÁUSULA SEGUNDA: ESTRUCTURA DE COMPENSACIÓN",
+            "englishTranslated": "ARTICLE TWO: COMPENSATION STRUCTURE"
+          },
+          {
+            "element": "Document Run #6",
+            "spanishSource": "Concepto",
+            "englishTranslated": "Concept"
+          },
+          {
+            "element": "Document Run #7",
+            "spanishSource": "Importe Mensual",
+            "englishTranslated": "Monthly Amount"
+          },
+          {
+            "element": "Document Run #8",
+            "spanishSource": "Frecuencia de Pago",
+            "englishTranslated": "Payment Frequency"
+          },
+          {
+            "element": "Document Run #9",
+            "spanishSource": "Salario Base Garantizado",
+            "englishTranslated": "Guaranteed Base Salary"
+          },
+          {
+            "element": "Document Run #10",
+            "spanishSource": "$7,500 USD",
+            "englishTranslated": "$7,500 USD"
+          },
+          {
+            "element": "Document Run #11",
+            "spanishSource": "Mensual vencido",
+            "englishTranslated": "Past-Due Monthly Payment"
+          },
+          {
+            "element": "Document Run #12",
+            "spanishSource": "Bono por Rendimiento",
+            "englishTranslated": "Performance Bonus"
+          },
+          {
+            "element": "Document Run #13",
+            "spanishSource": "$2,000 USD",
+            "englishTranslated": "$2,000 USD"
+          },
+          {
+            "element": "Document Run #14",
+            "spanishSource": "Trimestral por objetivos",
+            "englishTranslated": "Quarterly by Objectives"
+          },
+          {
+            "element": "Document Run #15",
+            "spanishSource": "CLÁUSULA TERCERA: OBLIGACIÓN DE CONFIDENCIALIDAD",
+            "englishTranslated": "ARTICLE THREE: CONFIDENTIALITY OBLIGATION"
+          },
+          {
+            "element": "Document Run #16",
+            "spanishSource": "Toda información técnica, comercial o financiera a la que tenga acceso el empleado será considerada secreto empresarial confidencial.",
+            "englishTranslated": "Any technical, commercial, or financial information to which an employee has access shall be considered a confidential trade secret."
+          },
+          {
+            "element": "Document Run #17",
+            "spanishSource": "Firmado en dos ejemplares de un mismo tenor y efecto en la fecha arriba indicada.",
+            "englishTranslated": "Signed in two copies, both of the same text and legal effect, on the date indicated above."
+          },
+          {
+            "element": "Footer (word/footer1.xml)",
+            "spanishSource": "Documento Privado y Confidencial • Página 1 de 1",
+            "englishTranslated": "Private and Confidential Document • Page 1 of 1"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-09-12T15:24:32.868Z",
+      "step": "9. Defect & Fidelity Assessment",
+      "details": {
+        "defectsCount": 0,
+        "defects": [],
+        "observations": [
+          "PASS: Zero mock or placeholder prefixes found. Translation generated purely via neural provider.",
+          "PASS: Title was translated into English.",
+          "PASS: Clause headings translated into English.",
+          "PASS: Table geometry perfectly preserved (3 rows, 9 cells).",
+          "PASS: Financial figures and currency symbols ($7,500 USD, $2,000 USD) preserved without alteration.",
+          "NOTE: Text expansion from Spanish to English is relatively neutral (~0.95x ratio), preventing table column cell clipping.",
+          "NOTE: DeepL translated 'Innovaciones Digitales S.L.' properly as the company proper noun, and 'Alejandro Ramírez' as employee."
+        ]
+      }
+    }
+  ]
+}

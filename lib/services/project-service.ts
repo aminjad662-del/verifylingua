@@ -126,8 +126,7 @@ export class ProjectService {
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.id.toLowerCase().includes(q) ||
-          p.sourceLang.toLowerCase().includes(q) ||
-          p.targetLang.toLowerCase().includes(q)
+          p.sourceLang.toLowerCase().includes(q)
       );
     }
 

@@ -2,7 +2,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ''} --max-old-space-size=4096`.trim();
+process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ''} --max-old-space-size=2048`.trim();
 
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 console.log('📦 Step 1: Generating Prisma Client...');

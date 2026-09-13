@@ -176,7 +176,7 @@ export async function processTranslationJob(
     // 5. Ready (100%)
     job.status = "ready";
     job.progress = 100;
-    job.currentStep = "Translation complete and certified for official use.";
+    job.currentStep = "Machine translation and layout reconstruction complete.";
     job.translatedBuffer = translatedBuffer;
     job.completedAt = new Date().toISOString();
     job.qualityGate = qualityGate;

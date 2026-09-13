@@ -47,7 +47,14 @@ export async function translateDocx(
 
     // Extract text runs inside <w:t> tags
     const regex = /(<w:t(?:\s+[^>]*)?>)([\s\S]*?)(<\/w:t>)/g;
-    const matches: { id: string; full: string; open: string; text: string; close: string }[] = [];
+    const matches: {
+      id: string;
+      start: number;
+      end: number;
+      open: string;
+      text: string;
+      close: string;
+    }[] = [];
     let match;
     let nodeIdx = 0;
 
@@ -56,7 +63,8 @@ export async function translateDocx(
       if (rawText.trim().length > 0) {
         matches.push({
           id: `docx_${filePath.replace(/[^a-zA-Z0-9]/g, "_")}_${nodeIdx++}`,
-          full: match[0],
+          start: match.index,
+          end: match.index + match[0].length,
           open: match[1],
           text: rawText,
           close: match[3],
@@ -76,17 +84,19 @@ export async function translateDocx(
         options
       );
 
-      let updatedXml = xmlContent;
+      let updatedXml = "";
+      let cursor = 0;
       for (const m of matches) {
         textNodeCount++;
         wordCount += m.text.trim().split(/\s+/).length;
 
+        updatedXml += xmlContent.slice(cursor, m.start);
         const translated = translationMap.get(m.id) || m.text;
         const encoded = encodeXmlEntities(translated);
-        const replacement = `${m.open}${encoded}${m.close}`;
-
-        updatedXml = updatedXml.replace(m.full, replacement);
+        updatedXml += `${m.open}${encoded}${m.close}`;
+        cursor = m.end;
       }
+      updatedXml += xmlContent.slice(cursor);
 
       zip.file(filePath, updatedXml);
     }

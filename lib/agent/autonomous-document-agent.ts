@@ -137,7 +137,7 @@ export class AutonomousDocumentAgent {
       );
     }
 
-    onProgress?.("Document successfully translated and verified with certified quality seal.", 100);
+    onProgress?.("Document machine translation and layout reconstruction complete.", 100);
 
     return {
       translatedBuffer,
