@@ -296,7 +296,7 @@ export async function processTranslationJob(
           job.userId,
           job.id,
           job.pageCount || 1,
-          job.error
+          job.error || "Translation failure"
         );
       } catch (creditErr: any) {
         console.error(`[processTranslationJob] Failed to release credits for job ${job.id}:`, creditErr?.message || creditErr);

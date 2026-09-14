@@ -4,8 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { memorySubscriptions, withDbTimeout } from "@/lib/stripe/store";
 import { handleStripeWebhookEvent } from "./handler";
 
-export { handleStripeWebhookEvent } from "./handler";
-
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();

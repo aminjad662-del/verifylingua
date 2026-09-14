@@ -2,10 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from "vites
 import { prisma } from "../lib/prisma";
 import { MVP_PLANS, getMvpPlan, getMvpPlanPages } from "../lib/pricing";
 import { POST as checkoutRoute } from "../app/api/billing/checkout/route";
-import {
-  POST as webhookRoute,
-  handleStripeWebhookEvent,
-} from "../app/api/webhooks/stripe/route";
+import { POST as webhookRoute } from "../app/api/webhooks/stripe/route";
+import { handleStripeWebhookEvent } from "../app/api/webhooks/stripe/handler";
 import { CreditTransactionType } from "@prisma/client";
 import { NextRequest } from "next/server";
 
