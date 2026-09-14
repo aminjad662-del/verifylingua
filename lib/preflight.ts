@@ -1,6 +1,7 @@
 import { PDFDocument } from "pdf-lib";
 import { detectFormatFromBuffer, validateInputFile } from "./translation/pipeline";
 import { DocumentFormat } from "./translation/types";
+import { MVP_LANGUAGE_CODES } from "./constants";
 
 export interface PreflightServiceTierQuote {
   tier: "automated" | "professional" | "certified";
@@ -37,7 +38,16 @@ export interface PreflightAnalysisResult {
     professional: PreflightServiceTierQuote;
     certified: PreflightServiceTierQuote;
   };
+  sampleText?: string;
+  nonLatinScriptRatio?: number;
+  mvpLanguageCheck?: {
+    supported: boolean;
+    reason?: string;
+    waitlistAffordance?: boolean;
+  };
 }
+
+export type PreflightResult = PreflightAnalysisResult;
 
 /**
  * Detects language from sample text using statistical n-grams / common lexicon
@@ -73,6 +83,61 @@ export function detectLanguageFromText(text: string): { lang: string; confidence
 
   const confidence = maxMatches > 0 ? Math.min(98, 60 + maxMatches * 10) : 50;
   return { lang: bestLang, confidence };
+}
+
+/**
+ * Validates whether source and target languages conform to MVP Core 4 LTR matrix.
+ */
+export function validateMvpLanguagePair(
+  sourceLang: string,
+  targetLang: string
+): { valid: boolean; reason?: string } {
+  const s = (sourceLang || "").toLowerCase().trim();
+  const t = (targetLang || "").toLowerCase().trim();
+
+  const isSourceSupported = (MVP_LANGUAGE_CODES as readonly string[]).includes(s);
+  const isTargetSupported = (MVP_LANGUAGE_CODES as readonly string[]).includes(t);
+
+  if (!isSourceSupported || !isTargetSupported) {
+    return {
+      valid: false,
+      reason: "UNSUPPORTED_LANGUAGE: Only English, Spanish, French, and German are supported in MVP.",
+    };
+  }
+
+  if (s === t) {
+    return {
+      valid: false,
+      reason: "IDENTICAL_LANGUAGES: Source and target languages cannot be the same.",
+    };
+  }
+
+  return { valid: true };
+}
+
+const NON_LATIN_SCRIPT_REGEX = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\u0590-\u05FF\uFB1D-\uFB4F\u4E00-\u9FFF\u3400-\u4DBF\u0400-\u04FF]/u;
+
+/**
+ * Calculates the proportion of non-Latin script characters in text.
+ * Ignores whitespace, punctuation, digits, and symbols.
+ */
+export function detectNonLatinScriptRatio(text: string): number {
+  if (!text) return 0;
+  const normalized = text.normalize("NFC");
+  let nonLatinCount = 0;
+  let totalLetterCount = 0;
+
+  for (const ch of normalized) {
+    if (NON_LATIN_SCRIPT_REGEX.test(ch)) {
+      nonLatinCount++;
+      totalLetterCount++;
+    } else if (/\p{L}/u.test(ch)) {
+      totalLetterCount++;
+    }
+  }
+
+  if (totalLetterCount === 0) return 0;
+  return nonLatinCount / totalLetterCount;
 }
 
 /**
@@ -171,6 +236,29 @@ export async function analyzeDocumentPreflight(
   const professionalPrice = Math.round(pageCount * 19.95 * 100) / 100;
   const certifiedPrice = Math.round(pageCount * 24.95 * 100) / 100;
 
+  // Script and MVP language check
+  const sampleTextToCheck = extractedSampleText || fileName;
+  const nonLatinScriptRatio = detectNonLatinScriptRatio(sampleTextToCheck);
+  let mvpLanguageCheck: { supported: boolean; reason?: string; waitlistAffordance?: boolean } = {
+    supported: true,
+  };
+
+  if (nonLatinScriptRatio > 0.10) {
+    mvpLanguageCheck = {
+      supported: false,
+      reason:
+        "Document contains non-Latin or RTL script (Arabic, Hebrew, Cyrillic, or Asian characters). VerifyLingua MVP currently supports Latin-script LTR documents (English, Spanish, French, German). RTL and Asian scripts are launching in v1.1.",
+      waitlistAffordance: true,
+    };
+  } else if (!(MVP_LANGUAGE_CODES as readonly string[]).includes(detectedSourceLang)) {
+    mvpLanguageCheck = {
+      supported: false,
+      reason:
+        "VerifyLingua MVP currently guarantees 100% layout preservation for English, Spanish, French, and German. Right-to-Left (RTL) and Asian scripts are launching in v1.1.",
+      waitlistAffordance: true,
+    };
+  }
+
   return {
     fileName,
     fileFormat: format,
@@ -186,6 +274,9 @@ export async function analyzeDocumentPreflight(
     riskScore: Math.min(100, riskScore),
     riskFlags,
     knownLimitations,
+    sampleText: extractedSampleText,
+    nonLatinScriptRatio,
+    mvpLanguageCheck,
     pricing: {
       automated: {
         tier: "automated",

@@ -62,6 +62,16 @@ export const INCUMBENT_COMPARISONS = [
   },
 ];
 
+export const MVP_SUPPORTED_LANGUAGES = [
+  { code: "en", name: "English", nativeName: "English", dir: "ltr" },
+  { code: "es", name: "Spanish", nativeName: "Español", dir: "ltr" },
+  { code: "fr", name: "French", nativeName: "Français", dir: "ltr" },
+  { code: "de", name: "German", nativeName: "Deutsch", dir: "ltr" },
+] as const;
+
+export const MVP_LANGUAGE_CODES = ["en", "es", "fr", "de"] as const;
+export type MvpLanguageCode = typeof MVP_LANGUAGE_CODES[number];
+
 export const POPULAR_LANGUAGES = [
   { code: "es", name: "Spanish", nativeName: "Español", dir: "ltr" },
   { code: "zh", name: "Chinese (Simplified)", nativeName: "简体中文", dir: "ltr" },
