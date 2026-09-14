@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 import { memorySubscriptions, withDbTimeout } from "@/lib/stripe/store";
+import { handleStripeWebhookEvent } from "./handler";
+
+export { handleStripeWebhookEvent } from "./handler";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +36,15 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
       }
+    }
+
+    // Process commercial MVP plans with strict idempotency and atomic credit fulfillment
+    const commercialResult = await handleStripeWebhookEvent(event);
+    if (
+      commercialResult.status === "CREDITS_GRANTED" ||
+      commercialResult.status === "DUPLICATE_IGNORED"
+    ) {
+      return NextResponse.json({ received: true, ...commercialResult });
     }
 
     const PLAN_PAGE_QUOTAS: Record<string, number> = {

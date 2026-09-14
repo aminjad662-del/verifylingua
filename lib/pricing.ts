@@ -1,5 +1,57 @@
 import { PRICING_CONFIG } from "./constants";
 
+export const MVP_PLANS = {
+  PACK_SMALL: {
+    id: "pack_small_25",
+    name: "Starter Pack",
+    priceCents: 999,          // $9.99
+    pages: 25,
+    unitPriceDisplay: "$0.40/page",
+    mode: "payment" as const,
+    description: "Ideal for students and occasional document translation.",
+  },
+  PACK_LARGE: {
+    id: "pack_large_100",
+    name: "Professional Pack",
+    priceCents: 2999,         // $29.99
+    pages: 100,
+    unitPriceDisplay: "$0.30/page",
+    mode: "payment" as const,
+    description: "Best for freelance translators handling ongoing client files.",
+  },
+  AGENCY_MONTHLY: {
+    id: "agency_monthly_500",
+    name: "Agency Monthly",
+    priceCents: 11900,        // $119.00 / month
+    pagesPerMonth: 500,
+    unitPriceDisplay: "$0.24/page",
+    mode: "subscription" as const,
+    description: "High-volume translation agencies. Hard monthly cap of 500 pages.",
+  },
+} as const;
+
+export type MvpPlanId = keyof typeof MVP_PLANS;
+export type MvpPlan = (typeof MVP_PLANS)[keyof typeof MVP_PLANS];
+
+export function getMvpPlan(planIdOrKey?: string | null): MvpPlan | undefined {
+  if (!planIdOrKey) return undefined;
+  const upperKey = planIdOrKey.toUpperCase() as keyof typeof MVP_PLANS;
+  if (upperKey in MVP_PLANS) {
+    return MVP_PLANS[upperKey];
+  }
+  const lowerId = planIdOrKey.toLowerCase();
+  return Object.values(MVP_PLANS).find(
+    (plan) => plan.id.toLowerCase() === lowerId
+  );
+}
+
+export function getMvpPlanPages(plan: MvpPlan): number {
+  if ("pages" in plan) {
+    return plan.pages;
+  }
+  return plan.pagesPerMonth;
+}
+
 export interface PricingInput {
   serviceType: "CERTIFIED" | "STANDARD";
   pageCount: number;
