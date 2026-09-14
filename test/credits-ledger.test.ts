@@ -31,7 +31,7 @@ describe("Transactional Credit Service Ledger", () => {
     return user;
   };
 
-  const createTestJob = async (userId: string, status = "translating", createdAt?: Date) => {
+  const createTestJob = async (userId: string | null, status = "translating", createdAt?: Date) => {
     const job = await prisma.translationJob.create({
       data: {
         userId,
@@ -253,5 +253,57 @@ describe("Transactional Credit Service Ledger", () => {
     // Re-running reconciliation immediately should find 0 additional stale jobs
     const secondReconcile = await reconcileStaleReservations(30);
     expect(secondReconcile).toBe(0);
+  });
+
+  it("rejects invalid non-integer or non-positive page count arguments", async () => {
+    const user = await createTestUser({ creditsAvailable: 10 });
+    const job = await createTestJob(user.id);
+
+    const invalidPages = [0, -1, -5, 1.5, NaN, Infinity, -Infinity];
+
+    for (const pages of invalidPages) {
+      await expect(reserveCreditsForJob(user.id, job.id, pages)).rejects.toThrow(
+        /Invalid page count/
+      );
+      await expect(settleCreditsOnSuccess(user.id, job.id, pages)).rejects.toThrow(
+        /Invalid page count/
+      );
+      await expect(releaseCreditsOnFailure(user.id, job.id, pages, "test")).rejects.toThrow(
+        /Invalid page count/
+      );
+    }
+  });
+
+  it("reconciles orphan stale jobs without user and still marks them failed", async () => {
+    const staleDate = new Date(Date.now() - 40 * 60 * 1000);
+    // Create an orphan job with no userId
+    const orphanJob = await createTestJob(null, "translating", staleDate);
+
+    // Create a mock JOB_RESERVED transaction linked to this job
+    const tx = await prisma.creditTransaction.create({
+      data: {
+        userId: (await createTestUser()).id,
+        amount: -2,
+        balanceAfter: 0,
+        type: CreditTransactionType.JOB_RESERVED,
+        description: "Reserved 2 credits for orphan job",
+        jobId: orphanJob.id,
+      },
+    });
+
+    // Remove user association from job (ensure job.userId is null)
+    await prisma.translationJob.update({
+      where: { id: orphanJob.id },
+      data: { userId: null },
+    });
+
+    const reconciled = await reconcileStaleReservations(30);
+    expect(reconciled).toBeGreaterThanOrEqual(1);
+
+    const updatedJob = await prisma.translationJob.findUnique({
+      where: { id: orphanJob.id },
+    });
+    expect(updatedJob?.status).toBe("failed");
+    expect(updatedJob?.errorCode).toBe("WORKER_TIMEOUT_AUTO_REFUNDED");
   });
 });

@@ -74,6 +74,10 @@ export async function reserveCreditsForJob(
   jobId: string,
   pages: number
 ): Promise<CreditReservationResult> {
+  if (!Number.isInteger(pages) || pages <= 0) {
+    throw new Error(`Invalid page count: ${pages}. Pages must be a positive integer.`);
+  }
+
   return await prisma.$transaction(async (tx) => {
     const users = await tx.$queryRaw<Array<{ id: string; creditsAvailable: number; creditsReserved: number }>>`
       SELECT id, "creditsAvailable", "creditsReserved"
@@ -138,6 +142,10 @@ export async function settleCreditsOnSuccess(
   jobId: string,
   pages: number
 ): Promise<void> {
+  if (!Number.isInteger(pages) || pages <= 0) {
+    throw new Error(`Invalid page count: ${pages}. Pages must be a positive integer.`);
+  }
+
   await prisma.$transaction(async (tx) => {
     const users = await tx.$queryRaw<Array<{ id: string; creditsAvailable: number; creditsReserved: number; lifetimePagesUsed: number }>>`
       SELECT id, "creditsAvailable", "creditsReserved", "lifetimePagesUsed"
@@ -188,6 +196,10 @@ export async function releaseCreditsOnFailure(
   pages: number,
   reason: string
 ): Promise<void> {
+  if (!Number.isInteger(pages) || pages <= 0) {
+    throw new Error(`Invalid page count: ${pages}. Pages must be a positive integer.`);
+  }
+
   await prisma.$transaction(async (tx) => {
     const users = await tx.$queryRaw<Array<{ id: string; creditsAvailable: number; creditsReserved: number }>>`
       SELECT id, "creditsAvailable", "creditsReserved"
@@ -259,6 +271,7 @@ export async function getUserCreditBalance(userId: string): Promise<UserCreditBa
  * Reconciles stale reservations where jobs have been pending/translating for longer than maxAgeMinutes
  * and have a JOB_RESERVED transaction without a subsequent JOB_DEDUCTED or JOB_RELEASED.
  * Automatically marks the job failed with code WORKER_TIMEOUT_AUTO_REFUNDED and releases reserved credits.
+ * If job.userId is null (orphan job), still marks job failed to prevent persistent stale loops.
  */
 export async function reconcileStaleReservations(maxAgeMinutes: number = 30): Promise<number> {
   const cutoff = new Date(Date.now() - maxAgeMinutes * 60 * 1000);
@@ -287,7 +300,7 @@ export async function reconcileStaleReservations(maxAgeMinutes: number = 30): Pr
         tx.type === CreditTransactionType.JOB_RELEASED
     );
 
-    if (reservedTx && !settledOrReleased && job.userId) {
+    if (reservedTx && !settledOrReleased) {
       const pages = Math.abs(reservedTx.amount);
 
       await prisma.$transaction(async (tx) => {
@@ -301,37 +314,39 @@ export async function reconcileStaleReservations(maxAgeMinutes: number = 30): Pr
           },
         });
 
-        // Release reserved credits
-        const users = await tx.$queryRaw<Array<{ id: string; creditsAvailable: number; creditsReserved: number }>>`
-          SELECT id, "creditsAvailable", "creditsReserved"
-          FROM "User"
-          WHERE id = ${job.userId!}
-          FOR UPDATE
-        `;
-        const user = users[0];
-        if (user) {
-          const newReserved = Math.max(0, user.creditsReserved - pages);
-          const updatedUser = await tx.user.update({
-            where: { id: job.userId! },
-            data: {
-              creditsReserved: newReserved,
-              creditsAvailable: { increment: pages },
-            },
-            select: {
-              creditsAvailable: true,
-            },
-          });
+        // Release reserved credits if user still exists
+        if (job.userId) {
+          const users = await tx.$queryRaw<Array<{ id: string; creditsAvailable: number; creditsReserved: number }>>`
+            SELECT id, "creditsAvailable", "creditsReserved"
+            FROM "User"
+            WHERE id = ${job.userId!}
+            FOR UPDATE
+          `;
+          const user = users[0];
+          if (user) {
+            const newReserved = Math.max(0, user.creditsReserved - pages);
+            const updatedUser = await tx.user.update({
+              where: { id: job.userId! },
+              data: {
+                creditsReserved: newReserved,
+                creditsAvailable: { increment: pages },
+              },
+              select: {
+                creditsAvailable: true,
+              },
+            });
 
-          await tx.creditTransaction.create({
-            data: {
-              userId: job.userId!,
-              amount: pages,
-              balanceAfter: updatedUser.creditsAvailable,
-              type: CreditTransactionType.JOB_RELEASED,
-              description: `Released ${pages} credits for failed job ${job.id}: WORKER_TIMEOUT_AUTO_REFUNDED`,
-              jobId: job.id,
-            },
-          });
+            await tx.creditTransaction.create({
+              data: {
+                userId: job.userId!,
+                amount: pages,
+                balanceAfter: updatedUser.creditsAvailable,
+                type: CreditTransactionType.JOB_RELEASED,
+                description: `Released ${pages} credits for failed job ${job.id}: WORKER_TIMEOUT_AUTO_REFUNDED`,
+                jobId: job.id,
+              },
+            });
+          }
         }
       });
 
