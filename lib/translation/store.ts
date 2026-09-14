@@ -28,14 +28,17 @@ if (!globalThis.__translationJobsCleanupStarted) {
 }
 
 export function createTranslationJob(params: {
+  id?: string;
   fileName: string;
   fileFormat: "pdf" | "docx" | "png" | "jpg";
   fileSize: number;
   sourceLang: string;
   targetLang: string;
   originalBuffer: Buffer;
+  userId?: string | null;
+  pageCount?: number;
 }): TranslationJob {
-  const id = `job_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const id = params.id || `job_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
   const downloadToken = crypto.randomBytes(24).toString("hex");
 
   // 24-hour expiration window
@@ -55,6 +58,8 @@ export function createTranslationJob(params: {
     originalBuffer: params.originalBuffer,
     downloadToken,
     tokenExpiresAt: expiresAt,
+    userId: params.userId || null,
+    pageCount: params.pageCount || 1,
   };
 
   jobsMap.set(id, job);

@@ -7,6 +7,8 @@ export type JobStatus =
   | "rebuilding"
   | "reconstructing"
   | "ready"
+  | "completed"
+  | "completed_with_warnings"
   | "failed";
 
 export interface SpatialTextBlock {
@@ -95,6 +97,8 @@ export interface TranslationJob {
   /** Mirrors qualityGate.layoutPreserved — false signals the fallback text-only PDF was served */
   layoutPreserved?: boolean;
   serviceTier?: "automated" | "professional" | "certified";
+  userId?: string | null;
+  pageCount?: number;
 }
 
 export interface TranslationOptions {
@@ -105,5 +109,6 @@ export interface TranslationOptions {
   register?: "certified_legal" | "academic" | "general";
   preservePlaceholders?: boolean;
   bypassTestMock?: boolean;
+  simulateError?: string;
 }
 

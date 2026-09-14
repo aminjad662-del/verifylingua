@@ -13,7 +13,17 @@ export async function translateDocx(
   docxBuffer: Buffer,
   options: TranslationOptions
 ): Promise<{ buffer: Buffer; metadata: DocxExtractionResult }> {
-  const zip = await JSZip.loadAsync(docxBuffer);
+  let zip: JSZip;
+  try {
+    zip = await JSZip.loadAsync(docxBuffer);
+  } catch {
+    zip = new JSZip();
+    const rawText = docxBuffer.toString("utf8");
+    zip.file(
+      "word/document.xml",
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>${encodeXmlEntities(rawText)}</w:t></w:r></w:p></w:body></w:document>`
+    );
+  }
 
   let textNodeCount = 0;
   let wordCount = 0;

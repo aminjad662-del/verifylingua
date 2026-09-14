@@ -147,6 +147,19 @@ export async function settleCreditsOnSuccess(
   }
 
   await prisma.$transaction(async (tx) => {
+    if (jobId) {
+      const existingTx = await tx.creditTransaction.findFirst({
+        where: {
+          userId,
+          jobId,
+          type: { in: [CreditTransactionType.JOB_DEDUCTED, CreditTransactionType.JOB_RELEASED] },
+        },
+      });
+      if (existingTx) {
+        return; // Idempotent: already settled or released
+      }
+    }
+
     const users = await tx.$queryRaw<Array<{ id: string; creditsAvailable: number; creditsReserved: number; lifetimePagesUsed: number }>>`
       SELECT id, "creditsAvailable", "creditsReserved", "lifetimePagesUsed"
       FROM "User"
@@ -201,6 +214,19 @@ export async function releaseCreditsOnFailure(
   }
 
   await prisma.$transaction(async (tx) => {
+    if (jobId) {
+      const existingTx = await tx.creditTransaction.findFirst({
+        where: {
+          userId,
+          jobId,
+          type: { in: [CreditTransactionType.JOB_DEDUCTED, CreditTransactionType.JOB_RELEASED] },
+        },
+      });
+      if (existingTx) {
+        return; // Idempotent: already settled or released
+      }
+    }
+
     const users = await tx.$queryRaw<Array<{ id: string; creditsAvailable: number; creditsReserved: number }>>`
       SELECT id, "creditsAvailable", "creditsReserved"
       FROM "User"

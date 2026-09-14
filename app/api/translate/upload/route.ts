@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateInputFile, processTranslationJob } from "@/lib/translation/pipeline";
-import { createTranslationJob, updateTranslationJob } from "@/lib/translation/store";
+import {
+  validateInputFile,
+  processTranslationJob,
+  estimateDocumentPageCount,
+} from "@/lib/translation/pipeline";
+import {
+  createTranslationJob,
+  updateTranslationJob,
+  deleteTranslationJob,
+} from "@/lib/translation/store";
+import { prisma } from "@/lib/prisma";
+import {
+  getUserCreditBalance,
+  reserveCreditsForJob,
+} from "@/lib/services/credit-service";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +27,8 @@ export async function POST(req: NextRequest) {
     let sourceLang = "es";
     let targetLang = "en";
     let serviceTier: "automated" | "professional" | "certified" = "automated";
+    let userId: string | null = null;
+    let explicitPageCount: number | null = null;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -30,12 +46,17 @@ export async function POST(req: NextRequest) {
       sourceLang = (formData.get("sourceLang") as string) || "es";
       targetLang = (formData.get("targetLang") as string) || "en";
       serviceTier = ((formData.get("serviceTier") as string) as any) || "automated";
+      userId = (formData.get("userId") as string) || null;
+      const pagesField = formData.get("pageCount");
+      if (pagesField) explicitPageCount = parseInt(String(pagesField), 10);
     } else if (contentType.includes("application/json")) {
       const body = await req.json();
       fileName = body.fileName || "document.pdf";
       sourceLang = body.sourceLang || "es";
       targetLang = body.targetLang || "en";
       serviceTier = body.serviceTier || "automated";
+      userId = body.userId || null;
+      if (body.pageCount) explicitPageCount = parseInt(String(body.pageCount), 10);
 
       if (body.fileBase64) {
         fileBuffer = Buffer.from(body.fileBase64, "base64");
@@ -59,13 +80,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Header, searchParam, and session fallbacks for userId
+    if (!userId) {
+      userId = req.headers.get("x-user-id");
+    }
+    if (!userId) {
+      try {
+        const urlObj = req.nextUrl || new URL(req.url);
+        userId = urlObj.searchParams?.get("userId") || null;
+      } catch {}
+    }
+    if (!userId) {
+      try {
+        const sessionUser = await getCurrentUser();
+        if (sessionUser?.id) userId = sessionUser.id;
+      } catch {}
+    }
+
     // 1. Validation & MIME sniffing
     const validation = validateInputFile(fileBuffer, fileName);
     if (validation.error) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // 2. Create job in queue
+    // Estimate or calculate document page count N (minimum 1)
+    const estimated = await estimateDocumentPageCount(fileBuffer, validation.format);
+    const N = Math.max(1, explicitPageCount && !isNaN(explicitPageCount) ? explicitPageCount : estimated);
+
+    // 2. Credit verification if userId is present
+    if (userId) {
+      const balance = await getUserCreditBalance(userId);
+      if (balance.available < N) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "INSUFFICIENT_CREDITS",
+            message: `Insufficient page credits. This document requires ${N} credits, but your account has ${balance.available} available.`,
+            requiredCredits: N,
+            availableCredits: balance.available,
+            upgradeUrl: "/pricing",
+          },
+          { status: 402 }
+        );
+      }
+    }
+
+    // 3. Create job in queue
     const job = createTranslationJob({
       fileName,
       fileFormat: validation.format,
@@ -73,23 +133,100 @@ export async function POST(req: NextRequest) {
       sourceLang,
       targetLang,
       originalBuffer: fileBuffer,
+      userId,
+      pageCount: N,
     });
     job.serviceTier = serviceTier;
 
-    // 3. Kick off asynchronous layout-preserving translation
+    // 4. If userId is present, persist to PostgreSQL and reserve credits
+    if (userId) {
+      try {
+        await prisma.translationJob.create({
+          data: {
+            id: job.id,
+            userId,
+            sourceKey: `sources/${job.id}/${fileName}`,
+            sourceFilename: fileName,
+            sourceFormat: validation.format,
+            sourceMimeType:
+              validation.format === "pdf"
+                ? "application/pdf"
+                : validation.format === "docx"
+                ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                : "application/octet-stream",
+            sourceLanguage: sourceLang,
+            targetLanguage: targetLang,
+            status: "queued",
+            currentStep: "Job initialized and queued for processing",
+            pageCount: N,
+            downloadToken: job.downloadToken,
+          },
+        });
+      } catch (dbErr: any) {
+        console.error("[upload] Failed to persist job to database:", dbErr?.message);
+      }
+
+      try {
+        await reserveCreditsForJob(userId, job.id, N);
+      } catch (resErr: any) {
+        try {
+          await prisma.translationJob.delete({ where: { id: job.id } });
+        } catch {}
+        deleteTranslationJob(job.id);
+        const isInsufficient = resErr.message?.includes("INSUFFICIENT_CREDITS");
+        return NextResponse.json(
+          {
+            success: false,
+            error: isInsufficient ? "INSUFFICIENT_CREDITS" : "RESERVATION_FAILED",
+            message: resErr.message || "Failed to reserve credits.",
+            requiredCredits: N,
+            upgradeUrl: "/pricing",
+          },
+          { status: isInsufficient ? 402 : 400 }
+        );
+      }
+    }
+
+    // 5. Kick off asynchronous layout-preserving translation
     processTranslationJob(job, {
       sourceLang,
       targetLang,
       serviceTier,
       register: serviceTier === "automated" ? "general" : "certified_legal",
     })
-      .then((updated) => {
+      .then(async (updated) => {
         updateTranslationJob(updated);
+        if (userId) {
+          try {
+            await prisma.translationJob.update({
+              where: { id: job.id },
+              data: {
+                status: "completed",
+                progress: 100,
+                currentStep: "Machine translation and layout reconstruction complete.",
+                completedAt: new Date(),
+                layoutPreserved: updated.layoutPreserved ?? true,
+              },
+            });
+          } catch {}
+        }
       })
-      .catch((err) => {
+      .catch(async (err) => {
         job.status = "failed";
         job.error = err.message;
         updateTranslationJob(job);
+        if (userId) {
+          try {
+            await prisma.translationJob.update({
+              where: { id: job.id },
+              data: {
+                status: "failed",
+                errorMessage: err.message,
+                completedAt: new Date(),
+              },
+            });
+          } catch {}
+        }
       });
 
     return NextResponse.json(
