@@ -213,6 +213,43 @@ describe("Pilot Feedback & Telemetry Engine", () => {
       expect(feedback.processingTimeMs).toBe(0);
       expect(feedback.comment).toBeNull();
     });
+
+    it("rejects invalid issueTag not in allowlist", async () => {
+      const job = await createTestJob();
+
+      await expect(
+        submitPilotFeedback({
+          jobId: job.id,
+          rating: 4,
+          issueTag: "INVALID_TAG_INJECTION",
+        })
+      ).rejects.toThrow("Invalid issueTag: 'INVALID_TAG_INJECTION'");
+    });
+
+    it("rejects invalid valueVerdict not in allowlist", async () => {
+      const job = await createTestJob();
+
+      await expect(
+        submitPilotFeedback({
+          jobId: job.id,
+          rating: 4,
+          valueVerdict: "UNREASONABLY_PRICED",
+        })
+      ).rejects.toThrow("Invalid valueVerdict: 'UNREASONABLY_PRICED'");
+    });
+
+    it("rejects comments exceeding 2000 characters", async () => {
+      const job = await createTestJob();
+      const longComment = "a".repeat(2001);
+
+      await expect(
+        submitPilotFeedback({
+          jobId: job.id,
+          rating: 4,
+          comment: longComment,
+        })
+      ).rejects.toThrow("Comment exceeds maximum length of 2000 characters");
+    });
   });
 
   describe("2. getPilotMetricsSummary Aggregator", () => {

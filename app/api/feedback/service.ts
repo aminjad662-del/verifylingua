@@ -26,6 +26,24 @@ export interface PilotMetricsSummary {
   recentComments: string[];
 }
 
+export const ALLOWED_ISSUE_TAGS = [
+  "NONE",
+  "LAYOUT_SHIFT",
+  "FONT_SIZE",
+  "TABLE_MISALIGNED",
+  "OTHER",
+] as const;
+
+export type AllowedIssueTag = (typeof ALLOWED_ISSUE_TAGS)[number];
+
+export const ALLOWED_VALUE_VERDICTS = [
+  "GREAT_VALUE",
+  "FAIR",
+  "TOO_EXPENSIVE",
+] as const;
+
+export type AllowedValueVerdict = (typeof ALLOWED_VALUE_VERDICTS)[number];
+
 /**
  * Validates and records pilot tester feedback for a completed translation job.
  * Automatically enriches feedback with job metadata if not supplied.
@@ -33,7 +51,7 @@ export interface PilotMetricsSummary {
 export async function submitPilotFeedback(
   input: SubmitPilotFeedbackInput
 ): Promise<PilotFeedback> {
-  const { rating, jobId } = input;
+  const { rating, jobId, issueTag, valueVerdict, comment } = input;
 
   if (
     typeof rating !== "number" ||
@@ -46,6 +64,25 @@ export async function submitPilotFeedback(
 
   if (!jobId) {
     throw new Error("jobId is required");
+  }
+
+  if (issueTag && !ALLOWED_ISSUE_TAGS.includes(issueTag as AllowedIssueTag)) {
+    throw new Error(
+      `Invalid issueTag: '${issueTag}'. Allowed tags: ${ALLOWED_ISSUE_TAGS.join(", ")}`
+    );
+  }
+
+  if (
+    valueVerdict &&
+    !ALLOWED_VALUE_VERDICTS.includes(valueVerdict as AllowedValueVerdict)
+  ) {
+    throw new Error(
+      `Invalid valueVerdict: '${valueVerdict}'. Allowed verdicts: ${ALLOWED_VALUE_VERDICTS.join(", ")}`
+    );
+  }
+
+  if (comment && comment.length > 2000) {
+    throw new Error("Comment exceeds maximum length of 2000 characters");
   }
 
   // Fetch job to ensure it exists and enrich telemetry
