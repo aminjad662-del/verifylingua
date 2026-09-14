@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
     let serviceTier: "automated" | "professional" | "certified" = "automated";
     let userId: string | null = null;
     let explicitPageCount: number | null = null;
+    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    let clientProvidedUserId: string | null = null;
+    let simulateError: string | undefined = undefined;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -46,7 +49,10 @@ export async function POST(req: NextRequest) {
       sourceLang = (formData.get("sourceLang") as string) || "es";
       targetLang = (formData.get("targetLang") as string) || "en";
       serviceTier = ((formData.get("serviceTier") as string) as any) || "automated";
-      userId = (formData.get("userId") as string) || null;
+      if (isTestEnv) {
+        clientProvidedUserId = (formData.get("userId") as string) || null;
+        simulateError = (formData.get("simulateError") as string) || undefined;
+      }
       const pagesField = formData.get("pageCount");
       if (pagesField) explicitPageCount = parseInt(String(pagesField), 10);
     } else if (contentType.includes("application/json")) {
@@ -55,7 +61,10 @@ export async function POST(req: NextRequest) {
       sourceLang = body.sourceLang || "es";
       targetLang = body.targetLang || "en";
       serviceTier = body.serviceTier || "automated";
-      userId = body.userId || null;
+      if (isTestEnv) {
+        clientProvidedUserId = body.userId || null;
+        simulateError = body.simulateError || undefined;
+      }
       if (body.pageCount) explicitPageCount = parseInt(String(body.pageCount), 10);
 
       if (body.fileBase64) {
@@ -80,16 +89,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Header, searchParam, and session fallbacks for userId
-    if (!userId) {
-      userId = req.headers.get("x-user-id");
+    // In test environment, allow client-provided userId, headers, or query parameters
+    if (isTestEnv) {
+      if (clientProvidedUserId) {
+        userId = clientProvidedUserId;
+      } else {
+        userId = req.headers.get("x-user-id");
+        if (!userId) {
+          try {
+            const urlObj = req.nextUrl || new URL(req.url);
+            userId = urlObj.searchParams?.get("userId") || null;
+          } catch {}
+        }
+      }
     }
-    if (!userId) {
-      try {
-        const urlObj = req.nextUrl || new URL(req.url);
-        userId = urlObj.searchParams?.get("userId") || null;
-      } catch {}
-    }
+
+    // In production (or if no test userId specified), strictly enforce session authentication
     if (!userId) {
       try {
         const sessionUser = await getCurrentUser();
@@ -193,21 +208,33 @@ export async function POST(req: NextRequest) {
       targetLang,
       serviceTier,
       register: serviceTier === "automated" ? "general" : "certified_legal",
+      simulateError,
     })
       .then(async (updated) => {
         updateTranslationJob(updated);
         if (userId) {
           try {
-            await prisma.translationJob.update({
-              where: { id: job.id },
-              data: {
-                status: "completed",
-                progress: 100,
-                currentStep: "Machine translation and layout reconstruction complete.",
-                completedAt: new Date(),
-                layoutPreserved: updated.layoutPreserved ?? true,
-              },
-            });
+            if (updated.status === "failed") {
+              await prisma.translationJob.update({
+                where: { id: job.id },
+                data: {
+                  status: "failed",
+                  errorMessage: updated.error || "Translation pipeline failed",
+                  completedAt: new Date(),
+                },
+              });
+            } else {
+              await prisma.translationJob.update({
+                where: { id: job.id },
+                data: {
+                  status: "completed",
+                  progress: 100,
+                  currentStep: "Machine translation and layout reconstruction complete.",
+                  completedAt: new Date(),
+                  layoutPreserved: updated.layoutPreserved ?? true,
+                },
+              });
+            }
           } catch {}
         }
       })
@@ -221,7 +248,7 @@ export async function POST(req: NextRequest) {
               where: { id: job.id },
               data: {
                 status: "failed",
-                errorMessage: err.message,
+                errorMessage: err.message || "Translation pipeline failed",
                 completedAt: new Date(),
               },
             });

@@ -233,7 +233,73 @@ describe("Translation Pipeline Credit Integration", () => {
     deleteTranslationJob(body.jobId);
   });
 
-  it("5. Null userId compatibility: Unauthenticated demo uploads skip credit lifecycle gracefully", async () => {
+  it("5. Upload Route Failure Path: POST /api/translate/upload marks DB job failed and refunds reserved credits", async () => {
+    const user = await createTestUser(0);
+    await grantWelcomeBonus(user.id); // 5 credits available
+
+    const req = new Request("http://localhost:3000/api/translate/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.id,
+        fileName: "failing_contract.docx",
+        sourceLang: "es",
+        targetLang: "en",
+        fileBase64: Buffer.from("Document triggering simulated failure").toString("base64"),
+        simulateError: "Simulated Provider Error during async upload translation",
+      }),
+    });
+
+    const res = await uploadPost(req as any);
+    expect(res.status).toBe(202);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.jobId).toBeDefined();
+
+    // Wait for async processing in store/DB
+    let job = getTranslationJob(body.jobId);
+    let attempts = 0;
+    while (job && job.status !== "failed" && attempts < 50) {
+      await new Promise((r) => setTimeout(r, 50));
+      job = getTranslationJob(body.jobId);
+      attempts++;
+    }
+
+    expect(job?.status).toBe("failed");
+    expect(job?.error).toContain("Simulated Provider Error");
+
+    // Wait a brief tick for DB update to complete
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Verify database record in TranslationJob has status: "failed" (not "completed")
+    const dbJob = await prisma.translationJob.findUnique({
+      where: { id: body.jobId },
+    });
+    expect(dbJob).toBeDefined();
+    expect(dbJob?.status).toBe("failed");
+    expect(dbJob?.errorMessage).toContain("Simulated Provider Error");
+
+    // Verify reserved credits are 100% refunded back to available balance
+    const balance = await getUserCreditBalance(user.id);
+    expect(balance.available).toBe(5);
+    expect(balance.reserved).toBe(0);
+    expect(balance.lifetimeUsed).toBe(0);
+
+    // Verify JOB_RELEASED transaction in ledger
+    const releaseTx = await prisma.creditTransaction.findFirst({
+      where: {
+        userId: user.id,
+        jobId: body.jobId,
+        type: "JOB_RELEASED",
+      },
+    });
+    expect(releaseTx).toBeDefined();
+    expect(releaseTx?.amount).toBe(1);
+
+    deleteTranslationJob(body.jobId);
+  });
+
+  it("6. Null userId compatibility: Unauthenticated demo uploads skip credit lifecycle gracefully", async () => {
     // Calling processDocumentTranslation without userId
     const result = await processDocumentTranslation({
       userId: null,
