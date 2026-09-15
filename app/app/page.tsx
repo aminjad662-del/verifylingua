@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { ProjectService } from "@/lib/services/project-service";
 
+export const dynamic = "force-dynamic";
+
 export default async function ClientAppOverviewPage() {
   const projects = await ProjectService.listProjects();
   const stats = await ProjectService.getUsageStats();

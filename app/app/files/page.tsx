@@ -3,6 +3,8 @@ import Link from "next/link";
 import { FolderLock, Download, ShieldCheck, FileText, ArrowRight } from "lucide-react";
 import { ProjectService } from "@/lib/services/project-service";
 
+export const dynamic = "force-dynamic";
+
 export default async function DocumentVaultPage() {
   const projects = await ProjectService.listProjects();
 

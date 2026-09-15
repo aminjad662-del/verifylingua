@@ -20,7 +20,4 @@ if (buildRes.status !== 0) {
   process.exit(buildRes.status || 1);
 }
 
-console.log('🚀 Step 3: Assembling Cloudflare Pages artifacts...');
-const { assembleCloudflareAssets } = require('./build-cloudflare.js');
-assembleCloudflareAssets();
-console.log('🎉 VerifyLingua build complete and assembled!');
+console.log('🎉 Next.js build complete!');

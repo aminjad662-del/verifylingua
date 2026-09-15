@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BarChart3, ArrowUpRight, Zap, Shield, FileText } from "lucide-react";
 import { ProjectService } from "@/lib/services/project-service";
 
+export const dynamic = "force-dynamic";
+
 export default async function UsagePage() {
   const stats = await ProjectService.getUsageStats();
 

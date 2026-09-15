@@ -1,4 +1,13 @@
 import { TranslationOptions } from "./types";
+import { GoogleGenAI } from "@google/genai";
+
+let genAIInstance: GoogleGenAI | null = null;
+function getGenAI(apiKey: string): GoogleGenAI {
+  if (!genAIInstance) {
+    genAIInstance = new GoogleGenAI({ apiKey });
+  }
+  return genAIInstance;
+}
 
 const LEGAL_GLOSSARY_EN: Record<string, Record<string, string>> = {
   es: {
@@ -125,7 +134,10 @@ export async function translateText(
     }
   }
 
-  // 5. Deterministic certified mock/offline translation engine (maintains exact formatting)
+  // 5. Deterministic certified mock/offline translation engine (strictly for offline vitest suites)
+  if (!process.env.VITEST || shouldBypassTestMock) {
+    throw new Error("Translation provider failed: upstream MT provider unavailable and simulation is disabled.");
+  }
   return mockTranslateDeterministic(trimmed, options.sourceLang, options.targetLang);
 }
 
@@ -193,8 +205,10 @@ export async function translateStructuredBlocks(
       for (const item of chunkTranslations) {
         resultMap.set(item.id, item.translatedText);
       }
+    } else if (!process.env.VITEST || shouldBypassTestMock) {
+      throw new Error("Translation provider failed: upstream MT provider unavailable and simulation is disabled.");
     } else {
-      // 3. Offline / deterministic fallback
+      // 3. Offline / deterministic fallback (strictly for offline vitest suites)
       for (const b of chunk) {
         let translated = await translateText(b.text, options);
 
@@ -293,51 +307,32 @@ async function callGeminiStructuredBatch(
   options: TranslationOptions,
   apiKey: string
 ): Promise<{ id: string; translatedText: string }[] | null> {
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
+  const ai = getGenAI(apiKey);
   const prompt = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the following structured text blocks from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL REQUIREMENTS:
 1. Maintain exact semantic context across related blocks.
-2. Preserve all proper nouns, registration numbers, dates, references, and codes.
-3. Return ONLY a valid JSON object matching this schema:
+2. Preserve all proper nouns, registration numbers, dates, references, identifiers, and codes EXACTLY.
+3. ZERO PROMOTIONAL FILLER. Never add promotional words, superlatives, or adjectives not present in the source.
+4. Return ONLY a valid JSON object matching this schema:
 {"translations": [{"id": "...", "translatedText": "..."}]}
 
 Input blocks:
 ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
 
-  const payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: prompt }],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.1,
-      responseMimeType: "application/json",
-      maxOutputTokens: 2048,
-    },
-  };
-
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const res = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          temperature: 0.1,
+          responseMimeType: "application/json",
+          maxOutputTokens: 4096,
+        },
       });
 
-      if (res.status === 429) {
-        // Exponential backoff: 200ms, 400ms, 800ms
-        await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
-        continue;
-      }
-
-      if (!res.ok) return null;
-
-      const data = await res.json();
-      const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const rawJson = res.text;
       if (!rawJson) return null;
 
       const parsed = JSON.parse(rawJson);
@@ -347,7 +342,7 @@ ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
       return null;
     } catch {
       if (attempt === 2) return null;
-      await new Promise((r) => setTimeout(r, 200 * Math.pow(2, attempt)));
+      await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
     }
   }
 
@@ -373,45 +368,30 @@ async function callGeminiTranslation(
   options: TranslationOptions,
   apiKey: string
 ): Promise<string | null> {
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const ai = getGenAI(apiKey);
   const systemInstruction = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the input text from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL RULES:
-1. Preserve all placeholders, numbers, dates, references, and codes EXACTLY as written.
-2. Return ONLY the translated string without quotes, conversational commentary, or prefixes.
-3. Maintain the formal legal register.`;
-
-  const payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: `${systemInstruction}\n\nTranslate this:\n${text}` }],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.1,
-      maxOutputTokens: 1024,
-    },
-  };
+1. Preserve all placeholders, numbers, dates, references, identifiers, and codes EXACTLY as written.
+2. Return ONLY the translated string without quotes, conversational commentary, prefixes, or markdown fences.
+3. Maintain the formal legal register.
+4. ZERO PROMOTIONAL FILLER. Never add adjectives, adverbs, or marketing words not present in source.`;
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const res = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `${systemInstruction}\n\nTranslate this:\n${text}`,
+        config: {
+          temperature: 0.1,
+          maxOutputTokens: 1024,
+        },
       });
-      if (res.status === 429) {
-        await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
-        continue;
-      }
-      if (!res.ok) return null;
-      const data = await res.json();
-      const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const candidate = res.text;
       return candidate ? candidate.trim() : null;
     } catch {
       if (attempt === 2) return null;
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
     }
   }
   return null;

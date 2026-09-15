@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Plus, ArrowRight, CheckCircle2, Clock, Search, Filter } from "lucide-react";
 import { ProjectService } from "@/lib/services/project-service";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsListPage({
   searchParams,
 }: {
