@@ -281,7 +281,7 @@ export default {
 
     // 4. Clean URL Resolution (e.g. /pricing -> /pricing/index.html or /pricing.html)
     if (!pathname.includes('.')) {
-      const cleanPath = pathname.replace(/\/+$/, '');
+      const cleanPath = pathname.replace(/\\/+$/, '');
 
       // Try /route/index.html
       const indexPath = new URL(\`\${cleanPath}/index.html\`, request.url);

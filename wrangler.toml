@@ -12,7 +12,6 @@ NODE_OPTIONS = "--max-old-space-size=4096"
 name = "verifylingua"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "dist"
 
 [env.production.vars]
 NEXT_TELEMETRY_DISABLED = "1"

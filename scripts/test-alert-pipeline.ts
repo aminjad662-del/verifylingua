@@ -87,7 +87,7 @@ export async function dispatchTestAlert(
   const serialized = JSON.stringify(payload);
   const containsRawEmail = serialized.includes("corporate-counsel@megacorp.com");
   const containsRawApiKey = serialized.includes("AIzaSyTestApiKeySecret9876543210");
-  const containsRawStripe = serialized.includes("sk_live_51ABCDEF1234567890TestKey");
+  const containsRawStripe = serialized.includes("sk_test_51MockStripeKey123456");
   const containsRawDbPass = serialized.includes("super_secret_db_pass_9988");
 
   const redactionVerified = !containsRawEmail && !containsRawApiKey && !containsRawStripe && !containsRawDbPass;
@@ -115,7 +115,7 @@ async function run() {
   simulatedFailureError.stack = `Error: Upstream provider returned HTTP 500 Internal Error during translation for user corporate-counsel@megacorp.com
     at DeepLTranslationProvider.translate (C:\\Users\\aminj\\Downloads\\SAAS 7\\lib\\providers\\deepl\\index.ts:45:12)
     at Connection.query (postgres://admin:super_secret_db_pass_9988@ep-production-db.neon.tech/verifylingua_prod?sslmode=require)
-    at StripeBilling.recordEvent (sk_live_51ABCDEF1234567890TestKey)`;
+    at StripeBilling.recordEvent (sk_test_51MockStripeKey123456)`;
 
   console.log("[Test 1] Dispatching test alert with simulated PII and secrets...");
   const result = await dispatchTestAlert(simulatedFailureError, {
@@ -123,7 +123,7 @@ async function run() {
     userEmail: "corporate-counsel@megacorp.com",
     provider: "deepl",
     databaseTarget: "postgres://admin:super_secret_db_pass_9988@ep-production-db.neon.tech/verifylingua_prod?sslmode=require",
-    stripeBillingKey: "sk_live_51ABCDEF1234567890TestKey",
+    stripeBillingKey: "sk_test_51MockStripeKey123456",
   });
 
   console.log(`✓ Alert Event ID Generated: ${result.eventId}`);
