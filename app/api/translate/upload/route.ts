@@ -115,7 +115,18 @@ export async function POST(req: NextRequest) {
     // 1. Validation & MIME sniffing
     const validation = validateInputFile(fileBuffer, fileName);
     if (validation.error) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+      return NextResponse.json({ error: validation.error }, { status: 415 });
+    }
+
+    // Reject raster images clearly per User Request 4 and Prime Directive 3
+    if (validation.format === "png" || validation.format === "jpg") {
+      return NextResponse.json(
+        {
+          error:
+            "Raster image and scanned OCR translation (PNG/JPG) is not supported in the Node.js serverless runtime. Please upload a digital text-based PDF or DOCX file.",
+        },
+        { status: 415 }
+      );
     }
 
     // Estimate or calculate document page count N (minimum 1)

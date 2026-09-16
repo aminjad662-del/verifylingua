@@ -158,6 +158,11 @@ export async function translateBatch(
  * translates via DeepL Neural Engine or Gemini LLM with schema enforcement,
  * and handles 429 rate limits via exponential backoff.
  */
+const invalidDeepLKeys = new Set<string>();
+
+/**
+ * Translates structured blocks contextually
+ */
 export async function translateStructuredBlocks(
   blocks: { id: string; text: string; context?: string; isRtl?: boolean }[],
   options: TranslationOptions
@@ -168,8 +173,8 @@ export async function translateStructuredBlocks(
   const deeplKey = process.env.DEEPL_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
 
-  // Chunk blocks into semantic batches of up to 15 blocks
-  const CHUNK_SIZE = 15;
+  // Chunk blocks into semantic batches of up to 40 blocks
+  const CHUNK_SIZE = 40;
   for (let i = 0; i < blocks.length; i += CHUNK_SIZE) {
     const chunk = blocks.slice(i, i + CHUNK_SIZE);
 
@@ -177,8 +182,14 @@ export async function translateStructuredBlocks(
 
     const shouldBypassTestMock = Boolean(options.bypassTestMock || process.env.FORCE_LIVE_TRANSLATION === "true");
 
-    // 1. Try DeepL Neural Translation
-    if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
+    // 1. Try DeepL Neural Translation (if key not previously found invalid)
+    if (
+      deeplKey &&
+      deeplKey !== "mock" &&
+      deeplKey.length > 10 &&
+      !invalidDeepLKeys.has(deeplKey) &&
+      (!process.env.VITEST || shouldBypassTestMock)
+    ) {
       try {
         const deeplResults = await callDeepLBatchTranslation(
           chunk.map((b) => b.text),
@@ -262,6 +273,8 @@ export async function callDeepLBatchTranslation(
     payload.formality = "prefer_more";
   }
 
+  if (invalidDeepLKeys.has(apiKey)) return null;
+
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(endpoint, {
@@ -272,6 +285,11 @@ export async function callDeepLBatchTranslation(
         },
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401 || res.status === 403) {
+        invalidDeepLKeys.add(apiKey);
+        return null;
+      }
 
       if (res.status === 429) {
         await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
@@ -340,7 +358,8 @@ ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
         return parsed.translations;
       }
       return null;
-    } catch {
+    } catch (err: any) {
+      console.error("[callGeminiStructuredBatch error]:", err?.message || err);
       if (attempt === 2) return null;
       await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
     }

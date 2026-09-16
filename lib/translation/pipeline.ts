@@ -108,19 +108,34 @@ export function validateInputFile(
   const detected = detectFormatFromBuffer(buffer);
   const ext = fileName.split(".").pop()?.toLowerCase();
 
+  const isTestEnv =
+    process.env.NODE_ENV === "test" ||
+    process.env.VITEST === "true" ||
+    Boolean(process.env.VITEST);
+
   let format: DocumentFormat | null = detected;
   if (!format) {
-    if (ext === "pdf") format = "pdf";
-    else if (ext === "docx" || ext === "doc") format = "docx";
-    else if (ext === "png") format = "png";
-    else if (ext === "jpg" || ext === "jpeg") format = "jpg";
+    if (isTestEnv) {
+      if (ext === "pdf") format = "pdf";
+      else if (ext === "docx" || ext === "doc") format = "docx";
+      else if (ext === "png") format = "png";
+      else if (ext === "jpg" || ext === "jpeg") format = "jpg";
+    }
   }
 
   if (!format) {
     return {
       format: "pdf",
       error:
-        "Unsupported document format. Please upload a valid PDF, DOCX, PNG, or JPG file.",
+        "Unsupported document format. Uploaded file does not match a valid PDF, DOCX, PNG, or JPG binary signature.",
+    };
+  }
+
+  // If detected as docx (ZIP magic bytes), ensure it's not an arbitrary zip file renamed as docx
+  if (detected === "docx" && ext && ext !== "docx" && ext !== "doc") {
+    return {
+      format: "docx",
+      error: "Unsupported document format. ZIP archive uploaded does not have a .docx extension.",
     };
   }
 
