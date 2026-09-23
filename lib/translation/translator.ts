@@ -227,8 +227,8 @@ export async function translateStructuredBlocks(
   const deeplKey = process.env.DEEPL_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
 
-  // Chunk blocks into semantic batches of up to 15 blocks
-  const CHUNK_SIZE = 15;
+  // Chunk blocks into semantic batches of up to 50 blocks (matches 20-60 prompt spec)
+  const CHUNK_SIZE = 50;
   for (let i = 0; i < blocks.length; i += CHUNK_SIZE) {
     const chunk = blocks.slice(i, i + CHUNK_SIZE);
 
@@ -267,13 +267,17 @@ export async function translateStructuredBlocks(
     } else {
       // 3. Offline / deterministic fallback (strictly preserves uptime when upstream providers are 429 rate limited or offline)
       for (const b of chunk) {
-        let translated = await translateText(b.text, options);
-
-        // Special handling for Arabic (RTL) simulation when target is 'ar'
+        let translated = "";
         if (options.targetLang === "ar") {
           translated = translateToArabicDeterministic(b.text);
+        } else {
+          const langDict = LEGAL_GLOSSARY_EN[options.sourceLang?.toLowerCase()];
+          if (langDict && langDict[b.text.trim().toLowerCase()]) {
+            translated = preserveCase(b.text.trim(), langDict[b.text.trim().toLowerCase()]);
+          } else {
+            translated = mockTranslateDeterministic(b.text.trim(), options.sourceLang, options.targetLang);
+          }
         }
-
         resultMap.set(b.id, translated);
       }
     }
@@ -335,25 +339,23 @@ export async function callDeepLBatchTranslation(
         signal: AbortSignal.timeout(3500),
       });
 
-      if (res.status === 401 || res.status === 403) {
+      if (res.status === 401 || res.status === 403 || res.status === 429) {
         deepLCooldownUntil = Date.now() + 60000;
         return null;
       }
 
-      if (res.status === 429) {
-        await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
-        continue;
+      if (!res.ok) {
+        deepLCooldownUntil = Date.now() + 60000;
+        return null;
       }
-
-      if (!res.ok) return null;
       const data = await res.json();
       if (Array.isArray(data.translations)) {
         return data.translations.map((t: any) => t.text);
       }
       return null;
     } catch {
-      if (attempt === 2) return null;
-      await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
+      deepLCooldownUntil = Date.now() + 60000;
+      return null;
     }
   }
 
@@ -412,12 +414,8 @@ ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
       }
       return null;
     } catch (err: any) {
-      if (err?.status === 429 || err?.message?.includes("429") || err?.message?.includes("Quota exceeded") || err?.message?.includes("RESOURCE_EXHAUSTED")) {
-        geminiCooldownUntil = Date.now() + 60000;
-        return null;
-      }
-      if (attempt === 2) return null;
-      await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
+      geminiCooldownUntil = Date.now() + 60000;
+      return null;
     }
   }
 
@@ -469,12 +467,8 @@ CRITICAL RULES:
       const candidate = res.text;
       return candidate ? candidate.trim() : null;
     } catch (err: any) {
-      if (err?.status === 429 || err?.message?.includes("429") || err?.message?.includes("Quota exceeded") || err?.message?.includes("RESOURCE_EXHAUSTED")) {
-        geminiCooldownUntil = Date.now() + 60000;
-        return null;
-      }
-      if (attempt === 2) return null;
-      await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
+      geminiCooldownUntil = Date.now() + 60000;
+      return null;
     }
   }
   return null;

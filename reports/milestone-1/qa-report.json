@@ -1,0 +1,103 @@
+{
+  "milestone": 1,
+  "milestone_name": "Foundation & S1 Intake",
+  "timestamp": "2026-09-23T18:15:00Z",
+  "status": "PASSED",
+  "gates": {
+    "api_health_check": {
+      "status": "PASSED",
+      "endpoint": "/health",
+      "limits": {
+        "max_file_size_mb": 50,
+        "max_pages": 100,
+        "max_image_megapixels": 60
+      }
+    },
+    "job_state_machine": {
+      "status": "PASSED",
+      "states_supported": [
+        "uploaded",
+        "validating",
+        "analyzing",
+        "translating",
+        "rendering",
+        "qa",
+        "ready",
+        "ready_with_warnings",
+        "failed"
+      ]
+    },
+    "s1_intake_magic_bytes": {
+      "status": "PASSED",
+      "spoofing_rejected_code": "E_TYPE_MISMATCH",
+      "http_status": 415
+    },
+    "docx_zipbomb_defense": {
+      "status": "PASSED",
+      "sample": "10b_malicious_zipbomb.docx",
+      "entries": 10007,
+      "rejection_code": "E_DOCX_SECURITY_RISK"
+    },
+    "image_decompression_bomb_defense": {
+      "status": "PASSED",
+      "sample": "10c_malicious_huge_header.png",
+      "header_megapixels": 900,
+      "rejection_code": "E_IMAGE_TOO_LARGE"
+    },
+    "page_limit_enforcement": {
+      "status": "PASSED",
+      "allowed_100_pages": "PASSED",
+      "blocked_101_pages": "PASSED",
+      "rejection_code": "E_PAGE_LIMIT_EXCEEDED"
+    },
+    "user_golden_test_case_15": {
+      "status": "PASSED",
+      "source_path": "C:\\Users\\aminj\\Downloads\\testtrans\\DocuMatch_ES_d5a39fbdb8a6cfbe357d408c1ca41736 (1).jpg",
+      "corpus_path": "tests/corpus/user/user_test_case_15.jpg",
+      "file_size_bytes": 162625,
+      "format": "jpg",
+      "dimensions": {
+        "width": 772,
+        "height": 1000
+      },
+      "megapixels": 0.772,
+      "http_intake_status": 200,
+      "job_progression": "uploaded -> validating -> analyzing (30%)"
+    },
+    "corpus_manifest": {
+      "status": "PASSED",
+      "total_items": 18,
+      "categories": [
+        "academic",
+        "contract",
+        "tables",
+        "certificate",
+        "photo",
+        "hybrid",
+        "broken_encoding",
+        "security",
+        "corrupt",
+        "malicious",
+        "docx",
+        "bidi",
+        "flyer",
+        "load_test",
+        "limit_test",
+        "user_golden"
+      ]
+    }
+  },
+  "test_suites": {
+    "python_pytest_foundation": {
+      "total": 15,
+      "passed": 15,
+      "failed": 0,
+      "duration_seconds": 0.71
+    },
+    "nextjs_vitest_suites": {
+      "total_tests": 323,
+      "passed_tests": 323,
+      "failed_tests": 0
+    }
+  }
+}

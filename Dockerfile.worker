@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install native system dependencies: HarfBuzz, FreeType, qpdf, fonts, LibreOffice headless
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libpq-dev \
+    qpdf \
+    fonts-noto \
+    fonts-noto-cjk \
+    fonts-noto-core \
+    libreoffice-writer-nogui \
+    libharfbuzz-dev \
+    libraqm-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application and worker code
+COPY api /app/api
+COPY workers /app/workers
+COPY docs /app/docs
+
+# Security: non-root user
+RUN useradd -m -u 1000 workeruser && chown -R workeruser:workeruser /app
+USER workeruser
+
+CMD ["celery", "-A", "workers.celery_app", "worker", "--loglevel=info", "-Q", "intake,analyze,translate,render,qa"]

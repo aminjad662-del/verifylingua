@@ -1,0 +1,150 @@
+{
+  "version": "1.0",
+  "description": "VerifyLingua Document Translation Service Golden Test Corpus",
+  "corpus": [
+    {
+      "id": "01",
+      "filename": "01_academic_two_column.pdf",
+      "category": "academic",
+      "description": "Two-column academic PDF with sidebar and footnotes",
+      "expected_behavior": "Correct multi-column reading order and footnote preservation",
+      "gate_target": "Reading order correct"
+    },
+    {
+      "id": "02",
+      "filename": "02_contract_20page_consistency.pdf",
+      "category": "contract",
+      "description": "20-page contract with repeated defined terms (Board, Agreement)",
+      "expected_behavior": "Terminology consistency across 20 pages without drift",
+      "gate_target": "Glossary consistency: 0 deviations"
+    },
+    {
+      "id": "03",
+      "filename": "03_table_heavy_multipage.pdf",
+      "category": "tables",
+      "description": "Table-heavy multi-page financial statement with numbers and merged cells",
+      "expected_behavior": "Accurate table column alignment and numerical preservation",
+      "gate_target": "Table structure preserved"
+    },
+    {
+      "id": "04",
+      "filename": "04_scanned_certificate.png",
+      "category": "certificate",
+      "description": "Scanned certificate simulation (300 DPI layout)",
+      "expected_behavior": "Clean text layer recovery and visual inpainting",
+      "gate_target": "CER <= 3%"
+    },
+    {
+      "id": "05",
+      "filename": "05_phone_photo_distorted.jpg",
+      "category": "photo",
+      "description": "Mobile phone photo of civil registry record with perspective lighting",
+      "expected_behavior": "Robust OCR without geometric hallucination",
+      "gate_target": "OCR robust detection"
+    },
+    {
+      "id": "06",
+      "filename": "06_hybrid_multipage.pdf",
+      "category": "hybrid",
+      "description": "4-page hybrid PDF (digital, scanned, table-image, vector)",
+      "expected_behavior": "Per-page classification (digital vs scanned) correctly identified",
+      "gate_target": "Classification accuracy 100%"
+    },
+    {
+      "id": "07",
+      "filename": "07_broken_cid_encoding.pdf",
+      "category": "broken_encoding",
+      "description": "PDF with broken CID font encoding",
+      "expected_behavior": "Detects low text layer trustworthiness and routes to visual OCR",
+      "gate_target": "CID detection triggered"
+    },
+    {
+      "id": "08a",
+      "filename": "08a_password_protected_user.pdf",
+      "category": "security",
+      "description": "User password encrypted PDF",
+      "expected_behavior": "Pauses in needs_password state with E_PDF_PASSWORD",
+      "gate_target": "E_PDF_PASSWORD raised"
+    },
+    {
+      "id": "09",
+      "filename": "09_corrupted_xref.pdf",
+      "category": "corrupt",
+      "description": "Truncated PDF with damaged xref table",
+      "expected_behavior": "Attempts repair or halts safely with E_PDF_CORRUPT",
+      "gate_target": "E_PDF_CORRUPT handled cleanly"
+    },
+    {
+      "id": "10a",
+      "filename": "10a_malicious_javascript.pdf",
+      "category": "malicious",
+      "description": "PDF containing embedded /JavaScript and /OpenAction payloads",
+      "expected_behavior": "Sanitizes active scripts before processing without worker exploit",
+      "gate_target": "Sanitized safely"
+    },
+    {
+      "id": "10b",
+      "filename": "10b_malicious_zipbomb.docx",
+      "category": "malicious",
+      "description": "DOCX zip bomb with > 10,000 entries",
+      "expected_behavior": "Rejected by intake S1 with E_DOCX_SECURITY_RISK",
+      "gate_target": "E_DOCX_SECURITY_RISK raised"
+    },
+    {
+      "id": "10c",
+      "filename": "10c_malicious_huge_header.png",
+      "category": "malicious",
+      "description": "PNG image with 900 MP header (decompression bomb defense)",
+      "expected_behavior": "Rejected by intake before memory allocation with E_IMAGE_TOO_LARGE",
+      "gate_target": "E_IMAGE_TOO_LARGE raised"
+    },
+    {
+      "id": "11",
+      "filename": "11_complex_elements.docx",
+      "category": "docx",
+      "description": "Complex DOCX with headers, footers, tables, and bold/italic runs",
+      "expected_behavior": "Run-level XML text replacement preserving all container structures",
+      "gate_target": "All elements preserved"
+    },
+    {
+      "id": "12",
+      "filename": "12_arabic_bidi_record.pdf",
+      "category": "bidi",
+      "description": "Arabic RTL document with embedded English names, dates, numbers, and emails",
+      "expected_behavior": "HarfBuzz shaping + BiDi isolate token protection",
+      "gate_target": "Arabic joined forms & 100% token preservation"
+    },
+    {
+      "id": "13",
+      "filename": "13_dense_marketing_flyer.pdf",
+      "category": "flyer",
+      "description": "Dense marketing flyer with multi-styled headings and background layout",
+      "expected_behavior": "Auto-fit font reduction to avoid boundary overflow",
+      "gate_target": "Non-text SSIM >= 0.98"
+    },
+    {
+      "id": "14a",
+      "filename": "14a_100_page_load_test.pdf",
+      "category": "load_test",
+      "description": "100-page document load test",
+      "expected_behavior": "Completes without memory OOM, streaming page by page",
+      "gate_target": "Peak memory within limits"
+    },
+    {
+      "id": "14b",
+      "filename": "14b_101_page_limit_test.pdf",
+      "category": "limit_test",
+      "description": "101-page document exceeding the 100-page cap",
+      "expected_behavior": "Rejected at intake S1 with E_PAGE_LIMIT_EXCEEDED",
+      "gate_target": "E_PAGE_LIMIT_EXCEEDED raised"
+    },
+    {
+      "id": "15",
+      "filename": "user/user_test_case_15.jpg",
+      "category": "user_golden",
+      "description": "Real-world test file from user (DocuMatch Spanish civil certificate photo)",
+      "expected_behavior": "Golden test case: full layout-preserving translation into AR, FR, EN",
+      "gate_target": "All gates pass"
+    }
+  ]
+}

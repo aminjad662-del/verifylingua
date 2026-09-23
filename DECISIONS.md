@@ -134,3 +134,11 @@ This log records every non-obvious decision made during the elevation and produc
 - **State Machine Integrity**: Rebuilt discrete stage progression (`queued` -> `extracting` -> `translating` -> `rendering` -> `completed`) and anti-fake-completion gate. In error states, download and preview tokens are strictly suppressed, and concrete failure reasons are surfaced.
 - **Zero Raw Hex Colors**: Enforced design tokens across all components verified via `node scripts/check-raw-hex.js`.
 
+---
+
+### Decision 12: Production-Grade Multi-Service Architecture & Milestone 1 Foundation
+- **Architecture**: Next.js App Router (web UI + edge API proxies) + FastAPI (document orchestration API) + Python Celery/Dramatiq workers (sandboxed document processing containers with HarfBuzz, pypdfium2, pikepdf, Noto fonts) + Redis (task queue & token-bucket rate limits) + PostgreSQL (single source of truth) + S3/MinIO (encrypted private object storage).
+- **Worker Isolation**: Sandboxed non-root workers with strict resource limits (`--memory`, `--cpus`), per-task timeouts, and isolated queues: `intake` (validation, sanitization), `analyze` (classification, layout, OCR), `translate` (I/O network bound, batching), `render` (heavy PDF/DOCX vector reconstruction), `qa` (automated completeness, SSIM, and glyph inspection).
+- **Idempotency & Resilience**: Every stage is keyed by `(job_id, page_no, stage)`. Failed pages are retried up to 3 times with exponential backoff. Partial delivery is preserved: if page 94 fails in a 100-page job, 99 translated pages are delivered with explicit per-page reporting (`qa_warning`).
+- **Dual Execution Engine**: Services are fully containerized via `docker-compose.yml` for Linux VPS deployment, while providing native scripts and TypeScript/Python bridges for seamless local execution and automated golden corpus testing.
+

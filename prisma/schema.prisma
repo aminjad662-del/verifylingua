@@ -396,6 +396,11 @@ model TranslationJob {
   qaResults       QAResult[]
   creditTransactions CreditTransaction[]
   pilotFeedbacks     PilotFeedback[]
+  pages              Page[]
+  detailedSegments   Segment[]
+  events             JobEvent[]
+  costLedgerEntries  CostLedger[]
+  review             Review?
 
   @@index([userId])
   @@index([documentId])
@@ -607,4 +612,130 @@ model PilotFeedback {
   @@index([jobId])
   @@index([rating])
 }
+
+enum PageKind {
+  DIGITAL_TEXT
+  SCANNED
+  HYBRID
+  IMAGE_ONLY
+  VECTOR_GRAPHIC
+  BLANK
+}
+
+enum PageStatus {
+  PENDING
+  ANALYZED
+  TRANSLATED
+  RENDERED
+  QA_PASSED
+  QA_WARNING
+  FAILED
+}
+
+model Page {
+  id                  String     @id @default(cuid())
+  jobId               String
+  pageNumber          Int
+  kind                PageKind   @default(DIGITAL_TEXT)
+  status              PageStatus @default(PENDING)
+  attempts            Int        @default(0)
+  errorCode           String?
+  errorMessage        String?
+  textLayerConfidence Float?
+  isBrokenEncoding    Boolean    @default(false)
+  nonTextRegionsCount Int        @default(0)
+  width               Float?
+  height              Float?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  job                 TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  segments            Segment[]
+
+  @@unique([jobId, pageNumber])
+  @@index([jobId])
+  @@index([status])
+}
+
+model Segment {
+  id               String   @id @default(cuid())
+  pageId           String
+  jobId            String
+  blockId          String
+  orderIndex       Int
+  sourceText       String
+  sourceMarkup     String?
+  translatedText   String?
+  translatedMarkup String?
+  protectedTokens  Json?
+  engine           String   @default("neural")
+  confidence       Float    @default(1.0)
+  status           String   @default("pending") // pending, translated, reviewer_edited, failed
+  reviewerEdit     String?
+  geometry         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  page             Page           @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  job              TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@index([jobId])
+  @@index([orderIndex])
+}
+
+model JobEvent {
+  id        String   @id @default(cuid())
+  jobId     String
+  stage     String   // intake, classification, extraction, translation, reconstruction, qa
+  eventType String   // STAGE_START, STAGE_PROGRESS, STAGE_COMPLETE, WARNING, ERROR, RETRY
+  message   String
+  data      Json?
+  createdAt DateTime @default(now())
+
+  job       TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([stage])
+  @@index([createdAt])
+}
+
+model CostLedger {
+  id            String   @id @default(cuid())
+  jobId         String
+  pageNumber    Int?
+  provider      String   // gemini, deepl, local
+  model         String
+  tokensIn      Int      @default(0)
+  tokensOut     Int      @default(0)
+  ocrSeconds    Float    @default(0.0)
+  renderSeconds Float    @default(0.0)
+  costUsd       Float    @default(0.0)
+  createdAt     DateTime @default(now())
+
+  job           TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([provider])
+}
+
+model Review {
+  id                  String    @id @default(cuid())
+  jobId               String    @unique
+  orderId             String?
+  reviewerId          String?
+  status              String    @default("assigned") // assigned, in_review, approved, rejected
+  notes               String?
+  certifiedStatement  String?
+  signatureUrl        String?
+  reviewedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  job                 TranslationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([reviewerId])
+  @@index([status])
+}
+
 

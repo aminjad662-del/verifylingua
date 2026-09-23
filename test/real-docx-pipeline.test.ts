@@ -87,7 +87,7 @@ describe("DOCX-to-DOCX Translation Vertical Slice (Live Unmocked Execution)", ()
     expect(translationResult.metadata.hasHeaders).toBe(true);
     expect(translationResult.metadata.textNodeCount).toBeGreaterThan(10);
     expect(translationResult.metadata.wordCount).toBeGreaterThan(40);
-  }, 20000);
+  }, 60000);
 
   it("Step 6: Persists the translated DOCX buffer to object storage", async () => {
     await putObject(

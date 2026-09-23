@@ -1,0 +1,89 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >> 
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R 10 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 142 >>
+stream
+BT
+/F1 12 Tf
+50 720 Td
+18 TL
+(HYBRID DOCUMENT - PAGE 1: Native Digital Text) Tj T*
+(This page contains pure vector selectable text.) Tj T*
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 147 >>
+stream
+BT
+/F1 12 Tf
+50 720 Td
+18 TL
+(HYBRID DOCUMENT - PAGE 2: Scanned Document Page) Tj T*
+(Scanned raster text layer with OCR pre-processing.) Tj T*
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 152 >>
+stream
+BT
+/F1 12 Tf
+50 720 Td
+18 TL
+(HYBRID DOCUMENT - PAGE 3: Table Embedded as Graphic) Tj T*
+(Complex financial table rendered as an image block.) Tj T*
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 11 0 R >>
+endobj
+11 0 obj
+<< /Length 160 >>
+stream
+BT
+/F1 12 Tf
+50 720 Td
+18 TL
+(HYBRID DOCUMENT - PAGE 4: Vector Diagram & CAD Flow) Tj T*
+(Technical diagram paths preserved without re-rasterization.) Tj T*
+ET
+endstream
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000059 00000 n 
+0000000135 00000 n 
+0000000205 00000 n 
+0000000331 00000 n 
+0000000523 00000 n 
+0000000649 00000 n 
+0000000846 00000 n 
+0000000972 00000 n 
+0000001174 00000 n 
+0000001302 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+1513
+%%EOF

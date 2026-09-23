@@ -55,3 +55,8 @@ next-env.d.ts
 /fixtures/live_audit/
 test_sample_civil_record.pdf
 /public/uploads/
+tests/corpus/user/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
