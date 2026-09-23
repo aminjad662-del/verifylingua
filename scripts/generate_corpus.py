@@ -35,7 +35,7 @@ def make_simple_pdf(pages_text: list[list[str]], output_path: str, extra_catalog
     objects.append(b"") # placeholder
     
     # Object 3: Font
-    font_obj = b"3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n"
+    font_obj = b"3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n"
     objects.append(font_obj)
     
     page_obj_ids = []

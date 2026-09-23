@@ -102,3 +102,49 @@ class PasswordSubmitRequest(BaseModel):
 
 class OwnerConfirmRequest(BaseModel):
     confirmed: bool = True
+
+class GlossaryTermModel(BaseModel):
+    source: str
+    target: str
+    domain: Optional[str] = None
+    is_user_forced: bool = False
+
+class SegmentModel(BaseModel):
+    id: str
+    page_number: int
+    block_id: str
+    order_index: int
+    source_text: str
+    source_markup: str
+    translated_text: Optional[str] = None
+    translated_markup: Optional[str] = None
+    protected_tokens: Dict[str, str] = Field(default_factory=dict)
+    engine: Optional[str] = None
+    confidence: float = 1.0
+    status: str = "pending"
+    reviewer_edit: Optional[str] = None
+
+class CostLedgerEntryModel(BaseModel):
+    id: str
+    job_id: str
+    page_number: int
+    provider: str
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    latency_ms: float
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class CostSummaryResponse(BaseModel):
+    job_id: str
+    total_cost_usd: float
+    total_input_tokens: int
+    total_output_tokens: int
+    average_cost_per_page: float
+    provider_breakdown: Dict[str, float] = Field(default_factory=dict)
+
+class TranslateJobRequest(BaseModel):
+    user_names: Optional[List[str]] = None
+    user_glossary: Optional[List[GlossaryTermModel]] = None
+

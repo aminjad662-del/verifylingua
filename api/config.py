@@ -24,5 +24,19 @@ class Settings(BaseSettings):
     # Provider keys
     GEMINI_API_KEY: Optional[str] = None
     DEEPL_API_KEY: Optional[str] = None
+    
+    # Models (configurable, never hard-coded)
+    GEMINI_FAST_MODEL: str = "gemini-2.5-flash"
+    GEMINI_STRONG_MODEL: str = "gemini-1.5-pro"
+    DEEPL_API_URL: str = "https://api-free.deepl.com/v2/translate"
+    
+    # Rate Limits & Circuit Breaker
+    RATE_LIMIT_RPS_GEMINI: int = 15
+    RATE_LIMIT_RPS_DEEPL: int = 10
+    RATE_LIMIT_TPM_GEMINI: int = 1_000_000
+    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = 3
+    CIRCUIT_BREAKER_RESET_TIMEOUT_SEC: float = 30.0
+    BATCH_SIZE_MIN: int = 20
+    BATCH_SIZE_MAX: int = 60
 
 settings = Settings()

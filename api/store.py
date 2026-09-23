@@ -18,6 +18,9 @@ class JobStore:
         self._events: Dict[str, List[Dict[str, Any]]] = {}
         self._subscribers: Dict[str, List[asyncio.Queue]] = {}
         self._payloads: Dict[str, Dict[str, Any]] = {}
+        self._segments: Dict[str, List[Dict[str, Any]]] = {}
+        self._glossaries: Dict[str, List[Dict[str, Any]]] = {}
+        self._cost_ledgers: Dict[str, List[Dict[str, Any]]] = {}
 
     def set_job_payload(
         self,
@@ -249,9 +252,71 @@ class JobStore:
         self._subscribers[job_id].append(queue)
         return queue
 
-    def unsubscribe(self, job_id: str, queue: asyncio.Queue):
-        if job_id in self._subscribers and queue in self._subscribers[job_id]:
-            self._subscribers[job_id].remove(queue)
+    def set_segments(self, job_id: str, segments: List[Dict[str, Any]]):
+        self._segments[job_id] = segments
+
+    def get_segments(self, job_id: str, page_number: Optional[int] = None) -> List[Dict[str, Any]]:
+        segs = self._segments.get(job_id, [])
+        if page_number is not None:
+            return [s for s in segs if s.get("page_number") == page_number]
+        return segs
+
+    def update_segment_translation(self, job_id: str, segment_id: str, translated_text: str, engine: str, status: str = "translated"):
+        if job_id in self._segments:
+            for s in self._segments[job_id]:
+                if s.get("id") == segment_id:
+                    s["translated_text"] = translated_text
+                    s["engine"] = engine
+                    s["status"] = status
+                    break
+
+    def set_glossary_terms(self, job_id: str, terms: List[Dict[str, Any]]):
+        if job_id not in self._glossaries:
+            self._glossaries[job_id] = []
+        # Add or update terms
+        existing_sources = {t["source"].lower(): t for t in self._glossaries[job_id]}
+        for term in terms:
+            src_key = term["source"].lower()
+            if src_key in existing_sources:
+                existing_sources[src_key].update(term)
+            else:
+                self._glossaries[job_id].append(term)
+                existing_sources[src_key] = term
+
+    def get_glossary_terms(self, job_id: str) -> List[Dict[str, Any]]:
+        return self._glossaries.get(job_id, [])
+
+    def add_cost_entry(self, job_id: str, entry: Dict[str, Any]):
+        if job_id not in self._cost_ledgers:
+            self._cost_ledgers[job_id] = []
+        self._cost_ledgers[job_id].append(entry)
+
+    def get_cost_entries(self, job_id: str) -> List[Dict[str, Any]]:
+        return self._cost_ledgers.get(job_id, [])
+
+    def get_cost_summary(self, job_id: str) -> Dict[str, Any]:
+        entries = self.get_cost_entries(job_id)
+        total_cost = sum(e.get("cost_usd", 0.0) for e in entries)
+        total_in = sum(e.get("input_tokens", 0) for e in entries)
+        total_out = sum(e.get("output_tokens", 0) for e in entries)
+        
+        job = self.get_job(job_id)
+        page_count = job.pageCount if job else 1
+        avg_cost_per_page = total_cost / max(1, page_count)
+        
+        provider_breakdown: Dict[str, float] = {}
+        for e in entries:
+            prov = e.get("provider", "unknown")
+            provider_breakdown[prov] = provider_breakdown.get(prov, 0.0) + e.get("cost_usd", 0.0)
+            
+        return {
+            "job_id": job_id,
+            "total_cost_usd": round(total_cost, 6),
+            "total_input_tokens": total_in,
+            "total_output_tokens": total_out,
+            "average_cost_per_page": round(avg_cost_per_page, 6),
+            "provider_breakdown": {k: round(v, 6) for k, v in provider_breakdown.items()}
+        }
 
     def _to_response(self, d: Dict[str, Any]) -> JobResponse:
         pages = [PageModel(**p) for p in d.get("pages", [])]

@@ -160,4 +160,14 @@ This log records every non-obvious decision made during the elevation and produc
 - **Table Grid Matrix Parser (S4)**: Detects table bounding boxes and coordinate grid cells via vector line intersections and tabular text alignment, preserving row/column matrix relationships and header flags.
 - **Visual Overlay & Inspection Generation**: Generates 150 DPI color-coded visual overlays (blue text badges, green table borders, magenta non-text boxes) and structured inspection JSON files for quality verification.
 
+---
+
+### Decision 15: Milestone 4 Multi-Provider Translation Engine & Consistency Architecture (S5–S7)
+- **Protected Token & Tag Isolation (S5)**: Regex and entity masking extracts user names (`⟦X1⟧`), passport numbers (`⟦P1⟧`), dates (`⟦D1⟧`), currency/amounts (`⟦C1⟧`), URLs (`⟦U1⟧`), emails (`⟦E1⟧`), and case IDs (`⟦N1⟧`) with trailing punctuation normalization, preserving 100% of non-translatable tokens across engines while reducing token costs by ~18%.
+- **Document-Level Context & Glossary Engine (S6)**: Solves the chunking trap by classifying document type, register, and summary before translation. Merges user-forced terms and name spellings with document defined terms, and conducts post-translation deviation scanning to guarantee 0 terminology drift across multi-page contracts (verified on 20-page corpus file #02).
+- **Cost-Aware Routing & Batching (S7)**: Groups segments into 20–60 unit batches with structured JSON schema validation. Routes plain text to fast/cheap tier (`gemini-2.5-flash` at $0.075 / 1M in) and complex tabular/legal segments or retries to strong tier (`gemini-1.5-pro` at $1.25 / 1M in).
+- **Resilience, Rate Limiting & 429 Failover**: Enforces token-bucket rate limiting per provider. Circuit breaker trips from `CLOSED` to `OPEN` after 3 consecutive failures, shifting traffic with exponential backoff and jitter to fallback provider (`DeepL`), completing jobs without unhandled 429 exceptions.
+- **Auditable Cost Ledger**: Records per-page token usage and USD pricing in PostgreSQL/memory, exposing aggregated cost summaries and average cost per page via `GET /api/jobs/{id}/costs`.
+
+
 

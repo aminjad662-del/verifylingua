@@ -1,6 +1,6 @@
 import json
 import asyncio
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from typing import Optional
@@ -16,10 +16,16 @@ from api.models import (
     PresignUploadResponse,
     PasswordSubmitRequest,
     OwnerConfirmRequest,
-    ErrorDetail
+    ErrorDetail,
+    GlossaryTermModel,
+    SegmentModel,
+    CostLedgerEntryModel,
+    CostSummaryResponse,
+    TranslateJobRequest
 )
 from api.intake import run_intake_security_check, unlock_and_sanitize_pdf, IntakeError
 from api.analyze import analyze_pdf_document
+from api.translate import translate_document_pipeline, TranslationRouter
 from api.store import job_store
 
 app = FastAPI(
@@ -266,6 +272,76 @@ async def analyze_job_layout(job_id: str):
         progress=45
     )
     return job_store.get_job(job_id)
+
+@app.post("/api/jobs/{job_id}/translate", response_model=JobResponse)
+async def translate_job_content(job_id: str, req: Optional[TranslateJobRequest] = None):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    payload = job_store.get_job_payload(job_id)
+    if not payload:
+        raise HTTPException(status_code=400, detail="No document payload cached for this job")
+
+    bytes_to_translate = payload.get("sanitized_bytes") or payload.get("raw_bytes")
+    if not bytes_to_translate:
+        raise HTTPException(status_code=400, detail="Empty document payload")
+
+    # Analyze if not already analyzed
+    analysis = analyze_pdf_document(bytes_to_translate, filename=job.sourceFilename)
+
+    user_names = req.user_names if req else None
+    user_glossary = req.user_glossary if req else None
+
+    # Run translation pipeline
+    await translate_document_pipeline(
+        job_id=job_id,
+        analysis=analysis,
+        source_lang=job.sourceLanguage,
+        target_lang=job.targetLanguage,
+        user_names=user_names,
+        user_glossary=user_glossary
+    )
+
+    return job_store.get_job(job_id)
+
+@app.get("/api/jobs/{job_id}/glossary")
+async def get_job_glossary(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"job_id": job_id, "terms": job_store.get_glossary_terms(job_id)}
+
+@app.post("/api/jobs/{job_id}/glossary")
+async def add_job_glossary(job_id: str, request: Request):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    data = await request.json()
+    if isinstance(data, list):
+        terms = [GlossaryTermModel(**item) for item in data]
+    elif isinstance(data, dict) and "terms" in data:
+        terms = [GlossaryTermModel(**item) for item in data["terms"]]
+    else:
+        raise HTTPException(status_code=422, detail="Invalid glossary payload format")
+    job_store.set_glossary_terms(job_id, [t.model_dump() for t in terms])
+    return {"job_id": job_id, "terms": job_store.get_glossary_terms(job_id)}
+
+@app.get("/api/jobs/{job_id}/segments")
+async def get_job_segments(job_id: str, page: Optional[int] = None):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    segments = job_store.get_segments(job_id, page_number=page)
+    return {"job_id": job_id, "count": len(segments), "segments": segments}
+
+@app.get("/api/jobs/{job_id}/costs", response_model=CostSummaryResponse)
+async def get_job_costs(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    summary = job_store.get_cost_summary(job_id)
+    return CostSummaryResponse(**summary)
 
 @app.get("/api/jobs/{job_id}", response_model=JobResponse)
 async def get_job_status(job_id: str):
