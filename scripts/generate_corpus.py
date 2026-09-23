@@ -191,6 +191,18 @@ import shutil
 shutil.copyfile(os.path.join(CORPUS_DIR, "user", "user_test_case_15.jpg"), f5)
 add_to_manifest("05", "05_phone_photo_distorted.jpg", "photo", "Mobile phone photo of civil registry record with perspective lighting", "Robust OCR without geometric hallucination", "OCR robust detection")
 
+# 5b. Photo with EXIF orientation metadata
+f5b = os.path.join(CORPUS_DIR, "05b_photo_with_exif_rotation.jpg")
+try:
+    from PIL import Image
+    test_img = Image.new("RGB", (200, 400), color=(240, 235, 220))
+    exif = test_img.getexif()
+    exif[274] = 6  # 90 degrees CW rotation tag
+    test_img.save(f5b, format="JPEG", exif=exif)
+    add_to_manifest("05b", "05b_photo_with_exif_rotation.jpg", "photo_exif", "Photo with EXIF orientation tag 6 (90 deg CW)", "Orientation normalized upright and EXIF metadata stripped", "EXIF stripped & normalized")
+except Exception as e:
+    print(f"Warning: could not generate 05b: {e}")
+
 # 6. Hybrid PDF
 f6 = os.path.join(CORPUS_DIR, "06_hybrid_multipage.pdf")
 make_simple_pdf([
@@ -210,43 +222,75 @@ make_simple_pdf([[
 ]], f7)
 add_to_manifest("07", "07_broken_cid_encoding.pdf", "broken_encoding", "PDF with broken CID font encoding", "Detects low text layer trustworthiness and routes to visual OCR", "CID detection triggered")
 
-# 8. Encrypted PDF & Owner restricted
+# 8a. Encrypted PDF with User Password
 f8a = os.path.join(CORPUS_DIR, "08a_password_protected_user.pdf")
-# Embed /Encrypt dictionary
-make_simple_pdf([["CONFIDENTIAL IMMIGRATION RECORD", "This document is encrypted with password."]], f8a, extra_catalog=b"/Encrypt << /Filter /Standard /V 2 /R 3 /P -1052 >> ")
-add_to_manifest("08a", "08a_password_protected_user.pdf", "security", "User password encrypted PDF", "Pauses in needs_password state with E_PDF_PASSWORD", "E_PDF_PASSWORD raised")
+try:
+    import pikepdf
+    p_enc = pikepdf.new()
+    p_enc.add_blank_page()
+    enc_user = pikepdf.Encryption(owner="ownerpass123", user="userpass123", R=4)
+    p_enc.save(f8a, encryption=enc_user)
+    add_to_manifest("08a", "08a_password_protected_user.pdf", "security", "User password encrypted PDF (userpass123)", "Pauses in needs_password state with E_PDF_PASSWORD, unlocks on correct password", "E_PDF_PASSWORD raised & unlocked")
+except Exception as e:
+    make_simple_pdf([["CONFIDENTIAL IMMIGRATION RECORD", "This document is encrypted with password."]], f8a, extra_catalog=b"/Encrypt << /Filter /Standard /V 2 /R 3 /P -1052 >> ")
+    add_to_manifest("08a", "08a_password_protected_user.pdf", "security", "User password encrypted PDF", "Pauses in needs_password state with E_PDF_PASSWORD", "E_PDF_PASSWORD raised")
+
+# 8b. Owner-restricted PDF (no user password, extraction restricted)
+f8b = os.path.join(CORPUS_DIR, "08b_owner_restricted.pdf")
+try:
+    import pikepdf
+    p_owner = pikepdf.new()
+    p_owner.add_blank_page()
+    enc_owner = pikepdf.Encryption(owner="ownerpass123", user="", R=4, allow=pikepdf.Permissions(print_lowres=True, extract=False))
+    p_owner.save(f8b, encryption=enc_owner)
+    add_to_manifest("08b", "08b_owner_restricted.pdf", "security", "Owner-restricted PDF (no user password required to view, text extraction restricted)", "Identifies owner restriction and requests confirmation before proceeding", "Owner restrictions detected")
+except Exception as e:
+    print(f"Warning: could not generate 08b: {e}")
 
 # 9. Corrupted xref PDF
 f9 = os.path.join(CORPUS_DIR, "09_corrupted_xref.pdf")
 with open(f1, "rb") as f:
     valid_pdf_bytes = f.read()
-# Truncate halfway through xref
 truncated = valid_pdf_bytes[:valid_pdf_bytes.rfind(b"xref") + 10]
 with open(f9, "wb") as f:
     f.write(truncated)
-add_to_manifest("09", "09_corrupted_xref.pdf", "corrupt", "Truncated PDF with damaged xref table", "Attempts repair or halts safely with E_PDF_CORRUPT", "E_PDF_CORRUPT handled cleanly")
+add_to_manifest("09", "09_corrupted_xref.pdf", "corrupt", "Truncated PDF with damaged xref table", "Attempts repair or halts safely with E_PDF_CORRUPT", "E_PDF_CORRUPT or qpdf repair handled cleanly")
 
 # 10. Malicious samples
 f10a = os.path.join(CORPUS_DIR, "10a_malicious_javascript.pdf")
-make_simple_pdf([["STANDARD BILL OF SALE", "Total: $1,200.00"]], f10a, extra_catalog=b"/Names << /JavaScript << /Names [ (Exploit) << /S /JavaScript /JS (app.alert('XSS')) >> ] >> >> ")
+try:
+    import pikepdf
+    p_mal = pikepdf.new()
+    p_mal.add_blank_page()
+    p_mal.Root.OpenAction = pikepdf.Dictionary(S=pikepdf.Name.JavaScript, JS=pikepdf.String("app.alert('malicious XSS exploit')"))
+    p_mal.Root.Names = pikepdf.Dictionary(JavaScript=pikepdf.Dictionary(Names=[pikepdf.String("exploit"), pikepdf.Dictionary(S=pikepdf.Name.JavaScript, JS=pikepdf.String("app.alert('injected')"))]))
+    p_mal.save(f10a)
+except Exception:
+    make_simple_pdf([["STANDARD BILL OF SALE", "Total: $1,200.00"]], f10a, extra_catalog=b"/Names << /JavaScript << /Names [ (Exploit) << /S /JavaScript /JS (app.alert('XSS')) >> ] >> >> ")
 add_to_manifest("10a", "10a_malicious_javascript.pdf", "malicious", "PDF containing embedded /JavaScript and /OpenAction payloads", "Sanitizes active scripts before processing without worker exploit", "Sanitized safely")
 
 f10b = os.path.join(CORPUS_DIR, "10b_malicious_zipbomb.docx")
 with zipfile.ZipFile(f10b, "w") as zf:
     zf.writestr("[Content_Types].xml", "<Types></Types>")
     zf.writestr("word/document.xml", "<w:document></w:document>")
-    # Add dummy 10,500 entries to test entry limit cap
     for i in range(10_005):
         zf.writestr(f"word/dummy_{i}.xml", "x")
 add_to_manifest("10b", "10b_malicious_zipbomb.docx", "malicious", "DOCX zip bomb with > 10,000 entries", "Rejected by intake S1 with E_DOCX_SECURITY_RISK", "E_DOCX_SECURITY_RISK raised")
 
 f10c = os.path.join(CORPUS_DIR, "10c_malicious_huge_header.png")
-# PNG header claiming 30,000 x 30,000 (900 megapixels)
 ihdr_huge = struct.pack(">IIBBBBB", 30000, 30000, 8, 2, 0, 0, 0)
 png_huge = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + ihdr_huge + struct.pack(">I", zlib.crc32(b"IHDR" + ihdr_huge))
 with open(f10c, "wb") as f:
     f.write(png_huge)
 add_to_manifest("10c", "10c_malicious_huge_header.png", "malicious", "PNG image with 900 MP header (decompression bomb defense)", "Rejected by intake before memory allocation with E_IMAGE_TOO_LARGE", "E_IMAGE_TOO_LARGE raised")
+
+# 10d. Malicious DOCX with XXE external entity payload
+f10d = os.path.join(CORPUS_DIR, "10d_malicious_xxe.docx")
+with zipfile.ZipFile(f10d, "w") as zf:
+    zf.writestr("[Content_Types].xml", '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/></Types>')
+    xxe_xml = '<!DOCTYPE document [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>&xxe;</w:t></w:r></w:p></w:body></w:document>'
+    zf.writestr("word/document.xml", xxe_xml)
+add_to_manifest("10d", "10d_malicious_xxe.docx", "malicious", "DOCX package containing XXE external entity injection", "Blocked by defusedxml parser with E_DOCX_SECURITY_RISK", "E_DOCX_SECURITY_RISK raised")
 
 # 11. Complex DOCX
 f11 = os.path.join(CORPUS_DIR, "11_complex_elements.docx")

@@ -85,8 +85,14 @@ def test_corpus_08a_encrypted_pdf_detection():
     """Corpus #8a: Password-protected PDF detection."""
     path = os.path.join(CORPUS_DIR, "08a_password_protected_user.pdf")
     with open(path, "rb") as f:
-        meta = run_intake_security_check(f.read(), "08a_password_protected_user.pdf", "pdf")
+        data = f.read()
+    with pytest.raises(IntakeError) as exc:
+        run_intake_security_check(data, "08a_password_protected_user.pdf", "pdf")
+    assert exc.value.code == "E_PDF_PASSWORD"
+    # Unlocks with password
+    meta = run_intake_security_check(data, "08a_password_protected_user.pdf", "pdf", password="userpass123")
     assert meta["is_encrypted"] is True
+    assert meta["page_count"] == 1
 
 def test_corpus_10b_malicious_zipbomb_blocked():
     """Corpus #10b: Malicious zip bomb with > 10,000 entries blocked."""

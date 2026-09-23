@@ -14,9 +14,11 @@ from api.models import (
     JobResponse,
     PresignUploadRequest,
     PresignUploadResponse,
+    PasswordSubmitRequest,
+    OwnerConfirmRequest,
     ErrorDetail
 )
-from api.intake import run_intake_security_check, IntakeError
+from api.intake import run_intake_security_check, unlock_and_sanitize_pdf, IntakeError
 from api.store import job_store
 
 app = FastAPI(
@@ -108,6 +110,25 @@ async def process_job_intake(
         meta = run_intake_security_check(file_bytes, file.filename or job.sourceFilename, fmt)
         page_count = meta.get("page_count", 1)
         
+        # Save raw and sanitized bytes
+        job_store.set_job_payload(
+            job_id,
+            raw_bytes=file_bytes,
+            sanitized_bytes=meta.get("sanitized_bytes"),
+            is_encrypted=meta.get("is_encrypted", False),
+            owner_restricted=meta.get("owner_restricted", False)
+        )
+
+        if meta.get("owner_restricted"):
+            job_store.update_job_stage(
+                job_id=job_id,
+                status=JobStatus.NEEDS_OWNER_CONFIRMATION,
+                stage_name="intake",
+                progress=20,
+                page_count=page_count
+            )
+            return job_store.get_job(job_id)
+
         job_store.update_job_stage(
             job_id=job_id,
             status=JobStatus.ANALYZING,
@@ -132,6 +153,25 @@ async def process_job_intake(
             stage="intake",
             details={}
         )
+        if err.code == "E_PDF_PASSWORD":
+            job_store.set_job_payload(
+                job_id,
+                raw_bytes=file_bytes,
+                is_encrypted=True,
+                owner_restricted=False
+            )
+            job_store.update_job_stage(
+                job_id=job_id,
+                status=JobStatus.NEEDS_PASSWORD,
+                stage_name="intake",
+                progress=20,
+                error=error_detail
+            )
+            return JSONResponse(
+                status_code=401,
+                content={"error": error_detail.model_dump()}
+            )
+
         job_store.update_job_stage(
             job_id=job_id,
             status=JobStatus.FAILED,
@@ -143,6 +183,42 @@ async def process_job_intake(
             status_code=err.http_status,
             content={"error": error_detail.model_dump()}
         )
+
+@app.post("/api/jobs/{job_id}/password", response_model=JobResponse)
+async def submit_job_password(job_id: str, req: PasswordSubmitRequest):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    payload = job_store.get_job_payload(job_id)
+    if not payload or not payload.get("raw_bytes"):
+        raise HTTPException(status_code=400, detail="No document payload cached for this job")
+
+    try:
+        meta = unlock_and_sanitize_pdf(payload["raw_bytes"], password=req.password)
+        unlocked = job_store.unlock_job(job_id, meta["sanitized_bytes"], meta["page_count"])
+        return unlocked
+    except IntakeError as err:
+        error_detail = ErrorDetail(
+            code=err.code,
+            message=err.message,
+            action=err.action,
+            stage="intake"
+        )
+        return JSONResponse(
+            status_code=401 if err.code == "E_PDF_PASSWORD" else err.http_status,
+            content={"error": error_detail.model_dump()}
+        )
+
+@app.post("/api/jobs/{job_id}/confirm-owner-rights", response_model=JobResponse)
+async def confirm_owner_rights(job_id: str, req: OwnerConfirmRequest):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if not req.confirmed:
+        raise HTTPException(status_code=400, detail="Owner confirmation must be affirmative")
+    confirmed_job = job_store.confirm_owner_rights(job_id)
+    return confirmed_job
 
 @app.get("/api/jobs/{job_id}", response_model=JobResponse)
 async def get_job_status(job_id: str):

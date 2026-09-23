@@ -17,6 +17,58 @@ class JobStore:
         self._jobs: Dict[str, Dict[str, Any]] = {}
         self._events: Dict[str, List[Dict[str, Any]]] = {}
         self._subscribers: Dict[str, List[asyncio.Queue]] = {}
+        self._payloads: Dict[str, Dict[str, Any]] = {}
+
+    def set_job_payload(
+        self,
+        job_id: str,
+        raw_bytes: bytes,
+        sanitized_bytes: Optional[bytes] = None,
+        is_encrypted: bool = False,
+        owner_restricted: bool = False
+    ):
+        self._payloads[job_id] = {
+            "raw_bytes": raw_bytes,
+            "sanitized_bytes": sanitized_bytes,
+            "is_encrypted": is_encrypted,
+            "owner_restricted": owner_restricted,
+            "owner_confirmed": False
+        }
+
+    def get_job_payload(self, job_id: str) -> Optional[Dict[str, Any]]:
+        return self._payloads.get(job_id)
+
+    def set_sanitized_bytes(self, job_id: str, sanitized_bytes: bytes):
+        if job_id in self._payloads:
+            self._payloads[job_id]["sanitized_bytes"] = sanitized_bytes
+
+    def unlock_job(self, job_id: str, sanitized_bytes: bytes, page_count: int) -> Optional[JobResponse]:
+        job_data = self._jobs.get(job_id)
+        if not job_data:
+            return None
+        self.set_sanitized_bytes(job_id, sanitized_bytes)
+        job_data["status"] = JobStatus.ANALYZING
+        job_data["currentStage"] = "analyzing"
+        job_data["progress"] = 25
+        job_data["pageCount"] = page_count
+        job_data["error"] = None
+        job_data["updatedAt"] = datetime.now(timezone.utc)
+        self.emit_event(job_id, "intake", "JOB_UNLOCKED", "Document unlocked successfully with valid credentials")
+        return self._to_response(job_data)
+
+    def confirm_owner_rights(self, job_id: str) -> Optional[JobResponse]:
+        job_data = self._jobs.get(job_id)
+        if not job_data:
+            return None
+        if job_id in self._payloads:
+            self._payloads[job_id]["owner_confirmed"] = True
+        job_data["status"] = JobStatus.ANALYZING
+        job_data["currentStage"] = "analyzing"
+        job_data["progress"] = 25
+        job_data["error"] = None
+        job_data["updatedAt"] = datetime.now(timezone.utc)
+        self.emit_event(job_id, "intake", "OWNER_CONFIRMED", "Owner permissions confirmed by user. Proceeding with analysis.")
+        return self._to_response(job_data)
 
     def create_job(
         self,

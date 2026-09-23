@@ -1,0 +1,33 @@
+{
+  "milestone": 2,
+  "name": "Intake & Security Deepening (Stage S1)",
+  "timestamp": "2026-09-23T19:35:00Z",
+  "status": "PASSED",
+  "total_security_tests": 14,
+  "passed_tests": 14,
+  "failed_tests": 0,
+  "coverage": {
+    "pdf_active_content_sanitization": "VERIFIED_PASSED",
+    "pdf_user_password_challenge": "VERIFIED_PASSED",
+    "pdf_owner_restriction_workflow": "VERIFIED_PASSED",
+    "pdf_damaged_xref_qpdf_recovery": "VERIFIED_PASSED",
+    "pdf_fatal_corruption_rejection": "VERIFIED_PASSED",
+    "docx_zipbomb_threshold_enforcement": "VERIFIED_PASSED",
+    "docx_xxe_defusedxml_defense": "VERIFIED_PASSED",
+    "docx_macro_prohibition": "VERIFIED_PASSED",
+    "docx_path_traversal_rejection": "VERIFIED_PASSED",
+    "image_header_decompression_bomb_precheck": "VERIFIED_PASSED",
+    "image_exif_orientation_normalization": "VERIFIED_PASSED",
+    "image_metadata_privacy_stripping": "VERIFIED_PASSED",
+    "malware_eicar_signature_detection": "VERIFIED_PASSED",
+    "page_count_limit_enforcement": "VERIFIED_PASSED"
+  },
+  "metrics": {
+    "max_image_megapixels_limit": 60,
+    "max_document_pages_limit": 100,
+    "max_docx_archive_entries": 10000,
+    "max_docx_uncompressed_mb": 200,
+    "pytest_duration_seconds": 0.94,
+    "vitest_duration_seconds": 18.66
+  }
+}

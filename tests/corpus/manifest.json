@@ -43,6 +43,14 @@
       "gate_target": "OCR robust detection"
     },
     {
+      "id": "05b",
+      "filename": "05b_photo_with_exif_rotation.jpg",
+      "category": "photo_exif",
+      "description": "Photo with EXIF orientation tag 6 (90 deg CW)",
+      "expected_behavior": "Orientation normalized upright and EXIF metadata stripped",
+      "gate_target": "EXIF stripped & normalized"
+    },
+    {
       "id": "06",
       "filename": "06_hybrid_multipage.pdf",
       "category": "hybrid",
@@ -62,9 +70,17 @@
       "id": "08a",
       "filename": "08a_password_protected_user.pdf",
       "category": "security",
-      "description": "User password encrypted PDF",
-      "expected_behavior": "Pauses in needs_password state with E_PDF_PASSWORD",
-      "gate_target": "E_PDF_PASSWORD raised"
+      "description": "User password encrypted PDF (userpass123)",
+      "expected_behavior": "Pauses in needs_password state with E_PDF_PASSWORD, unlocks on correct password",
+      "gate_target": "E_PDF_PASSWORD raised & unlocked"
+    },
+    {
+      "id": "08b",
+      "filename": "08b_owner_restricted.pdf",
+      "category": "security",
+      "description": "Owner-restricted PDF (no user password required to view, text extraction restricted)",
+      "expected_behavior": "Identifies owner restriction and requests confirmation before proceeding",
+      "gate_target": "Owner restrictions detected"
     },
     {
       "id": "09",
@@ -72,7 +88,7 @@
       "category": "corrupt",
       "description": "Truncated PDF with damaged xref table",
       "expected_behavior": "Attempts repair or halts safely with E_PDF_CORRUPT",
-      "gate_target": "E_PDF_CORRUPT handled cleanly"
+      "gate_target": "E_PDF_CORRUPT or qpdf repair handled cleanly"
     },
     {
       "id": "10a",
@@ -97,6 +113,14 @@
       "description": "PNG image with 900 MP header (decompression bomb defense)",
       "expected_behavior": "Rejected by intake before memory allocation with E_IMAGE_TOO_LARGE",
       "gate_target": "E_IMAGE_TOO_LARGE raised"
+    },
+    {
+      "id": "10d",
+      "filename": "10d_malicious_xxe.docx",
+      "category": "malicious",
+      "description": "DOCX package containing XXE external entity injection",
+      "expected_behavior": "Blocked by defusedxml parser with E_DOCX_SECURITY_RISK",
+      "gate_target": "E_DOCX_SECURITY_RISK raised"
     },
     {
       "id": "11",

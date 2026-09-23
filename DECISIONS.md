@@ -142,3 +142,13 @@ This log records every non-obvious decision made during the elevation and produc
 - **Idempotency & Resilience**: Every stage is keyed by `(job_id, page_no, stage)`. Failed pages are retried up to 3 times with exponential backoff. Partial delivery is preserved: if page 94 fails in a 100-page job, 99 translated pages are delivered with explicit per-page reporting (`qa_warning`).
 - **Dual Execution Engine**: Services are fully containerized via `docker-compose.yml` for Linux VPS deployment, while providing native scripts and TypeScript/Python bridges for seamless local execution and automated golden corpus testing.
 
+---
+
+### Decision 13: Milestone 2 Intake & Security Deepening Architecture (S1)
+- **Active Script Stripping**: PDF active elements (`/OpenAction`, `/AA`, `/JavaScript`, `/XFA`, `/Launch`, `/EmbeddedFiles`) are stripped from Catalog root and page annotations using `pikepdf`. Downstream stages only ever touch the decrypted, linearized, sanitized PDF copy.
+- **In-Memory Credential Decryption**: User-password encrypted PDFs pause the job in `needs_password` (emitting `E_PDF_PASSWORD` with HTTP 401). Passwords submitted via `POST /api/jobs/{id}/password` unlock and decrypt the document in memory only; passwords and decrypted bytes are never written to disk or logged.
+- **Owner-Permission Enforcement**: PDFs with owner-restriction flags pause in `needs_owner_confirmation`. The user affirms legal right to translate via `POST /api/jobs/{id}/confirm-owner-rights` before pipeline ingestion.
+- **Damaged PDF Self-Healing**: Truncated or corrupt xref tables are automatically repaired via libqpdf recovery during intake. Unrecoverable files safely fail with `E_PDF_CORRUPT` and HTTP 422.
+- **DOCX Defused XML & Zip-Bomb Defenses**: All XML parts inside `.docx` archives are inspected using `defusedxml.ElementTree` to block XXE (`EntitiesForbidden`), with hard ceilings on entry count (10,000) and uncompressed size (200 MB).
+- **Image Decompression Bomb & Privacy Safeguards**: Fast binary struct parsing on JPEG/PNG headers enforces a 60 MP ceiling prior to full decompression. EXIF orientation is normalized upright via `ImageOps.exif_transpose` and camera/GPS metadata is completely stripped.
+

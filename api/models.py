@@ -6,6 +6,8 @@ from datetime import datetime
 class JobStatus(str, Enum):
     UPLOADED = "uploaded"
     VALIDATING = "validating"
+    NEEDS_PASSWORD = "needs_password"
+    NEEDS_OWNER_CONFIRMATION = "needs_owner_confirmation"
     ANALYZING = "analyzing"
     TRANSLATING = "translating"
     RENDERING = "rendering"
@@ -94,3 +96,9 @@ class PresignUploadResponse(BaseModel):
     s3Key: str
     fields: Dict[str, str] = {}
     expiresInSeconds: int = 900
+
+class PasswordSubmitRequest(BaseModel):
+    password: str
+
+class OwnerConfirmRequest(BaseModel):
+    confirmed: bool = True
