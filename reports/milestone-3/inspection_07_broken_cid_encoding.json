@@ -1,0 +1,86 @@
+{
+  "filename": "07_broken_cid_encoding.pdf",
+  "page_count": 1,
+  "pages": [
+    {
+      "page_number": 1,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "scanned",
+      "text_layer_trustworthiness": 0.4482758620689655,
+      "garbage_ratio": 0.13793103448275862,
+      "is_broken_encoding": true,
+      "blocks": [
+        {
+          "id": "blk_1_1",
+          "page_number": 1,
+          "order_index": 1,
+          "bbox": [
+            51.077999114990234,
+            719.8460083007812,
+            369.54998779296875,
+            730.2059936523438
+          ],
+          "pixel_bbox": [
+            51.077999114990234,
+            61.79400634765625,
+            369.54998779296875,
+            72.15399169921875
+          ],
+          "text": "DOCUMENT WITH CORRUPTED CID ENCODING",
+          "font_size": 10.4,
+          "role": "header",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_2",
+          "page_number": 1,
+          "order_index": 2,
+          "bbox": [
+            50.040000915527344,
+            637.9099731445312,
+            433.18988037109375,
+            647.280029296875
+          ],
+          "pixel_bbox": [
+            50.040000915527344,
+            144.719970703125,
+            433.18988037109375,
+            154.09002685546875
+          ],
+          "text": "Visual layout looks like standard Latin, but underlying text stream has unmapped CIDs.",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_3",
+          "page_number": 1,
+          "order_index": 3,
+          "bbox": [
+            50.0,
+            679.8790283203125,
+            292.1210021972656,
+            688.0189819335938
+          ],
+          "pixel_bbox": [
+            50.0,
+            103.98101806640625,
+            292.1210021972656,
+            112.1209716796875
+          ],
+          "text": "\u0001\u0004\u0005\u0006\u0007\b\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f UNMAPPED CID CODEPOINTS",
+          "font_size": 8.1,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [],
+      "non_text_regions": [],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_07_broken_cid_encoding_p1.png"
+    }
+  ]
+}

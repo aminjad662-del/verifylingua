@@ -1,0 +1,572 @@
+{
+  "filename": "03_table_heavy_multipage.pdf",
+  "page_count": 2,
+  "pages": [
+    {
+      "page_number": 1,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "digital_text",
+      "text_layer_trustworthiness": 1.0,
+      "garbage_ratio": 0.0,
+      "is_broken_encoding": false,
+      "blocks": [
+        {
+          "id": "blk_1_1",
+          "page_number": 1,
+          "order_index": 1,
+          "bbox": [
+            51.14799880981445,
+            717.073974609375,
+            449.3500061035156,
+            730.1920166015625
+          ],
+          "pixel_bbox": [
+            51.14799880981445,
+            61.8079833984375,
+            449.3500061035156,
+            74.926025390625
+          ],
+          "text": "FINANCIAL AUDIT STATEMENT - BALANCE SHEET (PAGE 1)",
+          "font_size": 13.1,
+          "role": "header",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_2",
+          "page_number": 1,
+          "order_index": 2,
+          "bbox": [
+            55.91999816894531,
+            647.9099731445312,
+            266.62994384765625,
+            657.2899780273438
+          ],
+          "pixel_bbox": [
+            55.91999816894531,
+            134.71002197265625,
+            266.62994384765625,
+            144.09002685546875
+          ],
+          "text": "| Asset Category | Q1 2026 | Q2 2026 | Growth |",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_3",
+          "page_number": 1,
+          "order_index": 3,
+          "bbox": [
+            55.91999816894531,
+            607.9099731445312,
+            320.2999572753906,
+            617.8200073242188
+          ],
+          "pixel_bbox": [
+            55.91999816894531,
+            174.17999267578125,
+            320.2999572753906,
+            184.09002685546875
+          ],
+          "text": "| Cash and Cash Equiv | $1,250,000 | $1,420,000 | +13.6% |",
+          "font_size": 9.9,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_4",
+          "page_number": 1,
+          "order_index": 4,
+          "bbox": [
+            55.91999816894531,
+            567.9099731445312,
+            300.2799377441406,
+            577.8200073242188
+          ],
+          "pixel_bbox": [
+            55.91999816894531,
+            214.17999267578125,
+            300.2799377441406,
+            224.09002685546875
+          ],
+          "text": "| Accounts Receivable | $480,000 | $510,000 | +6.25% |",
+          "font_size": 9.9,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_5",
+          "page_number": 1,
+          "order_index": 5,
+          "bbox": [
+            55.91999816894531,
+            527.9099731445312,
+            337.51995849609375,
+            537.8200073242188
+          ],
+          "pixel_bbox": [
+            55.91999816894531,
+            254.17999267578125,
+            337.51995849609375,
+            264.09002685546875
+          ],
+          "text": "| Retained Capital Reserve | $2,100,000 | $2,350,000 | +11.9% |",
+          "font_size": 9.9,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [
+        {
+          "id": "tbl_1_1",
+          "page_number": 1,
+          "bbox": [
+            55.91999816894531,
+            527.9099731445312,
+            337.51995849609375,
+            657.2899780273438
+          ],
+          "rows_count": 4,
+          "cols_count": 4,
+          "headers": [
+            "Asset Category",
+            "Q1 2026",
+            "Q2 2026",
+            "Growth"
+          ],
+          "cells": [
+            {
+              "row": 0,
+              "col": 0,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Asset Category",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 0,
+              "col": 1,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Q1 2026",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 0,
+              "col": 2,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Q2 2026",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 0,
+              "col": 3,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Growth",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 1,
+              "col": 0,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Cash and Cash Equiv",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 1,
+              "col": 1,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$1,250,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 1,
+              "col": 2,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$1,420,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 1,
+              "col": 3,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "+13.6%",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 0,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Accounts Receivable",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 1,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$480,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 2,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$510,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 3,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "+6.25%",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 3,
+              "col": 0,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Retained Capital Reserve",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 3,
+              "col": 1,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$2,100,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 3,
+              "col": 2,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$2,350,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 3,
+              "col": 3,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "+11.9%",
+              "bbox": [],
+              "is_header": false
+            }
+          ]
+        }
+      ],
+      "non_text_regions": [
+        {
+          "id": "nt_1_1",
+          "page_number": 1,
+          "kind": "vector_graphic",
+          "bbox": [
+            49.5,
+            509.5,
+            560.5,
+            680.5
+          ]
+        }
+      ],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_03_table_heavy_multipage_p1.png"
+    },
+    {
+      "page_number": 2,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "digital_text",
+      "text_layer_trustworthiness": 1.0,
+      "garbage_ratio": 0.0,
+      "is_broken_encoding": false,
+      "blocks": [
+        {
+          "id": "blk_2_1",
+          "page_number": 2,
+          "order_index": 1,
+          "bbox": [
+            51.14799880981445,
+            717.073974609375,
+            496.7959899902344,
+            730.2059936523438
+          ],
+          "pixel_bbox": [
+            51.14799880981445,
+            61.79400634765625,
+            496.7959899902344,
+            74.926025390625
+          ],
+          "text": "FINANCIAL AUDIT STATEMENT - BALANCE SHEET (PAGE 2 CONT.)",
+          "font_size": 13.1,
+          "role": "header",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_2_2",
+          "page_number": 2,
+          "order_index": 2,
+          "bbox": [
+            55.91999816894531,
+            647.9099731445312,
+            278.8599548339844,
+            657.2899780273438
+          ],
+          "pixel_bbox": [
+            55.91999816894531,
+            134.71002197265625,
+            278.8599548339844,
+            144.09002685546875
+          ],
+          "text": "| Liability & Equity | Q1 2026 | Q2 2026 | Variance |",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_2_3",
+          "page_number": 2,
+          "order_index": 3,
+          "bbox": [
+            55.91999816894531,
+            607.9099731445312,
+            276.0799560546875,
+            617.8200073242188
+          ],
+          "pixel_bbox": [
+            55.91999816894531,
+            174.17999267578125,
+            276.0799560546875,
+            184.09002685546875
+          ],
+          "text": "| Current Liabilities | $320,000 | $295,000 | -7.8% |",
+          "font_size": 9.9,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_2_4",
+          "page_number": 2,
+          "order_index": 4,
+          "bbox": [
+            55.91999816894531,
+            567.9099731445312,
+            333.63995361328125,
+            577.8200073242188
+          ],
+          "pixel_bbox": [
+            55.91999816894531,
+            214.17999267578125,
+            333.63995361328125,
+            224.09002685546875
+          ],
+          "text": "| Total Shareholder Equity | $3,510,000 | $3,985,000 | +13.5% |",
+          "font_size": 9.9,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_2_5",
+          "page_number": 2,
+          "order_index": 5,
+          "bbox": [
+            50.22999954223633,
+            417.9100036621094,
+            320.929931640625,
+            427.2799987792969
+          ],
+          "pixel_bbox": [
+            50.22999954223633,
+            364.7200012207031,
+            320.929931640625,
+            374.0899963378906
+          ],
+          "text": "Total Net Position: Certified accurate by Independent Auditor.",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [
+        {
+          "id": "tbl_2_1",
+          "page_number": 2,
+          "bbox": [
+            55.91999816894531,
+            567.9099731445312,
+            333.63995361328125,
+            657.2899780273438
+          ],
+          "rows_count": 3,
+          "cols_count": 4,
+          "headers": [
+            "Liability & Equity",
+            "Q1 2026",
+            "Q2 2026",
+            "Variance"
+          ],
+          "cells": [
+            {
+              "row": 0,
+              "col": 0,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Liability & Equity",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 0,
+              "col": 1,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Q1 2026",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 0,
+              "col": 2,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Q2 2026",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 0,
+              "col": 3,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Variance",
+              "bbox": [],
+              "is_header": true
+            },
+            {
+              "row": 1,
+              "col": 0,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Current Liabilities",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 1,
+              "col": 1,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$320,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 1,
+              "col": 2,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$295,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 1,
+              "col": 3,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "-7.8%",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 0,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "Total Shareholder Equity",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 1,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$3,510,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 2,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "$3,985,000",
+              "bbox": [],
+              "is_header": false
+            },
+            {
+              "row": 2,
+              "col": 3,
+              "rowspan": 1,
+              "colspan": 1,
+              "text": "+13.5%",
+              "bbox": [],
+              "is_header": false
+            }
+          ]
+        }
+      ],
+      "non_text_regions": [
+        {
+          "id": "nt_2_1",
+          "page_number": 2,
+          "kind": "vector_graphic",
+          "bbox": [
+            49.5,
+            549.5,
+            560.5,
+            680.5
+          ]
+        }
+      ],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_03_table_heavy_multipage_p2.png"
+    }
+  ]
+}

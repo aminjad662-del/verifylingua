@@ -103,21 +103,95 @@ def make_simple_pdf(pages_text: list[list[str]], output_path: str, extra_catalog
         f"startxref\n{xref_offset}\n%%EOF\n"
     ).encode("utf-8")
     
+def make_spatial_pdf(pages_data: list[dict], output_path: str):
+    """Creates a standards-compliant PDF with exact spatial coordinates, vector paths, and images."""
+    objects = {}
+    objects[3] = b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+    current_id = 4
+    page_ids = []
+    
+    for p in pages_data:
+        xobject_dict = []
+        image_ids = []
+        for idx, img in enumerate(p.get("images", [])):
+            x, y, w, h, iw, ih, raw_rgb = img
+            comp = zlib.compress(raw_rgb)
+            img_id = current_id
+            current_id += 1
+            objects[img_id] = (
+                f"<< /Type /XObject /Subtype /Image /Width {iw} /Height {ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length {len(comp)} >>\nstream\n".encode("utf-8")
+                + comp
+                + b"\nendstream"
+            )
+            xobject_dict.append(f"/Im{idx+1} {img_id} 0 R")
+            image_ids.append((f"Im{idx+1}", x, y, w, h))
+            
+        stream_parts = []
+        for r in p.get("rects", []):
+            rx, ry, rw, rh = r
+            stream_parts.append(f"0.5 w 0.2 0.2 0.2 RG {rx} {ry} {rw} {rh} re S\n".encode("utf-8"))
+        for img_name, ix, iy, iw, ih in image_ids:
+            stream_parts.append(f"q {iw} 0 0 {ih} {ix} {iy} cm /{img_name} Do Q\n".encode("utf-8"))
+        for t in p.get("texts", []):
+            tx, ty, tsize, tstr = t
+            safe = tstr.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+            stream_parts.append(f"BT /F1 {tsize} Tf 1 0 0 1 {tx} {ty} Tm ({safe}) Tj ET\n".encode("utf-8"))
+            
+        stream_bytes = b"".join(stream_parts)
+        stream_id = current_id
+        current_id += 1
+        objects[stream_id] = f"<< /Length {len(stream_bytes)} >>\nstream\n".encode("utf-8") + stream_bytes + b"\nendstream"
+        
+        xobj_res = ""
+        if xobject_dict:
+            xobj_str = " ".join(xobject_dict)
+            xobj_res = f" /XObject << {xobj_str} >>"
+            
+        page_id = current_id
+        current_id += 1
+        page_ids.append(page_id)
+        objects[page_id] = f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >>{xobj_res} >> /Contents {stream_id} 0 R >>".encode("utf-8")
+        
+    kids = " ".join(f"{pid} 0 R" for pid in page_ids)
+    objects[2] = f"<< /Type /Pages /Kids [{kids}] /Count {len(page_ids)} >>".encode("utf-8")
+    objects[1] = b"<< /Type /Catalog /Pages 2 0 R >>"
+    
+    pdf = b"%PDF-1.4\n"
+    offsets = {}
+    for oid in sorted(objects.keys()):
+        offsets[oid] = len(pdf)
+        pdf += f"{oid} 0 obj\n".encode("utf-8") + objects[oid] + b"\nendobj\n"
+        
+    xref_off = len(pdf)
+    pdf += f"xref\n0 {len(objects)+1}\n0000000000 65535 f \n".encode("utf-8")
+    for oid in range(1, len(objects)+1):
+        pdf += f"{offsets[oid]:010d} 00000 n \n".encode("utf-8")
+    pdf += f"trailer << /Size {len(objects)+1} /Root 1 0 R >>\nstartxref\n{xref_off}\n%%EOF\n".encode("utf-8")
+    
     with open(output_path, "wb") as f:
-        f.write(pdf_out)
+        f.write(pdf)
 
 print("Starting corpus generation...")
 
 # 1. Two-column academic PDF with sidebar and footnotes
 f1 = os.path.join(CORPUS_DIR, "01_academic_two_column.pdf")
-make_simple_pdf([[
-    "RESEARCH ARTICLE: High-Fidelity Neural Document Parsing",
-    "Abstract: In this work we explore multi-column layout extraction.",
-    "Column 1: The model identifies spatial headers and paragraphs.",
-    "Column 2: Spatial continuity is preserved across reading orders.",
-    "Sidebar: Key Takeaways - 100% geometry retention.",
-    "Footnote 1: Verified under USCIS 8 CFR evidentiary guidelines."
-]], f1)
+make_spatial_pdf([
+    {
+        "texts": [
+            (50, 720, 16, "RESEARCH ARTICLE: High-Fidelity Neural Document Parsing"),
+            (50, 680, 11, "Abstract: In this work we explore multi-column layout extraction."),
+            (50, 620, 10, "Column 1: The model identifies spatial headers and paragraphs."),
+            (50, 580, 10, "Column 1 Section B: Multi-modal OCR aligns coordinates accurately."),
+            (320, 620, 10, "Column 2: Spatial continuity is preserved across reading orders."),
+            (320, 580, 10, "Column 2 Section B: Column flow resumes after left column completion."),
+            (320, 500, 9, "Sidebar: Key Takeaways - 100% geometry retention."),
+            (50, 80, 8, "Footnote 1: Verified under USCIS 8 CFR evidentiary guidelines.")
+        ],
+        "rects": [
+            (315, 485, 245, 40) # Sidebar boundary box
+        ]
+    }
+], f1)
 add_to_manifest("01", "01_academic_two_column.pdf", "academic", "Two-column academic PDF with sidebar and footnotes", "Correct multi-column reading order and footnote preservation", "Reading order correct")
 
 # 2. 20-Page Contract with repeated terms
@@ -136,21 +210,36 @@ add_to_manifest("02", "02_contract_20page_consistency.pdf", "contract", "20-page
 
 # 3. Table-heavy PDF spanning 2 pages
 f3 = os.path.join(CORPUS_DIR, "03_table_heavy_multipage.pdf")
-make_simple_pdf([
-    [
-        "FINANCIAL AUDIT STATEMENT - BALANCE SHEET (PAGE 1)",
-        "| Asset Category           | Q1 2026   | Q2 2026   | Growth |",
-        "| Cash and Cash Equiv      | $1,250,000| $1,420,000| +13.6% |",
-        "| Accounts Receivable      | $480,000  | $510,000  | +6.25% |",
-        "| Retained Capital Reserve | $2,100,000| $2,350,000| +11.9% |"
-    ],
-    [
-        "FINANCIAL AUDIT STATEMENT - BALANCE SHEET (PAGE 2 CONT.)",
-        "| Liability & Equity       | Q1 2026   | Q2 2026   | Variance |",
-        "| Current Liabilities      | $320,000  | $295,000  | -7.8%    |",
-        "| Total Shareholder Equity | $3,510,000| $3,985,000| +13.5%   |",
-        "Total Net Position: Certified accurate by Independent Auditor."
-    ]
+make_spatial_pdf([
+    {
+        "texts": [
+            (50, 720, 14, "FINANCIAL AUDIT STATEMENT - BALANCE SHEET (PAGE 1)"),
+            (55, 650, 10, "| Asset Category | Q1 2026 | Q2 2026 | Growth |"),
+            (55, 610, 10, "| Cash and Cash Equiv | $1,250,000 | $1,420,000 | +13.6% |"),
+            (55, 570, 10, "| Accounts Receivable | $480,000 | $510,000 | +6.25% |"),
+            (55, 530, 10, "| Retained Capital Reserve | $2,100,000 | $2,350,000 | +11.9% |")
+        ],
+        "rects": [
+            (50, 510, 510, 170), # Table outer grid box
+            (50, 640, 510, 1),   # Header separator line
+            (50, 600, 510, 1),   # Row 1 separator line
+            (50, 560, 510, 1)    # Row 2 separator line
+        ]
+    },
+    {
+        "texts": [
+            (50, 720, 14, "FINANCIAL AUDIT STATEMENT - BALANCE SHEET (PAGE 2 CONT.)"),
+            (55, 650, 10, "| Liability & Equity | Q1 2026 | Q2 2026 | Variance |"),
+            (55, 610, 10, "| Current Liabilities | $320,000 | $295,000 | -7.8% |"),
+            (55, 570, 10, "| Total Shareholder Equity | $3,510,000 | $3,985,000 | +13.5% |"),
+            (50, 420, 10, "Total Net Position: Certified accurate by Independent Auditor.")
+        ],
+        "rects": [
+            (50, 550, 510, 130), # Table outer grid box
+            (50, 640, 510, 1),   # Header separator line
+            (50, 600, 510, 1)    # Row 1 separator line
+        ]
+    }
 ], f3)
 add_to_manifest("03", "03_table_heavy_multipage.pdf", "tables", "Table-heavy multi-page financial statement with numbers and merged cells", "Accurate table column alignment and numerical preservation", "Table structure preserved")
 
@@ -203,23 +292,68 @@ try:
 except Exception as e:
     print(f"Warning: could not generate 05b: {e}")
 
-# 6. Hybrid PDF
+# 6. Hybrid PDF (digital text, scanned image, hybrid text+image, vector graphic CAD)
 f6 = os.path.join(CORPUS_DIR, "06_hybrid_multipage.pdf")
-make_simple_pdf([
-    ["HYBRID DOCUMENT - PAGE 1: Native Digital Text", "This page contains pure vector selectable text."],
-    ["HYBRID DOCUMENT - PAGE 2: Scanned Document Page", "Scanned raster text layer with OCR pre-processing."],
-    ["HYBRID DOCUMENT - PAGE 3: Table Embedded as Graphic", "Complex financial table rendered as an image block."],
-    ["HYBRID DOCUMENT - PAGE 4: Vector Diagram & CAD Flow", "Technical diagram paths preserved without re-rasterization."]
+make_spatial_pdf([
+    # Page 1: Pure Digital Text
+    {
+        "texts": [
+            (50, 720, 14, "HYBRID DOCUMENT - PAGE 1: Native Digital Vector Text"),
+            (50, 680, 11, "This page contains pure vector selectable text without embedded raster graphics."),
+            (50, 640, 10, "Section 1: Automated layout preservation parses paragraph coordinates precisely."),
+            (50, 600, 10, "Section 2: High confidence text layers are extracted directly via vector pipelines.")
+        ]
+    },
+    # Page 2: Scanned Page (full page background raster image covering 85% of page)
+    {
+        "images": [
+            (50, 50, 512, 690, 20, 20, b"\xf0\xef\xe8" * 400) # Full page scan background
+        ],
+        "texts": [
+            (60, 710, 10, "Scanned Document Page - Header")
+        ]
+    },
+    # Page 3: Hybrid Page (Digital Header + Embedded Financial Graphic Image)
+    {
+        "texts": [
+            (50, 720, 14, "HYBRID DOCUMENT - PAGE 3: Digital Header with Graphic Chart"),
+            (50, 680, 10, "Below is an embedded financial growth projection chart rendered as an image block:")
+        ],
+        "images": [
+            (60, 300, 480, 320, 20, 20, b"\x20\x80\xd0" * 400) # Chart graphic image
+        ]
+    },
+    # Page 4: Vector CAD Diagram (Multi-path technical blueprint with minimal text)
+    {
+        "texts": [
+            (50, 720, 11, "CAD SCHEMATIC - ARCHITECTURAL BLUEPRINT (VECTOR GRAPHIC)")
+        ],
+        "rects": [
+            (50, 100, 510, 580), # Outer boundary
+            (60, 110, 240, 260), # Room A
+            (310, 110, 240, 260),# Room B
+            (60, 390, 240, 270), # Room C
+            (310, 390, 240, 270),# Room D
+            (100, 150, 160, 180),# Internal fixture 1
+            (350, 150, 160, 180),# Internal fixture 2
+            (100, 430, 160, 180),# Internal fixture 3
+            (350, 430, 160, 180) # Internal fixture 4
+        ]
+    }
 ], f6)
-add_to_manifest("06", "06_hybrid_multipage.pdf", "hybrid", "4-page hybrid PDF (digital, scanned, table-image, vector)", "Per-page classification (digital vs scanned) correctly identified", "Classification accuracy 100%")
+add_to_manifest("06", "06_hybrid_multipage.pdf", "hybrid", "4-page hybrid PDF (digital, scanned, hybrid, vector graphic)", "Per-page classification (digital, scanned, hybrid, vector) 100% accurate", "Classification accuracy 100%")
 
 # 7. Broken CID font encoding PDF
 f7 = os.path.join(CORPUS_DIR, "07_broken_cid_encoding.pdf")
-make_simple_pdf([[
-    "DOCUMENT WITH CORRUPTED CID ENCODING",
-    "\u0001\u0002\u0003\u0004 unmapped CID code points simulation",
-    "Visual text looks like standard Latin, but text layer is corrupted."
-]], f7)
+make_spatial_pdf([
+    {
+        "texts": [
+            (50, 720, 14, "DOCUMENT WITH CORRUPTED CID ENCODING"),
+            (50, 680, 11, "\x01\x02\x03\x04\x05\x06\x07\x08\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f UNMAPPED CID CODEPOINTS"),
+            (50, 640, 10, "Visual layout looks like standard Latin, but underlying text stream has unmapped CIDs.")
+        ]
+    }
+], f7)
 add_to_manifest("07", "07_broken_cid_encoding.pdf", "broken_encoding", "PDF with broken CID font encoding", "Detects low text layer trustworthiness and routes to visual OCR", "CID detection triggered")
 
 # 8a. Encrypted PDF with User Password

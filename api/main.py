@@ -19,6 +19,7 @@ from api.models import (
     ErrorDetail
 )
 from api.intake import run_intake_security_check, unlock_and_sanitize_pdf, IntakeError
+from api.analyze import analyze_pdf_document
 from api.store import job_store
 
 app = FastAPI(
@@ -219,6 +220,52 @@ async def confirm_owner_rights(job_id: str, req: OwnerConfirmRequest):
         raise HTTPException(status_code=400, detail="Owner confirmation must be affirmative")
     confirmed_job = job_store.confirm_owner_rights(job_id)
     return confirmed_job
+
+@app.post("/api/jobs/{job_id}/analyze", response_model=JobResponse)
+async def analyze_job_layout(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    payload = job_store.get_job_payload(job_id)
+    if not payload:
+        raise HTTPException(status_code=400, detail="No document payload cached for this job")
+
+    bytes_to_analyze = payload.get("sanitized_bytes") or payload.get("raw_bytes")
+    if not bytes_to_analyze:
+        raise HTTPException(status_code=400, detail="Empty document payload")
+
+    if job.sourceFormat.lower() == "pdf":
+        analysis = analyze_pdf_document(bytes_to_analyze, filename=job.sourceFilename)
+        for page_data in analysis.pages:
+            job_store.update_page_details(
+                job_id=job_id,
+                page_number=page_data.page_number,
+                kind=PageKind(page_data.kind),
+                status=PageStatus.ANALYZED,
+                text_layer_confidence=page_data.text_layer_trustworthiness,
+                is_broken_encoding=page_data.is_broken_encoding,
+                non_text_regions_count=len(page_data.non_text_regions),
+                width=page_data.width,
+                height=page_data.height
+            )
+    else:
+        # Single-page image or DOCX
+        kind = PageKind.IMAGE_ONLY if job.sourceFormat.lower() in ("jpg", "png") else PageKind.DIGITAL_TEXT
+        job_store.update_page_status(
+            job_id=job_id,
+            page_number=1,
+            status=PageStatus.ANALYZED,
+            kind=kind
+        )
+
+    job_store.update_job_stage(
+        job_id=job_id,
+        status=JobStatus.TRANSLATING,
+        stage_name="translating",
+        progress=45
+    )
+    return job_store.get_job(job_id)
 
 @app.get("/api/jobs/{job_id}", response_model=JobResponse)
 async def get_job_status(job_id: str):

@@ -189,6 +189,39 @@ class JobStore:
             {"pageNumber": page_number, "status": status.value}
         )
 
+    def update_page_details(
+        self,
+        job_id: str,
+        page_number: int,
+        kind: PageKind,
+        status: PageStatus,
+        text_layer_confidence: Optional[float] = None,
+        is_broken_encoding: bool = False,
+        non_text_regions_count: int = 0,
+        width: Optional[float] = None,
+        height: Optional[float] = None
+    ):
+        job_data = self._jobs.get(job_id)
+        if not job_data:
+            return
+        for p in job_data["pages"]:
+            if p["pageNumber"] == page_number:
+                p["status"] = status
+                p["kind"] = kind
+                p["textLayerConfidence"] = text_layer_confidence
+                p["isBrokenEncoding"] = is_broken_encoding
+                p["nonTextRegionsCount"] = non_text_regions_count
+                p["width"] = width
+                p["height"] = height
+                break
+        self.emit_event(
+            job_id,
+            "analysis",
+            "PAGE_ANALYZED",
+            f"Page {page_number} analyzed as {kind.value}",
+            {"pageNumber": page_number, "kind": kind.value, "confidence": text_layer_confidence}
+        )
+
     def emit_event(self, job_id: str, stage: str, event_type: str, message: str, data: Optional[Dict[str, Any]] = None):
         event = {
             "jobId": job_id,

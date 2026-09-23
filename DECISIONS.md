@@ -152,3 +152,12 @@ This log records every non-obvious decision made during the elevation and produc
 - **DOCX Defused XML & Zip-Bomb Defenses**: All XML parts inside `.docx` archives are inspected using `defusedxml.ElementTree` to block XXE (`EntitiesForbidden`), with hard ceilings on entry count (10,000) and uncompressed size (200 MB).
 - **Image Decompression Bomb & Privacy Safeguards**: Fast binary struct parsing on JPEG/PNG headers enforces a 60 MP ceiling prior to full decompression. EXIF orientation is normalized upright via `ImageOps.exif_transpose` and camera/GPS metadata is completely stripped.
 
+---
+
+### Decision 14: Milestone 3 Layout Analysis, XY-Cut Reading Order & Table Extraction Architecture (S2–S4)
+- **Per-Page Classification (S2)**: Classifies every page into explicit `PageKind` (`digital_text`, `scanned`, `hybrid`, `image_only`, `vector_graphic`, `blank`) using object area ratios. Detects broken font CID encodings and unmapped glyphs (via ASCII control characters, PUA ranges, and `U+FFFD`), safely forcing OCR routing for corrupted text layers.
+- **Multi-Column XY-Cut Reading Order (S4)**: Solves multi-column line interleaving by isolating spanning document headers, titles, and footers, and partitioning column bodies vertically. Guarantees complete top-to-bottom reading of Column 1 before proceeding to Column 2.
+- **Table Grid Matrix Parser (S4)**: Detects table bounding boxes and coordinate grid cells via vector line intersections and tabular text alignment, preserving row/column matrix relationships and header flags.
+- **Visual Overlay & Inspection Generation**: Generates 150 DPI color-coded visual overlays (blue text badges, green table borders, magenta non-text boxes) and structured inspection JSON files for quality verification.
+
+

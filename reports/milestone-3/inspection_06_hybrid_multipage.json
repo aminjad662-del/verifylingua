@@ -1,0 +1,362 @@
+{
+  "filename": "06_hybrid_multipage.pdf",
+  "page_count": 4,
+  "pages": [
+    {
+      "page_number": 1,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "digital_text",
+      "text_layer_trustworthiness": 1.0,
+      "garbage_ratio": 0.0,
+      "is_broken_encoding": false,
+      "blocks": [
+        {
+          "id": "blk_1_1",
+          "page_number": 1,
+          "order_index": 1,
+          "bbox": [
+            51.119998931884766,
+            717.073974609375,
+            416.3099365234375,
+            730.2059936523438
+          ],
+          "pixel_bbox": [
+            51.119998931884766,
+            61.79400634765625,
+            416.3099365234375,
+            74.926025390625
+          ],
+          "text": "HYBRID DOCUMENT - PAGE 1: Native Digital Vector Text",
+          "font_size": 13.1,
+          "role": "header",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_2",
+          "page_number": 1,
+          "order_index": 2,
+          "bbox": [
+            50.25299835205078,
+            677.7009887695312,
+            444.6139831542969,
+            687.8759765625
+          ],
+          "pixel_bbox": [
+            50.25299835205078,
+            104.1240234375,
+            444.6139831542969,
+            114.29901123046875
+          ],
+          "text": "This page contains pure vector selectable text without embedded raster graphics.",
+          "font_size": 10.2,
+          "role": "heading",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_3",
+          "page_number": 1,
+          "order_index": 3,
+          "bbox": [
+            50.45000076293945,
+            637.9099731445312,
+            412.6299133300781,
+            647.280029296875
+          ],
+          "pixel_bbox": [
+            50.45000076293945,
+            144.719970703125,
+            412.6299133300781,
+            154.09002685546875
+          ],
+          "text": "Section 1: Automated layout preservation parses paragraph coordinates precisely.",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_4",
+          "page_number": 1,
+          "order_index": 4,
+          "bbox": [
+            50.45000076293945,
+            597.9099731445312,
+            402.60992431640625,
+            607.280029296875
+          ],
+          "pixel_bbox": [
+            50.45000076293945,
+            184.719970703125,
+            402.60992431640625,
+            194.09002685546875
+          ],
+          "text": "Section 2: High confidence text layers are extracted directly via vector pipelines.",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": -1,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [],
+      "non_text_regions": [],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_06_hybrid_multipage_p1.png"
+    },
+    {
+      "page_number": 2,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "scanned",
+      "text_layer_trustworthiness": 1.0,
+      "garbage_ratio": 0.0,
+      "is_broken_encoding": false,
+      "blocks": [
+        {
+          "id": "blk_2_1",
+          "page_number": 2,
+          "order_index": 1,
+          "bbox": [
+            60.45000076293945,
+            707.9099731445312,
+            215.7699737548828,
+            717.280029296875
+          ],
+          "pixel_bbox": [
+            60.45000076293945,
+            74.719970703125,
+            215.7699737548828,
+            84.09002685546875
+          ],
+          "text": "Scanned Document Page - Header",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [],
+      "non_text_regions": [
+        {
+          "id": "nt_2_1",
+          "page_number": 2,
+          "kind": "image",
+          "bbox": [
+            50.0,
+            50.0,
+            562.0,
+            740.0
+          ]
+        }
+      ],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_06_hybrid_multipage_p2.png"
+    },
+    {
+      "page_number": 3,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "hybrid",
+      "text_layer_trustworthiness": 1.0,
+      "garbage_ratio": 0.0,
+      "is_broken_encoding": false,
+      "blocks": [
+        {
+          "id": "blk_3_1",
+          "page_number": 3,
+          "order_index": 1,
+          "bbox": [
+            51.119998931884766,
+            717.073974609375,
+            466.8778991699219,
+            730.2059936523438
+          ],
+          "pixel_bbox": [
+            51.119998931884766,
+            61.79400634765625,
+            466.8778991699219,
+            74.926025390625
+          ],
+          "text": "HYBRID DOCUMENT - PAGE 3: Digital Header with Graphic Chart",
+          "font_size": 13.1,
+          "role": "header",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_3_2",
+          "page_number": 3,
+          "order_index": 2,
+          "bbox": [
+            50.72999954223633,
+            677.9099731445312,
+            422.6199035644531,
+            687.280029296875
+          ],
+          "pixel_bbox": [
+            50.72999954223633,
+            104.719970703125,
+            422.6199035644531,
+            114.09002685546875
+          ],
+          "text": "Below is an embedded financial growth projection chart rendered as an image block:",
+          "font_size": 9.4,
+          "role": "heading",
+          "column_index": -1,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [],
+      "non_text_regions": [
+        {
+          "id": "nt_3_1",
+          "page_number": 3,
+          "kind": "image",
+          "bbox": [
+            60.0,
+            300.0,
+            540.0,
+            620.0
+          ]
+        }
+      ],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_06_hybrid_multipage_p3.png"
+    },
+    {
+      "page_number": 4,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "vector_graphic",
+      "text_layer_trustworthiness": 1.0,
+      "garbage_ratio": 0.0,
+      "is_broken_encoding": false,
+      "blocks": [
+        {
+          "id": "blk_4_1",
+          "page_number": 4,
+          "order_index": 1,
+          "bbox": [
+            50.54999923706055,
+            717.7009887695312,
+            416.905029296875,
+            728.0189819335938
+          ],
+          "pixel_bbox": [
+            50.54999923706055,
+            63.98101806640625,
+            416.905029296875,
+            74.29901123046875
+          ],
+          "text": "CAD SCHEMATIC - ARCHITECTURAL BLUEPRINT (VECTOR GRAPHIC)",
+          "font_size": 10.3,
+          "role": "header",
+          "column_index": -1,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [],
+      "non_text_regions": [
+        {
+          "id": "nt_4_1",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            49.5,
+            99.5,
+            560.5,
+            680.5
+          ]
+        },
+        {
+          "id": "nt_4_2",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            59.5,
+            109.5,
+            300.5,
+            370.5
+          ]
+        },
+        {
+          "id": "nt_4_3",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            309.5,
+            109.5,
+            550.5,
+            370.5
+          ]
+        },
+        {
+          "id": "nt_4_4",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            59.5,
+            389.5,
+            300.5,
+            660.5
+          ]
+        },
+        {
+          "id": "nt_4_5",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            309.5,
+            389.5,
+            550.5,
+            660.5
+          ]
+        },
+        {
+          "id": "nt_4_6",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            99.5,
+            149.5,
+            260.5,
+            330.5
+          ]
+        },
+        {
+          "id": "nt_4_7",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            349.5,
+            149.5,
+            510.5,
+            330.5
+          ]
+        },
+        {
+          "id": "nt_4_8",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            99.5,
+            429.5,
+            260.5,
+            610.5
+          ]
+        },
+        {
+          "id": "nt_4_9",
+          "page_number": 4,
+          "kind": "vector_graphic",
+          "bbox": [
+            349.5,
+            429.5,
+            510.5,
+            610.5
+          ]
+        }
+      ],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_06_hybrid_multipage_p4.png"
+    }
+  ]
+}

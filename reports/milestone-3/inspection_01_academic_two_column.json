@@ -1,0 +1,208 @@
+{
+  "filename": "01_academic_two_column.pdf",
+  "page_count": 1,
+  "pages": [
+    {
+      "page_number": 1,
+      "width": 612.0,
+      "height": 792.0,
+      "kind": "digital_text",
+      "text_layer_trustworthiness": 1.0,
+      "garbage_ratio": 0.0,
+      "is_broken_encoding": false,
+      "blocks": [
+        {
+          "id": "blk_1_1",
+          "page_number": 1,
+          "order_index": 1,
+          "bbox": [
+            51.263999938964844,
+            716.656005859375,
+            495.2479553222656,
+            731.6480102539062
+          ],
+          "pixel_bbox": [
+            51.263999938964844,
+            60.35198974609375,
+            495.2479553222656,
+            75.343994140625
+          ],
+          "text": "RESEARCH ARTICLE: High-Fidelity Neural Document Parsing",
+          "font_size": 15.0,
+          "role": "header",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_2",
+          "page_number": 1,
+          "order_index": 2,
+          "bbox": [
+            50.0,
+            677.7009887695312,
+            358.9789733886719,
+            687.8759765625
+          ],
+          "pixel_bbox": [
+            50.0,
+            104.1240234375,
+            358.9789733886719,
+            114.29901123046875
+          ],
+          "text": "Abstract: In this work we explore multi-column layout extraction.",
+          "font_size": 10.2,
+          "role": "heading",
+          "column_index": -1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_3",
+          "page_number": 1,
+          "order_index": 3,
+          "bbox": [
+            50.5,
+            617.9099731445312,
+            333.1499328613281,
+            627.280029296875
+          ],
+          "pixel_bbox": [
+            50.5,
+            164.719970703125,
+            333.1499328613281,
+            174.09002685546875
+          ],
+          "text": "Column 1: The model identifies spatial headers and paragraphs.",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_4",
+          "page_number": 1,
+          "order_index": 4,
+          "bbox": [
+            50.5,
+            577.9099731445312,
+            354.2299499511719,
+            587.2899780273438
+          ],
+          "pixel_bbox": [
+            50.5,
+            204.71002197265625,
+            354.2299499511719,
+            214.09002685546875
+          ],
+          "text": "Column 1 Section B: Multi-modal OCR aligns coordinates accurately.",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": 0,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_5",
+          "page_number": 1,
+          "order_index": 5,
+          "bbox": [
+            320.5,
+            617.9099731445312,
+            602.5699462890625,
+            627.280029296875
+          ],
+          "pixel_bbox": [
+            320.5,
+            164.719970703125,
+            602.5699462890625,
+            174.09002685546875
+          ],
+          "text": "Column 2: Spatial continuity is preserved across reading orders.",
+          "font_size": 9.4,
+          "role": "paragraph",
+          "column_index": 1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_6",
+          "page_number": 1,
+          "order_index": 6,
+          "bbox": [
+            320.5,
+            578.02001953125,
+            637.0198974609375,
+            587.280029296875
+          ],
+          "pixel_bbox": [
+            320.5,
+            204.719970703125,
+            637.0198974609375,
+            213.97998046875
+          ],
+          "text": "Column 2 Section B: Column flow resumes after left column completion.",
+          "font_size": 9.3,
+          "role": "paragraph",
+          "column_index": 1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_7",
+          "page_number": 1,
+          "order_index": 7,
+          "bbox": [
+            320.4049987792969,
+            498.1189880371094,
+            529.8079223632812,
+            506.552001953125
+          ],
+          "pixel_bbox": [
+            320.4049987792969,
+            285.447998046875,
+            529.8079223632812,
+            293.8810119628906
+          ],
+          "text": "Sidebar: Key Takeaways - 100% geometry retention.",
+          "font_size": 8.4,
+          "role": "sidebar",
+          "column_index": 1,
+          "confidence": 1.0
+        },
+        {
+          "id": "blk_1_8",
+          "page_number": 1,
+          "order_index": 8,
+          "bbox": [
+            50.65599822998047,
+            78.3280029296875,
+            275.17596435546875,
+            85.8239974975586
+          ],
+          "pixel_bbox": [
+            50.65599822998047,
+            706.1760025024414,
+            275.17596435546875,
+            713.6719970703125
+          ],
+          "text": "Footnote 1: Verified under USCIS 8 CFR evidentiary guidelines.",
+          "font_size": 8.0,
+          "role": "footnote",
+          "column_index": -1,
+          "confidence": 1.0
+        }
+      ],
+      "tables": [],
+      "non_text_regions": [
+        {
+          "id": "nt_1_1",
+          "page_number": 1,
+          "kind": "vector_graphic",
+          "bbox": [
+            314.5,
+            484.5,
+            560.5,
+            525.5
+          ]
+        }
+      ],
+      "overlay_path": "C:\\Users\\aminj\\Downloads\\SAAS 7\\reports\\milestone-3\\overlays\\overlay_01_academic_two_column_p1.png"
+    }
+  ]
+}

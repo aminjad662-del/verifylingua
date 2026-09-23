@@ -54,8 +54,8 @@
       "id": "06",
       "filename": "06_hybrid_multipage.pdf",
       "category": "hybrid",
-      "description": "4-page hybrid PDF (digital, scanned, table-image, vector)",
-      "expected_behavior": "Per-page classification (digital vs scanned) correctly identified",
+      "description": "4-page hybrid PDF (digital, scanned, hybrid, vector graphic)",
+      "expected_behavior": "Per-page classification (digital, scanned, hybrid, vector) 100% accurate",
       "gate_target": "Classification accuracy 100%"
     },
     {

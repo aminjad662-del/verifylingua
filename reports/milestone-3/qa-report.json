@@ -1,0 +1,28 @@
+{
+  "milestone": 3,
+  "name": "Document Analysis (Stages S2 - S4)",
+  "timestamp": "2026-09-23T20:00:00Z",
+  "status": "PASSED",
+  "total_analysis_tests": 6,
+  "passed_tests": 6,
+  "failed_tests": 0,
+  "coverage": {
+    "reading_order_two_column_xy_cut": "VERIFIED_PASSED",
+    "table_grid_matrix_extraction": "VERIFIED_PASSED",
+    "hybrid_multipage_classification": "VERIFIED_PASSED",
+    "broken_cid_encoding_detection": "VERIFIED_PASSED",
+    "visual_overlay_and_json_inspection": "VERIFIED_PASSED",
+    "api_analyze_job_progression": "VERIFIED_PASSED"
+  },
+  "metrics": {
+    "corpus_01_reading_order_segments": 8,
+    "corpus_03_table_cells_p1": 16,
+    "corpus_03_table_cells_p2": 12,
+    "corpus_06_classification_accuracy": 1.0,
+    "corpus_07_garbage_ratio_detected": 0.138,
+    "overlay_dpi": 150,
+    "total_overlay_pngs_generated": 8,
+    "total_inspection_jsons_generated": 4,
+    "pytest_duration_seconds": 1.10
+  }
+}
