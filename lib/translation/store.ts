@@ -38,11 +38,17 @@ export function createTranslationJob(params: {
   userId?: string | null;
   pageCount?: number;
 }): TranslationJob {
-  const id = params.id || `job_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const id = params.id || crypto.randomUUID();
   const downloadToken = crypto.randomBytes(24).toString("hex");
 
   // 24-hour expiration window
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+  const userSegment = params.userId || "anonymous";
+  const ext = params.fileName.split(".").pop()?.toLowerCase() || params.fileFormat;
+  const sourceKey = `jobs/${userSegment}/${id}/source.${ext}`;
+  const outputKey = `jobs/${userSegment}/${id}/output.pdf`;
+  const sourceSha256 = crypto.createHash("sha256").update(params.originalBuffer).digest("hex");
 
   const job: TranslationJob = {
     id,
@@ -60,6 +66,9 @@ export function createTranslationJob(params: {
     tokenExpiresAt: expiresAt,
     userId: params.userId || null,
     pageCount: params.pageCount || 1,
+    sourceKey,
+    outputKey,
+    sourceSha256,
   };
 
   jobsMap.set(id, job);

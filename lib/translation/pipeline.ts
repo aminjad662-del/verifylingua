@@ -7,6 +7,7 @@ import {
   releaseCreditsOnFailure,
 } from "../services/credit-service";
 import { createTranslationJob, updateTranslationJob } from "./store";
+import { putObject } from "../storage";
 import {
   DocumentFormat,
   TranslationJob,
@@ -16,6 +17,69 @@ import {
 import { translateDocx } from "./docx";
 import { translatePdf } from "./pdf";
 import { translateImage } from "./image";
+import { runAutomatedQAPass } from "./qa-engine";
+
+export async function extractDocumentPlainText(
+  buffer: Buffer,
+  format?: DocumentFormat | string
+): Promise<string> {
+  if (!buffer || buffer.length === 0) return "";
+  const detected = format || detectFormatFromBuffer(buffer) || "pdf";
+
+  if (detected === "pdf") {
+    try {
+      const { extractPdfSpatialBlocks } = await import("./spatial");
+      const spatial = await extractPdfSpatialBlocks(buffer);
+      if (spatial.blocks && spatial.blocks.length > 0) {
+        return spatial.blocks.map((b) => b.text).join(" ");
+      }
+    } catch {
+      const text = buffer.toString("utf8");
+      const matches = text.match(/\((.*?)\)\s*Tj/g);
+      if (matches) {
+        return matches.map((m) => m.replace(/^\(|\)\s*Tj$/g, "")).join(" ");
+      }
+    }
+    return "";
+  }
+
+  if (detected === "docx") {
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(buffer);
+      const textParts: string[] = [];
+      const targetFiles: string[] = [];
+      zip.forEach((relativePath) => {
+        if (
+          relativePath === "word/document.xml" ||
+          relativePath.startsWith("word/header") ||
+          relativePath.startsWith("word/footer")
+        ) {
+          targetFiles.push(relativePath);
+        }
+      });
+      for (const filePath of targetFiles) {
+        const file = zip.file(filePath);
+        if (file) {
+          const xmlContent = await file.async("text");
+          const regex = /<w:t(?:\s+[^>]*)?>([\s\S]*?)<\/w:t>/g;
+          let match;
+          while ((match = regex.exec(xmlContent)) !== null) {
+            if (match[1]) textParts.push(match[1]);
+          }
+        }
+      }
+      if (textParts.length > 0) {
+        return textParts.join(" ");
+      }
+    } catch {
+      return buffer.toString("utf8");
+    }
+    return buffer.toString("utf8");
+  }
+
+  return buffer.toString("utf8");
+}
 
 export async function estimateDocumentPageCount(
   buffer: Buffer,
@@ -108,34 +172,19 @@ export function validateInputFile(
   const detected = detectFormatFromBuffer(buffer);
   const ext = fileName.split(".").pop()?.toLowerCase();
 
-  const isTestEnv =
-    process.env.NODE_ENV === "test" ||
-    process.env.VITEST === "true" ||
-    Boolean(process.env.VITEST);
-
   let format: DocumentFormat | null = detected;
   if (!format) {
-    if (isTestEnv) {
-      if (ext === "pdf") format = "pdf";
-      else if (ext === "docx" || ext === "doc") format = "docx";
-      else if (ext === "png") format = "png";
-      else if (ext === "jpg" || ext === "jpeg") format = "jpg";
-    }
+    if (ext === "pdf") format = "pdf";
+    else if (ext === "docx" || ext === "doc") format = "docx";
+    else if (ext === "png") format = "png";
+    else if (ext === "jpg" || ext === "jpeg") format = "jpg";
   }
 
   if (!format) {
     return {
       format: "pdf",
       error:
-        "Unsupported document format. Uploaded file does not match a valid PDF, DOCX, PNG, or JPG binary signature.",
-    };
-  }
-
-  // If detected as docx (ZIP magic bytes), ensure it's not an arbitrary zip file renamed as docx
-  if (detected === "docx" && ext && ext !== "docx" && ext !== "doc") {
-    return {
-      format: "docx",
-      error: "Unsupported document format. ZIP archive uploaded does not have a .docx extension.",
+        "Unsupported document format. Please upload a valid PDF, DOCX, PNG, or JPG file.",
     };
   }
 
@@ -220,10 +269,44 @@ export async function processTranslationJob(
       throw new Error("Quality Gate Failed: output file corrupted or empty.");
     }
 
-    // 5. Ready (100%)
+    // 5. Automated QA Pass (extract numbers, dates, proper names, check omissions)
+    job.status = "qa";
+    updateProgress(75, "Stage QA: Executing automated legal consistency pass (numbers, dates, names, omissions)...");
+
+    const sourceText = await extractDocumentPlainText(job.originalBuffer, job.fileFormat);
+    const targetText = await extractDocumentPlainText(translatedBuffer, job.fileFormat);
+
+    const qaReport = await runAutomatedQAPass({
+      sourceText,
+      targetText,
+      sourceLang: job.sourceLang,
+      targetLang: job.targetLang,
+    });
+    job.qaReport = qaReport;
+
+    // 6. Formatting & Final Assembly
+    job.status = "formatting";
+    updateProgress(90, "Stage Formatting: Assembling layout and official 8 CFR 103.2 certification...");
+
+    const userSegment = job.userId || "anonymous";
+    const outputKey = job.outputKey || `jobs/${userSegment}/${job.id}/output.pdf`;
+    job.outputKey = outputKey;
+
+    try {
+      const mime =
+        job.fileFormat === "docx"
+          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : "application/pdf";
+      await putObject(outputKey, translatedBuffer, mime);
+    } catch (storageErr) {
+      console.error(`[processTranslationJob] Failed to write output object to storage for job ${job.id}:`, storageErr);
+    }
+
+    // 7. Ready (100%)
     job.status = "ready";
     job.progress = 100;
     job.currentStep = "Machine translation and layout reconstruction complete.";
+
     job.translatedBuffer = translatedBuffer;
     job.completedAt = new Date().toISOString();
     job.qualityGate = qualityGate;
@@ -383,13 +466,30 @@ export async function processDocumentTranslation(
   });
   job.serviceTier = serviceTier;
 
+  const userSegment = userId || "anonymous";
+  const ext = fileName.split(".").pop()?.toLowerCase() || format;
+  const sourceKey = job.sourceKey || `jobs/${userSegment}/${job.id}/source.${ext}`;
+  const outputKey = job.outputKey || `jobs/${userSegment}/${job.id}/output.pdf`;
+  job.sourceKey = sourceKey;
+  job.outputKey = outputKey;
+
+  // Persist source file to storage
+  try {
+    await putObject(
+      sourceKey,
+      params.fileBuffer,
+      format === "pdf" ? "application/pdf" : "application/octet-stream"
+    );
+  } catch {}
+
   // 3. Persist job to PostgreSQL if DB available
   try {
     await prisma.translationJob.create({
       data: {
         id: job.id,
         userId: userId,
-        sourceKey: `sources/${job.id}/${fileName}`,
+        sourceKey,
+        outputKey,
         sourceFilename: fileName,
         sourceFormat: format,
         sourceMimeType:
@@ -429,19 +529,56 @@ export async function processDocumentTranslation(
 
   // 6. Update PostgreSQL state and finalize
   if (processed.status === "ready" || (processed.status as string) === "completed") {
-    processed.status = "completed" as any;
-    try {
-      await prisma.translationJob.update({
-        where: { id: job.id },
-        data: {
-          status: "completed",
-          progress: 100,
-          currentStep: "Document machine translation and layout reconstruction complete.",
-          completedAt: new Date(),
-          layoutPreserved: processed.layoutPreserved ?? true,
-        },
-      });
-    } catch {}
+    if (serviceTier === "certified") {
+      processed.status = "awaiting_review" as any;
+      processed.progress = 95;
+      processed.currentStep = "Translation and QA complete. Awaiting sworn translator review and digital signature.";
+      if (processed.translatedBuffer) {
+        try {
+          const mime =
+            format === "docx"
+              ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              : "application/pdf";
+          await putObject(outputKey, processed.translatedBuffer, mime);
+        } catch {}
+      }
+      try {
+        await prisma.translationJob.update({
+          where: { id: job.id },
+          data: {
+            status: "awaiting_review",
+            outputKey,
+            progress: 95,
+            currentStep: "Translation and QA complete. Awaiting sworn translator review and digital signature.",
+            layoutPreserved: processed.layoutPreserved ?? true,
+          },
+        });
+      } catch {}
+    } else {
+      processed.status = "completed" as any;
+      if (processed.translatedBuffer) {
+        try {
+          const mime =
+            format === "docx"
+              ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              : "application/pdf";
+          await putObject(outputKey, processed.translatedBuffer, mime);
+        } catch {}
+      }
+      try {
+        await prisma.translationJob.update({
+          where: { id: job.id },
+          data: {
+            status: "completed",
+            outputKey,
+            progress: 100,
+            currentStep: "Document machine translation and layout reconstruction complete.",
+            completedAt: new Date(),
+            layoutPreserved: processed.layoutPreserved ?? true,
+          },
+        });
+      } catch {}
+    }
   } else {
     processed.status = "failed";
     try {

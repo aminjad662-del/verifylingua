@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -16,13 +17,21 @@ import {
   ShieldCheck,
   Trash2,
   CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  RefreshCw,
 } from "lucide-react";
 
 export default function SettingsPage() {
   const [saved, setSaved] = React.useState(false);
-  const [name, setName] = React.useState("Mohammed Abdullah Al-Rashid");
-  const [email, setEmail] = React.useState("user@example.com");
-  const [phone, setPhone] = React.useState("+1 (555) 234-5678");
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+
+  // Verification resend state
+  const [isResendingVerify, setIsResendingVerify] = React.useState(false);
+  const [verifyNotice, setVerifyNotice] = React.useState<string | null>(null);
 
   // Preferences
   const [emailNotify, setEmailNotify] = React.useState(true);
@@ -30,6 +39,23 @@ export default function SettingsPage() {
   const [autoPurge, setAutoPurge] = React.useState(false); // Default is keep indefinitely (opt-in)
 
   React.useEffect(() => {
+    async function loadUserData() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.authenticated && data.user) {
+            setCurrentUser(data.user);
+            if (data.user.name) setName(data.user.name);
+            if (data.user.email) setEmail(data.user.email);
+            if (data.user.phone) setPhone(data.user.phone);
+          }
+        }
+      } catch {
+        // default state
+      }
+    }
+
     async function loadRetention() {
       try {
         const res = await fetch("/api/settings/retention");
@@ -43,8 +69,34 @@ export default function SettingsPage() {
         // use default state
       }
     }
+
+    loadUserData();
     loadRetention();
   }, []);
+
+  const handleResendVerification = async () => {
+    if (!email || isResendingVerify) return;
+    setIsResendingVerify(true);
+    setVerifyNotice(null);
+
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerifyNotice("Verification link sent! Please check your inbox.");
+      } else {
+        setVerifyNotice(data.error || "Failed to dispatch verification email.");
+      }
+    } catch {
+      setVerifyNotice("Network error occurred.");
+    } finally {
+      setIsResendingVerify(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +186,91 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+          </Card>
+
+          {/* Institutional Identity & Security Vault */}
+          <Card className="p-6 md:p-8 rounded-[32px] bg-surface-raised border border-border space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <h2 className="text-lg font-bold text-brand-ink flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-brand-500" />
+                  Institutional Identity & Security Vault
+                </h2>
+                <p className="text-xs text-text-muted">
+                  Cryptographic verification status, institutional role scope, and USCIS filing authorization.
+                </p>
+              </div>
+
+              <div>
+                {currentUser?.emailVerified ? (
+                  <Badge className="bg-status-success/15 text-status-success border-status-success/30 gap-1 px-3 py-1 font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Verified Identity
+                  </Badge>
+                ) : (
+                  <Badge className="bg-accent-seal/15 text-accent-seal border-accent-seal/30 gap-1 px-3 py-1 font-semibold">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    Verification Pending
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border/60">
+              <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
+                <span className="text-[11px] font-mono uppercase text-text-muted">Institutional Scope</span>
+                <p className="text-sm font-bold text-brand-ink">
+                  {currentUser?.accountType === "LAW_FIRM"
+                    ? "Immigration Law Firm & Legal Counsel"
+                    : currentUser?.accountType === "TRANSLATOR"
+                    ? "Certified Linguist & Court Notary"
+                    : "Individual Translation Vault"}
+                </p>
+                {currentUser?.companyName && (
+                  <p className="text-xs text-text-muted">{currentUser.companyName}</p>
+                )}
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
+                <span className="text-[11px] font-mono uppercase text-text-muted">Vault Security Protocol</span>
+                <p className="text-sm font-bold text-brand-ink">TLS 1.3 / 256-Bit Cryptographic Vault</p>
+                <p className="text-xs text-text-muted">Zero model training retention & 8 CFR § 103.2 guaranteed</p>
+              </div>
+            </div>
+
+            {!currentUser?.emailVerified && (
+              <div className="p-4 rounded-xl bg-accent-seal/10 border border-accent-seal/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div className="space-y-0.5">
+                  <p className="font-bold text-brand-ink">Action Required: Verify Email Address</p>
+                  <p className="text-text-muted">
+                    Federal immigration regulations require applicant verification before signing USCIS affidavits.
+                  </p>
+                  {verifyNotice && (
+                    <p className="text-status-success font-medium pt-1">{verifyNotice}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResendVerification}
+                    disabled={isResendingVerify}
+                    className="h-8 rounded-lg text-xs font-bold gap-1 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isResendingVerify ? "animate-spin" : ""}`} />
+                    <span>Resend Link</span>
+                  </Button>
+                  <Link href="/verify-email">
+                    <Button size="sm" className="h-8 rounded-lg text-xs font-bold gap-1 bg-brand-500 hover:bg-brand-600 text-white cursor-pointer">
+                      <span>Verify Now</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Notifications */}

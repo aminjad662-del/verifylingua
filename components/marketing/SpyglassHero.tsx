@@ -18,6 +18,8 @@ import {
   FileCheck2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FluidGlassRibbon } from "./FluidGlassRibbon";
+import { HeroInteractiveCard } from "./HeroInteractiveCard";
 
 export function SpyglassHero() {
   const router = useRouter();
@@ -107,6 +109,9 @@ export function SpyglassHero() {
 
   return (
     <section className="relative pt-12 sm:pt-16 md:pt-20 pb-16 lg:pb-24 overflow-hidden bg-canvas border-b border-border/40">
+      {/* Runey-style Organic 3D Fluid Glass Ribbon Backdrop */}
+      <FluidGlassRibbon />
+
       {/* Hidden camera upload input */}
       <input
         ref={fileInputRef}
@@ -217,159 +222,9 @@ export function SpyglassHero() {
             </div>
           </div>
 
-          {/* Right Column: Asymmetric Floating Layered Stack of Translated Documents */}
-          <div className="lg:col-span-6 relative flex items-center justify-center min-h-[480px] sm:min-h-[540px]">
-            {/* Ambient shadow gradient */}
-            <div className="pointer-events-none absolute inset-0 bg-radial-gradient from-brand-100/40 via-transparent to-transparent blur-3xl opacity-70" />
-
-            {/* Floating Document Collage Container */}
-            <div className="relative w-full max-w-lg mx-auto h-[500px]">
-              {/* Card 1: Top-Left - Mexican Birth Certificate (Acta de Nacimiento) */}
-              <div className="absolute top-0 left-2 w-64 sm:w-72 p-4 rounded-2xl bg-surface-raised border border-border shadow-xl transform -rotate-3 hover:-rotate-1 hover:scale-105 transition-all duration-300 z-10">
-                <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm">🇲🇽</span>
-                    <span className="text-[11px] font-bold text-brand-ink uppercase font-mono">
-                      Civil Registry
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    USCIS Ready
-                  </span>
-                </div>
-                <div className="pt-2.5 pb-2 space-y-1">
-                  <span className="text-[10px] font-mono text-text-subtle block">
-                    MEXICAN BIRTH CERTIFICATE
-                  </span>
-                  <p className="text-xs font-bold text-brand-ink leading-snug">
-                    Acta de Nacimiento No. 49102
-                  </p>
-                  <div className="space-y-1 py-1" aria-hidden="true">
-                    <div className="h-1.5 w-full bg-border/40 rounded-full" />
-                    <div className="h-1.5 w-4/5 bg-border/40 rounded-full" />
-                  </div>
-                </div>
-                <div className="p-2 rounded border border-amber-600/30 bg-amber-500/10 text-[9px] font-mono font-bold text-amber-800 flex items-center justify-between">
-                  <span className="flex items-center gap-1 truncate">
-                    <Stamp className="w-3 h-3 shrink-0" />
-                    REGISTRO CIVIL SELLO OFICIAL
-                  </span>
-                  <Award className="w-3 h-3 shrink-0 text-amber-700" />
-                </div>
-              </div>
-
-              {/* Card 2: Top-Right - ATA Sworn Competency Affidavit */}
-              <div className="absolute top-6 right-2 w-64 sm:w-72 p-4 rounded-2xl bg-brand-ink text-white border border-white/10 shadow-2xl transform rotate-3 hover:rotate-1 hover:scale-105 transition-all duration-300 z-20">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                  <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-brand-300" />
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-300">
-                      ATA Affidavit
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-mono text-white/50">
-                    8 CFR § 204.2
-                  </span>
-                </div>
-                <div className="pt-2 space-y-1.5">
-                  <div className="text-[11px] font-bold text-white leading-tight">
-                    Certificate of Translator Competency
-                  </div>
-                  <p className="text-[10px] text-white/70 italic leading-relaxed">
-                    &ldquo;I hereby certify that I am fluent in Spanish & English, and this is a true, complete translation.&rdquo;
-                  </p>
-                  <div className="flex items-center justify-between pt-2 border-t border-white/10 text-[9px] font-mono text-white/60">
-                    <span>ATA Member No. 27194</span>
-                    <span className="text-emerald-400 font-bold">Wet-Ink Verified</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 3: Center Foreground - Tamper-Proof QR & SHA-256 Ledger Node */}
-              <div className="absolute top-44 left-1/2 -translate-x-1/2 w-72 sm:w-80 p-4 rounded-2xl bg-surface-raised border-2 border-brand-500/80 shadow-2xl transform hover:scale-105 transition-all duration-300 z-30">
-                <div className="flex items-center justify-between pb-2 border-b border-border/80">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs font-mono font-bold text-brand-ink uppercase">
-                      Consular Ledger Node
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    100% Pre-Cleared
-                  </span>
-                </div>
-                <div className="pt-3 grid grid-cols-12 gap-3 items-center">
-                  <div className="col-span-8 space-y-1.5 text-left">
-                    <div className="text-xs font-bold text-brand-ink truncate">
-                      Dossier: VL-2026-8941
-                    </div>
-                    <div className="text-[10px] font-mono text-text-subtle truncate">
-                      SHA256: 9e4f1a...c82a01
-                    </div>
-                    <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-brand-500">
-                      <Lock className="w-3 h-3" />
-                      <span>Immutable Cryptographic Seal</span>
-                    </div>
-                  </div>
-                  <div className="col-span-4 flex justify-end">
-                    <div className="p-2 rounded-xl bg-surface border border-border flex items-center justify-center">
-                      <QrCode className="w-11 h-11 text-brand-ink" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 4: Bottom-Left - Ukrainian Court Decree & Hague Apostille */}
-              <div className="absolute bottom-2 left-2 w-64 sm:w-70 p-4 rounded-2xl bg-surface-raised border border-border shadow-xl transform rotate-1 hover:rotate-0 hover:scale-105 transition-all duration-300 z-10">
-                <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm">🇺🇦</span>
-                    <span className="text-[11px] font-bold text-brand-ink uppercase font-mono">
-                      Court Decree
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-mono text-text-muted">
-                    Hague 1961
-                  </span>
-                </div>
-                <div className="pt-2 space-y-1">
-                  <span className="text-[10px] font-mono text-text-subtle block">
-                    UKRAINIAN COURT ORDER
-                  </span>
-                  <p className="text-xs font-bold text-brand-ink leading-snug truncate">
-                    Рішення суду про розірвання шлюбу
-                  </p>
-                  <div className="p-1.5 rounded border border-blue-600/30 bg-blue-500/10 text-[9px] font-mono font-bold text-blue-800 flex items-center gap-1 truncate">
-                    <Stamp className="w-3 h-3 shrink-0" />
-                    APOSTILLE CONVENTION DE LA HAYE
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 5: Bottom-Right - Munich University Academic Transcript */}
-              <div className="absolute bottom-0 right-2 w-60 sm:w-68 p-3.5 rounded-2xl bg-surface border border-border shadow-lg transform -rotate-2 hover:rotate-0 hover:scale-105 transition-all duration-300 z-20">
-                <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm">🇩🇪</span>
-                    <span className="text-[10px] font-bold text-brand-ink uppercase font-mono">
-                      University LMU
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-mono text-text-subtle font-bold">
-                    WES Approved
-                  </span>
-                </div>
-                <div className="pt-1.5 space-y-1">
-                  <p className="text-[11px] font-bold text-brand-ink truncate">
-                    Zeugnis der Bachelorprüfung
-                  </p>
-                  <div className="text-[9px] font-mono text-text-subtle flex items-center justify-between">
-                    <span>ECTS Credits: 180</span>
-                    <span className="text-emerald-700 font-bold">1:1 Table Match</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Right Column: Runey-Style Floating Glassmorphic Interactive Exhibit Card */}
+          <div className="lg:col-span-6 relative flex items-center justify-center py-6">
+            <HeroInteractiveCard />
           </div>
         </div>
       </div>

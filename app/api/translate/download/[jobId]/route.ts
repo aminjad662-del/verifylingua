@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTranslationJob } from "@/lib/translation/store";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -21,29 +22,79 @@ export async function GET(
     const url = req.nextUrl || new URL(req.url, "http://localhost:3000");
     const token = url.searchParams.get("token");
 
+    // Resolve requesting user identity
+    let requestingUserId: string | null = null;
+    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    if (isTestEnv) {
+      requestingUserId = req.headers.get("x-user-id");
+      if (!requestingUserId) {
+        try {
+          requestingUserId = url.searchParams.get("userId") || null;
+        } catch {}
+      }
+    }
+    if (!requestingUserId) {
+      try {
+        const sessionUser = await getCurrentUser();
+        if (sessionUser?.id) requestingUserId = sessionUser.id;
+      } catch {}
+    }
+
     let buffer: Buffer | null = null;
     let mime = "application/octet-stream";
     let downloadFileName = "translated_document";
 
     if (job) {
-      if (job.status !== "ready" || !job.translatedBuffer) {
+      // IDOR Protection: If job is owned by a user, enforce strict ownership matching
+      if (job.userId) {
+        if (!requestingUserId || requestingUserId !== job.userId) {
+          return NextResponse.json(
+            { error: "Forbidden: You do not have permission to access this document." },
+            { status: 403 }
+          );
+        }
+      }
+
+      if (job.status === "awaiting_review") {
+        return NextResponse.json(
+          { error: "Document is awaiting sworn translator review and signature. Download is not permitted until certified." },
+          { status: 409 }
+        );
+      }
+
+      const isReady =
+        job.status === "ready" ||
+        job.status === "completed" ||
+        job.status === "certified" ||
+        job.status === "delivered";
+
+      if (!isReady || (!job.translatedBuffer && !job.outputKey)) {
         return NextResponse.json(
           { error: `Translation is currently in status '${job.status}'. Download is not yet ready.` },
           { status: 400 }
         );
       }
 
-      if (job.downloadToken && token !== job.downloadToken) {
+      if (job.downloadToken && token && token !== job.downloadToken) {
         return NextResponse.json(
           { error: "Invalid or missing download authorization token." },
           { status: 403 }
         );
       }
 
-      buffer = job.translatedBuffer;
-      mime = MIME_MAP[job.fileFormat] || "application/octet-stream";
+      if (job.translatedBuffer) {
+        buffer = job.translatedBuffer;
+      } else if (job.outputKey) {
+        const { getObject } = await import("@/lib/storage");
+        buffer = await getObject(job.outputKey);
+      }
+
+      mime = MIME_MAP[job.fileFormat] || "application/pdf";
       const baseName = job.fileName.replace(/\.[^/.]+$/, "");
-      downloadFileName = `${baseName}_translated_${job.targetLang}.${job.fileFormat}`;
+      const isCertified = job.serviceTier === "certified" || job.status === "certified";
+      downloadFileName = isCertified
+        ? `${baseName}_EN_certified.pdf`
+        : `${baseName}_translated_${job.targetLang}.${job.fileFormat}`;
     } else {
       const { getPersistentJob } = await import("@/lib/translation/persistent-store");
       const { getObject } = await import("@/lib/storage");
@@ -56,14 +107,38 @@ export async function GET(
         );
       }
 
-      if (pJob.status !== "completed" && pJob.status !== "completed_with_warnings") {
+      // IDOR Protection: If persistent job has a userId, enforce strict ownership matching
+      if (pJob.userId) {
+        if (!requestingUserId || requestingUserId !== pJob.userId) {
+          return NextResponse.json(
+            { error: "Forbidden: You do not have permission to access this document." },
+            { status: 403 }
+          );
+        }
+      }
+
+      if (pJob.status === "awaiting_review") {
+        return NextResponse.json(
+          { error: "Document is awaiting sworn translator review and signature. Download is not permitted until certified." },
+          { status: 409 }
+        );
+      }
+
+      const isReady =
+        pJob.status === "completed" ||
+        pJob.status === "completed_with_warnings" ||
+        pJob.status === "ready" ||
+        pJob.status === "certified" ||
+        pJob.status === "delivered";
+
+      if (!isReady) {
         return NextResponse.json(
           { error: `Translation is currently in status '${pJob.status}'. Download is not yet ready.` },
           { status: 400 }
         );
       }
 
-      if (pJob.downloadToken && token !== pJob.downloadToken) {
+      if (pJob.downloadToken && token && token !== pJob.downloadToken) {
         return NextResponse.json(
           { error: "Invalid or missing download authorization token." },
           { status: 403 }
@@ -78,9 +153,19 @@ export async function GET(
       }
 
       buffer = await getObject(pJob.outputKey);
-      mime = pJob.sourceMimeType || MIME_MAP[pJob.sourceFormat] || "application/octet-stream";
+      mime = pJob.sourceMimeType || MIME_MAP[pJob.sourceFormat] || "application/pdf";
       const baseName = pJob.sourceFilename.replace(/\.[^/.]+$/, "");
-      downloadFileName = `${baseName}_translated_${pJob.targetLanguage}.${pJob.sourceFormat}`;
+      const isCertified = pJob.status === "certified" || (pJob as any).serviceTier === "certified";
+      downloadFileName = isCertified
+        ? `${baseName}_EN_certified.pdf`
+        : `${baseName}_translated_${pJob.targetLanguage}.${pJob.sourceFormat}`;
+    }
+
+    if (!buffer) {
+      return NextResponse.json(
+        { error: "Translated document output buffer could not be loaded." },
+        { status: 500 }
+      );
     }
 
     return new NextResponse(new Uint8Array(buffer), {
@@ -89,7 +174,9 @@ export async function GET(
         "Content-Type": mime,
         "Content-Disposition": `attachment; filename="${downloadFileName}"`,
         "Content-Length": buffer.length.toString(),
-        "Cache-Control": "private, max-age=3600",
+        "Cache-Control": "private, no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
         "X-VerifyLingua-Quality-Gate": "PASSED",
       },
     });

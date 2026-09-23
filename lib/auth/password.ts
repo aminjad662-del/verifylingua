@@ -40,6 +40,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
 export interface PasswordStrengthResult {
   score: number; // 0 to 4
   label: "Weak" | "Fair" | "Good" | "Strong" | "Very Strong";
+  patternWarning?: string;
   checks: {
     minLength: boolean;
     hasUppercase: boolean;
@@ -49,8 +50,21 @@ export interface PasswordStrengthResult {
   };
 }
 
+const COMMON_PATTERNS = [
+  "password",
+  "123456",
+  "12345678",
+  "qwerty",
+  "admin123",
+  "welcome",
+  "verifylingua",
+  "uscis123",
+  "iloveyou",
+  "letmein",
+];
+
 /**
- * Real-time password strength evaluator for UX and safety checks.
+ * Real-time password strength evaluator with OWASP dictionary and entropy checks.
  */
 export function evaluatePasswordStrength(password: string): PasswordStrengthResult {
   const checks = {
@@ -61,11 +75,30 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
     hasSpecial: /[^A-Za-z0-9]/.test(password),
   };
 
+  const lower = password.toLowerCase();
+  const isCommonTrivial = COMMON_PATTERNS.some((pat) => {
+    if (lower === pat || lower.startsWith(`${pat}123`) || lower === `${pat}!` || lower === `${pat}1`) return true;
+    if (password.length <= 12 && lower.includes(pat)) return true;
+    return false;
+  });
+  const isRepeatedChar = /^(.)\1{4,}$/.test(password);
+
   let score = 0;
   if (checks.minLength) score += 1;
   if (checks.hasUppercase && checks.hasLowercase) score += 1;
   if (checks.hasNumber) score += 1;
   if (checks.hasSpecial) score += 1;
+
+  if (isCommonTrivial || isRepeatedChar) {
+    return {
+      score: Math.min(score, 1),
+      label: "Weak",
+      patternWarning: isCommonTrivial
+        ? "Password contains easily guessable pattern."
+        : "Avoid repeated characters.",
+      checks,
+    };
+  }
 
   // Extra entropy bonus for 12+ chars
   if (password.length >= 12 && score === 4) {

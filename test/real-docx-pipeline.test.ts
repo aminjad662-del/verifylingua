@@ -20,11 +20,6 @@ beforeAll(() => {
     const m = envText.match(/DEEPL_API_KEY=["']?([^"'\r\n]+)["']?/);
     if (m) process.env.DEEPL_API_KEY = m[1];
   }
-  if (!process.env.GEMINI_API_KEY && fs.existsSync(path.resolve(process.cwd(), ".env"))) {
-    const envText = fs.readFileSync(path.resolve(process.cwd(), ".env"), "utf8");
-    const m = envText.match(/GEMINI_API_KEY=["']?([^"'\r\n]+)["']?/);
-    if (m) process.env.GEMINI_API_KEY = m[1];
-  }
 });
 
 const FIXTURE_PATH = path.resolve(process.cwd(), "fixtures/real_employment_contract.docx");
@@ -92,7 +87,7 @@ describe("DOCX-to-DOCX Translation Vertical Slice (Live Unmocked Execution)", ()
     expect(translationResult.metadata.hasHeaders).toBe(true);
     expect(translationResult.metadata.textNodeCount).toBeGreaterThan(10);
     expect(translationResult.metadata.wordCount).toBeGreaterThan(40);
-  }, 60000);
+  }, 20000);
 
   it("Step 6: Persists the translated DOCX buffer to object storage", async () => {
     await putObject(
@@ -150,7 +145,7 @@ describe("DOCX-to-DOCX Translation Vertical Slice (Live Unmocked Execution)", ()
     // Proves user download can fetch valid streamable buffer from the stored output key
     const downloadBuffer = await getObject(finalState!.outputKey!);
     expect(downloadBuffer.length).toBe(translatedDocxBuffer.length);
-  }, 20000);
+  });
 
   it("Step 9 & 10: Verifies translated OpenXML archive opens cleanly, retains all formatting, and contains genuine translations", async () => {
     // 1. Unzip the output DOCX to verify valid archive structure

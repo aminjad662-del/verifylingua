@@ -3,23 +3,17 @@ import { prisma } from "../prisma";
 import { putObject, getObject } from "../storage";
 import { FidelityScoreBreakdown, FidelityIssue } from "../fidelity";
 
+import { JobStatus } from "./types";
+
 export type PersistentJobStatus =
-  | "queued"
-  | "rendering"
+  | JobStatus
   | "created"
   | "uploading"
-  | "uploaded"
   | "classifying"
-  | "extracting"
   | "translation_queued"
-  | "translating"
-  | "reconstructing"
-  | "qa"
   | "repairing"
   | "rendering_preview"
-  | "completed"
-  | "completed_with_warnings"
-  | "failed"
+  | "rendering"
   | "cancelled"
   | "expired"
   | "deleted";
@@ -116,20 +110,9 @@ export async function createPersistentJob(params: {
   sizeBytes?: number;
   sourceKey?: string;
 }): Promise<PersistentTranslationJob> {
-  const id = `job_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const id = crypto.randomUUID();
   const downloadToken = crypto.randomBytes(24).toString("hex");
-  const sourceKey = params.sourceKey || `sources/${id}/${params.filename}`;
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-  if (params.fileBuffer) {
-    await putObject(sourceKey, params.fileBuffer, params.mimeType);
-  }
-
-  const initialStatus: PersistentJobStatus = params.fileBuffer ? "uploaded" : "created";
-  const initialStep = params.fileBuffer
-    ? "File uploaded and queued for processing"
-    : "Job created, awaiting file upload";
-  const initialProgress = params.fileBuffer ? 10 : 0;
 
   let validUserId: string | null = null;
   if (params.userId) {
@@ -150,11 +133,27 @@ export async function createPersistentJob(params: {
     }
   }
 
+  const userSegment = validUserId || "anonymous";
+  const ext = params.filename.split(".").pop()?.toLowerCase() || params.format;
+  const sourceKey = params.sourceKey || `jobs/${userSegment}/${id}/source.${ext}`;
+  const outputKey = `jobs/${userSegment}/${id}/output.pdf`;
+
+  if (params.fileBuffer) {
+    await putObject(sourceKey, params.fileBuffer, params.mimeType);
+  }
+
+  const initialStatus: PersistentJobStatus = params.fileBuffer ? "uploaded" : "created";
+  const initialStep = params.fileBuffer
+    ? "File uploaded and queued for processing"
+    : "Job created, awaiting file upload";
+  const initialProgress = params.fileBuffer ? 10 : 0;
+
   const dbJob = await prisma.translationJob.create({
     data: {
       id,
       userId: validUserId,
       sourceKey,
+      outputKey,
       sourceFilename: params.filename,
       sourceFormat: params.format,
       sourceMimeType: params.mimeType,

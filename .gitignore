@@ -34,7 +34,6 @@ yarn-error.log*
 .env.local
 
 # vercel
-
 .vercel
 
 # typescript
@@ -52,5 +51,7 @@ next-env.d.ts
 
 *.traineddata
 .superpowers/
-fixtures/live_audit/
-scratch/
+/scratch/
+/fixtures/live_audit/
+test_sample_civil_record.pdf
+/public/uploads/

@@ -10,6 +10,7 @@ import { OrderVault } from "@/components/dashboard/OrderVault";
 import { OrderDrawer, OrderDetail } from "@/components/dashboard/OrderDrawer";
 import { LegalToolkitBento } from "@/components/dashboard/LegalToolkitBento";
 import { ToastContainer } from "@/components/dashboard/ToastNotification";
+import { VerificationBanner } from "@/components/auth/VerificationBanner";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -35,7 +36,7 @@ const itemVariants = {
   },
 };
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [realJobs, setRealJobs] = React.useState<RealTranslationJob[]>([]);
   const [loadingJobs, setLoadingJobs] = React.useState(true);
   
@@ -43,7 +44,12 @@ export default function DashboardPage() {
   const [loadingOrders, setLoadingOrders] = React.useState(true);
 
   const [selectedOrder, setSelectedOrder] = React.useState<OrderDetail | null>(null);
-  const [user, setUser] = React.useState<{ name: string | null; email: string; organizationName?: string } | null>(null);
+  const [user, setUser] = React.useState<{
+    name: string | null;
+    email: string;
+    organizationName?: string;
+    emailVerified?: Date | null;
+  } | null>(null);
 
   const fetchUser = React.useCallback(async () => {
     try {
@@ -127,6 +133,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-text">
       <DashboardNav />
+      <VerificationBanner email={user?.email} isVerified={!!user?.emailVerified} />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <motion.div
@@ -179,5 +186,13 @@ export default function DashboardPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-canvas" />}>
+      <DashboardContent />
+    </React.Suspense>
   );
 }

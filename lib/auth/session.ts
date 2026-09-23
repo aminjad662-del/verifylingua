@@ -15,6 +15,7 @@ export interface SafeUser {
   companyName: string | null;
   phone: string | null;
   isGuest: boolean;
+  emailVerified: Date | null;
   createdAt: Date;
 }
 
@@ -72,6 +73,7 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
               companyName: true,
               phone: true,
               isGuest: true,
+              emailVerified: true,
               createdAt: true,
             },
           },
@@ -100,6 +102,7 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
         companyName: memUser.companyName,
         phone: memUser.phone,
         isGuest: memUser.isGuest,
+        emailVerified: memUser.emailVerified ?? null,
         createdAt: memUser.createdAt,
       };
     }

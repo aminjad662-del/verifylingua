@@ -15,6 +15,7 @@ import {
   reserveCreditsForJob,
 } from "@/lib/services/credit-service";
 import { getCurrentUser } from "@/lib/auth/session";
+import { putObject } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -115,18 +116,7 @@ export async function POST(req: NextRequest) {
     // 1. Validation & MIME sniffing
     const validation = validateInputFile(fileBuffer, fileName);
     if (validation.error) {
-      return NextResponse.json({ error: validation.error }, { status: 415 });
-    }
-
-    // Reject raster images clearly per User Request 4 and Prime Directive 3
-    if (validation.format === "png" || validation.format === "jpg") {
-      return NextResponse.json(
-        {
-          error:
-            "Raster image and scanned OCR translation (PNG/JPG) is not supported in the Node.js serverless runtime. Please upload a digital text-based PDF or DOCX file.",
-        },
-        { status: 415 }
-      );
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     // Estimate or calculate document page count N (minimum 1)
@@ -164,6 +154,24 @@ export async function POST(req: NextRequest) {
     });
     job.serviceTier = serviceTier;
 
+    const ext = fileName.split(".").pop()?.toLowerCase() || validation.format;
+    const userSegment = userId || "anonymous";
+    const sourceKey = job.sourceKey || `jobs/${userSegment}/${job.id}/source.${ext}`;
+    const outputKey = job.outputKey || `jobs/${userSegment}/${job.id}/output.pdf`;
+    job.sourceKey = sourceKey;
+    job.outputKey = outputKey;
+
+    // Persist source file to storage
+    if (fileBuffer) {
+      try {
+        await putObject(
+          sourceKey,
+          fileBuffer,
+          validation.format === "pdf" ? "application/pdf" : "application/octet-stream"
+        );
+      } catch {}
+    }
+
     // 4. If userId is present, persist to PostgreSQL and reserve credits
     if (userId) {
       try {
@@ -171,7 +179,8 @@ export async function POST(req: NextRequest) {
           data: {
             id: job.id,
             userId,
-            sourceKey: `sources/${job.id}/${fileName}`,
+            sourceKey,
+            outputKey,
             sourceFilename: fileName,
             sourceFormat: validation.format,
             sourceMimeType:
@@ -239,6 +248,7 @@ export async function POST(req: NextRequest) {
                 where: { id: job.id },
                 data: {
                   status: "completed",
+                  outputKey: updated.outputKey || job.outputKey,
                   progress: 100,
                   currentStep: "Machine translation and layout reconstruction complete.",
                   completedAt: new Date(),

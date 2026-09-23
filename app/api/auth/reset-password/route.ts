@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, evaluatePasswordStrength } from "@/lib/auth/password";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { memoryUsers, memoryResetTokens } from "@/lib/auth/dev-store";
+import { recordAuthAuditEvent } from "@/lib/auth/audit";
 
 const requestResetSchema = z.object({
   action: z.literal("request"),
@@ -98,6 +99,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Record audit event
+      await recordAuthAuditEvent({
+        userId: user?.id || null,
+        action: "PASSWORD_RESET_REQUESTED",
+        ipAddress: ip,
+        userAgent: req.headers.get("user-agent") || null,
+        details: { email },
+      });
+
       return NextResponse.json({
         ok: true,
         message: "If an account exists with this email, a password reset link has been dispatched.",
@@ -180,6 +190,15 @@ export async function POST(req: NextRequest) {
         memoryUsers.set(memUser.id, memUser);
       }
       memoryResetTokens.delete(token);
+
+      // Record audit event
+      await recordAuthAuditEvent({
+        userId: memUser?.id || null,
+        action: "PASSWORD_RESET_SUCCESS",
+        ipAddress: ip,
+        userAgent: req.headers.get("user-agent") || null,
+        details: { email: targetEmail },
+      });
 
       return NextResponse.json({
         ok: true,

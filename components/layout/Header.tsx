@@ -5,12 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/ui/magnetic-button";
-import { ShieldCheck, Menu, X, ArrowRight, Globe2, LayoutDashboard } from "lucide-react";
+import { ShieldCheck, Menu, X, ArrowRight, Globe2, LayoutDashboard, Zap } from "lucide-react";
 import { PRODUCT_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/app", label: "Workspace" },
+  { href: "/translate", label: "Studio" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/pricing", label: "Pricing" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/counsel", label: "CounselDesk™ (Law Firms)" },
@@ -33,6 +34,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [locale, setLocale] = React.useState("en");
   const [currentUser, setCurrentUser] = React.useState<{ name: string | null; email: string } | null>(null);
+  const [credits, setCredits] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     fetch("/api/auth/me")
@@ -47,6 +49,15 @@ export function Header() {
       .catch(() => {
         setCurrentUser(null);
       });
+
+    fetch("/api/billing/balance")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.available === "number") {
+          setCredits(data.available);
+        }
+      })
+      .catch(() => {});
   }, [pathname]);
 
   const handleLogout = async () => {
@@ -110,6 +121,20 @@ export function Header() {
               ))}
             </select>
           </div>
+
+          {/* Live Credit Balance Pill */}
+          {credits !== null && (
+            <Link
+              href="/translate"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-surface text-xs font-semibold text-brand-ink hover:bg-surface-raised transition-colors shadow-2xs"
+              title="Available certified page translation credits"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>
+                <strong>{credits}</strong> Pages
+              </span>
+            </Link>
+          )}
 
           {/* Prominent Direct Dashboard Button (Always Visible) */}
           <Button

@@ -1,11 +1,18 @@
 export type DocumentFormat = "pdf" | "docx" | "png" | "jpg";
 
 export type JobStatus =
+  | "uploaded"
   | "queued"
   | "extracting"
+  | "detecting"
   | "translating"
   | "rebuilding"
   | "reconstructing"
+  | "qa"
+  | "formatting"
+  | "awaiting_review"
+  | "certified"
+  | "delivered"
   | "ready"
   | "completed"
   | "completed_with_warnings"
@@ -99,6 +106,12 @@ export interface TranslationJob {
   serviceTier?: "automated" | "professional" | "certified";
   userId?: string | null;
   pageCount?: number;
+  sourceKey?: string;
+  outputKey?: string;
+  sourceSha256?: string;
+  qaReport?: any;
+  reviewedAt?: string;
+  translatorId?: string;
 }
 
 export interface TranslationOptions {
@@ -110,5 +123,9 @@ export interface TranslationOptions {
   preservePlaceholders?: boolean;
   bypassTestMock?: boolean;
   simulateError?: string;
+  fileName?: string;
+  translatorName?: string;
+  sourceSha256?: string;
+  includeAffidavitPage?: boolean;
 }
 
