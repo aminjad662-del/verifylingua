@@ -21,3 +21,7 @@ if (buildRes.status !== 0) {
 }
 
 console.log('🎉 Next.js build complete!');
+
+console.log('🌐 Step 3: Assembling Cloudflare Pages artifacts (dist/)...');
+const { assembleCloudflareAssets } = require('./build-cloudflare.js');
+assembleCloudflareAssets();

@@ -65,7 +65,7 @@ export default function PrivacyPage() {
               </div>
               <h3 className="text-lg font-bold text-brand-ink">Instant Self-Erasure</h3>
               <p className="text-sm text-text-muted leading-relaxed">
-                Click "Delete Document" at any point in the viewer or issue a DELETE request to permanently purge all raw files and extracted text immediately.
+                Click &quot;Delete Document&quot; at any point in the viewer or issue a DELETE request to permanently purge all raw files and extracted text immediately.
               </p>
             </Card>
           </div>
