@@ -157,18 +157,25 @@ export async function POST(req: NextRequest) {
     const ext = fileName.split(".").pop()?.toLowerCase() || validation.format;
     const userSegment = userId || "anonymous";
     const sourceKey = job.sourceKey || `jobs/${userSegment}/${job.id}/source.${ext}`;
-    const outputKey = job.outputKey || `jobs/${userSegment}/${job.id}/output.pdf`;
+    const outputKey = job.outputKey || `jobs/${userSegment}/${job.id}/output.${ext}`;
     job.sourceKey = sourceKey;
     job.outputKey = outputKey;
+
+    const sourceMime =
+      validation.format === "pdf"
+        ? "application/pdf"
+        : validation.format === "docx"
+        ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        : validation.format === "png"
+        ? "image/png"
+        : validation.format === "jpg"
+        ? "image/jpeg"
+        : "application/octet-stream";
 
     // Persist source file to storage
     if (fileBuffer) {
       try {
-        await putObject(
-          sourceKey,
-          fileBuffer,
-          validation.format === "pdf" ? "application/pdf" : "application/octet-stream"
-        );
+        await putObject(sourceKey, fileBuffer, sourceMime);
       } catch {}
     }
 
@@ -183,12 +190,7 @@ export async function POST(req: NextRequest) {
             outputKey,
             sourceFilename: fileName,
             sourceFormat: validation.format,
-            sourceMimeType:
-              validation.format === "pdf"
-                ? "application/pdf"
-                : validation.format === "docx"
-                ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                : "application/octet-stream",
+            sourceMimeType: sourceMime,
             sourceLanguage: sourceLang,
             targetLanguage: targetLang,
             status: "queued",

@@ -71,9 +71,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: `${PRODUCT_NAME} | Certified Translation Services for USCIS, Courts & Universities`,
+  title: `${PRODUCT_NAME} | Automated Document Processing & Certified Translations`,
   description:
-    "Guaranteed certified document translations for USCIS, universities, courts, and consulates. Fast 24h turnaround, instant AI triage, and public verification portal.",
+    "High-precision automated document processing and guaranteed certified translations for USCIS, courts, and universities. Layout-preserving, instant AI triage, and public verification portal.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
 };
 

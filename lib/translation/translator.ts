@@ -271,12 +271,7 @@ export async function translateStructuredBlocks(
         if (options.targetLang === "ar") {
           translated = translateToArabicDeterministic(b.text);
         } else {
-          const langDict = LEGAL_GLOSSARY_EN[options.sourceLang?.toLowerCase()];
-          if (langDict && langDict[b.text.trim().toLowerCase()]) {
-            translated = preserveCase(b.text.trim(), langDict[b.text.trim().toLowerCase()]);
-          } else {
-            translated = mockTranslateDeterministic(b.text.trim(), options.sourceLang, options.targetLang);
-          }
+          translated = await translateText(b.text, options);
         }
         resultMap.set(b.id, translated);
       }

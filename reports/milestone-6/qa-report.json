@@ -1,0 +1,74 @@
+{
+  "milestone": 6,
+  "title": "DOCX Pipeline (OpenXML Extraction + Run-Level Reconstruction + BiDi & Comparison)",
+  "timestamp": "2026-09-23T23:10:00Z",
+  "status": "PASSED",
+  "quality_gates": {
+    "gate_6_1_extraction_and_analysis": {
+      "status": "PASSED",
+      "corpus_file": "11_complex_elements.docx",
+      "extracted_blocks_count": 14,
+      "roles_detected": ["header", "heading", "paragraph", "table_cell", "footer"],
+      "tables_extracted": 1,
+      "table_rows": 3,
+      "table_cols": 3,
+      "inline_tags_preserved": true
+    },
+    "gate_6_2_reconstruction_spanish": {
+      "status": "PASSED",
+      "target_language": "es",
+      "rendered_docx_bytes": 36910,
+      "xml_schema_valid": true,
+      "tables_preserved": true,
+      "table_rows_preserved": 3,
+      "table_cols_preserved": 3,
+      "bold_runs_preserved": true,
+      "italic_runs_preserved": true,
+      "python_docx_load_clean": true
+    },
+    "gate_6_3_arabic_bidi_and_table_visual": {
+      "status": "PASSED",
+      "target_language": "ar",
+      "rendered_docx_bytes": 37215,
+      "paragraph_w_bidi_present": true,
+      "run_w_rtl_present": true,
+      "complex_script_fonts_set": true,
+      "table_w_bidiVisual_present": true,
+      "python_docx_load_clean": true
+    },
+    "gate_6_4_full_api_workflow": {
+      "status": "PASSED",
+      "endpoints_verified": [
+        "POST /api/jobs",
+        "POST /api/jobs/{id}/intake",
+        "POST /api/jobs/{id}/analyze",
+        "POST /api/jobs/{id}/translate",
+        "POST /api/jobs/{id}/render",
+        "GET /api/jobs/{id}/preview",
+        "GET /api/jobs/{id}/download"
+      ],
+      "preview_image_mime": "image/jpeg",
+      "download_file_mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    "gate_6_5_universal_openxml_support": {
+      "status": "PASSED",
+      "handles_minimal_docx_without_rels": true,
+      "handles_standard_opc_packages": true
+    }
+  },
+  "visual_artifacts": [
+    "reports/milestone-6/visual/11_complex_elements_es_preview.jpg",
+    "reports/milestone-6/visual/11_complex_elements_ar_preview.jpg",
+    "reports/milestone-6/visual/11_complex_elements_side_by_side.png"
+  ],
+  "test_metrics": {
+    "pytest_total": 52,
+    "pytest_passed": 52,
+    "pytest_failed": 0,
+    "pytest_duration_seconds": 66.70,
+    "vitest_total": 323,
+    "vitest_passed": 323,
+    "vitest_failed": 0,
+    "vitest_duration_seconds": 115.10
+  }
+}

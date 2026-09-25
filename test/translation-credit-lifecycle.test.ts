@@ -114,6 +114,8 @@ describe("Translation Pipeline Credit Integration", () => {
       format: "docx",
       fileBuffer: Buffer.from("Certified Affiliation Agreement"),
       options: {
+        sourceLang: "en",
+        targetLang: "es",
         simulateError: "Simulated Provider 500: Neural Translation API unavailable",
       },
     });

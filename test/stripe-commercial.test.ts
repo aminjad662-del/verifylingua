@@ -163,7 +163,7 @@ describe("Commercial MVP Billing & Webhook Fulfillment", () => {
       const origNodeEnv = process.env.NODE_ENV;
       const origVitest = process.env.VITEST;
       try {
-        process.env.NODE_ENV = "production";
+        (process.env as any).NODE_ENV = "production";
         delete process.env.VITEST;
 
         const req = new NextRequest("http://localhost:3000/api/billing/checkout", {
@@ -175,7 +175,7 @@ describe("Commercial MVP Billing & Webhook Fulfillment", () => {
         const data = await res.json();
         expect(data.error).toBe("Authentication required");
       } finally {
-        process.env.NODE_ENV = origNodeEnv;
+        (process.env as any).NODE_ENV = origNodeEnv;
         process.env.VITEST = origVitest;
       }
     });

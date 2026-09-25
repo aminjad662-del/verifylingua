@@ -92,9 +92,11 @@ export async function GET(
       mime = MIME_MAP[job.fileFormat] || "application/pdf";
       const baseName = job.fileName.replace(/\.[^/.]+$/, "");
       const isCertified = job.serviceTier === "certified" || job.status === "certified";
-      downloadFileName = isCertified
+      const isImage = ["png", "jpg", "jpeg"].includes(job.fileFormat.toLowerCase());
+      const ext = isImage ? job.fileFormat.toLowerCase() : (isCertified ? "pdf" : job.fileFormat);
+      downloadFileName = isCertified && !isImage
         ? `${baseName}_EN_certified.pdf`
-        : `${baseName}_translated_${job.targetLang}.${job.fileFormat}`;
+        : `${baseName}_translated_${job.targetLang}.${ext}`;
     } else {
       const { getPersistentJob } = await import("@/lib/translation/persistent-store");
       const { getObject } = await import("@/lib/storage");
@@ -156,9 +158,11 @@ export async function GET(
       mime = pJob.sourceMimeType || MIME_MAP[pJob.sourceFormat] || "application/pdf";
       const baseName = pJob.sourceFilename.replace(/\.[^/.]+$/, "");
       const isCertified = pJob.status === "certified" || (pJob as any).serviceTier === "certified";
-      downloadFileName = isCertified
+      const isImage = ["png", "jpg", "jpeg"].includes(pJob.sourceFormat.toLowerCase());
+      const ext = isImage ? pJob.sourceFormat.toLowerCase() : (isCertified ? "pdf" : pJob.sourceFormat);
+      downloadFileName = isCertified && !isImage
         ? `${baseName}_EN_certified.pdf`
-        : `${baseName}_translated_${pJob.targetLanguage}.${pJob.sourceFormat}`;
+        : `${baseName}_translated_${pJob.targetLanguage}.${ext}`;
     }
 
     if (!buffer) {
@@ -168,14 +172,15 @@ export async function GET(
       );
     }
 
+    const isInline = url.searchParams.get("inline") === "true";
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         "Content-Type": mime,
-        "Content-Disposition": `attachment; filename="${downloadFileName}"`,
+        "Content-Disposition": `${isInline ? "inline" : "attachment"}; filename="${downloadFileName}"`,
         "Content-Length": buffer.length.toString(),
-        "Cache-Control": "private, no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
+        "Cache-Control": isInline ? "public, max-age=300" : "private, no-cache, no-store, must-revalidate",
+        "Pragma": isInline ? "public" : "no-cache",
         "Expires": "0",
         "X-VerifyLingua-Quality-Gate": "PASSED",
       },

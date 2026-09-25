@@ -233,10 +233,10 @@ export function Footer() {
           <p>© {new Date().getFullYear()} {PRODUCT_NAME}, Inc. All rights reserved. Not affiliated with USCIS or the U.S. Federal Government.</p>
           <div className="flex items-center gap-6">
             <span>Support: {SUPPORT_EMAIL}</span>
-            <Link href="/help" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy & Security
             </Link>
-            <Link href="/help" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               Terms of Service
             </Link>
           </div>

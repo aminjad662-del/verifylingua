@@ -31,7 +31,7 @@ export default function HowItWorksPage() {
             </h1>
 
             <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
-              Discover how our pre-payment AI vision triage, 1:1 layout preservation engine, and public QR verification portal guarantee your application succeeds on the first attempt.
+              Discover how our automated document processing, pre-payment AI vision triage, 1:1 layout preservation engine, and public QR verification portal guarantee your application succeeds on the first attempt.
             </p>
           </div>
         </section>

@@ -242,6 +242,8 @@ describe("Commercial MVP End-to-End Pilot Journey", () => {
       format: "docx",
       fileBuffer: Buffer.from("Corrupted content that triggers error"),
       options: {
+        sourceLang: "en",
+        targetLang: "de",
         simulateError: "Simulated Provider Error: Translation Engine 503 Outage",
       },
     });

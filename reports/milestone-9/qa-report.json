@@ -1,0 +1,97 @@
+{
+  "milestone": 9,
+  "title": "Commercial Pricing, Accounts, S10 Retention & Deletion Lifecycle, Marketing Pages & Legal Drafts",
+  "timestamp": "2026-09-24T07:18:00Z",
+  "status": "PASSED",
+  "quality_gates": {
+    "gate_1_immediate_deletion": {
+      "status": "PASSED",
+      "endpoint": "DELETE /api/jobs/{id}",
+      "metrics": {
+        "raw_payloads_purged": true,
+        "rendered_binaries_purged": true,
+        "preview_cache_purged": true,
+        "segment_text_scrubbed_to_purged": true,
+        "tombstone_status": "purged",
+        "audit_entry_logged_without_content": true
+      }
+    },
+    "gate_2_retention_lifecycle_engine": {
+      "status": "PASSED",
+      "endpoint": "POST /api/admin/retention/cleanup",
+      "policies": {
+        "instant_tier_ttl_seconds": 86400,
+        "certified_tier_ttl_seconds": 2592000,
+        "presigned_download_ttl_seconds": 900
+      },
+      "validation": {
+        "instant_26h_expired_purged": true,
+        "certified_5d_active_preserved": true,
+        "certified_32d_expired_purged": true,
+        "dry_run_simulation_accuracy": true
+      }
+    },
+    "gate_3_retention_status_transparency": {
+      "status": "PASSED",
+      "endpoint": "GET /api/jobs/{id}/retention",
+      "metrics": {
+        "policy_ttl_reported": 86400,
+        "seconds_remaining_accurate": true,
+        "is_purged_flag_accurate": true
+      }
+    },
+    "gate_4_commercial_pricing_catalog": {
+      "status": "PASSED",
+      "endpoints": [
+        "GET /api/pricing/plans",
+        "POST /api/pricing/calculate"
+      ],
+      "plans": [
+        {"id": "pack_small_25", "pages": 25, "price_usd": 9.99, "rate": 0.40},
+        {"id": "pack_large_100", "pages": 100, "price_usd": 29.99, "rate": 0.30},
+        {"id": "agency_monthly_500", "pages": 500, "price_usd": 119.00, "rate": 0.24}
+      ],
+      "certified_pricing": {
+        "base_rate_per_page": 24.95,
+        "expedited_turnaround_fee": 14.95,
+        "notarization_fee": 19.00,
+        "apostille_fee": 49.00
+      }
+    },
+    "gate_5_stripe_checkout_and_idempotent_webhooks": {
+      "status": "PASSED",
+      "endpoints": [
+        "POST /api/billing/checkout",
+        "POST /api/webhooks/stripe",
+        "GET /api/accounts/{id}/balance"
+      ],
+      "metrics": {
+        "checkout_session_generated": true,
+        "webhook_credit_fulfillment": true,
+        "idempotency_duplicate_rejection": true,
+        "account_balance_reflects_credits": true
+      }
+    },
+    "gate_6_marketing_copy_and_legal_documents": {
+      "status": "PASSED",
+      "verified_files": [
+        "app/layout.tsx",
+        "app/pricing/page.tsx",
+        "app/how-it-works/page.tsx",
+        "app/privacy/page.tsx",
+        "app/terms/page.tsx",
+        "components/marketing/SpyglassHero.tsx",
+        "docs/PRIVACY.md",
+        "docs/TERMS.md"
+      ],
+      "key_phrase": "automated document processing",
+      "all_present_naturally": true,
+      "legal_guarantees_documented": true
+    }
+  },
+  "summary": {
+    "total_gates": 6,
+    "passed_gates": 6,
+    "failed_gates": 0
+  }
+}

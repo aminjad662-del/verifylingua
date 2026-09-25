@@ -1,9 +1,10 @@
 import json
 import asyncio
+import os
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
-from typing import Optional
+from fastapi.responses import StreamingResponse, JSONResponse, Response
+from typing import Optional, List, Dict, Any
 
 from api.config import settings
 from api.models import (
@@ -21,11 +22,36 @@ from api.models import (
     SegmentModel,
     CostLedgerEntryModel,
     CostSummaryResponse,
-    TranslateJobRequest
+    TranslateJobRequest,
+    UpdateSegmentRequest,
+    ReRenderPageRequest,
+    QAPageResultModel,
+    QADocumentReportResponse,
+    CertifiedOrderRequest,
+    CertifiedApprovalRequest,
+    CertifiedQueueItem,
+    ReviewAuditEntry,
+    RetentionInfoResponse,
+    RetentionCleanupResponse,
+    ImmediateDeletionResponse,
+    CommercialPlanModel,
+    PricingCalculateRequest,
+    PricingCalculateResponse,
+    CheckoutSessionRequest,
+    CheckoutSessionResponse,
+    AccountBalanceResponse
 )
 from api.intake import run_intake_security_check, unlock_and_sanitize_pdf, IntakeError
-from api.analyze import analyze_pdf_document
+from api.analyze import analyze_pdf_document, analyze_image_document
 from api.translate import translate_document_pipeline, TranslationRouter
+from api.render import reconstruct_document
+from api.qa import QualityAssuranceEngine
+from api.certified import CertifiedWorkflowManager
+from api.notifications import NotificationService
+from api.retention import RetentionPolicyManager
+from api.commercial import CommercialBillingService
+from api.monitoring import SystemMonitor
+from api.backup import BackupManager
 from api.store import job_store
 
 app = FastAPI(
@@ -255,14 +281,42 @@ async def analyze_job_layout(job_id: str):
                 width=page_data.width,
                 height=page_data.height
             )
+    elif job.sourceFormat.lower() == "docx":
+        from api.docx_pipeline import DocxPipeline
+        analysis = DocxPipeline.extract_docx_analysis(bytes_to_analyze, filename=job.sourceFilename)
+        for page_data in analysis.pages:
+            job_store.update_page_details(
+                job_id=job_id,
+                page_number=page_data.page_number,
+                kind=PageKind(page_data.kind),
+                status=PageStatus.ANALYZED,
+                text_layer_confidence=page_data.text_layer_trustworthiness,
+                is_broken_encoding=page_data.is_broken_encoding,
+                non_text_regions_count=len(page_data.non_text_regions),
+                width=page_data.width,
+                height=page_data.height
+            )
+    elif job.sourceFormat.lower() in ("jpg", "jpeg", "png"):
+        analysis = analyze_image_document(bytes_to_analyze, filename=job.sourceFilename)
+        for page_data in analysis.pages:
+            job_store.update_page_details(
+                job_id=job_id,
+                page_number=page_data.page_number,
+                kind=PageKind(page_data.kind),
+                status=PageStatus.ANALYZED,
+                text_layer_confidence=page_data.text_layer_trustworthiness,
+                is_broken_encoding=page_data.is_broken_encoding,
+                non_text_regions_count=len(page_data.non_text_regions),
+                width=page_data.width,
+                height=page_data.height
+            )
     else:
-        # Single-page image or DOCX
-        kind = PageKind.IMAGE_ONLY if job.sourceFormat.lower() in ("jpg", "png") else PageKind.DIGITAL_TEXT
+        # Generic fallback
         job_store.update_page_status(
             job_id=job_id,
             page_number=1,
             status=PageStatus.ANALYZED,
-            kind=kind
+            kind=PageKind.DIGITAL_TEXT
         )
 
     job_store.update_job_stage(
@@ -288,7 +342,13 @@ async def translate_job_content(job_id: str, req: Optional[TranslateJobRequest] 
         raise HTTPException(status_code=400, detail="Empty document payload")
 
     # Analyze if not already analyzed
-    analysis = analyze_pdf_document(bytes_to_translate, filename=job.sourceFilename)
+    if job.sourceFormat.lower() == "docx":
+        from api.docx_pipeline import DocxPipeline
+        analysis = DocxPipeline.extract_docx_analysis(bytes_to_translate, filename=job.sourceFilename)
+    elif job.sourceFormat.lower() in ("jpg", "jpeg", "png"):
+        analysis = analyze_image_document(bytes_to_translate, filename=job.sourceFilename)
+    else:
+        analysis = analyze_pdf_document(bytes_to_translate, filename=job.sourceFilename)
 
     user_names = req.user_names if req else None
     user_glossary = req.user_glossary if req else None
@@ -304,6 +364,329 @@ async def translate_job_content(job_id: str, req: Optional[TranslateJobRequest] 
     )
 
     return job_store.get_job(job_id)
+
+@app.post("/api/jobs/{job_id}/render", response_model=JobResponse)
+async def render_job_document(job_id: str, auto_qa: bool = False):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    payload = job_store.get_job_payload(job_id)
+    if not payload:
+        raise HTTPException(status_code=400, detail="No document payload cached for this job")
+
+    bytes_to_render = payload.get("sanitized_bytes") or payload.get("raw_bytes")
+    if not bytes_to_render:
+        raise HTTPException(status_code=400, detail="Empty document payload")
+
+    # Update to rendering stage
+    job_store.update_job_stage(
+        job_id=job_id,
+        status=JobStatus.RENDERING,
+        stage_name="rendering",
+        progress=70
+    )
+
+    # Perform analysis if not present
+    if job.sourceFormat.lower() == "docx":
+        from api.docx_pipeline import DocxPipeline
+        analysis = DocxPipeline.extract_docx_analysis(bytes_to_render, filename=job.sourceFilename)
+    elif job.sourceFormat.lower() in ("jpg", "jpeg", "png"):
+        analysis = analyze_image_document(bytes_to_render, filename=job.sourceFilename)
+    else:
+        analysis = analyze_pdf_document(bytes_to_render, filename=job.sourceFilename)
+    translated_segments = job_store.get_segments(job_id)
+
+    rendered_bytes, preview_bytes, qa_records = reconstruct_document(
+        original_bytes=bytes_to_render,
+        file_format=job.sourceFormat,
+        analysis=analysis,
+        translated_segments=translated_segments,
+        target_lang=job.targetLanguage
+    )
+
+    # Store outputs
+    job_store.set_rendered_output(job_id, rendered_bytes, preview_bytes, qa_records=qa_records)
+
+    # Update pages to rendered
+    for rec in qa_records:
+        p_no = rec.get("page_number", 1)
+        job_store.update_page_status(
+            job_id=job_id,
+            page_number=p_no,
+            status=PageStatus.RENDERED
+        )
+
+    # Advance to QA stage
+    job_store.update_job_stage(
+        job_id=job_id,
+        status=JobStatus.QA,
+        stage_name="qa",
+        progress=85
+    )
+
+    if auto_qa:
+        await run_job_qa_stage(job_id)
+
+    return job_store.get_job(job_id)
+
+
+async def run_job_qa_stage(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    payload = job_store.get_job_payload(job_id)
+    if not payload:
+        raise HTTPException(status_code=400, detail="No document payload cached for this job")
+
+    bytes_to_render = payload.get("sanitized_bytes") or payload.get("raw_bytes")
+    rendered_bytes = job_store.get_rendered_output(job_id)
+    if not rendered_bytes:
+        raise HTTPException(status_code=400, detail="Document must be rendered before running QA")
+
+    if job.sourceFormat.lower() == "docx":
+        from api.docx_pipeline import DocxPipeline
+        analysis = DocxPipeline.extract_docx_analysis(bytes_to_render, filename=job.sourceFilename)
+    elif job.sourceFormat.lower() in ("jpg", "jpeg", "png"):
+        analysis = analyze_image_document(bytes_to_render, filename=job.sourceFilename)
+    else:
+        analysis = analyze_pdf_document(bytes_to_render, filename=job.sourceFilename)
+
+    translated_segments = job_store.get_segments(job_id)
+    s8_qa_records = job_store.get_s8_records(job_id)
+
+    # Run Stage S9 Automated Quality Assurance Engine
+    qa_report = QualityAssuranceEngine.evaluate_document(
+        job_id=job_id,
+        original_bytes=bytes_to_render,
+        rendered_bytes=rendered_bytes,
+        file_format=job.sourceFormat,
+        analysis=analysis,
+        translated_segments=translated_segments,
+        target_lang=job.targetLanguage,
+        s8_qa_records=s8_qa_records
+    )
+    job_store.set_qa_report(job_id, qa_report.model_dump())
+
+    # Update per-page statuses according to QA verdict
+    for p_res in qa_report.pages:
+        job_store.update_page_status(
+            job_id=job_id,
+            page_number=p_res.page_number,
+            status=p_res.status,
+            error_code=p_res.error_code,
+            error_message=p_res.error_message
+        )
+
+    # Finalize job status from QA report
+    job_store.update_job_stage(
+        job_id=job_id,
+        status=qa_report.overall_status,
+        stage_name="qa_complete",
+        progress=100
+    )
+
+    # Trigger job completion notification
+    all_warnings = qa_report.global_warnings + [
+        w for p in qa_report.pages for w in p.warnings
+    ]
+    notif = NotificationService.send_job_completed_email(
+        job_id=job_id,
+        recipient="user@example.com",
+        filename=job.sourceFilename,
+        download_url=f"/api/jobs/{job_id}/download",
+        qa_status=qa_report.overall_status.value,
+        warnings=all_warnings[:5],
+        service_tier=job.serviceTier.value
+    )
+    job_store.log_notification(job_id, notif.model_dump())
+    job_store.emit_event(
+        job_id=job_id,
+        stage="qa",
+        event_type="QA_COMPLETED",
+        message=f"QA Stage complete: status is {qa_report.overall_status.value}",
+        data={
+            "overall_status": qa_report.overall_status.value,
+            "passed": qa_report.passed_count,
+            "warnings": qa_report.warning_count,
+            "failed": qa_report.failed_count
+        }
+    )
+    return qa_report
+
+@app.post("/api/jobs/{job_id}/qa", response_model=QADocumentReportResponse)
+async def execute_job_qa(job_id: str):
+    qa_report = await run_job_qa_stage(job_id)
+    return QADocumentReportResponse(**qa_report.model_dump())
+
+@app.get("/api/jobs/{job_id}/qa", response_model=QADocumentReportResponse)
+async def get_job_qa_report(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    qa_report = job_store.get_qa_report(job_id)
+    if not qa_report:
+        if job_store.get_rendered_output(job_id):
+            qa_res = await run_job_qa_stage(job_id)
+            return QADocumentReportResponse(**qa_res.model_dump())
+        raise HTTPException(status_code=404, detail="QA report not yet generated for this job")
+    return QADocumentReportResponse(**qa_report)
+
+@app.get("/api/jobs/{job_id}/download")
+async def download_rendered_document(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    rendered = job_store.get_rendered_output(job_id)
+    if not rendered:
+        raise HTTPException(status_code=404, detail="Rendered output not available for this job")
+
+    fmt = job.sourceFormat.lower()
+    media_types = {
+        "pdf": "application/pdf",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg"
+    }
+    media_type = media_types.get(fmt, "application/octet-stream")
+    ext = fmt if fmt != "jpeg" else "jpg"
+    filename = f"translated_{os.path.splitext(job.sourceFilename)[0]}.{ext}"
+
+    return Response(
+        content=rendered,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+@app.get("/api/jobs/{job_id}/preview")
+async def get_rendered_preview(job_id: str, page: int = 1):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    rendered = job_store.get_rendered_output(job_id)
+    if not rendered:
+        preview = job_store.get_preview_output(job_id)
+        if not preview:
+            raise HTTPException(status_code=404, detail="Preview not available for this job")
+        return Response(content=preview, media_type="image/jpeg")
+
+    # If page > 1 and PDF, generate specific page preview
+    if job.sourceFormat.lower() == "pdf" and page > 1:
+        from api.render import PreviewGenerator
+        page_preview = PreviewGenerator.generate_watermarked_preview(rendered, format_hint="pdf", page_number=page)
+        return Response(content=page_preview, media_type="image/jpeg")
+
+    preview = job_store.get_preview_output(job_id)
+    if not preview:
+        from api.render import PreviewGenerator
+        preview = PreviewGenerator.generate_watermarked_preview(rendered, format_hint=job.sourceFormat.lower(), page_number=page)
+    return Response(content=preview, media_type="image/jpeg")
+
+@app.get("/api/jobs/{job_id}/qa", response_model=QADocumentReportResponse)
+async def get_job_qa_report(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    qa_report = job_store.get_qa_report(job_id)
+    if not qa_report:
+        raise HTTPException(status_code=404, detail="QA report not yet generated for this job")
+    return QADocumentReportResponse(**qa_report)
+
+@app.patch("/api/jobs/{job_id}/segments/{segment_id}")
+async def update_segment_text(job_id: str, segment_id: str, req: UpdateSegmentRequest):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    seg = job_store.update_segment(job_id, segment_id, req.translated_text, req.reviewer_edit)
+    if not seg:
+        raise HTTPException(status_code=404, detail="Segment not found")
+    return {"job_id": job_id, "segment": seg}
+
+@app.post("/api/jobs/{job_id}/pages/{page_no}/re-render")
+async def rerender_single_page(job_id: str, page_no: int):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    payload = job_store.get_job_payload(job_id)
+    if not payload:
+        raise HTTPException(status_code=400, detail="No document payload cached for this job")
+
+    bytes_to_render = payload.get("sanitized_bytes") or payload.get("raw_bytes")
+    if not bytes_to_render:
+        raise HTTPException(status_code=400, detail="Empty document payload")
+
+    if job.sourceFormat.lower() == "docx":
+        from api.docx_pipeline import DocxPipeline
+        analysis = DocxPipeline.extract_docx_analysis(bytes_to_render, filename=job.sourceFilename)
+    else:
+        analysis = analyze_pdf_document(bytes_to_render, filename=job.sourceFilename)
+
+    translated_segments = job_store.get_segments(job_id)
+
+    # Reconstruct document with updated segments
+    rendered_bytes, preview_bytes, qa_records = reconstruct_document(
+        original_bytes=bytes_to_render,
+        file_format=job.sourceFormat,
+        analysis=analysis,
+        translated_segments=translated_segments,
+        target_lang=job.targetLanguage
+    )
+
+    job_store.set_rendered_output(job_id, rendered_bytes, preview_bytes)
+
+    # Re-evaluate S9 QA
+    qa_report = QualityAssuranceEngine.evaluate_document(
+        job_id=job_id,
+        original_bytes=bytes_to_render,
+        rendered_bytes=rendered_bytes,
+        file_format=job.sourceFormat,
+        analysis=analysis,
+        translated_segments=translated_segments,
+        target_lang=job.targetLanguage,
+        s8_qa_records=qa_records
+    )
+    job_store.set_qa_report(job_id, qa_report.model_dump())
+
+    # Find the specific page QA result
+    target_page_qa = next((p for p in qa_report.pages if p.page_number == page_no), None)
+    if target_page_qa:
+        job_store.update_page_status(
+            job_id=job_id,
+            page_number=page_no,
+            status=target_page_qa.status,
+            error_code=target_page_qa.error_code,
+            error_message=target_page_qa.error_message
+        )
+
+    job_store.emit_event(
+        job_id=job_id,
+        stage="render",
+        event_type="PAGE_RERENDERED",
+        message=f"Page {page_no} successfully re-rendered in seconds",
+        data={"page_number": page_no, "status": target_page_qa.status.value if target_page_qa else "unknown"}
+    )
+
+    return {
+        "job_id": job_id,
+        "page_number": page_no,
+        "status": target_page_qa.status.value if target_page_qa else "qa_passed",
+        "warnings": target_page_qa.warnings if target_page_qa else [],
+        "preview_url": f"/api/jobs/{job_id}/preview?page={page_no}",
+        "download_url": f"/api/jobs/{job_id}/download"
+    }
+
+@app.get("/api/jobs/{job_id}/notifications")
+async def get_job_notifications(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    notifs = job_store.get_notifications(job_id)
+    return {"job_id": job_id, "notifications": notifs}
 
 @app.get("/api/jobs/{job_id}/glossary")
 async def get_job_glossary(job_id: str):
@@ -384,3 +767,151 @@ async def stream_job_events(job_id: str, request: Request):
             "X-Accel-Buffering": "no"
         }
     )
+
+# ---------------------------------------------------------------------------
+# Certified Mode & Reviewer Workbench Endpoints (Milestone 8)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/jobs/{job_id}/certified/order")
+async def create_certified_translation_order(job_id: str, req: CertifiedOrderRequest):
+    try:
+        order = CertifiedWorkflowManager.create_certified_order(job_id, req)
+        return {"job_id": job_id, "order": order}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/certified/queue", response_model=List[CertifiedQueueItem])
+async def list_certified_reviewer_queue():
+    items = job_store.list_certified_queue()
+    return [CertifiedQueueItem(**i) for i in items]
+
+@app.get("/api/jobs/{job_id}/certified/review")
+async def get_certified_reviewer_workbench(job_id: str):
+    try:
+        workbench = CertifiedWorkflowManager.get_reviewer_workbench(job_id)
+        return workbench
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/jobs/{job_id}/certified/approve")
+async def approve_and_certify_document(job_id: str, req: CertifiedApprovalRequest):
+    try:
+        result = CertifiedWorkflowManager.approve_and_certify(job_id, req)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/jobs/{job_id}/certified/audit")
+async def get_certified_audit_trail(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    audit_trail = job_store.get_audit_trail(job_id)
+    return {"job_id": job_id, "audit_trail": audit_trail}
+
+# ---------------------------------------------------------------------------
+# Stage S10: Retention & Deletion Lifecycle Endpoints (Milestone 9)
+# ---------------------------------------------------------------------------
+
+@app.delete("/api/jobs/{job_id}", response_model=ImmediateDeletionResponse)
+async def delete_job_immediate(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    try:
+        res = RetentionPolicyManager.immediate_purge(job_id=job_id, actor="user", reason="User requested immediate deletion")
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/jobs/{job_id}/retention", response_model=RetentionInfoResponse)
+async def get_job_retention_status(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    info = RetentionPolicyManager.get_retention_info(job_id)
+    if not info:
+        raise HTTPException(status_code=404, detail="Retention info not found")
+    return info
+
+@app.post("/api/admin/retention/cleanup", response_model=RetentionCleanupResponse)
+async def run_retention_cleanup_sweep(dry_run: bool = False):
+    try:
+        report = RetentionPolicyManager.cleanup_expired_jobs(dry_run=dry_run)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------------------------------------------------------------------------
+# Commercial Plans, Pricing, Checkout & Stripe Webhooks (Milestone 9)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/pricing/plans", response_model=List[CommercialPlanModel])
+async def list_commercial_pricing_plans():
+    return CommercialBillingService.get_plans()
+
+@app.post("/api/pricing/calculate", response_model=PricingCalculateResponse)
+async def calculate_translation_pricing(req: PricingCalculateRequest):
+    return CommercialBillingService.calculate_pricing(req)
+
+@app.post("/api/billing/checkout", response_model=CheckoutSessionResponse)
+async def create_checkout_session(req: CheckoutSessionRequest):
+    try:
+        session = CommercialBillingService.create_checkout_session(req)
+        return session
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/webhooks/stripe")
+async def handle_stripe_webhook_event(request: Request):
+    try:
+        payload = await request.json()
+        result = CommercialBillingService.handle_stripe_webhook(payload)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/accounts/{user_id}/balance", response_model=AccountBalanceResponse)
+async def get_user_account_balance(user_id: str):
+    return CommercialBillingService.get_account_balance(user_id)
+
+# ---------------------------------------------------------------------------
+# Milestone 10: Production Hardening, Deep Telemetry & Snapshots
+# ---------------------------------------------------------------------------
+
+@app.get("/health/deep")
+async def deep_health_check():
+    return SystemMonitor.get_deep_health()
+
+@app.post("/api/admin/backup/snapshot")
+async def create_system_snapshot(tag: str = "manual"):
+    try:
+        res = BackupManager.create_snapshot(tag=tag)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/backup/list")
+async def list_system_snapshots():
+    return BackupManager.list_snapshots()
+
+@app.post("/api/admin/backup/verify")
+async def verify_system_snapshot(filename: str):
+    try:
+        return BackupManager.verify_snapshot_integrity(filename)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+

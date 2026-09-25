@@ -1,0 +1,92 @@
+{
+  "milestone": 7,
+  "timestamp": "2026-09-23T22:50:14Z",
+  "overall_status": "PASSED",
+  "quality_gates": {
+    "gate_7_1_stage_s9_checks": "PASSED",
+    "gate_7_2_per_page_transparent_warnings": "PASSED",
+    "gate_7_3_segment_editor_and_single_page_rerender": "PASSED",
+    "gate_7_4_notification_dispatch_and_audit_logging": "PASSED",
+    "gate_7_5_full_api_workflow": "PASSED"
+  },
+  "corpus_evaluations": {
+    "13_dense_marketing_flyer.pdf": {
+      "job_id": "job_f13",
+      "overall_status": "ready_with_warnings",
+      "page_count": 1,
+      "passed_count": 0,
+      "warning_count": 1,
+      "failed_count": 0,
+      "pages": [
+        {
+          "page_number": 1,
+          "status": "qa_warning",
+          "completeness": true,
+          "overflow_mitigated": true,
+          "glyph_integrity": true,
+          "direction_valid": true,
+          "non_text_ssim": 0.9997,
+          "structure_valid": true,
+          "protected_tokens_preserved": true,
+          "warnings": [
+            "Text on page 1 was downscaled by auto-fit engine to prevent overflow."
+          ],
+          "error_code": null,
+          "error_message": null
+        }
+      ],
+      "global_warnings": []
+    },
+    "12_arabic_bidi_record.pdf": {
+      "job_id": "job_f12",
+      "overall_status": "ready",
+      "page_count": 1,
+      "passed_count": 1,
+      "warning_count": 0,
+      "failed_count": 0,
+      "pages": [
+        {
+          "page_number": 1,
+          "status": "qa_passed",
+          "completeness": true,
+          "overflow_mitigated": false,
+          "glyph_integrity": true,
+          "direction_valid": true,
+          "non_text_ssim": 1.0,
+          "structure_valid": true,
+          "protected_tokens_preserved": true,
+          "warnings": [],
+          "error_code": null,
+          "error_message": null
+        }
+      ],
+      "global_warnings": [],
+      "single_page_rerender_ms": 869.74
+    },
+    "11_complex_elements.docx": {
+      "job_id": "job_f11",
+      "overall_status": "ready",
+      "page_count": 1,
+      "passed_count": 1,
+      "warning_count": 0,
+      "failed_count": 0,
+      "pages": [
+        {
+          "page_number": 1,
+          "status": "qa_passed",
+          "completeness": true,
+          "overflow_mitigated": false,
+          "glyph_integrity": true,
+          "direction_valid": true,
+          "non_text_ssim": 1.0,
+          "structure_valid": true,
+          "protected_tokens_preserved": true,
+          "warnings": [],
+          "error_code": null,
+          "error_message": null
+        }
+      ],
+      "global_warnings": []
+    }
+  }
+}

@@ -56,6 +56,7 @@ export default function PricingPage() {
             </h1>
 
             <p className="text-lg text-ink-soft max-w-2xl mx-auto leading-relaxed">
+              High-precision automated document processing and USCIS-certified translations with deterministic flat-rate pricing.
               We match the $24.95/page industry benchmark and include pre-payment AI document triage,
               passport name-locking, and public QR verification at no extra cost.
             </p>

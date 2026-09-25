@@ -10,18 +10,42 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    let binary: Buffer | null = null;
+    let mime = "application/octet-stream";
+    let filename = "preview_document";
+
     const job = await getPersistentJob(id);
-    if (!job || !job.outputKey) {
-      return NextResponse.json({ error: "Preview not available." }, { status: 404 });
+    if (job && job.outputKey) {
+      binary = await getObject(job.outputKey);
+      mime = job.sourceMimeType || "application/octet-stream";
+      filename = `preview_${job.sourceFilename}`;
+    } else {
+      const { getTranslationJob } = await import("@/lib/translation/store");
+      const memJob = getTranslationJob(id);
+      if (memJob) {
+        if (memJob.translatedBuffer) {
+          binary = memJob.translatedBuffer;
+        } else if (memJob.outputKey) {
+          binary = await getObject(memJob.outputKey);
+        }
+        mime = memJob.fileFormat === "png"
+          ? "image/png"
+          : memJob.fileFormat === "jpg"
+          ? "image/jpeg"
+          : "application/pdf";
+        filename = `preview_${memJob.fileName}`;
+      }
     }
 
-    const binary = await getObject(job.outputKey);
+    if (!binary) {
+      return NextResponse.json({ error: "Preview not available." }, { status: 404 });
+    }
 
     return new NextResponse(new Uint8Array(binary), {
       status: 200,
       headers: {
-        "Content-Type": job.sourceMimeType || "application/octet-stream",
-        "Content-Disposition": `inline; filename="preview_${job.sourceFilename}"`,
+        "Content-Type": mime,
+        "Content-Disposition": `inline; filename="${filename}"`,
         "Cache-Control": "public, max-age=300",
       },
     });

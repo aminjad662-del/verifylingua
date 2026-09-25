@@ -58,5 +58,6 @@ test_sample_civil_record.pdf
 tests/corpus/user/
 __pycache__/
 *.pyc
+backups/*.json.gz
 *.pyo
 .pytest_cache/

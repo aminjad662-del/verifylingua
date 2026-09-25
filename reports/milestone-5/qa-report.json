@@ -1,0 +1,92 @@
+{
+  "milestone": "milestone-5",
+  "stage": "S8 - Document Reconstruction",
+  "timestamp": "2026-09-23T22:21:00Z",
+  "summary": {
+    "total_tests": 47,
+    "passed_tests": 47,
+    "failed_tests": 0,
+    "pass_rate": 1.0,
+    "vitest_files": 51,
+    "vitest_tests": 323,
+    "vitest_passed": 323
+  },
+  "quality_gates": {
+    "gate_5_1_glyph_integrity": {
+      "status": "PASSED",
+      "threshold": "0 tofu / '?' / U+FFFD characters in all rendered outputs",
+      "measured": 0,
+      "font_coverage": {
+        "Latin": "VerifyLingua-Arial (100%)",
+        "French": "VerifyLingua-Arial (100%)",
+        "Spanish": "VerifyLingua-Arial (100%)",
+        "German": "VerifyLingua-Arial (100%)",
+        "Arabic": "VerifyLingua-Arial / VerifyLingua-Tahoma (100%)",
+        "Mixed_BiDi": "VerifyLingua-Arial (100% with token bracket normalization)"
+      }
+    },
+    "gate_5_2_non_text_preservation_ssim": {
+      "status": "PASSED",
+      "threshold": "SSIM >= 0.98 on non-text regions",
+      "measured": 1.0,
+      "max_masked_diff": 0.0,
+      "mean_masked_diff": 0.0,
+      "details": "Vector text overlay and redaction preserves lines, seals, and backgrounds bit-for-bit"
+    },
+    "gate_5_3_overflow_overlap_prevention": {
+      "status": "PASSED",
+      "threshold": "Rendered text boxes within page and block bounds",
+      "measured": "0 bounding box collisions; auto-fit down to 70% floor executed with line height compression to 1.05x"
+    },
+    "gate_5_4_arabic_bidi_shaping_file_12": {
+      "status": "PASSED",
+      "file": "tests/corpus/12_arabic_bidi_record.pdf",
+      "target_lang": "ar",
+      "rendered_size_bytes": 45848,
+      "preview_size_bytes": 146549,
+      "bidi_alignment": "right-aligned",
+      "shaping_engine": "uharfbuzz + arabic-reshaper + python-bidi",
+      "visual_artifact": "reports/milestone-5/visual/12_arabic_bidi_record_side_by_side.png"
+    },
+    "gate_5_5_dense_flyer_autofit_file_13": {
+      "status": "PASSED",
+      "file": "tests/corpus/13_dense_marketing_flyer.pdf",
+      "target_lang": "fr",
+      "expansion_ratio": 1.32,
+      "rendered_size_bytes": 42696,
+      "overflow_mitigated": true,
+      "visual_artifact": "reports/milestone-5/visual/13_dense_marketing_flyer_side_by_side.png"
+    },
+    "gate_5_6_user_test_case_15": {
+      "status": "PASSED",
+      "file": "tests/corpus/user/user_test_case_15.jpg",
+      "dimensions": [772, 1000],
+      "inpainting": "Border ring sampling + Gaussian spatial texture blend",
+      "targets": {
+        "ar": {
+          "rendered_bytes": 225778,
+          "visual": "reports/milestone-5/visual/user_test_case_15_ar_side_by_side.png"
+        },
+        "fr": {
+          "rendered_bytes": 232353,
+          "visual": "reports/milestone-5/visual/user_test_case_15_fr_side_by_side.png"
+        },
+        "en": {
+          "rendered_bytes": 231366,
+          "visual": "reports/milestone-5/visual/user_test_case_15_en_side_by_side.png"
+        }
+      }
+    },
+    "gate_5_7_api_endpoints": {
+      "status": "PASSED",
+      "endpoints": [
+        "POST /api/jobs/{id}/render",
+        "GET /api/jobs/{id}/download",
+        "GET /api/jobs/{id}/preview"
+      ],
+      "verified_status_transition": "TRANSLATING -> RENDERING -> QA",
+      "download_headers": "attachment; filename=\"...\"",
+      "preview_mime_type": "image/jpeg"
+    }
+  }
+}

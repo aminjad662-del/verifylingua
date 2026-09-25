@@ -428,11 +428,37 @@ add_to_manifest("10d", "10d_malicious_xxe.docx", "malicious", "DOCX package cont
 
 # 11. Complex DOCX
 f11 = os.path.join(CORPUS_DIR, "11_complex_elements.docx")
-with zipfile.ZipFile(f11, "w") as zf:
-    zf.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
-    zf.writestr("word/header1.xml", '<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>OFFICIAL ACADEMIC TRANSCRIPT</w:t></w:r></w:p></w:hdr>')
-    zf.writestr("word/footer1.xml", '<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>Page 1 of 1 - Confidential</w:t></w:r></w:p></w:ftr>')
-    zf.writestr("word/document.xml", '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Student Name: Alejandro Garcia</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Subject: Mathematics</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Grade: A (Honors)</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>')
+try:
+    import docx
+    d11 = docx.Document()
+    sec = d11.sections[0]
+    sec.header.paragraphs[0].text = "OFFICIAL ACADEMIC TRANSCRIPT"
+    sec.footer.paragraphs[0].text = "Page 1 of 1 - Confidential"
+    d11.add_heading("OFFICIAL ACADEMIC TRANSCRIPT", level=1)
+    p_stu = d11.add_paragraph("Student Name: ")
+    p_stu.add_run("Alejandro Garcia").bold = True
+    p_stu.add_run(" has completed all requirements with ")
+    p_stu.add_run("Highest Academic Honors").italic = True
+    p_stu.add_run(".")
+    d11.add_paragraph("This document certifies that the individual named above has demonstrated exemplary performance in the following curriculum:")
+    tbl = d11.add_table(rows=3, cols=3)
+    tbl.style = "Table Grid"
+    tbl.rows[0].cells[0].text = "Course Code"
+    tbl.rows[0].cells[1].text = "Course Title"
+    tbl.rows[0].cells[2].text = "Final Grade"
+    tbl.rows[1].cells[0].text = "MATH-401"
+    tbl.rows[1].cells[1].text = "Advanced Mathematics"
+    tbl.rows[1].cells[2].text = "A (Honors)"
+    tbl.rows[2].cells[0].text = "PHYS-302"
+    tbl.rows[2].cells[1].text = "Theoretical Physics"
+    tbl.rows[2].cells[2].text = "A"
+    d11.save(f11)
+except Exception:
+    with zipfile.ZipFile(f11, "w") as zf:
+        zf.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
+        zf.writestr("word/header1.xml", '<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>OFFICIAL ACADEMIC TRANSCRIPT</w:t></w:r></w:p></w:hdr>')
+        zf.writestr("word/footer1.xml", '<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>Page 1 of 1 - Confidential</w:t></w:r></w:p></w:ftr>')
+        zf.writestr("word/document.xml", '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Student Name: Alejandro Garcia</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Subject: Mathematics</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Grade: A (Honors)</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>')
 add_to_manifest("11", "11_complex_elements.docx", "docx", "Complex DOCX with headers, footers, tables, and bold/italic runs", "Run-level XML text replacement preserving all container structures", "All elements preserved")
 
 # 12. Arabic source and English BiDi target

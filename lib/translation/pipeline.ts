@@ -289,13 +289,18 @@ export async function processTranslationJob(
     updateProgress(90, "Stage Formatting: Assembling layout and official 8 CFR 103.2 certification...");
 
     const userSegment = job.userId || "anonymous";
-    const outputKey = job.outputKey || `jobs/${userSegment}/${job.id}/output.pdf`;
+    const ext = job.fileFormat || "pdf";
+    const outputKey = job.outputKey || `jobs/${userSegment}/${job.id}/output.${ext}`;
     job.outputKey = outputKey;
 
     try {
       const mime =
         job.fileFormat === "docx"
           ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : job.fileFormat === "png"
+          ? "image/png"
+          : job.fileFormat === "jpg"
+          ? "image/jpeg"
           : "application/pdf";
       await putObject(outputKey, translatedBuffer, mime);
     } catch (storageErr) {
