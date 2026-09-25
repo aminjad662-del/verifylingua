@@ -1546,7 +1546,7 @@ export default function TranslatePage() {
                   >
                     <Download className="w-4 h-4" />
                     <span>
-                      Download Translated Document ({job.fileFormat.toUpperCase()})
+                      Download Translated Document ({(job.fileFormat || "PDF").toUpperCase()})
                     </span>
                   </motion.button>
                 )}

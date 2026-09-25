@@ -117,7 +117,12 @@ function TriageContent() {
             const statusRes = await fetch(`/api/translate/status/${initialJob.jobId}`);
             if (statusRes.ok) {
               const current = await statusRes.json();
-              setTranslationJob(current);
+              setTranslationJob((prev) => ({
+                ...prev,
+                ...current,
+                fileFormat: current.fileFormat || prev?.fileFormat || "PDF",
+                fileName: current.fileName || prev?.fileName || "document.pdf",
+              }));
               if (current.status === "ready" || current.status === "failed") {
                 clearInterval(poll);
               }
@@ -343,7 +348,7 @@ function TriageContent() {
                         </span>
                       </div>
                       <Badge variant={translationJob.status === "ready" ? "success" : "default"} className="text-[11px] font-mono">
-                        {translationJob.fileFormat?.toUpperCase()} • {translationJob.progress}%
+                        {(translationJob.fileFormat || "PDF").toUpperCase()} • {translationJob.progress}%
                       </Badge>
                     </div>
 
@@ -374,7 +379,7 @@ function TriageContent() {
                         >
                           <a href={translationJob.downloadUrl} download>
                             <Download className="w-4 h-4" />
-                            Download Translated Document ({translationJob.fileFormat.toUpperCase()})
+                            Download Translated Document ({(translationJob.fileFormat || "PDF").toUpperCase()})
                           </a>
                         </Button>
                       </div>

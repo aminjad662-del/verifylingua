@@ -881,6 +881,8 @@ async function handleApiRequest(request, pathname, env) {
     const jId = pathname.split('/').pop();
     return new Response(JSON.stringify({
       jobId: jId,
+      fileName: 'document.pdf',
+      fileFormat: 'pdf',
       status: 'ready',
       progress: 100,
       currentStep: 'Translation, layout reconstruction & verification complete',
