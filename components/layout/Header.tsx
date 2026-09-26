@@ -9,6 +9,13 @@ import { ShieldCheck, Menu, X, ArrowRight, Globe2, LayoutDashboard, Zap } from "
 import { PRODUCT_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
+const PRIMARY_NAV_LINKS = [
+  { href: "/translate", label: "Studio" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/counsel", label: "CounselDesk™" },
+];
+
 const NAV_LINKS = [
   { href: "/translate", label: "Studio" },
   { href: "/dashboard", label: "Dashboard" },
@@ -84,9 +91,9 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Desktop Navigation - Max 5 Links (§5.1) */}
-        <nav className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((link) => {
+        {/* Desktop Navigation - 4 Clean Primary Links */}
+        <nav className="hidden md:flex items-center gap-7">
+          {PRIMARY_NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link

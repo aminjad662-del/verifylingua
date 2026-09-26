@@ -254,13 +254,13 @@ function TriageContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Upload & Triage Results */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border space-y-6">
+          <Card className="p-6 md:p-8 rounded-2xl bg-surface-raised border border-border/80 shadow-2xs space-y-6">
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-3 ${
+              className={`border border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-3 ${
                 isDragActive
-                  ? "border-brand-500 bg-brand-50/70 scale-[1.01]"
-                  : "border-border hover:border-brand-500/60 bg-surface hover:bg-brand-50/20"
+                  ? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 scale-[1.01]"
+                  : "border-border/80 hover:border-emerald-500/60 bg-surface hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50"
               }`}
             >
               <input {...getInputProps()} />
@@ -274,32 +274,45 @@ function TriageContent() {
                 className="hidden"
               />
 
-              <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center text-brand-500 shadow-sm">
-                <UploadCloud className="w-7 h-7" />
+              <div className="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-800 dark:text-neutral-200 shadow-2xs border border-border/50">
+                <UploadCloud className="w-6 h-6" />
               </div>
 
               <div className="space-y-1">
                 <p className="text-base font-bold text-brand-ink">
                   {uploadedFile
                     ? "Upload another document or replace current file"
-                    : "Drop your official document here, or browse"}
+                    : "Drop official document here, or click to browse"}
                 </p>
                 <p className="text-xs text-text-muted">
-                  Supports PDF, JPG, PNG, WebP up to 25MB • Front & back pages supported
+                  Supports PDF, JPG, PNG, WebP up to 50MB • Certified 1:1 format preservation
                 </p>
               </div>
 
-              <div className="pt-2">
+              {/* Pre-flight Telemetry Inspection Pills */}
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-[11px] font-mono text-neutral-500">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> 300+ DPI Auto-Scale
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Glare Detection
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Seal OCR Guard
+                </span>
+              </div>
+
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-raised border border-border hover:bg-surface text-xs font-bold text-brand-ink shadow-sm transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-raised border border-border hover:bg-surface text-xs font-bold text-brand-ink shadow-2xs transition-colors active:scale-[0.98]"
                 >
-                  <Camera className="w-4 h-4 text-brand-500" />
-                  Take a Photo on Phone
+                  <Camera className="w-4 h-4 text-emerald-600" />
+                  Take Photo with Camera
                 </button>
               </div>
             </div>
@@ -320,7 +333,7 @@ function TriageContent() {
 
             {uploadedFile && !isAnalyzing && (
               <div className="space-y-4 pt-2">
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-surface border border-border">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-surface border border-border/80 shadow-2xs">
                   <div className="flex items-center gap-3">
                     <FileText className="w-6 h-6 text-brand-500 shrink-0" />
                     <div>
@@ -339,7 +352,7 @@ function TriageContent() {
 
                 {/* Live Translation Engine Progress & Instant Download Card */}
                 {translationJob && (
-                  <div className="p-5 rounded-2xl bg-surface border-2 border-brand-500/30 space-y-3">
+                  <div className="p-5 rounded-xl bg-surface border border-emerald-500/40 shadow-2xs space-y-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping" />
@@ -388,7 +401,7 @@ function TriageContent() {
                 )}
 
                 {findings.length === 0 ? (
-                  <div className="p-6 rounded-2xl bg-trust-bg border border-trust-border space-y-4">
+                  <div className="p-6 rounded-xl bg-trust-bg border border-trust-border space-y-4">
                     <div className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-trust shrink-0 mt-0.5" />
                       <div className="space-y-1">
@@ -422,7 +435,7 @@ function TriageContent() {
                     {findings.map((f) => (
                       <div
                         key={f.id}
-                        className={`p-5 rounded-2xl border space-y-3 ${
+                        className={`p-4 rounded-xl border space-y-3 ${
                           f.severity === "BLOCK"
                             ? "bg-status-danger/10 border-status-danger/30"
                             : "bg-status-warning/10 border-status-warning/30"
@@ -497,7 +510,7 @@ function TriageContent() {
             )}
           </Card>
 
-          <div className="p-5 rounded-2xl bg-surface-raised border border-border/70 flex items-start gap-3 text-xs text-ink-muted">
+          <div className="p-5 rounded-xl bg-surface-raised border border-border/70 shadow-2xs flex items-start gap-3 text-xs text-ink-muted">
             <Info className="w-5 h-5 text-cta shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               <strong className="text-ink font-bold">Why we triage before payment:</strong> Competitors like RushTranslate and ImmiTranslate take your payment first, and issue a refund or delay your file days later when a translator discovers handwriting issues. We prevent delays upfront.
