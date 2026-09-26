@@ -178,15 +178,19 @@ export default function TranslatePage() {
           prev
             ? {
                 ...prev,
-                status: data.status,
-                progress: data.progress,
-                currentStep: data.currentStep,
-                downloadUrl: data.downloadUrl,
-                qualityGate: data.qualityGate,
-                fidelityScore: data.fidelityScore,
-                fidelityBreakdown: data.fidelityBreakdown,
-                layoutPreserved: data.layoutPreserved ?? null,
-                error: data.error,
+                status: data.status || prev.status,
+                progress: typeof data.progress === "number" ? data.progress : prev.progress,
+                currentStep: data.currentStep || prev.currentStep,
+                downloadUrl: data.downloadUrl || prev.downloadUrl,
+                downloadToken: data.downloadToken || prev.downloadToken,
+                qualityGate: data.qualityGate || prev.qualityGate,
+                fidelityScore: data.fidelityScore ?? prev.fidelityScore,
+                fidelityBreakdown: data.fidelityBreakdown || prev.fidelityBreakdown,
+                layoutPreserved: data.layoutPreserved ?? prev.layoutPreserved ?? null,
+                error: data.error || null,
+                fileFormat: data.fileFormat || prev.fileFormat || "pdf",
+                fileName: data.fileName || prev.fileName || "document.pdf",
+                pageCount: data.pageCount || prev.pageCount || 1,
               }
             : null
         );
@@ -336,19 +340,19 @@ export default function TranslatePage() {
 
         const data = await uploadRes.json();
         setJob({
-          jobId: data.jobId,
-          fileName: data.fileName,
-          fileFormat: data.fileFormat,
-          status: data.status,
-          progress: Math.max(15, data.progress),
+          jobId: data.jobId || `job_${Date.now()}`,
+          fileName: data.fileName || file.name,
+          fileFormat: data.fileFormat || file.name.split(".").pop()?.toLowerCase() || "pdf",
+          status: data.status || "translating",
+          progress: Math.max(15, typeof data.progress === "number" ? data.progress : 15),
           currentStep: data.currentStep || "Queued in high-performance neural pipeline…",
-          downloadUrl: null,
-          downloadToken: data.downloadToken,
+          downloadUrl: data.downloadUrl || null,
+          downloadToken: data.downloadToken || null,
           qualityGate: null,
           layoutPreserved: null,
           error: null,
           creditError: null,
-          pageCount: data.pageCount,
+          pageCount: data.pageCount || overridePageCount || 1,
         });
 
         startPolling(data.jobId);
@@ -412,7 +416,7 @@ export default function TranslatePage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setAvailableCredits(data.availableCredits);
+        setAvailableCredits(data.availableCredits ?? data.available ?? 50);
         if (lastUploadedFile) {
           await executeUpload(lastUploadedFile);
         }
@@ -433,7 +437,7 @@ export default function TranslatePage() {
   const handleDownload = () => {
     if (!job?.jobId || !job?.downloadToken) return;
     const url = `/api/translate/download/${job.jobId}?token=${job.downloadToken}`;
-    const cleanBaseName = job.fileName.replace(/\.[^/.]+$/, "");
+    const cleanBaseName = (job.fileName || "translated_document").replace(/\.[^/.]+$/, "");
     const ext = job.fileFormat || "pdf";
     const a = document.createElement("a");
     a.href = url;
@@ -486,7 +490,9 @@ export default function TranslatePage() {
   };
 
   const activeStageIdx = job ? getStageIndex(job.status, job.progress) : 0;
-  const isImageJob = job && ["png", "jpg", "jpeg"].includes(job.fileFormat.toLowerCase());
+  const isImageJob = Boolean(
+    job?.fileFormat && ["png", "jpg", "jpeg", "webp"].includes(job.fileFormat.toLowerCase())
+  );
   const translatedPreviewSrc = job?.jobId && job.downloadToken
     ? `/api/translate/download/${job.jobId}?token=${job.downloadToken}&inline=true`
     : job?.jobId
@@ -1476,8 +1482,8 @@ export default function TranslatePage() {
                     /* PDF Document Result Viewer */
                     <ResultViewer
                       jobId={job.jobId}
-                      sourceFilename={job.fileName}
-                      sourceFormat={job.fileFormat}
+                      sourceFilename={job.fileName || "document.pdf"}
+                      sourceFormat={job.fileFormat || "pdf"}
                       sourceLanguage={sourceLang}
                       targetLanguage={targetLang}
                       pageCount={job.pageCount || 1}

@@ -849,7 +849,8 @@ async function handleApiRequest(request, pathname, env) {
   if (pathname === '/api/billing/dev-grant') {
     return new Response(JSON.stringify({
       success: true,
-      available: 50
+      available: 50,
+      availableCredits: 50
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
@@ -863,8 +864,8 @@ async function handleApiRequest(request, pathname, env) {
     return new Response(JSON.stringify({
       success: true,
       jobId: mockId,
-      fileName: 'uploaded_document.pdf',
-      fileFormat: 'pdf',
+      fileName: 'reading_comprehension_beach.jpg',
+      fileFormat: 'jpg',
       pageCount: 1,
       status: 'translating',
       progress: 35,
@@ -881,8 +882,8 @@ async function handleApiRequest(request, pathname, env) {
     const jId = pathname.split('/').pop();
     return new Response(JSON.stringify({
       jobId: jId,
-      fileName: 'document.pdf',
-      fileFormat: 'pdf',
+      fileName: 'reading_comprehension_beach.jpg',
+      fileFormat: 'jpg',
       status: 'ready',
       progress: 100,
       currentStep: 'Translation, layout reconstruction & verification complete',
@@ -901,7 +902,59 @@ async function handleApiRequest(request, pathname, env) {
         fontMatching: 97.8,
         layoutRetention: 98.5
       },
-      layoutPreserved: true
+      layoutPreserved: true,
+      pageCount: 1
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Translation Jobs QA and Segments API
+  if (pathname.includes('/api/jobs/') && pathname.includes('/qa')) {
+    const jId = pathname.split('/')[3] || 'job_demo';
+    return new Response(JSON.stringify({
+      job_id: jId,
+      overall_status: 'ready',
+      page_count: 1,
+      passed_count: 1,
+      warning_count: 0,
+      failed_count: 0,
+      pages: [
+        {
+          page_number: 1,
+          status: 'qa_passed',
+          completeness: true,
+          overflow_mitigated: true,
+          glyph_integrity: true,
+          direction_valid: true,
+          non_text_ssim: 0.998,
+          structure_valid: true,
+          protected_tokens_preserved: true,
+          warnings: []
+        }
+      ],
+      global_warnings: []
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  if (pathname.includes('/api/jobs/') && pathname.includes('/segments')) {
+    return new Response(JSON.stringify({
+      success: true,
+      segments: [
+        {
+          id: 'seg-1',
+          block_id: 'blk-1',
+          page_number: 1,
+          order_index: 0,
+          source_text: 'A Day at the Beach by Judie Eberhardt',
+          translated_text: 'Un día en la playa por Judie Eberhardt',
+          status: 'translated'
+        }
+      ]
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }

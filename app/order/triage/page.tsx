@@ -140,8 +140,9 @@ function TriageContent() {
     setTimeout(() => {
       setIsAnalyzing(false);
 
-      const isLargeDoc = fileName.toLowerCase().includes("transcript") || fileName.toLowerCase().includes("court");
-      const isPhoto = fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".png");
+      const safeName = (fileName || "").toLowerCase();
+      const isLargeDoc = safeName.includes("transcript") || safeName.includes("court");
+      const isPhoto = safeName.endsWith(".jpg") || safeName.endsWith(".png");
       const pages = isLargeDoc ? 3 : 1;
       const words = pages * 230;
 

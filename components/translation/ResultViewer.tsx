@@ -64,26 +64,26 @@ export interface DocumentSegment {
 
 interface ResultViewerProps {
   jobId: string;
-  sourceFilename: string;
-  sourceFormat: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  pageCount: number;
-  downloadUrl: string;
-  previewUrl: string;
+  sourceFilename?: string;
+  sourceFormat?: string;
+  sourceLanguage?: string;
+  targetLanguage?: string;
+  pageCount?: number;
+  downloadUrl?: string;
+  previewUrl?: string;
   onReset?: () => void;
   onUpgradeToCertified?: () => void;
 }
 
 export function ResultViewer({
   jobId,
-  sourceFilename,
-  sourceFormat,
-  sourceLanguage,
-  targetLanguage,
-  pageCount,
-  downloadUrl,
-  previewUrl,
+  sourceFilename = "document.pdf",
+  sourceFormat = "pdf",
+  sourceLanguage = "en",
+  targetLanguage = "es",
+  pageCount = 1,
+  downloadUrl = "",
+  previewUrl = "",
   onReset,
   onUpgradeToCertified,
 }: ResultViewerProps) {
@@ -201,13 +201,13 @@ export function ResultViewer({
         <div>
           <div className="flex items-center gap-2.5">
             <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
-              {sourceFormat.toUpperCase()}
+              {(sourceFormat || "pdf").toUpperCase()}
             </span>
             <h2 className="text-base font-bold text-zinc-950 truncate max-w-md">
-              {sourceFilename}
+              {sourceFilename || "document.pdf"}
             </h2>
             <span className="text-xs font-mono text-zinc-400">
-              ({sourceLanguage.toUpperCase()} → {targetLanguage.toUpperCase()})
+              ({(sourceLanguage || "en").toUpperCase()} → {(targetLanguage || "es").toUpperCase()})
             </span>
           </div>
           <p className="text-xs text-zinc-500 mt-1">
@@ -232,7 +232,7 @@ export function ResultViewer({
             className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download ({sourceFormat.toUpperCase()})</span>
+            <span>Download ({(sourceFormat || "pdf").toUpperCase()})</span>
           </a>
         </div>
       </div>
@@ -244,7 +244,7 @@ export function ResultViewer({
             <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
               Document Pages ({pageCount})
             </span>
-            {qaReport && (
+            {qaReport && qaReport.overall_status && (
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                 qaReport.overall_status === "ready"
                   ? "bg-emerald-100 text-emerald-800"
@@ -252,7 +252,7 @@ export function ResultViewer({
                   ? "bg-amber-100 text-amber-800"
                   : "bg-rose-100 text-rose-800"
               }`}>
-                QA: {qaReport.overall_status.replace(/_/g, " ")}
+                QA: {(qaReport.overall_status || "verified").replace(/_/g, " ")}
               </span>
             )}
           </div>

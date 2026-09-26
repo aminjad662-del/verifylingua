@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "check:hex": "node scripts/check-raw-hex.js",
-    "test": "node --max-old-space-size=4096 ./node_modules/vitest/vitest.mjs run",
+    "test": "node --max-old-space-size=4096 ./node_modules/vitest/vitest.mjs run --pool=forks --poolOptions.forks.singleFork",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
