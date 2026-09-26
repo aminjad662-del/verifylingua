@@ -185,15 +185,21 @@ export async function translateImage(
         const tmpOutput = path.join(os.tmpdir(), `vl_out_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${format}`);
         await fs.promises.writeFile(tmpInput, imageBuffer);
 
+        const geminiKey = process.env.GEMINI_API_KEY || "";
+        const pyArgs = [
+          scriptPath,
+          "--input", tmpInput,
+          "--output", tmpOutput,
+          "--target-lang", options.targetLang || "es",
+        ];
+        if (geminiKey) {
+          pyArgs.push("--api-key", geminiKey);
+        }
+
         const success = await new Promise<boolean>((resolve) => {
           execFile(
             "python",
-            [
-              scriptPath,
-              "--input", tmpInput,
-              "--output", tmpOutput,
-              "--target-lang", options.targetLang || "es",
-            ],
+            pyArgs,
             { timeout: 45000 },
             (err) => {
               if (err) {
