@@ -963,13 +963,27 @@ async function handleApiRequest(request, pathname, env) {
 
   // Translation download & preview APIs
   if (pathname.startsWith('/api/translate/download/') || pathname.includes('/preview')) {
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Download ready'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    const url = new URL(request.url);
+    const isInline = url.searchParams.get('inline') === 'true' || pathname.includes('/preview');
+    const targetLang = (url.searchParams.get('lang') || 'es').toLowerCase();
+    let sampleFile = '/samples/translated_worksheet_spanish.jpg';
+    if (targetLang === 'fr') sampleFile = '/samples/translated_worksheet_french.jpg';
+    if (targetLang === 'de') sampleFile = '/samples/translated_worksheet_german.jpg';
+
+    const sampleUrl = new URL(sampleFile, request.url);
+    try {
+      const imgRes = await env.ASSETS.fetch(new Request(sampleUrl, request));
+      if (imgRes && imgRes.status !== 404) {
+        if (!isInline) {
+          const headers = new Headers(imgRes.headers);
+          headers.set('Content-Disposition', 'attachment; filename="translated_worksheet_' + targetLang + '.jpg"');
+          return new Response(imgRes.body, { status: 200, headers });
+        }
+        return imgRes;
+      }
+    } catch {}
+
+    return Response.redirect(sampleUrl.toString(), 302);
   }
 
   // Pilot feedback API

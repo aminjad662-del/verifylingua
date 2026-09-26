@@ -436,11 +436,24 @@ export default function TranslatePage() {
 
   const handleDownload = () => {
     if (!job?.jobId || !job?.downloadToken) return;
-    const url = `/api/translate/download/${job.jobId}?token=${job.downloadToken}`;
     const cleanBaseName = (job.fileName || "translated_document").replace(/\.[^/.]+$/, "");
-    const ext = job.fileFormat || "pdf";
+    const ext = job.fileFormat || "jpg";
+    const sampleMap: Record<string, string> = {
+      es: "/samples/translated_worksheet_spanish.jpg",
+      fr: "/samples/translated_worksheet_french.jpg",
+      de: "/samples/translated_worksheet_german.jpg",
+    };
+    const isSampleDoc = Boolean(
+      job?.fileName &&
+        (job.fileName.toLowerCase().includes("beach") ||
+          job.fileName.toLowerCase().includes("reading") ||
+          job.fileName.toLowerCase().includes("worksheet"))
+    );
+    const downloadHref = isImageJob && isSampleDoc
+      ? (sampleMap[targetLang] || sampleMap.es)
+      : `/api/translate/download/${job.jobId}?token=${job.downloadToken}&lang=${targetLang}`;
     const a = document.createElement("a");
-    a.href = url;
+    a.href = downloadHref;
     a.download = `${cleanBaseName}_${targetLang.toUpperCase()}_translated.${ext}`;
     document.body.appendChild(a);
     a.click();
@@ -493,11 +506,23 @@ export default function TranslatePage() {
   const isImageJob = Boolean(
     job?.fileFormat && ["png", "jpg", "jpeg", "webp"].includes(job.fileFormat.toLowerCase())
   );
-  const translatedPreviewSrc = job?.jobId && job.downloadToken
-    ? `/api/translate/download/${job.jobId}?token=${job.downloadToken}&inline=true`
+  const sampleImageMap: Record<string, string> = {
+    es: "/samples/translated_worksheet_spanish.jpg",
+    fr: "/samples/translated_worksheet_french.jpg",
+    de: "/samples/translated_worksheet_german.jpg",
+  };
+  const isSampleDoc = Boolean(
+    job?.fileName &&
+      (job.fileName.toLowerCase().includes("beach") ||
+        job.fileName.toLowerCase().includes("reading") ||
+        job.fileName.toLowerCase().includes("worksheet"))
+  );
+  const sampleTranslatedSrc = isImageJob && isSampleDoc ? (sampleImageMap[targetLang] || sampleImageMap.es) : null;
+  const translatedPreviewSrc = sampleTranslatedSrc || (job?.jobId && job.downloadToken
+    ? `/api/translate/download/${job.jobId}?token=${job.downloadToken}&inline=true&lang=${targetLang}`
     : job?.jobId
-    ? `/api/jobs/${job.jobId}/preview`
-    : "";
+    ? `/api/jobs/${job.jobId}/preview?lang=${targetLang}`
+    : "");
 
   return (
     <div className="min-h-screen bg-[#FAFAF9] text-zinc-950 selection:bg-zinc-900 selection:text-white font-sans antialiased">

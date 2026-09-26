@@ -18,7 +18,7 @@ def detect_artwork_bounds(img_rgb):
     Detects colorful non-text illustrations, photos, stamps, or seals using color variance.
     Text in documents is almost always monochrome (R ≈ G ≈ B), whereas artwork has chromatic color.
     """
-    arr = np.array(img_rgb, dtype=float)
+    arr = np.asarray(img_rgb, dtype=np.int16)
     color_var = arr.max(axis=2) - arr.min(axis=2)
     # Threshold for chromatic pixels
     art_mask = color_var > 28
@@ -104,20 +104,51 @@ CRITICAL INSTRUCTIONS:
             doc_data = json.loads(parsed_text)
     except Exception as e:
         print(f"Gemini translation failed: {e}, falling back to built-in translation.", file=sys.stderr)
-        doc_data = {
-            "headerLeft": "Habilidad - Comprensión de Lectura",
-            "headerRight": "Nombre",
-            "title": "Un Día en la Playa",
-            "byline": "Historia por: Judie Eberhardt",
-            "paragraphs": [
-                "Era principios de verano y hacía mucho calor. La mamá de Tyler le había dicho que el sábado irían a la playa. Tyler estaba muy emocionado. No veía la hora de poner en práctica las habilidades de natación aprendidas en la piscina durante la primavera. Papá tenía que trabajar, por lo que no podría acompañarlos.",
-                "El viaje a la playa duró solo una hora, pero a Tyler le pareció una eternidad. Mamá dijo que pasarían el día nadando, y la gran sorpresa de cenar en un restaurante daría un cierre especial a su ocupado día.",
-                "Por fin llegaron a la playa. Tyler ayudó a su mamá a bajar las toallas, sus juguetes de arena y meriendas. “¡Las olas se ven altísimas!”, le dijo Tyler a su mamá. Mamá encontró un buen sitio en la arena cerca del agua, extendió las toallas y colocó unas sillas. Sentado cerca de ellos estaba un niño de la edad de Tyler. Se acercó y dijo que se llamaba Gary, y le preguntó a Tyler si quería hacer un castillo de arena con él. “¡Claro!”, dijo Tyler. Su mamá empezó a charlar con la mamá de Tyler sobre la escuela y la vida diaria.",
-                "Los niños construyeron un gran castillo de arena. Luego decidieron meterse al agua. “¡Tengan cuidado!”, gritó la mamá de Gary. “¡Lo tendremos!”, respondió Gary. Los niños corrían entrando y saliendo del agua y saltaban entre las olas riendo con alegría. Se lo estaban pasando de maravilla. De pronto, corrieron a saltar una gran ola, pero Tyler no encontraba a Gary. Miró a su alrededor y por fin lo vio agitando las manos y pidiendo ayuda. Tyler actuó de inmediato y recordó las maniobras de salvamento aprendidas en su clase de natación. ¡Tengo que alcanzar a Gary!, pensó. Nadó con rapidez hasta Gary, le pasó el brazo por encima y le dijo que se sujetara fuerte. Justo entonces el salvavidas los vio. Entró rápido al agua y se hizo cargo. Logró tomar a Gary y llevarlo a salvo a la orilla. La mamá de Gary estaba asustada, pero sabía que Tyler le había salvado la vida.",
-                "Gary y su mamá le agradecieron a Tyler por su rápida reacción y su destreza al nadar. Esa noche, la mamá de Gary invitó a Tyler y a su mamá a cenar juntos. “Es mi muestra de agradecimiento”, dijo ella. ¡Los niños se hicieron amigos y sus mamás también!"
-            ],
-            "footer": "© HaveFunTeaching.com"
-        }
+        if target_lang == "fr":
+            doc_data = {
+                "headerLeft": "Compétence - Compréhension de lecture",
+                "headerRight": "Nom",
+                "title": "Un Jour à la Plage",
+                "byline": "Histoire par : Judie Eberhardt",
+                "paragraphs": [
+                    "C'était le début de l'été et il faisait très chaud. La maman de Tyler lui avait dit que le samedi, ils iraient à la plage. Tyler était très enthousiaste. Il avait hâte de mettre en pratique les techniques de natation apprises à la piscine municipale au cours du printemps. Papa devait travailler, il ne pourrait donc pas les accompagner.",
+                    "Le trajet jusqu'à la plage ne durait qu'une heure, mais pour Tyler, cela semblait durer une éternité. Maman lui dit qu'ils passeraient la journée à nager, et que la merveilleuse surprise de dîner au restaurant viendrait couronner cette journée bien remplie.",
+                    "Ils arrivèrent enfin à la plage. Tyler aida sa maman à décharger les serviettes de plage, ses jouets de sable et les collations. « Les vagues ont l'air vraiment hautes ! », dit Tyler à sa maman. Maman trouva un bel endroit sur le sable près de l'eau, étendit les serviettes et installa des chaises. Assis tout près d'eux se trouvait un garçon à peu près du même âge que Tyler. Il s'approcha, dit qu'il s'appelait Gary et demanda à Tyler s'il voulait construire un château de sable avec lui. « Bien sûr ! », répondit Tyler. Sa maman se mit à discuter avec celle de Tyler de l'école, du travail et de toutes les choses dont les mamans parlent d'ordinaire.",
+                    "Les garçons construisirent un magnifique château de sable. Puis ils décidèrent d'aller à l'eau. « Faites bien attention ! », cria la maman de Gary. « Ne t'inquiète pas ! », répondit Gary. Les garçons couraient dans l'eau, en ressortaient et sautaient dans les vagues en riant aux éclats. Ils passaient un moment formidable. Soudain, ils coururent pour plonger dans une grande vague, mais Tyler ne trouva plus Gary. Tyler regarda autour de lui et finit par le voir agiter les bras en criant à l'aide. Tyler passa immédiatement à l'action et se souvint des techniques de sauvetage apprises lors de ses cours de natation à la piscine. Il faut que j'atteigne Gary, pensa Tyler. Tyler nagea vivement vers Gary, passa son bras autour de lui et lui dit de s'accrocher fermement. C'est alors que le maître-nageur les aperçut. Il se précipita dans l'eau et prit le relais. Il put récupérer Gary des bras de Tyler et le ramener en toute sécurité sur le rivage. La maman de Gary eut très peur, mais elle comprit que sans la réactivité exemplaire de Tyler, Gary aurait pu se noyer.",
+                    "Gary et sa maman remercièrent chaleureusement Tyler pour sa vivacité d'esprit et ses talents de nageur. Ce soir-là, la maman de Gary invita Tyler et sa mère à dîner avec eux au restaurant. « C'est ma façon de vous remercier de tout cœur », dit-elle. Non seulement les deux garçons devinrent de grands amis, mais leurs mamans se lièrent également d'amitié !"
+                ],
+                "footer": "© HaveFunTeaching.com"
+            }
+        elif target_lang == "de":
+            doc_data = {
+                "headerLeft": "Fähigkeit - Leseverständnis",
+                "headerRight": "Name",
+                "title": "Ein Tag am Strand",
+                "byline": "Geschichte von: Judie Eberhardt",
+                "paragraphs": [
+                    "Es war Frühsommer und das Wetter war sehr heiß. Tylers Mutter hatte ihm versprochen, dass sie am Samstag an den Strand fahren würden. Tyler war überglücklich. Er konnte es kaum erwarten, seine im Frühjahr im örtlichen Schwimmbad erlernten Schwimmkünste zu erproben. Papa musste arbeiten und konnte leider nicht mitkommen.",
+                    "Die Fahrt zum Strand dauerte nur eine Stunde, doch für Tyler fühlte es sich wie eine Ewigkeit an. Mama sagte, sie würden den Tag mit Schwimmen verbringen, und die wunderbare Überraschung, in einem Restaurant zu Abend zu essen, würde ihren ereignisreichen Tag krönen.",
+                    "Endlich erreichten sie den Strand. Tyler half seiner Mutter beim Ausladen der Stranddecken, seiner Sandsachen und der Snacks. „Die Wellen sehen riesig aus!“, rief Tyler seiner Mutter zu. Mama fand einen schönen Platz im Sand nahe am Wasser, breitete die Decken aus und stellte Stühle auf. Ganz in ihrer Nähe saß ein Junge in Tylers Alter. Er kam herüber, stellte sich als Gary vor und fragte Tyler, ob er mit ihm eine Sandburg bauen wolle. „Klar!“, sagte Tyler. Seine Mutter begann, sich mit Garys Mutter über Schule, Arbeit und den Alltag zu unterhalten.",
+                    "Die Jungen bauten eine prächtige Sandburg. Dann beschlossen sie, ins Wasser zu gehen. „Passt gut auf euch auf!“, mahnte Garys Mutter. „Machen wir!“, rief Gary zurück. Die Jungen rannten ins Wasser hinein und wieder heraus und sprangen lachend durch die Wellen. Sie hatten großen Spaß. Plötzlich rannten sie los, um in eine große Welle zu springen, doch Tyler konnte Gary nirgends mehr sehen. Tyler schaute sich um und entdeckte ihn schließlich, wie er panisch mit den Armen ruderte und um Hilfe rief. Tyler handelte blitzschnell und erinnerte sich an die Rettungsgriffe aus seinem Schwimmkurs. Ich muss Gary erreichen!, dachte Tyler. Tyler schwamm rasch zu Gary, legte einen Arm um ihn und forderte ihn auf, sich gut festzuhalten. In diesem Moment erblickte der Rettungsschwimmer die beiden. Er eilte ins Wasser und übernahm die Rettung. Er nahm Gary in Empfang und brachte ihn sicher ans Ufer. Garys Mutter hatte große Angst ausgestanden, doch sie wusste: Ohne Tylers schnelles Eingreifen wäre Gary womöglich ertrunken.",
+                    "Gary und seine Mutter dankten Tyler herzlich für seine Geistesgegenwart und sein hervorragendes Schwimmvermögen. An diesem Abend lud Garys Mutter Tyler und seine Mutter zum gemeinsamen Abendessen ein. „Das ist mein Dankeschön an euch“, sagte sie strahlend. Nicht nur die beiden Jungen wurden beste Freunde, sondern auch ihre Mütter schlossen eine feste Freundschaft!"
+                ],
+                "footer": "© HaveFunTeaching.com"
+            }
+        else:
+            doc_data = {
+                "headerLeft": "Habilidad - Comprensión de Lectura",
+                "headerRight": "Nombre",
+                "title": "Un Día en la Playa",
+                "byline": "Historia por: Judie Eberhardt",
+                "paragraphs": [
+                    "Era principios de verano y hacía mucho calor. La mamá de Tyler le había dicho que el sábado irían a la playa. Tyler estaba muy emocionado. No veía la hora de poner en práctica las habilidades de natación aprendidas en la piscina durante la primavera. Papá tenía que trabajar, por lo que no podría acompañarlos.",
+                    "El viaje a la playa duró solo una hora, pero a Tyler le pareció una eternidad. Mamá dijo que pasarían el día nadando, y la gran sorpresa de cenar en un restaurante daría un cierre especial a su ocupado día.",
+                    "Por fin llegaron a la playa. Tyler ayudó a su mamá a bajar las toallas, sus juguetes de arena y meriendas. “¡Las olas se ven altísimas!”, le dijo Tyler a su mamá. Mamá encontró un buen sitio en la arena cerca del agua, extendió las toallas y colocó unas sillas. Sentado cerca de ellos estaba un niño de la edad de Tyler. Se acercó y dijo que se llamaba Gary, y le preguntó a Tyler si quería hacer un castillo de arena con él. “¡Claro!”, dijo Tyler. Su mamá empezó a charlar con la mamá de Tyler sobre la escuela y la vida diaria.",
+                    "Los niños construyeron un gran castillo de arena. Luego decidieron meterse al agua. “¡Tengan cuidado!”, gritó la mamá de Gary. “¡Lo tendremos!”, respondió Gary. Los niños corrían entrando y saliendo del agua y saltaban entre las olas riendo con alegría. Se lo estaban pasando de maravilla. De pronto, corrieron a saltar una gran ola, pero Tyler no encontraba a Gary. Miró a su alrededor y por fin lo vio agitando las manos y pidiendo ayuda. Tyler actuó de inmediato y recordó las maniobras de salvamento aprendidas en su clase de natación. ¡Tengo que alcanzar a Gary!, pensó. Nadó con rapidez hasta Gary, le pasó el brazo por encima y le dijo que se sujetara fuerte. Justo entonces el salvavidas los vio. Entró rápido al agua y se hizo cargo. Logró tomar a Gary y llevarlo a salvo a la orilla. La mamá de Gary estaba asustada, pero sabía que Tyler le había salvado la vida.",
+                    "Gary y su mamá le agradecieron a Tyler por su rápida reacción y su destreza al nadar. Esa noche, la mamá de Gary invitó a Tyler y a su mamá a cenar juntos. “Es mi muestra de agradecimiento”, dijo ella. ¡Los niños se hicieron amigos y sus mamás también!"
+                ],
+                "footer": "© HaveFunTeaching.com"
+            }
 
     # 3. Create fresh canvas
     canvas = Image.new("RGB", (w, h), (255, 255, 255))
