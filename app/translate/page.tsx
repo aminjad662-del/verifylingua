@@ -565,26 +565,26 @@ export default function TranslatePage() {
     : "";
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#1A1816] text-[#FAFAF8] overflow-hidden selection:bg-white/20">
+    <div className="h-screen w-full flex flex-col bg-slate-50 text-slate-900 overflow-hidden selection:bg-slate-200">
       
       {/* Minimalist Top Nav */}
-      <header className="shrink-0 h-14 border-b border-white/10 flex items-center justify-between px-6 z-50 bg-[#1A1816]">
+      <header className="shrink-0 h-14 border-b border-slate-200 flex items-center justify-between px-6 z-50 bg-slate-50">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-white hover:opacity-80 transition-opacity">
+          <Link href="/" className="text-slate-900 hover:opacity-80 transition-opacity">
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-white text-black flex items-center justify-center">
+              <div className="w-5 h-5 rounded bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center">
                 <Shield className="w-3 h-3" />
               </div>
               <span className="font-semibold tracking-tight text-sm">VerifyLingua Studio</span>
             </div>
           </Link>
-          <div className="h-4 w-[1px] bg-white/20"></div>
-          <span className="text-xs text-white/50 font-mono tracking-wider">SECURE WORKSPACE</span>
+          <div className="h-4 w-[1px] bg-slate-200"></div>
+          <span className="text-xs text-slate-500 font-mono tracking-wider">SECURE WORKSPACE</span>
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5">
-            <Coins className="w-3.5 h-3.5 text-white/70" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white">
+            <Coins className="w-3.5 h-3.5 text-slate-700" />
             <span className="text-xs font-mono font-medium">
               {availableCredits !== null ? `${availableCredits} Credits` : "..."}
             </span>
@@ -596,12 +596,12 @@ export default function TranslatePage() {
       <div className="flex-1 flex overflow-hidden">
         
         {/* LEFT PANE: SOURCE / INTAKE */}
-        <div className="w-1/2 flex flex-col border-r border-white/10 relative bg-[#1A1816]">
+        <div className="w-1/2 flex flex-col border-r border-slate-200 relative bg-slate-50">
           {/* Pane Header */}
-          <div className="h-12 border-b border-white/5 flex items-center justify-between px-6 shrink-0">
-            <span className="text-xs font-mono uppercase tracking-wider text-white/50">1. Original Source</span>
+          <div className="h-12 border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-500">1. Original Source</span>
             {stagedFile && (
-               <button onClick={handleReset} disabled={!!isProcessing} className="text-xs text-white/40 hover:text-white transition-colors cursor-pointer disabled:opacity-30">
+               <button onClick={handleReset} disabled={!!isProcessing} className="text-xs text-slate-500 hover:text-slate-900 transition-colors cursor-pointer disabled:opacity-30">
                  Clear / Replace
                </button>
             )}
@@ -611,7 +611,7 @@ export default function TranslatePage() {
           <div className="flex-1 overflow-auto p-6 flex flex-col relative">
             {!stagedFile ? (
               // Empty State / Dropzone
-              <div className="flex-1 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center p-8 hover:bg-white/[0.02] transition-colors relative">
+              <div className="flex-1 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center p-8 hover:bg-white transition-colors relative">
                 <input
                   type="file"
                   accept=".pdf,image/png,image/jpeg,image/webp"
@@ -619,36 +619,36 @@ export default function TranslatePage() {
                   onChange={(e) => e.target.files?.[0] && handleStageFile(e.target.files[0])}
                   disabled={!!isProcessing}
                 />
-                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 text-white/50">
+                <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-6 text-slate-500">
                   <UploadCloud className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-medium text-white mb-2">Drop document to translate</h3>
-                <p className="text-sm text-white/40 text-center max-w-sm mb-6">
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Drop document to translate</h3>
+                <p className="text-sm text-slate-500 text-center max-w-sm mb-6">
                   Supports PDF, PNG, JPG. We automatically extract and preserve artwork, seals, and tables.
                 </p>
-                <div className="px-4 py-2 rounded-lg bg-white text-black text-xs font-bold uppercase tracking-wider shadow-xl cursor-pointer">
+                <div className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold uppercase tracking-wider shadow-xl cursor-pointer">
                   Browse Files
                 </div>
               </div>
             ) : (
               // Source Preview
               <div className="flex-1 flex flex-col">
-                <div className="flex items-center gap-3 mb-6 p-4 rounded-xl border border-white/10 bg-white/5">
-                  <FileText className="w-8 h-8 text-white/70" />
+                <div className="flex items-center gap-3 mb-6 p-4 rounded-xl border border-slate-200 bg-white">
+                  <FileText className="w-8 h-8 text-slate-700" />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium truncate">{stagedFile.name}</h4>
-                    <p className="text-xs text-white/50 font-mono mt-1">{(stagedFile.size / 1024 / 1024).toFixed(2)} MB • {stagedDimensions ? `${stagedDimensions.width}x${stagedDimensions.height}` : 'PDF Document'}</p>
+                    <p className="text-xs text-slate-500 font-mono mt-1">{(stagedFile.size / 1024 / 1024).toFixed(2)} MB • {stagedDimensions ? `${stagedDimensions.width}x${stagedDimensions.height}` : 'PDF Document'}</p>
                   </div>
                   <div className="px-2 py-1 rounded bg-green-500/20 border border-green-500/30 text-green-400 text-[10px] font-mono font-bold">
                     DPI: 300 / PASS
                   </div>
                 </div>
 
-                <div className="flex-1 rounded-xl border border-white/10 bg-black/50 overflow-hidden relative flex items-center justify-center">
+                <div className="flex-1 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden relative flex items-center justify-center">
                   {stagedPreviewUrl ? (
                      <img src={stagedPreviewUrl} alt="Source" className="max-w-full max-h-full object-contain" />
                   ) : (
-                     <div className="text-center text-white/30 text-sm font-mono">PDF Preview Rendering...</div>
+                     <div className="text-center text-slate-900/30 text-sm font-mono">PDF Preview Rendering...</div>
                   )}
                   {/* Bounding Box Simulation (Visual Flair) */}
                   {isProcessing && (
@@ -667,11 +667,11 @@ export default function TranslatePage() {
         </div>
 
         {/* RIGHT PANE: TARGET / TRANSLATION */}
-        <div className="w-1/2 flex flex-col bg-[#111111]">
+        <div className="w-1/2 flex flex-col bg-slate-50">
           {/* Pane Header (Controls) */}
-          <div className="h-12 border-b border-white/5 flex items-center justify-between px-6 shrink-0 bg-[#1A1816]">
+          <div className="h-12 border-b border-slate-200 flex items-center justify-between px-6 shrink-0 bg-slate-50">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-wider text-white/50">2. Configuration & Output</span>
+              <span className="text-xs font-mono uppercase tracking-wider text-slate-500">2. Configuration & Output</span>
             </div>
           </div>
 
@@ -686,34 +686,34 @@ export default function TranslatePage() {
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-mono uppercase tracking-wider text-white/40 block mb-2">Source Language</label>
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-2">Source Language</label>
                     <select 
                       value={sourceLang}
                       onChange={(e) => setSourceLang(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-white/30 focus:ring-0 outline-none transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-slate-400 focus:ring-0 outline-none transition-colors"
                     >
                       <option value="auto">Auto-Detect</option>
                       {SUPPORTED_LANGS.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-mono uppercase tracking-wider text-white/40 block mb-2">Target Language</label>
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-2">Target Language</label>
                     <select 
                       value={targetLang}
                       onChange={(e) => setTargetLang(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-white/30 focus:ring-0 outline-none transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-slate-400 focus:ring-0 outline-none transition-colors"
                     >
                       {SUPPORTED_LANGS.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
                     </select>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                <div className="p-4 rounded-xl border border-slate-200 bg-white">
                   <div className="flex items-center gap-3 mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-white/70" />
+                    <CheckCircle2 className="w-4 h-4 text-slate-700" />
                     <span className="text-sm font-medium">Glossary & Artwork Lock Active</span>
                   </div>
-                  <p className="text-xs text-white/40 leading-relaxed ml-7">
+                  <p className="text-xs text-slate-500 leading-relaxed ml-7">
                     Neural MT will translate the text body while preserving non-text geometry, numbers, and proper nouns automatically.
                   </p>
                 </div>
@@ -723,7 +723,7 @@ export default function TranslatePage() {
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="w-full py-4 rounded-xl bg-white text-black font-semibold shadow-lg shadow-white/10 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
                   Begin Vector-Preserving Translation
@@ -734,8 +734,8 @@ export default function TranslatePage() {
             {/* Empty state when nothing selected */}
             {!stagedFile && !job && (
               <div className="flex-1 flex items-center justify-center opacity-20">
-                <div className="w-64 h-64 border border-white/20 rounded-full border-dashed flex items-center justify-center">
-                  <Scaling className="w-12 h-12 text-white/50" />
+                <div className="w-64 h-64 border border-slate-300 rounded-full border-dashed flex items-center justify-center">
+                  <Scaling className="w-12 h-12 text-slate-500" />
                 </div>
               </div>
             )}
@@ -747,10 +747,10 @@ export default function TranslatePage() {
                 animate={{ opacity: 1 }}
                 className="flex-1 flex flex-col space-y-6"
               >
-                <div className="p-6 rounded-2xl border border-white/10 bg-white/5 relative overflow-hidden">
+                <div className="p-6 rounded-2xl border border-slate-200 bg-white relative overflow-hidden">
                   <div className="absolute top-0 left-0 h-1 bg-white" style={{ width: `${job?.progress || 0}%`, transition: 'width 0.5s cubic-bezier(0.23, 1, 0.32, 1)' }}></div>
                   <h3 className="text-lg font-medium mb-1">Pipeline Active</h3>
-                  <p className="text-xs text-white/50 font-mono">{job?.currentStep}</p>
+                  <p className="text-xs text-slate-500 font-mono">{job?.currentStep}</p>
                 </div>
 
                 <div className="space-y-3">
@@ -758,13 +758,13 @@ export default function TranslatePage() {
                     const isActive = activeStageIdx === idx;
                     const isDone = activeStageIdx > idx;
                     return (
-                      <div key={stage.id} className={`p-4 rounded-xl border flex items-center gap-4 transition-colors ${isActive ? 'bg-white/10 border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : isDone ? 'bg-white/5 border-white/10' : 'bg-transparent border-white/5 opacity-40'}`}>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isDone ? 'bg-white text-black' : isActive ? 'border-2 border-white text-white' : 'border border-white/30 text-white/30'}`}>
+                      <div key={stage.id} className={`p-4 rounded-xl border flex items-center gap-4 transition-colors ${isActive ? 'bg-slate-50 border-slate-300 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : isDone ? 'bg-white border-slate-200' : 'bg-transparent border-slate-200 opacity-40'}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isDone ? 'bg-blue-600 text-white hover:bg-blue-700' : isActive ? 'border-2 border-white text-slate-900' : 'border border-slate-400 text-slate-900/30'}`}>
                           {isDone ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-[10px] font-mono">{idx + 1}</span>}
                         </div>
                         <div>
-                          <div className={`text-sm font-medium ${isActive ? 'text-white' : 'text-white/70'}`}>{stage.label}</div>
-                          <div className="text-xs text-white/40 mt-0.5">{stage.desc}</div>
+                          <div className={`text-sm font-medium ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{stage.label}</div>
+                          <div className="text-xs text-slate-500 mt-0.5">{stage.desc}</div>
                         </div>
                       </div>
                     );
@@ -772,7 +772,7 @@ export default function TranslatePage() {
                 </div>
                 
                 {/* Skeleton loader for the output */}
-                <div className="flex-1 mt-4 border border-white/10 rounded-xl bg-black/30 flex items-center justify-center relative overflow-hidden">
+                <div className="flex-1 mt-4 border border-slate-200 rounded-xl bg-slate-50/30 flex items-center justify-center relative overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
                    <div className="w-1/2 h-1/2 flex flex-col gap-3 opacity-20">
                      <div className="h-4 bg-white rounded w-3/4"></div>
@@ -787,9 +787,9 @@ export default function TranslatePage() {
             {job?.status === "failed" && (
               <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="p-6 rounded-2xl border border-red-500/30 bg-red-500/10 text-red-200">
                 <AlertTriangle className="w-8 h-8 text-red-500 mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">Translation Interrupted</h3>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Translation Interrupted</h3>
                 <p className="text-sm opacity-80 mb-4">{job?.error || "An unknown error occurred during the pipeline execution."}</p>
-                <button onClick={handleReset} className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors cursor-pointer">
+                <button onClick={handleReset} className="px-4 py-2 bg-red-500 text-slate-900 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors cursor-pointer">
                   Acknowledge & Reset
                 </button>
               </motion.div>
@@ -802,35 +802,35 @@ export default function TranslatePage() {
                 <div className="flex items-center justify-between mb-4 shrink-0">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-green-400" />
-                    <h3 className="font-medium text-white">Translation Complete</h3>
+                    <h3 className="font-medium text-slate-900">Translation Complete</h3>
                   </div>
                   <motion.button 
                     onClick={handleDownload}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-4 py-2 bg-white text-black rounded-lg text-sm font-bold flex items-center gap-2 cursor-pointer shadow-lg"
+                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-bold flex items-center gap-2 cursor-pointer shadow-lg"
                   >
                     <Download className="w-4 h-4" />
                     Download {(job.fileFormat || "PDF").toUpperCase()}
                   </motion.button>
                 </div>
 
-                <div className="flex-1 bg-black rounded-xl border border-white/10 relative overflow-hidden flex items-center justify-center p-4">
+                <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden flex items-center justify-center p-4">
                   {translatedPreviewSrc ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={translatedPreviewSrc} alt="Translated" className="max-w-full max-h-full object-contain cursor-zoom-in" onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }} />
                   ) : (
-                    <div className="text-white/30 text-sm font-mono">Rendered output unavailable.</div>
+                    <div className="text-slate-900/30 text-sm font-mono">Rendered output unavailable.</div>
                   )}
                 </div>
 
                 {/* Micro-Feedback */}
                 {!feedbackSent && (
-                  <div className="mt-4 p-4 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between shrink-0">
-                    <div className="text-sm text-white/70">Was the layout preserved correctly?</div>
+                  <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-white flex items-center justify-between shrink-0">
+                    <div className="text-sm text-slate-700">Was the layout preserved correctly?</div>
                     <div className="flex items-center gap-2">
-                      <button onClick={handleFeedbackSubmit} className="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors cursor-pointer">Yes, Perfect</button>
-                      <button onClick={() => { setFeedbackTag("LAYOUT_SHIFT"); handleFeedbackSubmit(); }} className="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors cursor-pointer">No, Issues</button>
+                      <button onClick={handleFeedbackSubmit} className="px-3 py-1.5 rounded bg-slate-50 hover:bg-slate-200 text-xs font-medium transition-colors cursor-pointer">Yes, Perfect</button>
+                      <button onClick={() => { setFeedbackTag("LAYOUT_SHIFT"); handleFeedbackSubmit(); }} className="px-3 py-1.5 rounded bg-slate-50 hover:bg-slate-200 text-xs font-medium transition-colors cursor-pointer">No, Issues</button>
                     </div>
                   </div>
                 )}
@@ -853,7 +853,7 @@ export default function TranslatePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8"
+            className="fixed inset-0 z-[100] bg-slate-50/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8"
             onClick={() => setIsZoomModalOpen(false)}
           >
             <motion.div
@@ -861,23 +861,23 @@ export default function TranslatePage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative max-w-6xl max-h-[90vh] bg-black rounded-2xl border border-white/10 overflow-hidden flex flex-col shadow-2xl"
+              className="relative max-w-6xl max-h-[90vh] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
-                <span className="text-xs font-mono uppercase text-white/50">
+              <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
+                <span className="text-xs font-mono uppercase text-slate-500">
                   {zoomTarget === "translated" ? "Translated Document Details" : "Original Document Details"}
                 </span>
-                <button onClick={() => setIsZoomModalOpen(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 transition-colors cursor-pointer">
+                <button onClick={() => setIsZoomModalOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="p-8 overflow-auto flex items-center justify-center bg-[#111111] max-h-[80vh]">
+              <div className="p-8 overflow-auto flex items-center justify-center bg-slate-50 max-h-[80vh]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={zoomTarget === "translated" ? translatedPreviewSrc : (stagedPreviewUrl || "")}
                   alt="Detail"
-                  className="max-h-[75vh] w-auto object-contain border border-white/10 shadow-2xl"
+                  className="max-h-[75vh] w-auto object-contain border border-slate-200 shadow-2xl"
                 />
               </div>
             </motion.div>
@@ -887,3 +887,5 @@ export default function TranslatePage() {
     </div>
   );
 }
+
+
