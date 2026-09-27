@@ -1181,19 +1181,12 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
     if (!job) {
       return new Response(JSON.stringify({
+        error: 'JOB_NOT_FOUND',
+        message: 'Translation job not found or expired. Please re-upload.',
         jobId: jId,
-        fileName: 'document.pdf',
-        fileFormat: 'pdf',
-        status: 'ready',
-        progress: 100,
-        currentStep: 'Translation ready',
-        downloadUrl: '/api/translate/download/' + jId + '?token=tok_' + jId,
-        downloadToken: 'tok_' + jId,
-        fidelityScore: 98.4,
-        layoutPreserved: true,
-        pageCount: 1
+        status: 'failed'
       }), {
-        status: 200,
+        status: 404,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
@@ -1248,23 +1241,29 @@ async function handleApiRequest(request, pathname, env, ctx) {
     const isInline = url.searchParams.get('inline') === 'true' || pathname.includes('/preview');
     const targetLang = url.searchParams.get('lang') || (job && job.targetLang) || 'es';
 
+    // If no job found at all, return a real 404 — never serve a placeholder SVG
+    if (!job) {
+      return new Response(JSON.stringify({
+        error: 'JOB_NOT_FOUND',
+        message: 'Translation job not found or expired. Please re-upload your document.'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
     let svgContent = (job && job.svgContent) || '';
     if (!svgContent && job) {
       svgContent = generateTranslatedSvg(job);
     }
     if (!svgContent) {
-      const langUpper = targetLang.toUpperCase();
-      svgContent = '<?xml version="1.0" encoding="UTF-8"?>\\n' +
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 1100" width="100%" height="100%">\\n' +
-        '  <rect width="820" height="1100" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>\\n' +
-        '  <rect width="820" height="50" fill="#0f172a"/>\\n' +
-        '  <text x="30" y="32" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#ffffff">VERIFYLINGUA CERTIFIED TRANSLATION • 8 CFR § 103.2</text>\\n' +
-        '  <text x="650" y="32" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#38bdf8">' + langUpper + ' TRANSLATION</text>\\n' +
-        '  <text x="40" y="100" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0f172a">Authenticated Translation Document</text>\\n' +
-        '  <text x="40" y="140" font-family="Arial, sans-serif" font-size="13" fill="#334155">Official translation record preserved with authentic layout fidelity.</text>\\n' +
-        '  <rect y="1050" width="820" height="50" fill="#f8fafc" stroke="#e2e8f0"/>\\n' +
-        '  <text x="30" y="1080" font-family="Arial, sans-serif" font-size="11" fill="#64748b">VerifyLingua Official Legal Record • USCIS Compliant</text>\\n' +
-        '</svg>';
+      return new Response(JSON.stringify({
+        error: 'TRANSLATION_EMPTY',
+        message: 'Translation produced no content. The document may be unsupported or empty.'
+      }), {
+        status: 422,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
     const cleanBaseName = (job && job.fileName ? job.fileName : 'translated_document').replace(/\\.[^/.]+$/, '');
@@ -1276,7 +1275,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
         'Content-Type': 'image/svg+xml; charset=utf-8',
         'Content-Disposition': isInline ? 'inline' : 'attachment; filename="' + cleanBaseName + '_' + targetLangCode + '_translated.svg"',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': isInline ? 'public, max-age=300' : 'private, no-cache'
+        'Cache-Control': 'private, no-store, no-cache, must-revalidate'
       }
     });
   }

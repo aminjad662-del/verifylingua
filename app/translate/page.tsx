@@ -160,6 +160,20 @@ export default function TranslatePage() {
     fetchBalance();
   }, [fetchBalance]);
 
+  // CRITICAL: Invalidate stale translation blob whenever target language changes.
+  // Without this, switching language shows the PREVIOUS language's translated SVG.
+  useEffect(() => {
+    if (translatedBlobUrl) {
+      URL.revokeObjectURL(translatedBlobUrl);
+      setTranslatedBlobUrl(null);
+    }
+    // If there's an active job result, clear it so user must re-translate
+    if (job?.status === "ready") {
+      setJob(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetLang]);
+
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
       clearInterval(pollRef.current);
@@ -172,7 +186,16 @@ export default function TranslatePage() {
     pollRef.current = setInterval(async () => {
       try {
         const res = await fetch(`/api/translate/status/${jobId}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          // 404 means job expired or doesn't exist — stop polling
+          if (res.status === 404) {
+            stopPolling();
+            setJob((prev) =>
+              prev ? { ...prev, status: "failed", error: "Translation job expired. Please re-upload.", progress: 0, currentStep: "Job not found." } : null
+            );
+          }
+          return;
+        }
         const data = await res.json();
 
         setJob((prev) =>
@@ -208,6 +231,14 @@ export default function TranslatePage() {
 
   // Stage a file for review & configuration
   const handleStageFile = useCallback((file: File) => {
+    // CRITICAL: Revoke any previous translated blob URL to prevent stale preview
+    if (translatedBlobUrl) {
+      URL.revokeObjectURL(translatedBlobUrl);
+      setTranslatedBlobUrl(null);
+    }
+    // Clear any existing job state so old results never bleed into new uploads
+    stopPolling();
+    setJob(null);
     setStagedFile(file);
     const ext = file.name.split(".").pop()?.toLowerCase() || "";
     const isImg = ["png", "jpg", "jpeg", "webp"].includes(ext) || file.type.startsWith("image/");
@@ -237,17 +268,22 @@ export default function TranslatePage() {
     } else {
       setDetectedLangInfo({ lang: "en", confidence: 98.9, label: "Auto-detected English (US)" });
     }
-  }, []);
+  }, [translatedBlobUrl, stopPolling]);
 
   const handleClearStaged = useCallback(() => {
     if (stagedPreviewUrl) {
       URL.revokeObjectURL(stagedPreviewUrl);
     }
+    if (translatedBlobUrl) {
+      URL.revokeObjectURL(translatedBlobUrl);
+      setTranslatedBlobUrl(null);
+    }
     setStagedFile(null);
     setStagedPreviewUrl(null);
     setStagedDimensions(null);
     setDetectedLangInfo(null);
-  }, [stagedPreviewUrl]);
+    setJob(null);
+  }, [stagedPreviewUrl, translatedBlobUrl]);
 
   // Load sample worksheet file
   const handleLoadSample = useCallback(async () => {
