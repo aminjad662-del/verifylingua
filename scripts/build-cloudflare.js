@@ -1030,8 +1030,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
     }
 
     // Store job metadata in edge-global map
-    if (!globalThis.__vlJobs) globalThis.__vlJobs = {};
-    globalThis.__vlJobs[jobId] = {
+    const job = {
       id: jobId,
       fileName,
       fileFormat,
@@ -1048,6 +1047,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
       error: null,
       startedAt: Date.now()
     };
+    if (!globalThis.__vlJobs) globalThis.__vlJobs = {};
+    globalThis.__vlJobs[jobId] = job;
 
     // Await edge translation with Gemini 2.5 Flash Vision
     const geminiKey = (typeof env !== 'undefined' && env.GEMINI_API_KEY) || '__BUILD_INJECTED_GEMINI_KEY__';
