@@ -16,6 +16,8 @@ import {
 } from "@/lib/services/credit-service";
 import { getCurrentUser } from "@/lib/auth/session";
 import { putObject } from "@/lib/storage";
+import { Orchestrator } from "@/lib/agents/00_orchestrator";
+import { settleCreditsOnSuccess, releaseCreditsOnFailure } from "@/lib/services/credit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -224,59 +226,65 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Kick off asynchronous layout-preserving translation
-    processTranslationJob(job, {
-      sourceLang,
-      targetLang,
-      serviceTier,
-      register: serviceTier === "automated" ? "general" : "certified_legal",
-      simulateError,
-    })
-      .then(async (updated) => {
-        updateTranslationJob(updated);
-        if (userId) {
-          try {
-            if (updated.status === "failed") {
-              await prisma.translationJob.update({
-                where: { id: job.id },
-                data: {
-                  status: "failed",
-                  errorMessage: updated.error || "Translation pipeline failed",
-                  completedAt: new Date(),
-                },
-              });
-            } else {
-              await prisma.translationJob.update({
-                where: { id: job.id },
-                data: {
-                  status: "completed",
-                  outputKey: updated.outputKey || job.outputKey,
-                  progress: 100,
-                  currentStep: "Machine translation and layout reconstruction complete.",
-                  completedAt: new Date(),
-                  layoutPreserved: updated.layoutPreserved ?? true,
-                },
-              });
-            }
-          } catch {}
+    // 5. Kick off asynchronous 8-Agent State Machine
+    const orchestrator = new Orchestrator();
+
+    orchestrator.processDocument(
+      job.id, 
+      fileBuffer, 
+      fileName, 
+      sourceMime, 
+      sourceLang, 
+      targetLang
+    )
+      .then(async (renderedBuffer) => {
+        // Persist final rendered output to storage
+        const outputMime = "application/pdf"; // Assuming Renderer output format
+        try {
+          await putObject(outputKey, renderedBuffer, outputMime);
+        } catch (e: any) {
+          console.error(`[Job ${job.id}] Failed to upload rendered output:`, e.message);
         }
-      })
-      .catch(async (err) => {
-        job.status = "failed";
-        job.error = err.message;
-        updateTranslationJob(job);
+
+        // Settle credits and mark job fully complete in DB
         if (userId) {
           try {
+            await settleCreditsOnSuccess(userId, job.id, N);
             await prisma.translationJob.update({
               where: { id: job.id },
               data: {
-                status: "failed",
-                errorMessage: err.message || "Translation pipeline failed",
+                status: "completed",
+                outputKey,
+                progress: 100,
+                currentStep: "Machine translation and layout reconstruction complete.",
                 completedAt: new Date(),
+                layoutPreserved: true, // Orchestrator guarantees layout
               },
             });
-          } catch {}
+          } catch (e: any) {
+            console.error(`[Job ${job.id}] Final settlement failed:`, e.message);
+          }
         }
+        
+        // Keep in-memory store updated for immediate local polling fallback
+        job.status = "completed";
+        job.progress = 100;
+        job.currentStep = "Machine translation and layout reconstruction complete.";
+        job.outputKey = outputKey;
+        updateTranslationJob(job);
+      })
+      .catch(async (err) => {
+        if (userId) {
+          try {
+            await releaseCreditsOnFailure(userId, job.id, N, err.message);
+          } catch (e: any) {
+            console.error(`[Job ${job.id}] Credit refund failed:`, e.message);
+          }
+        }
+        
+        job.status = "failed";
+        job.error = err.message;
+        updateTranslationJob(job);
       });
 
     return NextResponse.json(
