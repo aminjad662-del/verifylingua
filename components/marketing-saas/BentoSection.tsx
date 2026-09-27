@@ -15,7 +15,7 @@ export function BentoSection() {
             Watch. Search. <span className="text-slate-500">Translate.</span>
           </h2>
           <p className="text-lg md:text-xl text-slate-400 font-medium">
-            Creative intelligence in three moves. The world's fastest compliance engine for certified translation, indexed and searchable.
+            Creative intelligence in three moves. The world&apos;s fastest compliance engine for certified translation, indexed and searchable.
           </p>
         </div>
 
@@ -113,3 +113,4 @@ function LockIcon(props: any) {
     </svg>
   );
 }
+
