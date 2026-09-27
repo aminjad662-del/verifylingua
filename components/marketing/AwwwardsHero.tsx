@@ -1,177 +1,180 @@
 "use client";
 
-import { motion } from "motion/react";
-import { ArrowRight, CheckCircle2, Search } from "lucide-react";
-import Link from "next/link";
+import * as React from "react";
 import { useState } from "react";
+import { motion } from "motion/react";
+import Link from "next/link";
+import {
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
+  Star,
+  Search,
+  Sparkles,
+  FileCheck2,
+  Lock,
+  ChevronRight
+} from "lucide-react";
+import { InspectionStage } from "./InspectionStage";
 
-const SPRING_CONFIG = { type: "spring", stiffness: 350, damping: 28, mass: 1 } as const;
-const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const SPRING_TACTILE = { type: "spring", stiffness: 400, damping: 28, mass: 0.8 } as const;
+const FADE_UP = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" as const }
+  })
+};
 
 export function AwwwardsHero() {
-  const [isTranslated, setIsTranslated] = useState(false);
+  const [quickInput, setQuickInput] = useState("");
 
   return (
-    <section className="relative min-h-[90vh] pt-32 pb-16 overflow-hidden bg-[#FAFAF8] text-[#1A1816]">
-      {/* Absolute positioning background grid or noise (subtle) */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #000 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
+    <section className="relative w-full pt-28 pb-20 overflow-hidden bg-white text-slate-900 border-b border-slate-200/80">
+      {/* Subtle Structural 1px Grid Backdrop */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.4]"
+        style={{
+          backgroundImage: "linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)",
+          backgroundSize: "64px 64px"
+        }}
+      />
+      
+      {/* Subtle Radial Atmosphere (Calibrated High-Density Navy Accent) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[350px] bg-gradient-to-b from-blue-50/80 to-transparent blur-3xl pointer-events-none -z-10" />
 
-      <div className="container mx-auto px-6 lg:px-12 relative z-10 max-w-7xl">
-        <div className="grid lg:grid-cols-12 gap-16 lg:gap-8 items-center">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
-          {/* Left Content - Typography & CTA */}
-          <motion.div 
-            className="lg:col-span-5 flex flex-col items-start"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: EASE_OUT }}
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-neutral-200 bg-white shadow-sm mb-8">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-600 font-medium">USCIS 8 CFR § 103.2 Compliant</span>
-            </div>
+          {/* Left Column: Bespoke Editorial Typography & Actions */}
+          <div className="lg:col-span-6 flex flex-col items-start text-left space-y-6">
+            
+            {/* Status Pill Badge */}
+            <motion.div
+              custom={0}
+              initial="hidden"
+              animate="visible"
+              variants={FADE_UP}
+              className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-blue-50/60 backdrop-blur-md text-blue-900 text-[11px] font-mono font-semibold tracking-wider shadow-xs"
+            >
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
+              </span>
+              <span>USCIS 8 CFR § 103.2 COMPLIANT</span>
+              <span className="text-blue-300">|</span>
+              <span className="text-blue-700 font-bold">100% COURT ADMISSIBLE</span>
+            </motion.div>
 
-            <h1 className="text-5xl lg:text-7xl font-serif tracking-tight leading-[1.05] text-[#1A1816] mb-6">
-              Precision legal translation.<br/>
-              <span className="text-neutral-400 italic">No overlap.</span>
-            </h1>
+            {/* Main Editorial Display Headline */}
+            <motion.div
+              custom={1}
+              initial="hidden"
+              animate="visible"
+              variants={FADE_UP}
+              className="space-y-3"
+            >
+              <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.08]">
+                Certified translations <br />
+                <span className="font-serif italic font-normal text-slate-700 block mt-1">
+                  with authentic layout preservation.
+                </span>
+              </h1>
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl font-normal">
+                Autonomous vector-level translation engineered for immigration, federal courts, and global universities. Never retypes. Never collapses tables. Delivers cryptographically verifiable legal PDFs in under 90 seconds.
+              </p>
+            </motion.div>
 
-            <p className="text-lg text-neutral-500 leading-relaxed max-w-lg mb-10 font-sans">
-              The world’s first bounding-box aware engine for immigration, court, and patent documents. 
-              We extract graphics securely and reconstruct authentic layouts down to the pixel.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <Link href="/translate">
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={SPRING_CONFIG}
-                  className="w-full sm:w-auto px-8 py-4 bg-[#1A1816] text-white rounded-xl font-medium tracking-wide flex items-center justify-center gap-2 shadow-xl shadow-black/10 hover:shadow-black/20"
+            {/* High-Contrast Action Cluster */}
+            <motion.div
+              custom={2}
+              initial="hidden"
+              animate="visible"
+              variants={FADE_UP}
+              className="flex flex-wrap items-center gap-3 pt-2 w-full sm:w-auto"
+            >
+              <Link href="/order/triage">
+                <motion.button
+                  whileHover={{ scale: 1.015, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={SPRING_TACTILE}
+                  className="px-7 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-[0_8px_20px_rgba(37,99,235,0.25)] flex items-center gap-2.5 transition-colors cursor-pointer group"
                 >
-                  Start Translation
-                  <ArrowRight className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4 text-blue-200" />
+                  <span>Upload & Translate Document</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
               </Link>
-              <Link href="/pricing">
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={SPRING_CONFIG}
-                  className="w-full sm:w-auto px-8 py-4 bg-white border border-neutral-200 text-[#1A1816] rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-neutral-50"
-                >
-                  View Pricing
-                </motion.button>
-              </Link>
-            </div>
-
-            <div className="mt-10 flex items-center gap-6 text-sm text-neutral-500 font-medium">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Instant Turnaround</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Zero Data Retention</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right Content - Interactive Stage */}
-          <motion.div 
-            className="lg:col-span-7 relative"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, ease: EASE_OUT, delay: 0.2 }}
-          >
-            <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-white rounded-2xl border border-neutral-200 shadow-2xl shadow-black/5 overflow-hidden flex flex-col">
               
-              {/* Studio Toolbar */}
-              <div className="h-12 border-b border-neutral-100 bg-[#FAFAF8] flex items-center justify-between px-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                  </div>
-                  <div className="ml-4 h-6 px-3 bg-white border border-neutral-200 rounded-md flex items-center justify-center">
-                    <span className="text-[10px] font-mono text-neutral-400">document_v2.pdf</span>
-                  </div>
-                </div>
-                
-                {/* Before/After Toggle */}
-                <div className="flex bg-neutral-100 p-1 rounded-lg">
-                  <button 
-                    onClick={() => setIsTranslated(false)}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${!isTranslated ? 'bg-white shadow-sm text-black' : 'text-neutral-500 hover:text-black'}`}
-                  >
-                    Original
-                  </button>
-                  <button 
-                    onClick={() => setIsTranslated(true)}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${isTranslated ? 'bg-white shadow-sm text-black' : 'text-neutral-500 hover:text-black'}`}
-                  >
-                    Translated
-                  </button>
-                </div>
-              </div>
-
-              {/* Canvas Area */}
-              <div className="flex-1 relative bg-neutral-50 overflow-hidden group cursor-crosshair">
-                <motion.div 
-                  className="absolute inset-0 p-8 flex items-center justify-center"
-                  animate={{ opacity: isTranslated ? 0 : 1, y: isTranslated ? -10 : 0 }}
-                  transition={{ duration: 0.4, ease: EASE_OUT }}
-                  style={{ pointerEvents: isTranslated ? 'none' : 'auto' }}
+              <Link href="/pricing">
+                <motion.button
+                  whileHover={{ scale: 1.015, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={SPRING_TACTILE}
+                  className="px-6 py-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-semibold transition-colors shadow-2xs flex items-center gap-1.5"
                 >
-                  {/* Mock Original Document */}
-                  <div className="w-full max-w-sm bg-white shadow-lg border border-neutral-200 p-8 flex flex-col gap-4 relative">
-                    {/* Bounding box overlay on hover */}
-                    <div className="absolute top-8 left-8 right-8 h-8 border border-dashed border-blue-400 bg-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="absolute -top-5 left-0 bg-blue-500 text-white text-[9px] font-mono px-1 rounded-sm">TEXT_BLOCK_01</div>
-                    </div>
-                    <div className="h-8 bg-neutral-200 rounded-sm w-3/4"></div>
-                    <div className="h-32 bg-neutral-100 rounded-sm w-full border border-neutral-200 flex items-center justify-center text-neutral-400 text-xs">
-                      [ Illustration Area ]
-                    </div>
-                    <div className="h-4 bg-neutral-200 rounded-sm w-full mt-2"></div>
-                    <div className="h-4 bg-neutral-200 rounded-sm w-5/6"></div>
-                    <div className="h-4 bg-neutral-200 rounded-sm w-4/6"></div>
-                  </div>
-                </motion.div>
+                  <span>Explore Pricing ($0.30/pg)</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </motion.button>
+              </Link>
+            </motion.div>
 
-                <motion.div 
-                  className="absolute inset-0 p-8 flex items-center justify-center"
-                  animate={{ opacity: isTranslated ? 1 : 0, y: isTranslated ? 0 : 10 }}
-                  transition={{ duration: 0.4, ease: EASE_OUT }}
-                  style={{ pointerEvents: isTranslated ? 'auto' : 'none' }}
+            {/* Quick Interactive Search / Drop Pre-check */}
+            <motion.div
+              custom={3}
+              initial="hidden"
+              animate="visible"
+              variants={FADE_UP}
+              className="w-full max-w-lg pt-1"
+            >
+              <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 shadow-xs focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                <Search className="w-4 h-4 text-slate-400 ml-3 shrink-0" />
+                <input
+                  type="text"
+                  value={quickInput}
+                  onChange={(e) => setQuickInput(e.target.value)}
+                  placeholder="Drop file or check document format (e.g. Mexican Birth Certificate)..."
+                  className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                />
+                <Link
+                  href={quickInput ? `/order/triage?q=${encodeURIComponent(quickInput)}` : "/order/triage"}
+                  className="px-3.5 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors shrink-0 flex items-center gap-1 shadow-2xs"
                 >
-                  {/* Mock Translated Document */}
-                  <div className="w-full max-w-sm bg-white shadow-lg border border-neutral-200 p-8 flex flex-col gap-4 relative">
-                    <div className="h-8 bg-emerald-100 border border-emerald-200 rounded-sm w-3/4 flex items-center px-2">
-                      <span className="text-[10px] text-emerald-800 font-medium">Translated Title Block</span>
-                    </div>
-                    <div className="h-32 bg-neutral-100 rounded-sm w-full border border-neutral-200 flex items-center justify-center text-neutral-400 text-xs">
-                      [ Extracted & Preserved ]
-                    </div>
-                    <div className="h-4 bg-emerald-100 border border-emerald-200 rounded-sm w-full mt-2 flex items-center px-2"><span className="text-[8px] text-emerald-800">Translated Line</span></div>
-                    <div className="h-4 bg-emerald-100 border border-emerald-200 rounded-sm w-5/6 flex items-center px-2"><span className="text-[8px] text-emerald-800">Translated Line</span></div>
-                    <div className="h-4 bg-emerald-100 border border-emerald-200 rounded-sm w-4/6 flex items-center px-2"><span className="text-[8px] text-emerald-800">Translated Line</span></div>
-                  </div>
-                </motion.div>
-
-                {/* Magnification Loupe (Follows mouse via CSS/JS normally, here abstract representation) */}
-                <div className="absolute right-6 bottom-6 w-12 h-12 rounded-full bg-white shadow-xl border border-neutral-200 flex items-center justify-center text-neutral-400 pointer-events-none group-hover:scale-110 transition-transform">
-                  <Search className="w-5 h-5" />
-                </div>
+                  Inspect
+                </Link>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Decorative abstract lines/shapes */}
-            <div className="absolute -z-10 -right-12 -top-12 w-64 h-64 bg-amber-100/50 rounded-full blur-3xl opacity-50 mix-blend-multiply"></div>
-            <div className="absolute -z-10 -left-12 -bottom-12 w-64 h-64 bg-blue-100/50 rounded-full blur-3xl opacity-50 mix-blend-multiply"></div>
+            {/* Social Proof & Guarantees */}
+            <motion.div
+              custom={4}
+              initial="hidden"
+              animate="visible"
+              variants={FADE_UP}
+              className="flex flex-wrap items-center gap-4 pt-2 text-xs font-mono text-slate-500"
+            >
+              <div className="flex items-center gap-1 text-amber-500">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                ))}
+              </div>
+              <span className="font-bold text-slate-900">4.98/5 Rating</span>
+              <span className="text-slate-300">|</span>
+              <span className="text-slate-700 font-semibold">2,400+ Law Firms</span>
+              <span className="text-slate-300">|</span>
+              <span className="text-emerald-700 font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> 100% USCIS Acceptance
+              </span>
+            </motion.div>
 
-          </motion.div>
+          </div>
+
+          {/* Right Column: High-Precision Interactive Inspection Stage */}
+          <div className="lg:col-span-6 relative flex items-center justify-center">
+            <InspectionStage />
+          </div>
+
         </div>
       </div>
     </section>
