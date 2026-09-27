@@ -1,12 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Suspense } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDropzone } from "react-dropzone";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { motion, AnimatePresence } from "motion/react";
+import { calculatePricing } from "@/lib/pricing";
 import { StickyPriceBar } from "@/components/order/StickyPriceBar";
 import {
   UploadCloud,
@@ -21,8 +20,12 @@ import {
   Download,
   Sparkles,
   ArrowRight,
+  Layers,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
-import { calculatePricing } from "@/lib/pricing";
+
+const SPRING_CONFIG = { type: "spring", stiffness: 350, damping: 28, mass: 1 } as const;
 
 interface Finding {
   id: string;
@@ -49,32 +52,31 @@ interface TranslationJobState {
 function TriageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [uploadedFile, setUploadedFile] = React.useState<{
+  const [uploadedFile, setUploadedFile] = useState<{
     name: string;
     size: number;
     pages: number;
     words: number;
   } | null>(null);
 
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-  const [findings, setFindings] = React.useState<Finding[]>([]);
-  const [acknowledgedWarnings, setAcknowledgedWarnings] = React.useState<Record<string, boolean>>({});
-  const [translationJob, setTranslationJob] = React.useState<TranslationJobState | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [acknowledgedWarnings, setAcknowledgedWarnings] = useState<Record<string, boolean>>({});
+  const [translationJob, setTranslationJob] = useState<TranslationJobState | null>(null);
+  
+  // Carousel State
+  const [activePageIdx, setActivePageIdx] = useState(0);
 
-  // Restore any pending upload from hero or camera trigger
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const pending = sessionStorage.getItem("pending_upload");
       if (pending) {
         const data = JSON.parse(pending);
         handleFileAnalysis(data.fileName, data.fileSize, data.fileBase64);
       }
-    } catch {
-      // ignore
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch {}
   }, []);
 
   const handleFileAnalysis = async (
@@ -86,7 +88,6 @@ function TriageContent() {
     setIsAnalyzing(true);
     setFindings([]);
 
-    // 1. Kick off real layout-preserving translation
     try {
       let uploadRes;
       if (fileBlob) {
@@ -132,11 +133,8 @@ function TriageContent() {
           }
         }, 800);
       }
-    } catch {
-      // continue with triage
-    }
+    } catch {}
 
-    // 2. Set document metrics
     setTimeout(() => {
       setIsAnalyzing(false);
 
@@ -154,41 +152,28 @@ function TriageContent() {
       });
 
       const generatedFindings: Finding[] = [];
-
       if (isPhoto) {
         generatedFindings.push({
           id: "f-1",
           kind: "GLARE",
           severity: "WARN",
-          title: "Minor Flash Reflection on Top Seal",
-          message: "A light reflection is detected over the issuing notary stamp. The text remains readable, but daylight without direct flash is recommended.",
-          reshootTip: "Place the paper flat near a window and turn off direct room flash for highest clarity.",
+          title: "Minor Flash Reflection Detected",
+          message: "A light reflection is detected over the issuing notary stamp. The text remains readable.",
+          reshootTip: "Place the paper flat near a window without direct flash for the highest clarity.",
           pageNumber: 1,
         });
       }
 
       setFindings(generatedFindings);
-
       try {
-        sessionStorage.setItem(
-          "triage_result",
-          JSON.stringify({
-            fileName,
-            pages,
-            words,
-            findings: generatedFindings,
-          })
-        );
-      } catch {
-        // ignore
-      }
-    }, 1000);
+        sessionStorage.setItem("triage_result", JSON.stringify({ fileName, pages, words, findings: generatedFindings }));
+      } catch {}
+    }, 1500);
   };
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      handleFileAnalysis(file.name, file.size, undefined, file);
+      handleFileAnalysis(acceptedFiles[0].name, acceptedFiles[0].size, undefined, acceptedFiles[0]);
     }
   };
 
@@ -196,8 +181,6 @@ function TriageContent() {
     onDrop,
     accept: {
       "application/pdf": [".pdf"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-      "application/msword": [".doc"],
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
       "image/webp": [".webp"],
@@ -207,24 +190,13 @@ function TriageContent() {
 
   const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      handleFileAnalysis(file.name || "camera-scan.jpg", file.size, undefined, file);
+      handleFileAnalysis(e.target.files[0].name || "camera-scan.jpg", e.target.files[0].size, undefined, e.target.files[0]);
     }
   };
 
   const pageCount = uploadedFile?.pages || 1;
   const wordCount = uploadedFile?.words || 250;
-
-  const pricing = React.useMemo(() => {
-    return calculatePricing({
-      serviceType: "CERTIFIED",
-      pageCount,
-      wordCount,
-      isExpedited: false,
-      needsNotarization: false,
-    });
-  }, [pageCount, wordCount]);
-
+  const pricing = React.useMemo(() => calculatePricing({ serviceType: "CERTIFIED", pageCount, wordCount, isExpedited: false, needsNotarization: false }), [pageCount, wordCount]);
   const hasBlockingFindings = findings.some((f) => f.severity === "BLOCK");
 
   const handleContinue = () => {
@@ -232,319 +204,202 @@ function TriageContent() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Step Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Badge variant="default" className="text-xs font-mono font-bold bg-ink text-sand">
-            Step 1 of 4
-          </Badge>
-          <span className="text-xs font-mono text-cta font-bold uppercase tracking-wider">
-            Pre-Payment Document Quality Triage (§2.2)
-          </span>
+    <div className="w-full flex flex-col pt-4">
+      {/* Editorial Header */}
+      <div className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="px-3 py-1 bg-black text-white text-[10px] font-mono uppercase tracking-widest font-bold">Phase 01</div>
+          <div className="h-[1px] w-12 bg-black/10"></div>
+          <span className="text-xs font-mono uppercase tracking-widest text-black/40 font-bold">Document Intake & Verification</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight font-serif">
-          Upload &amp; Verify Document Readability
+        <h1 className="text-4xl md:text-5xl font-serif text-black tracking-tight mb-4 max-w-2xl">
+          Automated Vision Quality Inspection.
         </h1>
-        <p className="text-sm sm:text-base text-ink-muted max-w-3xl leading-relaxed">
-          Before taking payment, our AI vision model inspects your upload for illegible handwriting,
-          cropped seals, and missing pages — preventing post-payment rejections and delays.
+        <p className="text-sm text-black/60 font-medium max-w-xl leading-relaxed">
+          Before taking payment, our proprietary OCR engine performs a high-fidelity scan to detect illegible handwriting, cropped seals, or missing pages. We prevent rejections before they happen.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Upload & Triage Results */}
-        <div className="lg:col-span-8 space-y-6">
-          <Card className="p-6 md:p-8 rounded-2xl bg-surface-raised border border-border/80 shadow-2xs space-y-6">
-            <div
-              {...getRootProps()}
-              className={`border border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-3 ${
-                isDragActive
-                  ? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 scale-[1.01]"
-                  : "border-border/80 hover:border-emerald-500/60 bg-surface hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50"
-              }`}
-            >
-              <input {...getInputProps()} />
-
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                ref={fileInputRef}
-                onChange={handleCameraChange}
-                className="hidden"
-              />
-
-              <div className="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-800 dark:text-neutral-200 shadow-2xs border border-border/50">
-                <UploadCloud className="w-6 h-6" />
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-base font-bold text-brand-ink">
-                  {uploadedFile
-                    ? "Upload another document or replace current file"
-                    : "Drop official document here, or click to browse"}
-                </p>
-                <p className="text-xs text-text-muted">
-                  Supports PDF, JPG, PNG, WebP up to 50MB • Certified 1:1 format preservation
-                </p>
-              </div>
-
-              {/* Pre-flight Telemetry Inspection Pills */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-[11px] font-mono text-neutral-500">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> 300+ DPI Auto-Scale
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Glare Detection
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Seal OCR Guard
-                </span>
-              </div>
-
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-raised border border-border hover:bg-surface text-xs font-bold text-brand-ink shadow-2xs transition-colors active:scale-[0.98]"
-                >
-                  <Camera className="w-4 h-4 text-emerald-600" />
-                  Take Photo with Camera
-                </button>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        {/* Left Column: Triage Studio Workspace */}
+        <div className="lg:col-span-8 flex flex-col">
+          
+          <div className="bg-white border border-black/10 shadow-2xl overflow-hidden flex flex-col relative group">
+            <div className="h-10 bg-black/[0.02] border-b border-black/10 flex items-center justify-between px-4 shrink-0">
+               <div className="flex items-center gap-2">
+                 <div className="flex gap-1.5">
+                   <div className="w-2.5 h-2.5 rounded-full bg-black/20"></div>
+                   <div className="w-2.5 h-2.5 rounded-full bg-black/20"></div>
+                   <div className="w-2.5 h-2.5 rounded-full bg-black/20"></div>
+                 </div>
+                 <span className="ml-3 text-[10px] font-mono text-black/40 uppercase tracking-widest">VerifyLingua Triage Studio</span>
+               </div>
             </div>
-
-            {isAnalyzing && (
-              <div className="p-6 rounded-2xl bg-brand-50 border border-brand-100 flex items-center gap-4 animate-pulse">
-                <RefreshCw className="w-6 h-6 text-brand-500 animate-spin shrink-0" />
-                <div className="space-y-1">
-                  <p className="text-sm font-bold text-brand-ink">
-                    Running Pre-Payment AI Document Triage...
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    Checking OCR readability, edge boundaries, stamps, and page count.
-                  </p>
+            
+            <div className="relative flex flex-col bg-[#F9F9F8] min-h-[480px]">
+              {/* If empty: Raw Upload Zone */}
+              {!uploadedFile && !isAnalyzing && (
+                <div 
+                  {...getRootProps()} 
+                  className={`absolute inset-0 flex flex-col items-center justify-center p-8 transition-colors cursor-pointer
+                    ${isDragActive ? "bg-black/[0.03]" : "hover:bg-black/[0.02]"}`}
+                >
+                  <input {...getInputProps()} />
+                  <input type="file" accept="image/*" capture="environment" ref={fileInputRef} onChange={handleCameraChange} className="hidden" />
+                  
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={SPRING_CONFIG} className="w-20 h-20 bg-white border border-black/10 shadow-xl flex items-center justify-center mb-6">
+                    <UploadCloud className="w-8 h-8 text-black" />
+                  </motion.div>
+                  
+                  <h3 className="text-xl font-medium text-black mb-2 tracking-tight">Drop your source document</h3>
+                  <p className="text-sm text-black/50 font-medium mb-8">PDF, PNG, JPG accepted up to 50MB.</p>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="px-6 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider shadow-lg">
+                      Browse Files
+                    </div>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="px-6 py-2.5 bg-white border border-black/10 text-black text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-black/[0.02] transition-colors">
+                      Use Camera
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {uploadedFile && !isAnalyzing && (
-              <div className="space-y-4 pt-2">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-surface border border-border/80 shadow-2xs">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-6 h-6 text-brand-500 shrink-0" />
-                    <div>
-                      <p className="text-sm font-bold text-brand-ink truncate max-w-xs md:max-w-md">
-                        {uploadedFile.name}
-                      </p>
-                      <p className="text-xs text-text-muted font-mono">
-                        {(uploadedFile.size / 1024).toFixed(1)} KB • {uploadedFile.pages} Page (approx. {uploadedFile.words} words)
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="success" className="text-xs py-0.5">
-                    Analyzed
-                  </Badge>
+              {/* Analyzing State */}
+              {isAnalyzing && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F9F9F8] z-10">
+                  <motion.div 
+                    animate={{ rotate: 360 }} 
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="w-16 h-16 border-2 border-black/10 border-t-black mb-6"
+                  />
+                  <h3 className="text-lg font-medium text-black mb-2">Analyzing Geometry & Layout</h3>
+                  <p className="text-xs font-mono text-black/50 uppercase tracking-widest animate-pulse">Running ISO-17100 OCR Guard...</p>
                 </div>
+              )}
 
-                {/* Live Translation Engine Progress & Instant Download Card */}
-                {translationJob && (
-                  <div className="p-5 rounded-xl bg-surface border border-emerald-500/40 shadow-2xs space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping" />
-                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-ink">
-                          {translationJob.status === "ready" ? "Translation Complete" : "Translation Pipeline"}
-                        </span>
-                      </div>
-                      <Badge variant={translationJob.status === "ready" ? "success" : "default"} className="text-[11px] font-mono">
-                        {(translationJob.fileFormat || "PDF").toUpperCase()} • {translationJob.progress}%
-                      </Badge>
-                    </div>
-
-                    {/* GPU-Accelerated Progress Bar */}
-                    <div className="w-full h-2 rounded-full bg-surface-raised overflow-hidden border border-border">
-                      <div
-                        className="h-full bg-brand-500 origin-left transition-transform duration-300 ease-out"
-                        style={{ transform: `scaleX(${Math.max(5, translationJob.progress) / 100})` }}
-                      />
-                    </div>
-
-                    <p className="text-xs text-brand-ink font-medium flex items-center justify-between">
-                      <span>{translationJob.currentStep}</span>
-                      {translationJob.qualityGate && (
-                        <span className="text-status-success font-semibold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Quality Gate Passed
-                        </span>
-                      )}
-                    </p>
-
-                    {/* Instant Download Action when Ready */}
-                    {translationJob.status === "ready" && translationJob.downloadUrl && (
-                      <div className="pt-2">
-                        <Button
-                          asChild
-                          size="lg"
-                          className="w-full h-12 rounded-xl bg-status-success hover:bg-emerald-600 text-white font-bold gap-2 shadow-md active:scale-[0.97]"
-                        >
-                          <a href={translationJob.downloadUrl} download>
-                            <Download className="w-4 h-4" />
-                            Download Translated Document ({(translationJob.fileFormat || "PDF").toUpperCase()})
-                          </a>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {findings.length === 0 ? (
-                  <div className="p-6 rounded-xl bg-trust-bg border border-trust-border space-y-4">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-trust shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="text-sm font-bold text-ink font-display">
-                          Document Passed Quality Triage with 100% Readability
-                        </p>
-                        <p className="text-xs text-ink-muted leading-relaxed">
-                          All stamps, seals, signatures, and body text are crisp and eligible for USCIS certified translation.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Proximity Principle: Primary Continue CTA dynamically positioned below result */}
-                    <div className="pt-1">
-                      <Button
-                        variant="cta"
-                        size="lg"
-                        onClick={handleContinue}
-                        className="w-full sm:w-auto h-12 px-8 rounded-xl bg-cta hover:bg-cta-hover active:bg-cta-active text-white font-bold gap-2 shadow-md transition-all active:scale-[0.98]"
-                      >
-                        <span>Continue to Configure</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-status-warning">
-                      Triage Findings & Recommendations
-                    </span>
-                    {findings.map((f) => (
-                      <div
-                        key={f.id}
-                        className={`p-4 rounded-xl border space-y-3 ${
-                          f.severity === "BLOCK"
-                            ? "bg-status-danger/10 border-status-danger/30"
-                            : "bg-status-warning/10 border-status-warning/30"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {f.severity === "BLOCK" ? (
-                            <XCircle className="w-5 h-5 text-status-danger shrink-0 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="w-5 h-5 text-status-warning shrink-0 mt-0.5" />
-                          )}
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-bold text-ink">{f.title}</p>
-                              <Badge
-                                variant={f.severity === "BLOCK" ? "danger" : "warning"}
-                                className="text-[10px] py-0"
-                              >
-                                {f.severity}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-ink-muted leading-relaxed">{f.message}</p>
-                            <p className="text-xs text-ink font-semibold pt-1">
-                              💡 Re-shoot Tip: {f.reshootTip}
-                            </p>
-                          </div>
+              {/* Uploaded View: Multi-page Carousel */}
+              {uploadedFile && !isAnalyzing && (
+                <div className="flex-1 flex overflow-hidden">
+                   {/* Main Preview */}
+                   <div className="flex-1 border-r border-black/10 p-8 flex items-center justify-center relative bg-[#EFEFEF]">
+                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative">
+                        <div className="w-64 h-80 bg-white shadow-2xl border border-black/5 flex flex-col p-4 relative">
+                           {/* Fake document skeleton */}
+                           <div className="w-full h-4 bg-black/10 mb-6"></div>
+                           <div className="w-3/4 h-2 bg-black/5 mb-3"></div>
+                           <div className="w-full h-2 bg-black/5 mb-3"></div>
+                           <div className="w-5/6 h-2 bg-black/5 mb-6"></div>
+                           
+                           {/* Highlighted Bounding Box from Triage */}
+                           {findings.length > 0 && activePageIdx === findings[0].pageNumber - 1 && (
+                             <motion.div 
+                               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                               className="absolute top-1/4 left-1/4 w-1/2 h-1/4 border-2 border-amber-500 bg-amber-500/10"
+                             >
+                                <div className="absolute -top-6 left-0 bg-amber-500 text-white text-[9px] font-mono px-1 font-bold">WARN: GLARE</div>
+                             </motion.div>
+                           )}
+                           
+                           <div className="absolute bottom-4 right-4 text-[9px] font-mono text-black/30">PAGE {activePageIdx + 1}</div>
                         </div>
-
-                        {f.severity === "WARN" && (
-                          <div className="pt-3 border-t border-status-warning/20 space-y-3">
-                            <label className="text-xs text-ink font-semibold flex items-center gap-2.5 cursor-pointer select-none">
-                              <input
-                                type="checkbox"
-                                checked={acknowledgedWarnings[f.id] || false}
-                                onChange={(e) =>
-                                  setAcknowledgedWarnings((prev) => ({
-                                    ...prev,
-                                    [f.id]: e.target.checked,
-                                  }))
-                                }
-                                className="w-4 h-4 rounded text-cta focus:ring-cta border-border"
-                              />
-                              <span>I confirm text is readable; proceed with this scan</span>
-                            </label>
-
-                            {/* Proximity Principle: Primary Continue CTA dynamically positioned immediately below that checkbox */}
-                            <div className="pt-2">
-                              <Button
-                                variant="cta"
-                                size="lg"
-                                onClick={handleContinue}
-                                disabled={!acknowledgedWarnings[f.id]}
-                                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-cta hover:bg-cta-hover active:bg-cta-active text-white font-bold gap-2 shadow-md transition-all active:scale-[0.98] disabled:opacity-50"
-                              >
-                                <span>Continue to Configure</span>
-                                <ArrowRight className="w-4 h-4" />
-                              </Button>
-                              {!acknowledgedWarnings[f.id] && (
-                                <p className="text-[11px] text-ink-muted mt-1.5 flex items-center gap-1">
-                                  <Info className="w-3.5 h-3.5 text-status-warning shrink-0" />
-                                  Confirm readability above to proceed to configure receiving authority.
-                                </p>
-                              )}
-                            </div>
-                          </div>
+                     </motion.div>
+                     
+                     {/* Carousel Controls */}
+                     {uploadedFile.pages > 1 && (
+                        <div className="absolute bottom-6 flex items-center gap-2">
+                           <button 
+                             onClick={() => setActivePageIdx(Math.max(0, activePageIdx - 1))}
+                             className="w-8 h-8 bg-white border border-black/10 shadow flex items-center justify-center hover:bg-black/5 transition-colors disabled:opacity-30"
+                             disabled={activePageIdx === 0}
+                           >
+                             <ChevronLeft className="w-4 h-4 text-black" />
+                           </button>
+                           <span className="text-[10px] font-mono text-black/50">PAGE {activePageIdx + 1} OF {uploadedFile.pages}</span>
+                           <button 
+                             onClick={() => setActivePageIdx(Math.min(uploadedFile.pages - 1, activePageIdx + 1))}
+                             className="w-8 h-8 bg-white border border-black/10 shadow flex items-center justify-center hover:bg-black/5 transition-colors disabled:opacity-30"
+                             disabled={activePageIdx === uploadedFile.pages - 1}
+                           >
+                             <ChevronRight className="w-4 h-4 text-black" />
+                           </button>
+                        </div>
+                     )}
+                   </div>
+                   
+                   {/* Inspector Panel */}
+                   <div className="w-72 bg-white flex flex-col">
+                      <div className="p-4 border-b border-black/5">
+                        <div className="text-[10px] font-mono text-black/40 uppercase tracking-widest mb-1">File Metadata</div>
+                        <div className="text-sm font-semibold truncate mb-1">{uploadedFile.name}</div>
+                        <div className="text-xs text-black/60">{(uploadedFile.size / 1024).toFixed(1)} KB • {uploadedFile.pages} Pages</div>
+                      </div>
+                      
+                      <div className="p-4 flex-1 overflow-auto bg-[#F9F9F8]">
+                        <div className="text-[10px] font-mono text-black/40 uppercase tracking-widest mb-4">Inspection Report</div>
+                        
+                        {findings.length === 0 ? (
+                           <div className="p-3 bg-green-50 border border-green-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                <span className="text-xs font-bold text-green-800">100% Readability</span>
+                              </div>
+                              <p className="text-[11px] text-green-700 leading-relaxed">All stamps and seals are perfectly crisp for certification.</p>
+                           </div>
+                        ) : (
+                           <div className="space-y-4">
+                             {findings.map(f => (
+                               <div key={f.id} className="p-3 bg-amber-50 border border-amber-200 shadow-sm relative overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                                  <div className="flex items-center gap-2 mb-2 pl-2">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                    <span className="text-xs font-bold text-amber-800">{f.title}</span>
+                                  </div>
+                                  <p className="text-[11px] text-amber-700 leading-relaxed pl-2 mb-3">{f.message}</p>
+                                  
+                                  {f.severity === "WARN" && (
+                                     <label className="flex items-start gap-2 pl-2 cursor-pointer group">
+                                       <input 
+                                         type="checkbox" 
+                                         className="mt-0.5"
+                                         checked={acknowledgedWarnings[f.id] || false}
+                                         onChange={(e) => setAcknowledgedWarnings(prev => ({...prev, [f.id]: e.target.checked}))}
+                                       />
+                                       <span className="text-[10px] text-amber-900 font-medium group-hover:text-black">I confirm text is readable; proceed anyway.</span>
+                                     </label>
+                                  )}
+                               </div>
+                             ))}
+                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-
-          <div className="p-5 rounded-xl bg-surface-raised border border-border/70 shadow-2xs flex items-start gap-3 text-xs text-ink-muted">
-            <Info className="w-5 h-5 text-cta shrink-0 mt-0.5" />
-            <p className="leading-relaxed">
-              <strong className="text-ink font-bold">Why we triage before payment:</strong> Competitors like RushTranslate and ImmiTranslate take your payment first, and issue a refund or delay your file days later when a translator discovers handwriting issues. We prevent delays upfront.
-            </p>
+                   </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Triage Footer Metrics */}
+            <div className="h-10 bg-black flex items-center justify-center gap-8 px-4 shrink-0 text-white text-[10px] font-mono tracking-widest">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-400" /> 300+ DPI AUTO-SCALE</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-400" /> GLARE CHECK</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-400" /> SEAL GUARD</span>
+            </div>
           </div>
+          
         </div>
 
-        {/* Right Sticky Rail */}
+        {/* Right Column: Pricing & Next Steps (StickyPriceBar remains unchanged from layout) */}
         <div className="lg:col-span-4">
           <StickyPriceBar
             pricing={pricing}
             onNext={handleContinue}
             nextLabel="Continue to Configure"
-            disabled={
-              !uploadedFile ||
-              hasBlockingFindings ||
-              isAnalyzing ||
-              (findings.some((f) => f.severity === "WARN") &&
-                !findings
-                  .filter((f) => f.severity === "WARN")
-                  .every((f) => acknowledgedWarnings[f.id]))
-            }
+            disabled={!uploadedFile || hasBlockingFindings || isAnalyzing || (findings.some(f => f.severity === "WARN") && !findings.filter(f => f.severity === "WARN").every(f => acknowledgedWarnings[f.id]))}
             blockReason={
-              !uploadedFile
-                ? "Please upload a document to proceed"
-                : hasBlockingFindings
-                ? "Please fix blocking triage issue before continuing"
-                : findings.some((f) => f.severity === "WARN") &&
-                  !findings
-                    .filter((f) => f.severity === "WARN")
-                    .every((f) => acknowledgedWarnings[f.id])
-                ? "Please confirm document readability above to continue"
-                : undefined
+              !uploadedFile ? "Upload a document to proceed" :
+              hasBlockingFindings ? "Fix blocking issue" :
+              findings.some((f) => f.severity === "WARN") && !findings.filter((f) => f.severity === "WARN").every((f) => acknowledgedWarnings[f.id]) ? "Confirm warnings" :
+              undefined
             }
           />
         </div>
