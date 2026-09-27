@@ -26,16 +26,16 @@ export default function OrderLayout({
   const currentStep = FUNNEL_STEPS.find((s) => pathname.startsWith(s.path))?.step || 1;
 
   return (
-    <div className="min-h-screen flex flex-col bg-sand text-ink pb-20 lg:pb-12">
-      {/* Minimal Focused Header */}
-      <header className="sticky top-0 z-50 border-b border-ink/10 bg-sand/90 backdrop-blur-md px-6 py-4">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 pb-20 lg:pb-12">
+      {/* Minimal Focused Header - Modern SaaS Style */}
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-ink text-sand shadow-sm group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-5 h-5 text-trust" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-600 text-white shadow-sm group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-5 h-5" />
             </div>
-            <span className="text-xl font-black tracking-tight text-ink font-display">
-              Verify<span className="text-cta">Lingua</span>
+            <span className="text-xl font-extrabold tracking-tight text-slate-900">
+              Verify<span className="text-blue-600">Lingua</span>
             </span>
           </Link>
 
@@ -52,29 +52,29 @@ export default function OrderLayout({
                         className={cn(
                           "flex items-center justify-center w-6 h-6 rounded-full text-xs font-mono font-bold transition-all",
                           isPassed
-                            ? "bg-trust text-white"
+                            ? "bg-green-500 text-white"
                             : isCurrent
-                            ? "bg-cta text-white ring-2 ring-cta/20 shadow-sm"
-                            : "bg-surface-raised text-ink-muted border border-border"
+                            ? "bg-blue-600 text-white ring-4 ring-blue-600/20 shadow-sm"
+                            : "bg-slate-100 text-slate-400 border border-slate-200"
                         )}
                       >
                         {isPassed ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : s.step}
                       </div>
                       <span
                         className={cn(
-                          "text-xs tracking-tight transition-colors",
+                          "text-xs tracking-tight transition-colors font-medium",
                           isCurrent
-                            ? "text-ink font-bold"
+                            ? "text-slate-900 font-bold"
                             : isPassed
-                            ? "text-trust font-medium"
-                            : "text-ink-muted"
+                            ? "text-green-600"
+                            : "text-slate-400"
                         )}
                       >
                         {s.name}
                       </span>
                     </div>
                     {idx < FUNNEL_STEPS.length - 1 && (
-                      <ChevronRight className="w-4 h-4 text-ink/20" />
+                      <ChevronRight className="w-4 h-4 text-slate-300" />
                     )}
                   </React.Fragment>
                 );
@@ -82,8 +82,8 @@ export default function OrderLayout({
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-xs font-semibold text-ink-muted">
-            <Lock className="w-3.5 h-3.5 text-trust" />
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+            <Lock className="w-3.5 h-3.5 text-blue-600" />
             <span>256-Bit SSL Encrypted</span>
           </div>
         </div>
