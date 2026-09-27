@@ -225,7 +225,17 @@ export default {
 
     // 2. Mock API handler for client actions on Cloudflare Edge
     if (pathname.startsWith('/api/')) {
-      return handleApiRequest(request, pathname, env, ctx);
+      try {
+        return await handleApiRequest(request, pathname, env, ctx);
+      } catch (apiErr) {
+        return new Response(JSON.stringify({
+          error: apiErr.message || 'Internal Edge API Error',
+          stack: apiErr.stack || String(apiErr)
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
     }
 
     // 0. Explicit root index resolution
@@ -957,6 +967,17 @@ async function handleApiRequest(request, pathname, env, ctx) {
     return svgParts.join('\\n');
   }
 
+  function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    const chunkSize = 8192;
+    for (let i = 0; i < len; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
+    }
+    return btoa(binary);
+  }
+
   // Translation upload API — extracts actual file, sends to Gemini for translation
   if (pathname === '/api/translate/upload') {
     const jobId = 'job_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
@@ -990,7 +1011,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
             fileMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
           }
           const arrayBuffer = await file.arrayBuffer();
-          fileBase64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          fileBase64 = arrayBufferToBase64(arrayBuffer);
         }
       } else if (contentType.includes('application/json')) {
         const body = await request.json();
