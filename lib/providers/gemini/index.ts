@@ -60,7 +60,10 @@ export class GeminiProvider implements TranslationProvider {
         } else if (target === "fr") {
           // Contextual French Translation
           if (/employment agreement/i.test(translated)) translated = "Contrat de travail";
-          else if (/full name|nombre completo/i.test(translated)) translated = "Nom et Prénoms";
+          else if (/full name|nombre completo/i.test(translated)) {
+            const val = translated.split(":")[1]?.trim();
+            translated = val ? `Nom complet : ${val}` : "Nom et Prénoms";
+          }
           else if (/position/i.test(translated)) translated = "Poste : Architecte logiciel principal";
           else if (/monthly compensation/i.test(translated)) translated = "Rémunération mensuelle : 8 500 $ USD";
           else if (/republic|república/i.test(translated)) translated = "RÉPUBLIQUE DE COLOMBIE";

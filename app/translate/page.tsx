@@ -245,16 +245,15 @@ export default function TranslatePage() {
     setStagedFile(file);
     const ext = file.name.split(".").pop()?.toLowerCase() || "";
     const isImg = ["png", "jpg", "jpeg", "webp"].includes(ext) || file.type.startsWith("image/");
+    const url = URL.createObjectURL(file);
+    setStagedPreviewUrl(url);
     if (isImg) {
-      const url = URL.createObjectURL(file);
-      setStagedPreviewUrl(url);
       const img = new Image();
       img.onload = () => {
         setStagedDimensions({ width: img.naturalWidth, height: img.naturalHeight });
       };
       img.src = url;
     } else {
-      setStagedPreviewUrl(null);
       setStagedDimensions(null);
     }
 
@@ -487,8 +486,8 @@ export default function TranslatePage() {
 
   const handleTranslateSample = () => {
     const fileToTranslate = stagedFile || lastUploadedFile;
-    if (fileToTranslate && availableCredits && availableCredits > 0) {
-      executeUpload(fileToTranslate, availableCredits);
+    if (fileToTranslate) {
+      executeUpload(fileToTranslate);
     }
   };
 
@@ -645,7 +644,11 @@ export default function TranslatePage() {
 
                 <div className="flex-1 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden relative flex items-center justify-center">
                   {stagedPreviewUrl ? (
-                     <img src={stagedPreviewUrl} alt="Source" className="max-w-full max-h-full object-contain" />
+                    stagedDimensions ? (
+                      <img src={stagedPreviewUrl} alt="Source" className="max-w-full max-h-full object-contain" />
+                    ) : (
+                      <iframe src={stagedPreviewUrl} title="Source Document" className="w-full h-full rounded border-0" />
+                    )
                   ) : (
                      <div className="text-center text-slate-900/30 text-sm font-mono">PDF Preview Rendering...</div>
                   )}
@@ -816,8 +819,12 @@ export default function TranslatePage() {
 
                 <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden flex items-center justify-center p-4">
                   {translatedPreviewSrc ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={translatedPreviewSrc} alt="Translated" className="max-w-full max-h-full object-contain cursor-zoom-in" onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }} />
+                    isImageJob || translatedBlobUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={translatedPreviewSrc} alt="Translated" className="max-w-full max-h-full object-contain cursor-zoom-in" onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }} />
+                    ) : (
+                      <iframe src={translatedPreviewSrc} title="Translated Document Preview" className="w-full h-full rounded border-0" />
+                    )
                   ) : (
                     <div className="text-slate-900/30 text-sm font-mono">Rendered output unavailable.</div>
                   )}

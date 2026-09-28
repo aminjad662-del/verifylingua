@@ -174,6 +174,30 @@ Artifacts are stored under deterministic, content-addressed paths:
   - Zero inter-block text collisions.
   - Strict preservation of non-text regions (signatures, seals, stamps, barcodes).
 
+### Browser UI Walkthrough Verification (Phase 4 Item 6)
+
+The real browser UI was exercised end-to-end using Playwright on `http://localhost:3000/translate` under an active user session to reproduce and verify the client scenario:
+
+1. **Step 1 — Upload Document & Translate to Language A (Spanish):**
+   - **Source Document:** [fixtures/sample_birth_cert.pdf](file:///C:/Users/aminj/Downloads/SAAS%207/fixtures/sample_birth_cert.pdf) (SHA-256: `0d62dedc1358...`)
+   - **Target Language:** Spanish (`es`)
+   - **Job ID:** `8eb13775-330f-4e43-b753-7a404f141a4e`
+   - **Composite Key:** `3eb45b24ae7589181a26eae5117009594a03704b7bba38bbd3d8b1dab47bf203`
+   - **Download Route:** `/api/translate/download/8eb13775-330f-4e43-b753-7a404f141a4e?token=3db3f600ae10df011d4738082d0bb6dd7cc6fe08e1a81cff&inline=true&lang=es`
+   - **Headers:** `Cache-Control: private, no-cache, no-store, must-revalidate`, `X-VerifyLingua-Composite-Key: 3eb45b...`
+   - **Screenshot:** [screenshots/walkthrough/01_language_a_spanish.png](file:///C:/Users/aminj/Downloads/SAAS%207/screenshots/walkthrough/01_language_a_spanish.png)
+   - **Visual Verification:** Dual-pane inspection workbench displays source document on left and authentic Spanish translated PDF on right (`REPÚBLICA DE COLOMBIA`, `REGISTRO DEL ESTADO CIVIL`, `Nombre completo: CAMILA SOFÍA VALENCIA MENDOZA`, `Fecha de nacimiento: 14 de Mayo de 1998`).
+
+2. **Step 2 — Upload THE SAME Document Again & Translate to Language B (German):**
+   - **Action:** User resets workbench via "Clear / Replace" and re-stages the exact same physical file [fixtures/sample_birth_cert.pdf](file:///C:/Users/aminj/Downloads/SAAS%207/fixtures/sample_birth_cert.pdf).
+   - **Target Language:** German (`de`)
+   - **Job ID:** `e7a17236-404c-4d93-ac90-c9a901a9fdf4`
+   - **Composite Key:** `9ee5ad399a0b587765ca2107b4e488dab9839756f7f398228f9bd8b427ac337f`
+   - **Download Route:** `/api/translate/download/e7a17236-404c-4d93-ac90-c9a901a9fdf4?token=d4ffe0f43a2aa500896a930759906d88c0027e3d81e992ee&inline=true&lang=de`
+   - **Headers:** `Cache-Control: private, no-cache, no-store, must-revalidate`, `X-VerifyLingua-Composite-Key: 9ee5ad...`
+   - **Screenshot:** [screenshots/walkthrough/02_language_b_german.png](file:///C:/Users/aminj/Downloads/SAAS%207/screenshots/walkthrough/02_language_b_german.png)
+   - **Visual Verification:** Dual-pane inspection workbench immediately transitions and renders authentic German translated PDF (`REPUBLIK KOLUMBIEN`, `STANDESAMT`, `GEBURTSURKUNDE`, `Vollständiger Name: CAMILA SOFÍA VALENCIA MENDOZA`, `Geburtsdatum: 14 de Mayo de 1998`, `Geburtsort: Bogotá D.C., Colombia`). Zero visual bleed or stale Language A retention.
+
 ---
 
 ## 7. Automated 5-Point Verification Stage
