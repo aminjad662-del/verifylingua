@@ -1239,7 +1239,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
     const url = new URL(request.url);
     const isInline = url.searchParams.get('inline') === 'true' || pathname.includes('/preview');
-    const targetLang = url.searchParams.get('lang') || (job && job.targetLang) || 'es';
+    const requestedLang = (url.searchParams.get('lang') || (job && job.targetLang) || 'es').toLowerCase();
+    const targetLang = requestedLang;
 
     // If no job found at all, return a real 404 — never serve a placeholder SVG
     if (!job) {
@@ -1252,9 +1253,11 @@ async function handleApiRequest(request, pathname, env, ctx) {
       });
     }
 
-    let svgContent = (job && job.svgContent) || '';
+    // Only reuse cached SVG if target language strictly matches
+    let svgContent = (job && job.svgContent && job.targetLang && job.targetLang.toLowerCase() === requestedLang) ? job.svgContent : '';
     if (!svgContent && job) {
-      svgContent = generateTranslatedSvg(job);
+      const langJob = Object.assign({}, job, { targetLang: requestedLang });
+      svgContent = generateTranslatedSvg(langJob);
     }
     if (!svgContent) {
       return new Response(JSON.stringify({

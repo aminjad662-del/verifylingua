@@ -41,7 +41,7 @@ export class ExtractionAgent {
           originalText: b.text,
           fontSizeTier: tier,
           align: "left", // Rough default, precise calculation requires sibling analysis
-          pageNumber: b.page || 1
+          pageNumber: typeof b.page === "number" ? b.page + 1 : 1
         };
       });
 

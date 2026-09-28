@@ -258,20 +258,18 @@ export default function TranslatePage() {
       setStagedDimensions(null);
     }
 
-    // Contextual auto-detection heuristics
+    // Contextual auto-detection heuristics (advisory; never overwrites user's targetLang)
     const lowerName = file.name.toLowerCase();
     if (lowerName.includes("beach") || lowerName.includes("reading") || lowerName.includes("worksheet") || lowerName.includes("english")) {
-      setSourceLang("en");
-      setTargetLang("es");
       setDetectedLangInfo({ lang: "en", confidence: 99.8, label: "English (US) — Reading Worksheet" });
+      if (sourceLang === "auto") setSourceLang("en");
     } else if (lowerName.includes("spanish") || lowerName.includes("espanol") || lowerName.includes("acta")) {
-      setSourceLang("es");
-      setTargetLang("en");
       setDetectedLangInfo({ lang: "es", confidence: 99.5, label: "Spanish (ES) — Legal / General" });
+      if (sourceLang === "auto") setSourceLang("es");
     } else {
       setDetectedLangInfo({ lang: "en", confidence: 98.9, label: "Auto-detected English (US)" });
     }
-  }, [translatedBlobUrl, stopPolling]);
+  }, [translatedBlobUrl, stopPolling, sourceLang]);
 
   const handleClearStaged = useCallback(() => {
     if (stagedPreviewUrl) {
@@ -488,8 +486,9 @@ export default function TranslatePage() {
   };
 
   const handleTranslateSample = () => {
-    if (lastUploadedFile && availableCredits && availableCredits > 0) {
-      executeUpload(lastUploadedFile, availableCredits);
+    const fileToTranslate = stagedFile || lastUploadedFile;
+    if (fileToTranslate && availableCredits && availableCredits > 0) {
+      executeUpload(fileToTranslate, availableCredits);
     }
   };
 

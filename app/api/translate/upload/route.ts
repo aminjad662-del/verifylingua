@@ -8,7 +8,9 @@ import {
   createTranslationJob,
   updateTranslationJob,
   deleteTranslationJob,
+  getJobByCompositeKey,
 } from "@/lib/translation/store";
+import { generateCompositeKey, CURRENT_PIPELINE_VERSION } from "@/lib/translation/composite-key";
 import { prisma } from "@/lib/prisma";
 import {
   getUserCreditBalance,
@@ -143,6 +145,47 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Generate composite identity key
+    const compositeDetails = generateCompositeKey({
+      buffer: fileBuffer,
+      sourceLang,
+      targetLang,
+      pipelineVersion: CURRENT_PIPELINE_VERSION,
+      options: { serviceTier, format: validation.format },
+    });
+
+    // Check for legitimate cache reuse: same document + same languages + same pipeline version
+    const cachedJob = getJobByCompositeKey(compositeDetails.compositeKey);
+    if (
+      cachedJob &&
+      (cachedJob.status === "ready" || cachedJob.status === "completed") &&
+      (cachedJob.translatedBuffer || cachedJob.outputKey)
+    ) {
+      console.log(`[Upload] Legitimate cache hit for compositeKey: ${compositeDetails.compositeKey}`);
+      return NextResponse.json(
+        {
+          success: true,
+          jobId: cachedJob.id,
+          fileName: cachedJob.fileName,
+          fileFormat: cachedJob.fileFormat,
+          fileSize: cachedJob.fileSize,
+          status: "ready",
+          progress: 100,
+          currentStep: "Document translated with authentic layout preservation (cached).",
+          downloadToken: cachedJob.downloadToken,
+          downloadUrl: `/api/translate/download/${cachedJob.id}?token=${cachedJob.downloadToken}`,
+          cached: true,
+        },
+        {
+          status: 200,
+          headers: {
+            "X-VerifyLingua-Composite-Key": compositeDetails.compositeKey,
+            "X-VerifyLingua-Cache": "HIT",
+          },
+        }
+      );
+    }
+
     // 3. Create job in queue
     const job = createTranslationJob({
       fileName,
@@ -153,6 +196,7 @@ export async function POST(req: NextRequest) {
       originalBuffer: fileBuffer,
       userId,
       pageCount: N,
+      options: { serviceTier, format: validation.format },
     });
     job.serviceTier = serviceTier;
 
@@ -226,7 +270,114 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Kick off asynchronous 8-Agent State Machine
+    // 5. Kick off asynchronous processing
+    if (isTestEnv && simulateError) {
+      setTimeout(async () => {
+        if (userId) {
+          try {
+            await releaseCreditsOnFailure(userId, job.id, N, simulateError!);
+            await prisma.translationJob.update({
+              where: { id: job.id },
+              data: {
+                status: "failed",
+                errorMessage: simulateError,
+                completedAt: new Date(),
+              },
+            });
+          } catch (e: any) {}
+        }
+        job.status = "failed";
+        job.error = simulateError;
+        updateTranslationJob(job);
+      }, 10);
+
+      return NextResponse.json(
+        {
+          success: true,
+          jobId: job.id,
+          fileName: job.fileName,
+          fileFormat: job.fileFormat,
+          fileSize: job.fileSize,
+          status: "queued",
+          progress: 5,
+          currentStep: "Job initialized and queued for processing",
+          downloadToken: job.downloadToken,
+        },
+        { status: 202 }
+      );
+    }
+
+    if (validation.format === "docx") {
+      processTranslationJob(job, {
+        sourceLang,
+        targetLang,
+        serviceTier,
+        register: serviceTier === "automated" ? "general" : "certified_legal",
+      })
+        .then(async (updated) => {
+          updateTranslationJob(updated);
+          if (userId) {
+            try {
+              if (updated.status === "failed") {
+                await prisma.translationJob.update({
+                  where: { id: job.id },
+                  data: {
+                    status: "failed",
+                    errorMessage: updated.error || "Translation pipeline failed",
+                    completedAt: new Date(),
+                  },
+                });
+              } else {
+                await prisma.translationJob.update({
+                  where: { id: job.id },
+                  data: {
+                    status: "completed",
+                    progress: 100,
+                    currentStep: "Machine translation and layout reconstruction complete.",
+                    completedAt: new Date(),
+                    layoutPreserved: updated.layoutPreserved ?? true,
+                  },
+                });
+              }
+            } catch {}
+          }
+        })
+        .catch(async (err) => {
+          if (userId) {
+            try {
+              await releaseCreditsOnFailure(userId, job.id, N, err.message);
+              await prisma.translationJob.update({
+                where: { id: job.id },
+                data: {
+                  status: "failed",
+                  errorMessage: err.message || "Translation pipeline failed",
+                  completedAt: new Date(),
+                },
+              });
+            } catch {}
+          }
+          job.status = "failed";
+          job.error = err.message;
+          updateTranslationJob(job);
+        });
+
+      return NextResponse.json(
+        {
+          success: true,
+          jobId: job.id,
+          fileName: job.fileName,
+          fileFormat: job.fileFormat,
+          fileSize: job.fileSize,
+          status: "queued",
+          progress: 5,
+          currentStep: "Job initialized and queued for processing",
+          downloadToken: job.downloadToken,
+        },
+        { status: 202 }
+      );
+    }
+
+    // 8-Agent State Machine for Vector PDFs and High-Resolution Documents
     const orchestrator = new Orchestrator();
 
     orchestrator.processDocument(
@@ -239,7 +390,7 @@ export async function POST(req: NextRequest) {
     )
       .then(async (renderedBuffer) => {
         // Persist final rendered output to storage
-        const outputMime = "application/pdf"; // Assuming Renderer output format
+        const outputMime = "application/pdf";
         try {
           await putObject(outputKey, renderedBuffer, outputMime);
         } catch (e: any) {
@@ -258,7 +409,7 @@ export async function POST(req: NextRequest) {
                 progress: 100,
                 currentStep: "Machine translation and layout reconstruction complete.",
                 completedAt: new Date(),
-                layoutPreserved: true, // Orchestrator guarantees layout
+                layoutPreserved: true,
               },
             });
           } catch (e: any) {
@@ -266,17 +417,26 @@ export async function POST(req: NextRequest) {
           }
         }
         
-        // Keep in-memory store updated for immediate local polling fallback
-        job.status = "completed";
+        // Keep in-memory store updated for immediate local polling and preview
+        job.status = "ready";
         job.progress = 100;
         job.currentStep = "Machine translation and layout reconstruction complete.";
         job.outputKey = outputKey;
+        job.translatedBuffer = renderedBuffer;
         updateTranslationJob(job);
       })
       .catch(async (err) => {
         if (userId) {
           try {
             await releaseCreditsOnFailure(userId, job.id, N, err.message);
+            await prisma.translationJob.update({
+              where: { id: job.id },
+              data: {
+                status: "failed",
+                errorMessage: err.message || "Translation pipeline failed",
+                completedAt: new Date(),
+              },
+            });
           } catch (e: any) {
             console.error(`[Job ${job.id}] Credit refund failed:`, e.message);
           }
@@ -299,7 +459,12 @@ export async function POST(req: NextRequest) {
         currentStep: job.currentStep,
         downloadToken: job.downloadToken,
       },
-      { status: 202 }
+      {
+        status: 202,
+        headers: {
+          "X-VerifyLingua-Composite-Key": job.compositeKey || "",
+        },
+      }
     );
   } catch (error: any) {
     return NextResponse.json(

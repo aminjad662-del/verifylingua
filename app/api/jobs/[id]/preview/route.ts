@@ -46,7 +46,9 @@ export async function GET(
       headers: {
         "Content-Type": mime,
         "Content-Disposition": `inline; filename="${filename}"`,
-        "Cache-Control": "public, max-age=300",
+        "Cache-Control": "private, no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
       },
     });
   } catch (err: any) {

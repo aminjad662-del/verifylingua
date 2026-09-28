@@ -109,6 +109,10 @@ export interface TranslationJob {
   sourceKey?: string;
   outputKey?: string;
   sourceSha256?: string;
+  compositeKey?: string;
+  contentHash?: string;
+  pipelineVersion?: string;
+  verificationReport?: any;
   qaReport?: any;
   reviewedAt?: string;
   translatorId?: string;

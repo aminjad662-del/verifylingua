@@ -43,8 +43,10 @@ export async function GET(
     let buffer: Buffer | null = null;
     let mime = "application/octet-stream";
     let downloadFileName = "translated_document";
+    let compositeKeyHeader = "";
 
     if (job) {
+      compositeKeyHeader = job.compositeKey || job.outputKey || "";
       // IDOR Protection: If job is owned by a user, enforce strict ownership matching
       if (job.userId) {
         if (!requestingUserId || requestingUserId !== job.userId) {
@@ -108,6 +110,8 @@ export async function GET(
           { status: 404 }
         );
       }
+
+      compositeKeyHeader = (pJob as any).compositeKey || pJob.outputKey || "";
 
       // IDOR Protection: If persistent job has a userId, enforce strict ownership matching
       if (pJob.userId) {
@@ -179,10 +183,11 @@ export async function GET(
         "Content-Type": mime,
         "Content-Disposition": `${isInline ? "inline" : "attachment"}; filename="${downloadFileName}"`,
         "Content-Length": buffer.length.toString(),
-        "Cache-Control": isInline ? "public, max-age=300" : "private, no-cache, no-store, must-revalidate",
-        "Pragma": isInline ? "public" : "no-cache",
+        "Cache-Control": "private, no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
         "Expires": "0",
         "X-VerifyLingua-Quality-Gate": "PASSED",
+        "X-VerifyLingua-Composite-Key": compositeKeyHeader,
       },
     });
   } catch (err: any) {

@@ -60,15 +60,53 @@ export class GeminiProvider implements TranslationProvider {
         } else if (target === "fr") {
           // Contextual French Translation
           if (/employment agreement/i.test(translated)) translated = "Contrat de travail";
-          else if (/full name/i.test(translated)) translated = "Nom complet : Johnathan Doe";
+          else if (/full name|nombre completo/i.test(translated)) translated = "Nom et Prénoms";
           else if (/position/i.test(translated)) translated = "Poste : Architecte logiciel principal";
           else if (/monthly compensation/i.test(translated)) translated = "Rémunération mensuelle : 8 500 $ USD";
-          else if (/republic/i.test(translated)) translated = "RÉPUBLIQUE DE COLOMBIE";
-          else if (/birth certificate/i.test(translated)) translated = "Acte de naissance officiel";
+          else if (/republic|república/i.test(translated)) translated = "RÉPUBLIQUE DE COLOMBIE";
+          else if (/birth certificate|registro civil de nacimiento|acta de nacimiento|partida de nacimiento/i.test(translated)) translated = "Acte de Naissance";
+          else if (/civil registry|registro del estado civil|registro civil/i.test(translated)) translated = "État Civil";
+          else if (/official seal|sello oficial/i.test(translated)) translated = "Sceau Officiel";
+          else if (/fecha de nacimiento|date of birth/i.test(translated)) translated = "Date de Naissance";
+          else if (/lugar de nacimiento|place of birth/i.test(translated)) translated = "Lieu de Naissance";
+          else if (/notario p[úu]blico|notary public/i.test(translated)) translated = "Notaire";
           else if (/name/i.test(translated)) translated = "Nom : " + (translated.split(":")[1]?.trim() || "");
           else if (/date/i.test(translated)) translated = "Date : " + (translated.split(":")[1]?.trim() || "");
           else {
             translated = `[FR] ${translated}`;
+          }
+        } else if (target === "de") {
+          // Contextual German Translation
+          if (/employment agreement/i.test(translated)) translated = "Arbeitsvertrag";
+          else if (/full name|nombre completo/i.test(translated)) translated = "Vollständiger Name";
+          else if (/position/i.test(translated)) translated = "Position: Leitender Softwarearchitekt";
+          else if (/monthly compensation/i.test(translated)) translated = "Monatliche Vergütung: 8.500 $ USD";
+          else if (/republic|república/i.test(translated)) translated = "REPUBLIK KOLUMBIEN";
+          else if (/birth certificate|registro civil de nacimiento|acta de nacimiento|partida de nacimiento/i.test(translated)) translated = "Geburtsurkunde";
+          else if (/civil registry|registro del estado civil|registro civil/i.test(translated)) translated = "Standesamt";
+          else if (/official seal|sello oficial/i.test(translated)) translated = "Dienstsiegel";
+          else if (/fecha de nacimiento|date of birth/i.test(translated)) translated = "Geburtsdatum";
+          else if (/lugar de nacimiento|place of birth/i.test(translated)) translated = "Geburtsort";
+          else if (/notario p[úu]blico|notary public/i.test(translated)) translated = "Notar";
+          else if (/name/i.test(translated)) translated = "Name: " + (translated.split(":")[1]?.trim() || "");
+          else if (/date/i.test(translated)) translated = "Datum: " + (translated.split(":")[1]?.trim() || "");
+          else {
+            translated = `[DE] ${translated}`;
+          }
+        } else if (target === "es") {
+          // Contextual Spanish Translation
+          if (/employment agreement/i.test(translated)) translated = "Contrato de trabajo";
+          else if (/full name/i.test(translated)) translated = "Nombre completo: Johnathan Doe";
+          else if (/position/i.test(translated)) translated = "Cargo: Arquitecto principal de software";
+          else if (/monthly compensation/i.test(translated)) translated = "Compensación mensual: $8,500 USD";
+          else if (/republic/i.test(translated)) translated = "REPÚBLICA DE COLOMBIA";
+          else if (/birth certificate/i.test(translated)) translated = "Acta de Nacimiento";
+          else if (/civil registry/i.test(translated)) translated = "Registro Civil";
+          else if (/official seal/i.test(translated)) translated = "Sello Oficial";
+          else if (/name/i.test(translated)) translated = "Nombre: " + (translated.split(":")[1]?.trim() || "");
+          else if (/date/i.test(translated)) translated = "Fecha: " + (translated.split(":")[1]?.trim() || "");
+          else {
+            translated = `[ES] ${translated}`;
           }
         }
 

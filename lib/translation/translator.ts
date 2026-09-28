@@ -146,7 +146,9 @@ export async function translateText(
   if (langDict) {
     const lower = trimmed.toLowerCase();
     if (langDict[lower]) {
-      return preserveCase(trimmed, langDict[lower]);
+      const enResult = preserveCase(trimmed, langDict[lower]);
+      if (options.targetLang === "en") return enResult;
+      return mockTranslateDeterministic(enResult, "en", options.targetLang);
     }
     // Sort terms longest first to guarantee compound phrases take precedence over sub-tokens
     const sortedTerms = Object.entries(langDict).sort(
@@ -168,7 +170,10 @@ export async function translateText(
     }
 
     if (anyReplaced) {
-      return workingText;
+      if (options.targetLang === "en") {
+        return workingText;
+      }
+      return mockTranslateDeterministic(workingText, "en", options.targetLang);
     }
   }
 
@@ -470,67 +475,119 @@ CRITICAL RULES:
 }
 
 function mockTranslateDeterministic(text: string, source: string, target: string): string {
+  let workingText = text;
+
+  // 1. If text is in Spanish/French/German, normalize to English intermediate representation
+  // Common Spanish document substitutions
+  workingText = workingText
+    .replace(/Contrato Individual de Trabajo/gi, "Individual Employment Contract")
+    .replace(/Contrato de Trabajo/gi, "Employment Contract")
+    .replace(/Contrato/gi, "Contract")
+    .replace(/Salario/gi, "Salary")
+    .replace(/Remuneración/gi, "Compensation")
+    .replace(/Privado y Confidencial/gi, "Private and Confidential")
+    .replace(/Confidencial/gi, "Confidential")
+    .replace(/Grupo Tecnológico Internacional/gi, "International Technology Group")
+    .replace(/Internacional/gi, "International")
+    .replace(/Tecnológico/gi, "Technology")
+    .replace(/Acta de Nacimiento/gi, "Birth Certificate")
+    .replace(/Partida de Nacimiento/gi, "Birth Record")
+    .replace(/Certificado de Nacimiento/gi, "Birth Certificate")
+    .replace(/Registro Civil de Nacimiento/gi, "Civil Birth Registry")
+    .replace(/Registro del Estado Civil|Registro de Estado Civil/gi, "Civil Registry Office")
+    .replace(/Registro Civil/gi, "Civil Registry")
+    .replace(/República de Colombia/gi, "Republic of Colombia")
+    .replace(/República/gi, "Republic")
+    .replace(/Estados Unidos/gi, "United States")
+    .replace(/Notario Público/gi, "Notary Public")
+    .replace(/Certifico que/gi, "I hereby certify that")
+    .replace(/Doy fe/gi, "I attest")
+    .replace(/Fecha de nacimiento/gi, "Date of birth")
+    .replace(/Lugar de nacimiento/gi, "Place of birth")
+    .replace(/Nombre completo/gi, "Full name")
+    .replace(/Nacionalidad/gi, "Nationality")
+    .replace(/Título Universitario/gi, "University Diploma")
+    .replace(/Licenciatura en/gi, "Bachelor of")
+    .replace(/Calificaciones/gi, "Grades / Transcripts")
+    .replace(/Promedio/gi, "Grade Point Average (GPA)")
+    .replace(/Aprobado/gi, "Passed")
+    .replace(/Firma/gi, "Signature")
+    .replace(/Sello/gi, "Seal")
+    .replace(/Válido para trámites legales/gi, "Valid for official legal procedures");
+
+  // Common French document substitutions
+  workingText = workingText
+    .replace(/Acte de Naissance/gi, "Birth Certificate")
+    .replace(/République Française/gi, "French Republic")
+    .replace(/État Civil/gi, "Civil Registry")
+    .replace(/Certificat de Scolarité/gi, "Certificate of Enrollment")
+    .replace(/Diplôme National/gi, "National Diploma");
+
+  // Common German document substitutions
+  workingText = workingText
+    .replace(/Geburtsurkunde/gi, "Birth Certificate")
+    .replace(/Bundesrepublik Deutschland/gi, "Federal Republic of Germany")
+    .replace(/Standesamt/gi, "Civil Registry Office")
+    .replace(/Abschlusszeugnis/gi, "Graduation Certificate");
+
   if (target === "en") {
-    // Common Spanish document substitutions
-    let out = text
-      .replace(/Contrato Individual de Trabajo/gi, "Individual Employment Contract")
-      .replace(/Contrato de Trabajo/gi, "Employment Contract")
-      .replace(/Contrato/gi, "Contract")
-      .replace(/Salario/gi, "Salary")
-      .replace(/Remuneración/gi, "Compensation")
-      .replace(/Privado y Confidencial/gi, "Private and Confidential")
-      .replace(/Confidencial/gi, "Confidential")
-      .replace(/Grupo Tecnológico Internacional/gi, "International Technology Group")
-      .replace(/Internacional/gi, "International")
-      .replace(/Tecnológico/gi, "Technology")
-      .replace(/Acta de Nacimiento/gi, "Birth Certificate")
-      .replace(/Partida de Nacimiento/gi, "Birth Record")
-      .replace(/Registro Civil/gi, "Civil Registry")
-      .replace(/República/gi, "Republic")
-      .replace(/Estados Unidos/gi, "United States")
-      .replace(/Notario Público/gi, "Notary Public")
-      .replace(/Certifico que/gi, "I hereby certify that")
-      .replace(/Doy fe/gi, "I attest")
-      .replace(/Fecha de nacimiento/gi, "Date of birth")
-      .replace(/Lugar de nacimiento/gi, "Place of birth")
-      .replace(/Nombre completo/gi, "Full name")
-      .replace(/Nacionalidad/gi, "Nationality")
-      .replace(/Título Universitario/gi, "University Diploma")
-      .replace(/Licenciatura en/gi, "Bachelor of")
-      .replace(/Calificaciones/gi, "Grades / Transcripts")
-      .replace(/Promedio/gi, "Grade Point Average (GPA)")
-      .replace(/Aprobado/gi, "Passed")
-      .replace(/Firma/gi, "Signature")
-      .replace(/Sello/gi, "Seal")
-      .replace(/Válido para trámites legales/gi, "Valid for official legal procedures");
-
-    // Common French document substitutions
-    out = out
-      .replace(/Acte de Naissance/gi, "Birth Certificate")
-      .replace(/République Française/gi, "French Republic")
-      .replace(/État Civil/gi, "Civil Registry")
-      .replace(/Certificat de Scolarité/gi, "Certificate of Enrollment")
-      .replace(/Diplôme National/gi, "National Diploma");
-
-    // Common German document substitutions
-    out = out
-      .replace(/Geburtsurkunde/gi, "Birth Certificate")
-      .replace(/Bundesrepublik Deutschland/gi, "Federal Republic of Germany")
-      .replace(/Standesamt/gi, "Civil Registry Office")
-      .replace(/Abschlusszeugnis/gi, "Graduation Certificate");
-
-    if (out !== text) return out;
+    return workingText;
   }
 
-  // If text has not changed and needs translation to another target
   if (target === "es") {
-    return text
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Registro Civil de Nacimiento")
       .replace(/Birth Certificate/gi, "Acta de Nacimiento")
-      .replace(/Civil Registry/gi, "Registro Civil")
-      .replace(/Official Seal/gi, "Sello Oficial");
+      .replace(/Birth Record/gi, "Partida de Nacimiento")
+      .replace(/Civil Registry Office|Civil Registry/gi, "Registro Civil")
+      .replace(/Official Seal/gi, "Sello Oficial")
+      .replace(/Republic of Colombia/gi, "República de Colombia")
+      .replace(/Republic/gi, "República")
+      .replace(/United States/gi, "Estados Unidos")
+      .replace(/Full name/gi, "Nombre completo")
+      .replace(/Date of birth/gi, "Fecha de nacimiento")
+      .replace(/Place of birth/gi, "Lugar de nacimiento")
+      .replace(/Name/gi, "Nombre")
+      .replace(/Date/gi, "Fecha");
   }
 
-  return text;
+  if (target === "de") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Geburtenregister")
+      .replace(/Birth Certificate|Birth Record/gi, "Geburtsurkunde")
+      .replace(/Civil Registry Office|Civil Registry/gi, "Standesamt")
+      .replace(/Official Seal/gi, "Dienstsiegel")
+      .replace(/Republic of Colombia/gi, "Republik Kolumbien")
+      .replace(/Republic/gi, "Republik")
+      .replace(/United States/gi, "Vereinigte Staaten")
+      .replace(/Full name/gi, "Vollständiger Name")
+      .replace(/Date of birth/gi, "Geburtsdatum")
+      .replace(/Place of birth/gi, "Geburtsort")
+      .replace(/Notary Public/gi, "Notar")
+      .replace(/I hereby certify that/gi, "Ich bestätige hiermit, dass")
+      .replace(/Name/gi, "Name")
+      .replace(/Date/gi, "Datum");
+  }
+
+  if (target === "fr") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Registre d'État Civil des Naissances")
+      .replace(/Birth Certificate|Birth Record/gi, "Acte de Naissance")
+      .replace(/Civil Registry Office|Civil Registry/gi, "État Civil")
+      .replace(/Official Seal/gi, "Sceau Officiel")
+      .replace(/Republic of Colombia/gi, "République de Colombie")
+      .replace(/Republic/gi, "République")
+      .replace(/United States/gi, "États-Unis")
+      .replace(/Full name/gi, "Nom et Prénoms")
+      .replace(/Date of birth/gi, "Date de Naissance")
+      .replace(/Place of birth/gi, "Lieu de Naissance")
+      .replace(/Notary Public/gi, "Notaire")
+      .replace(/I hereby certify that/gi, "Je certifie par la présente que")
+      .replace(/Name/gi, "Nom")
+      .replace(/Date/gi, "Date");
+  }
+
+  return workingText;
 }
 
 function preserveCase(original: string, translated: string): string {
