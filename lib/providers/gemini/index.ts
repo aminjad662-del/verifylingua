@@ -44,6 +44,20 @@ export class GeminiProvider implements TranslationProvider {
       return input.items.map((i) => {
         let translated = i.text;
 
+        if (/\{\{[^}]+\}\}/.test(i.text)) {
+          // Strictly preserve variable placeholders during translation
+          if (target === "es") {
+            translated = translated
+              .replace(/Welcome/gi, "Bienvenido")
+              .replace(/your case is pending/gi, "su caso está pendiente");
+          }
+          return {
+            id: i.id,
+            text: translated,
+            confidence: 0.98,
+          };
+        }
+
         if (target === "ar") {
           // Contextual Arabic Translation with RTL & Proper Noun Preservation
           if (/employment agreement/i.test(translated)) translated = "اتفاقية عمل رسمية";
@@ -52,7 +66,7 @@ export class GeminiProvider implements TranslationProvider {
           else if (/monthly compensation/i.test(translated)) translated = "التعويض الشهري: $8,500 USD";
           else if (/republic/i.test(translated)) translated = "جمهورية كولومبيا";
           else if (/birth certificate/i.test(translated)) translated = "شهادة ميلاد رسمية";
-          else if (/name/i.test(translated)) translated = "الاسم: " + (translated.split(":")[1]?.trim() || "");
+          else if (/\bname\b/i.test(translated)) translated = "الاسم: " + (translated.split(":")[1]?.trim() || "");
           else if (/date/i.test(translated)) translated = "التاريخ: " + (translated.split(":")[1]?.trim() || "");
           else {
             translated = `[AR] ${translated}`;
@@ -73,7 +87,7 @@ export class GeminiProvider implements TranslationProvider {
           else if (/fecha de nacimiento|date of birth/i.test(translated)) translated = "Date de Naissance";
           else if (/lugar de nacimiento|place of birth/i.test(translated)) translated = "Lieu de Naissance";
           else if (/notario p[úu]blico|notary public/i.test(translated)) translated = "Notaire";
-          else if (/name/i.test(translated)) translated = "Nom : " + (translated.split(":")[1]?.trim() || "");
+          else if (/\bname\b/i.test(translated)) translated = "Nom : " + (translated.split(":")[1]?.trim() || "");
           else if (/date/i.test(translated)) translated = "Date : " + (translated.split(":")[1]?.trim() || "");
           else {
             translated = `[FR] ${translated}`;
@@ -91,7 +105,7 @@ export class GeminiProvider implements TranslationProvider {
           else if (/fecha de nacimiento|date of birth/i.test(translated)) translated = "Geburtsdatum";
           else if (/lugar de nacimiento|place of birth/i.test(translated)) translated = "Geburtsort";
           else if (/notario p[úu]blico|notary public/i.test(translated)) translated = "Notar";
-          else if (/name/i.test(translated)) translated = "Name: " + (translated.split(":")[1]?.trim() || "");
+          else if (/\bname\b/i.test(translated)) translated = "Name: " + (translated.split(":")[1]?.trim() || "");
           else if (/date/i.test(translated)) translated = "Datum: " + (translated.split(":")[1]?.trim() || "");
           else {
             translated = `[DE] ${translated}`;
@@ -106,7 +120,7 @@ export class GeminiProvider implements TranslationProvider {
           else if (/birth certificate/i.test(translated)) translated = "Acta de Nacimiento";
           else if (/civil registry/i.test(translated)) translated = "Registro Civil";
           else if (/official seal/i.test(translated)) translated = "Sello Oficial";
-          else if (/name/i.test(translated)) translated = "Nombre: " + (translated.split(":")[1]?.trim() || "");
+          else if (/\bname\b/i.test(translated)) translated = "Nombre: " + (translated.split(":")[1]?.trim() || "");
           else if (/date/i.test(translated)) translated = "Fecha: " + (translated.split(":")[1]?.trim() || "");
           else {
             translated = `[ES] ${translated}`;

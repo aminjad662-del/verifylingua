@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     let serviceTier: "automated" | "professional" | "certified" = "automated";
     let userId: string | null = null;
     let explicitPageCount: number | null = null;
-    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const isTestEnv = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
     let clientProvidedUserId: string | null = null;
     let simulateError: string | undefined = undefined;
 
@@ -162,18 +162,90 @@ export async function POST(req: NextRequest) {
       (cachedJob.translatedBuffer || cachedJob.outputKey)
     ) {
       console.log(`[Upload] Legitimate cache hit for compositeKey: ${compositeDetails.compositeKey}`);
+
+      // If owned by same user or anonymous, reuse directly
+      if (!cachedJob.userId || !userId || cachedJob.userId === userId) {
+        return NextResponse.json(
+          {
+            success: true,
+            jobId: cachedJob.id,
+            fileName: cachedJob.fileName,
+            fileFormat: cachedJob.fileFormat,
+            fileSize: cachedJob.fileSize,
+            status: "ready",
+            progress: 100,
+            currentStep: "Document translated with authentic layout preservation (cached).",
+            downloadToken: cachedJob.downloadToken,
+            downloadUrl: `/api/translate/download/${cachedJob.id}?token=${cachedJob.downloadToken}`,
+            cached: true,
+          },
+          {
+            status: 200,
+            headers: {
+              "X-VerifyLingua-Composite-Key": compositeDetails.compositeKey,
+              "X-VerifyLingua-Cache": "HIT",
+            },
+          }
+        );
+      }
+
+      // If owned by a different user, create a user-scoped job pointing to cached artifact
+      // This enforces strict multi-tenant IDOR isolation while avoiding re-translating
+      const tenantJob = createTranslationJob({
+        fileName,
+        fileFormat: validation.format,
+        fileSize: fileBuffer.length,
+        sourceLang,
+        targetLang,
+        originalBuffer: fileBuffer,
+        userId,
+        pageCount: N,
+        options: { serviceTier, format: validation.format },
+      });
+      tenantJob.status = "ready";
+      tenantJob.progress = 100;
+      tenantJob.translatedBuffer = cachedJob.translatedBuffer;
+      tenantJob.outputKey = cachedJob.outputKey;
+      tenantJob.qualityGate = cachedJob.qualityGate;
+      tenantJob.currentStep = "Document translated with authentic layout preservation (cached).";
+
+      // Also persist to PostgreSQL if userId is present
+      try {
+        const ext = fileName.split(".").pop()?.toLowerCase() || validation.format;
+        const userSegment = userId || "anonymous";
+        const sourceKey = tenantJob.sourceKey || `jobs/${userSegment}/${tenantJob.id}/source.${ext}`;
+        const outputKey = tenantJob.outputKey || `jobs/${userSegment}/${tenantJob.id}/output.pdf`;
+        await prisma.translationJob.create({
+          data: {
+            id: tenantJob.id,
+            userId,
+            sourceKey,
+            outputKey,
+            sourceFilename: fileName,
+            sourceFormat: validation.format,
+            sourceMimeType: validation.format === "pdf" ? "application/pdf" : "application/octet-stream",
+            sourceLanguage: sourceLang,
+            targetLanguage: targetLang,
+            status: "ready",
+            currentStep: tenantJob.currentStep,
+            pageCount: N,
+            downloadToken: tenantJob.downloadToken,
+          },
+        });
+      } catch {}
+
       return NextResponse.json(
         {
           success: true,
-          jobId: cachedJob.id,
-          fileName: cachedJob.fileName,
-          fileFormat: cachedJob.fileFormat,
-          fileSize: cachedJob.fileSize,
+          jobId: tenantJob.id,
+          fileName: tenantJob.fileName,
+          fileFormat: tenantJob.fileFormat,
+          fileSize: tenantJob.fileSize,
           status: "ready",
           progress: 100,
-          currentStep: "Document translated with authentic layout preservation (cached).",
-          downloadToken: cachedJob.downloadToken,
-          downloadUrl: `/api/translate/download/${cachedJob.id}?token=${cachedJob.downloadToken}`,
+          currentStep: tenantJob.currentStep,
+          downloadToken: tenantJob.downloadToken,
+          downloadUrl: `/api/translate/download/${tenantJob.id}?token=${tenantJob.downloadToken}`,
           cached: true,
         },
         {

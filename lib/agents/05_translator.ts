@@ -229,11 +229,12 @@ export class TranslationAgent {
 
       if (target === "es") {
         if (/employment agreement/i.test(text)) translated = "Contrato individual de trabajo";
-        else if (/birth certificate/i.test(text)) translated = "Acta de nacimiento oficial";
-        else if (/republic/i.test(text)) translated = "REPÚBLICA DE COLOMBIA";
-        else if (/full name/i.test(text)) translated = `Nombre completo: ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
+        else if (/birth certificate|registro civil de nacimiento|acta de nacimiento|partida de nacimiento/i.test(text)) translated = "Acta de nacimiento oficial";
+        else if (/republic|república/i.test(text)) translated = "REPÚBLICA DE COLOMBIA";
+        else if (/civil registry|registro del estado civil|registro civil/i.test(text)) translated = "Registro Civil";
+        else if (/full name|nombre completo/i.test(text)) translated = `Nombre completo: ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
         else if (/monthly compensation/i.test(text)) translated = `Compensación mensual: ${text.split(":")[1]?.trim() || "$8,500 USD"}`;
-        else if (/date/i.test(text)) translated = `Fecha: ${text.split(":")[1]?.trim() || ""}`;
+        else if (/date|fecha/i.test(text)) translated = `Fecha: ${text.split(":")[1]?.trim() || ""}`;
         else if (/skill\s*-\s*reading comprehension/i.test(text)) translated = "Habilidad - Comprensión de lectura";
         else if (/a day at the beach/i.test(text)) translated = "Un día en la playa";
         else {
@@ -241,31 +242,34 @@ export class TranslationAgent {
         }
       } else if (target === "fr") {
         if (/employment agreement/i.test(text)) translated = "Contrat de travail";
-        else if (/birth certificate/i.test(text)) translated = "Acte de naissance officiel";
-        else if (/republic/i.test(text)) translated = "RÉPUBLIQUE DE COLOMBIE";
-        else if (/full name/i.test(text)) translated = `Nom complet : ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
+        else if (/birth certificate|registro civil de nacimiento|acta de nacimiento|partida de nacimiento/i.test(text)) translated = "Acte de Naissance";
+        else if (/civil registry|registro del estado civil|registro civil/i.test(text)) translated = "État Civil";
+        else if (/republic|república/i.test(text)) translated = "RÉPUBLIQUE DE COLOMBIE";
+        else if (/full name|nombre completo/i.test(text)) translated = `Nom complet : ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
         else if (/monthly compensation/i.test(text)) translated = `Rémunération mensuelle : ${text.split(":")[1]?.trim() || "8 500 $ USD"}`;
-        else if (/date/i.test(text)) translated = `Date : ${text.split(":")[1]?.trim() || ""}`;
+        else if (/date|fecha/i.test(text)) translated = `Date : ${text.split(":")[1]?.trim() || ""}`;
         else {
           translated = `[FR] ${text}`;
         }
       } else if (target === "de") {
         if (/employment agreement/i.test(text)) translated = "Arbeitsvertrag";
-        else if (/birth certificate/i.test(text)) translated = "Geburtsurkunde";
-        else if (/republic/i.test(text)) translated = "REPUBLIK KOLUMBIEN";
-        else if (/full name/i.test(text)) translated = `Vollständiger Name: ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
+        else if (/birth certificate|registro civil de nacimiento|acta de nacimiento|partida de nacimiento/i.test(text)) translated = "Geburtsurkunde";
+        else if (/civil registry|registro del estado civil|registro civil/i.test(text)) translated = "Standesamt";
+        else if (/republic|república/i.test(text)) translated = "REPUBLIK KOLUMBIEN";
+        else if (/full name|nombre completo/i.test(text)) translated = `Vollständiger Name: ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
         else if (/monthly compensation/i.test(text)) translated = `Monatliche Vergütung: ${text.split(":")[1]?.trim() || "8.500 $ USD"}`;
-        else if (/date/i.test(text)) translated = `Datum: ${text.split(":")[1]?.trim() || ""}`;
+        else if (/date|fecha/i.test(text)) translated = `Datum: ${text.split(":")[1]?.trim() || ""}`;
         else {
           translated = `[DE] ${text}`;
         }
       } else if (target === "ar") {
         if (/employment agreement/i.test(text)) translated = "اتفاقية عمل رسمية";
-        else if (/birth certificate/i.test(text)) translated = "شهادة ميلاد رسمية";
-        else if (/republic/i.test(text)) translated = "جمهورية كولومبيا";
-        else if (/full name/i.test(text)) translated = `الاسم الكامل: ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
+        else if (/birth certificate|registro civil de nacimiento|acta de nacimiento|partida de nacimiento/i.test(text)) translated = "شهادة ميلاد رسمية";
+        else if (/civil registry|registro del estado civil|registro civil/i.test(text)) translated = "السجل المدني";
+        else if (/republic|república/i.test(text)) translated = "جمهورية كولومبيا";
+        else if (/full name|nombre completo/i.test(text)) translated = `الاسم الكامل: ${text.split(":")[1]?.trim() || "Johnathan Doe"}`;
         else if (/monthly compensation/i.test(text)) translated = `التعويض الشهري: ${text.split(":")[1]?.trim() || "$8,500 USD"}`;
-        else if (/date/i.test(text)) translated = `التاريخ: ${text.split(":")[1]?.trim() || ""}`;
+        else if (/date|fecha/i.test(text)) translated = `التاريخ: ${text.split(":")[1]?.trim() || ""}`;
         else {
           translated = `[AR] ${text}`;
         }

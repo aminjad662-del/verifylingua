@@ -24,7 +24,7 @@ export async function GET(
 
     // Resolve requesting user identity
     let requestingUserId: string | null = null;
-    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const isTestEnv = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
     if (isTestEnv) {
       requestingUserId = req.headers.get("x-user-id");
       if (!requestingUserId) {

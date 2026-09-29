@@ -73,7 +73,7 @@ export function createTranslationJob(params: {
   });
 
   const sourceKey = `jobs/${userSegment}/${id}/source.${ext}`;
-  const outputKey = compositeDetails.artifactStoragePath;
+  const outputKey = `jobs/${userSegment}/${id}/output.pdf`;
 
   const job: TranslationJob = {
     id,
@@ -97,6 +97,7 @@ export function createTranslationJob(params: {
     compositeKey: compositeDetails.compositeKey,
     contentHash: compositeDetails.contentHash,
     pipelineVersion: compositeDetails.pipelineVersion,
+    artifactStoragePath: compositeDetails.artifactStoragePath,
   };
 
   jobsMap.set(id, job);

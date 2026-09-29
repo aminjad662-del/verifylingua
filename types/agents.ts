@@ -81,6 +81,7 @@ export interface RendererInput {
   originalBuffer: Buffer;
   translatedBlocks: TranslatedBlock[];
   targetLang: string;
+  jobId?: string;
 }
 
 export interface RendererOutput {

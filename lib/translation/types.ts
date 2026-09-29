@@ -112,6 +112,7 @@ export interface TranslationJob {
   compositeKey?: string;
   contentHash?: string;
   pipelineVersion?: string;
+  artifactStoragePath?: string;
   verificationReport?: any;
   qaReport?: any;
   reviewedAt?: string;

@@ -104,7 +104,10 @@ describe("PHASE 4 VERIFICATION: Multi-Language Matrix, Cache Reuse & Security Ga
       poll++;
     }
 
-    const dlReq = new NextRequest(`http://localhost:3000/api/translate/download/${jobId}?token=${body.downloadToken}&userId=${testUserId}`);
+    const dlReq = new NextRequest(
+      `http://localhost:3000/api/translate/download/${jobId}?token=${body.downloadToken}&userId=${testUserId}`,
+      { headers: { "x-user-id": testUserId } }
+    );
     const dlRes = await downloadHandler(dlReq, { params: Promise.resolve({ jobId }) });
     const buffer = Buffer.from(await dlRes.arrayBuffer());
 

@@ -176,8 +176,14 @@ describe("PHASE 1 REPRODUCTION: Same File Upload With Different Target Language"
     }
 
     // Fetch Job B output
-    const dlReqB = new NextRequest(`http://localhost:3000/api/translate/download/${jobBId}?token=${bodyB.downloadToken}&userId=${testUserId}`);
+    const dlReqB = new NextRequest(
+      `http://localhost:3000/api/translate/download/${jobBId}?token=${bodyB.downloadToken}&userId=${testUserId}`,
+      { headers: { "x-user-id": testUserId } }
+    );
     const dlResB = await downloadHandler(dlReqB, { params: Promise.resolve({ jobId: jobBId }) });
+    if (dlResB.status !== 200) {
+      console.error("DEBUG dlResB status:", dlResB.status, await dlResB.clone().text());
+    }
     expect(dlResB.status).toBe(200);
 
     const bufB = Buffer.from(await dlResB.arrayBuffer());
@@ -216,7 +222,10 @@ describe("PHASE 1 REPRODUCTION: Same File Upload With Different Target Language"
     }
 
     // Fetch download with inline=true (as used by preview iframes)
-    const dlReq = new NextRequest(`http://localhost:3000/api/translate/download/${jobId}?token=${downloadToken}&inline=true&userId=${testUserId}`);
+    const dlReq = new NextRequest(
+      `http://localhost:3000/api/translate/download/${jobId}?token=${downloadToken}&inline=true&userId=${testUserId}`,
+      { headers: { "x-user-id": testUserId } }
+    );
     const dlRes = await downloadHandler(dlReq, { params: Promise.resolve({ jobId }) });
     expect(dlRes.status).toBe(200);
 
