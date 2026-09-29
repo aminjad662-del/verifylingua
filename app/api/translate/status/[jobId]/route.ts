@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTranslationJob } from "@/lib/translation/store";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -9,9 +10,18 @@ export async function GET(
 ) {
   try {
     const { jobId } = await context.params;
+
+    // 1. Check PostgreSQL Database first for freshest worker state
+    let dbJob = null;
+    try {
+      dbJob = await prisma.translationJob.findUnique({
+        where: { id: jobId },
+      });
+    } catch {}
+
     let job = getTranslationJob(jobId);
 
-    if (!job) {
+    if (!job && !dbJob) {
       const { getPersistentJob } = await import("@/lib/translation/persistent-store");
       const pJob = await getPersistentJob(jobId);
       if (pJob) {
@@ -49,25 +59,32 @@ export async function GET(
       );
     }
 
+    // Resolve unified status
+    const status = dbJob ? (dbJob.status === "completed" ? "ready" : dbJob.status) : job!.status;
+    const progress = dbJob ? dbJob.progress : job!.progress;
+    const currentStep = dbJob ? dbJob.currentStep : job!.currentStep;
+    const error = dbJob ? (dbJob.errorMessage || null) : (job!.error || null);
+    const downloadToken = dbJob?.downloadToken || job?.downloadToken || jobId;
+    const isReady = status === "ready" || status === "completed";
+
     return NextResponse.json({
-      jobId: job.id,
-      fileName: job.fileName,
-      fileFormat: job.fileFormat,
-      fileSize: job.fileSize,
-      sourceLang: job.sourceLang,
-      targetLang: job.targetLang,
-      status: job.status,
-      progress: job.progress,
-      currentStep: job.currentStep,
-      createdAt: job.createdAt,
-      completedAt: job.completedAt,
-      downloadUrl:
-        job.status === "ready"
-          ? `/api/translate/download/${job.id}?token=${job.downloadToken}`
-          : null,
-      qualityGate: job.qualityGate || null,
-      layoutPreserved: job.layoutPreserved ?? null,
-      error: job.error || null,
+      jobId: jobId,
+      fileName: dbJob?.sourceFilename || job?.fileName || "document.pdf",
+      fileFormat: dbJob?.sourceFormat || job?.fileFormat || "pdf",
+      fileSize: job?.fileSize || 0,
+      sourceLang: dbJob?.sourceLanguage || job?.sourceLang || "es",
+      targetLang: dbJob?.targetLanguage || job?.targetLang || "en",
+      status: status,
+      progress: progress,
+      currentStep: currentStep,
+      createdAt: dbJob?.createdAt || job?.createdAt,
+      completedAt: dbJob?.completedAt || job?.completedAt,
+      downloadUrl: isReady
+        ? `/api/translate/download/${jobId}?token=${downloadToken}`
+        : null,
+      qualityGate: job?.qualityGate || null,
+      layoutPreserved: dbJob?.layoutPreserved ?? job?.layoutPreserved ?? true,
+      error: error,
     });
   } catch (err: any) {
     return NextResponse.json(

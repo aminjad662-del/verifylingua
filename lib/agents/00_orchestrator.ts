@@ -1,7 +1,7 @@
 import { prisma } from "../prisma";
 import {
   GatekeeperInput, ClassifierInput, ExtractorInput, GlossaryInput,
-  TranslatorInput, RendererInput, InspectorInput, AgentResult, TranslatedBlock
+  TranslatorInput, RendererInput, InspectorInput, AgentResult, TranslatedBlock, TextBlock
 } from "../../types/agents";
 import { GatekeeperAgent } from "./01_gatekeeper";
 import { ClassifierAgent } from "./02_classifier";
@@ -11,6 +11,8 @@ import { TranslationAgent } from "./05_translator";
 import { ReconstructionAgent } from "./06_renderer";
 import { QAAgent } from "./07_inspector";
 import { verifyTranslationArtifact } from "../translation/verifier";
+import { getTranslationJob, updateTranslationJob } from "../translation/store";
+import { updatePersistentJob } from "../translation/persistent-store";
 import crypto from "crypto";
 
 export class Orchestrator {
@@ -22,7 +24,13 @@ export class Orchestrator {
   private renderer = new ReconstructionAgent();
   private inspector = new QAAgent();
 
-  private async updateJobStatus(jobId: string, status: string, progress: number, currentStep: string, error?: string): Promise<void> {
+  private async updateJobStatus(
+    jobId: string,
+    status: "extracting" | "translating" | "rendering" | "verifying" | "completed" | "ready" | "failed",
+    progress: number,
+    currentStep: string,
+    error?: string
+  ): Promise<void> {
     try {
       await prisma.translationJob.update({
         where: { id: jobId },
@@ -31,12 +39,35 @@ export class Orchestrator {
           progress,
           currentStep,
           errorMessage: error || null,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+          ...(status === "completed" || status === "ready" ? { completedAt: new Date() } : {}),
+        },
       });
     } catch (e) {
-      // Fallback logging if DB is unreachable in test / offline environments
+      // Database update fallback for non-persistent / offline testing
     }
+
+    // Sync in-memory store for instant status polling and zero-latency preview
+    try {
+      const memoryJob = getTranslationJob(jobId);
+      if (memoryJob) {
+        memoryJob.status = (status === "completed" ? "ready" : status) as any;
+        memoryJob.progress = progress;
+        memoryJob.currentStep = currentStep;
+        if (error) memoryJob.error = error;
+        updateTranslationJob(memoryJob);
+      }
+    } catch {}
+
+    // Sync persistent document store
+    try {
+      await updatePersistentJob(jobId, {
+        status: status as any,
+        progress,
+        currentStep,
+        errorMessage: error,
+      });
+    } catch {}
   }
 
   public async processDocument(
@@ -48,12 +79,11 @@ export class Orchestrator {
     targetLang: string
   ): Promise<Buffer> {
     const docHash = crypto.createHash("sha256").update(fileBuffer).digest("hex").slice(0, 12);
-    console.log(`[Job ${jobId}] [Doc ${fileName}#${docHash}] [${sourceLang} -> ${targetLang}] START: Processing initiated.`);
+    console.log(`[Job ${jobId}] [Doc ${fileName}#${docHash}] [${sourceLang} -> ${targetLang}] START: Processing initiated in background worker.`);
 
     try {
+      // 1. Stage: EXTRACTING - Gatekeeper
       await this.updateJobStatus(jobId, "extracting", 10, "Gatekeeper Scanning: Validating magic bytes and checking for zip-bombs/malware...");
-
-      // 1. Gatekeeper
       const gatekeeperRes = await this.gatekeeper.execute({ fileBuffer, fileName, mimeType });
       if (!gatekeeperRes.success || !gatekeeperRes.data) {
         throw new Error(`Gatekeeper failed: ${gatekeeperRes.error}`);
@@ -61,9 +91,8 @@ export class Orchestrator {
       const sanitizedBuffer = gatekeeperRes.data.sanitizedBuffer;
       console.log(`[Job ${jobId}] [Stage: Gatekeeper] Passed (${sanitizedBuffer.length} bytes).`);
 
+      // 2. Stage: EXTRACTING - Classifier
       await this.updateJobStatus(jobId, "extracting", 20, "Classifier Routing: Analyzing vector streams and determining optimal AI engine...");
-
-      // 2. Classifier
       const classifierRes = await this.classifier.execute({ sanitizedBuffer });
       if (!classifierRes.success || !classifierRes.data) {
         throw new Error(`Classifier failed: ${classifierRes.error}`);
@@ -71,9 +100,8 @@ export class Orchestrator {
       const engine = classifierRes.data.recommendedEngine;
       console.log(`[Job ${jobId}] [Stage: Classifier] Engine selected: ${engine}.`);
 
+      // 3. Stage: EXTRACTING - Extractor
       await this.updateJobStatus(jobId, "extracting", 30, `Extraction: Generating precise geometric bounding boxes via ${engine}...`);
-
-      // 3. Extractor
       const extractorRes = await this.extractor.execute({ sanitizedBuffer, routingStrategy: engine });
       if (!extractorRes.success || !extractorRes.data) {
         throw new Error(`Extractor failed: ${extractorRes.error}`);
@@ -81,9 +109,8 @@ export class Orchestrator {
       const blocks = extractorRes.data.blocks;
       console.log(`[Job ${jobId}] [Stage: Extractor] Extracted ${blocks.length} spatial text blocks.`);
 
+      // 4. Stage: EXTRACTING - Glossary
       await this.updateJobStatus(jobId, "extracting", 40, "Glossary: Locking dates, PII, and brand identifiers...");
-
-      // 4. Glossary
       const glossaryRes = await this.glossary.execute({ blocks, sourceLang, targetLang });
       if (!glossaryRes.success || !glossaryRes.data) {
         throw new Error(`Glossary failed: ${glossaryRes.error}`);
@@ -91,56 +118,83 @@ export class Orchestrator {
       const protectedTokens = glossaryRes.data.protectedTokens;
       console.log(`[Job ${jobId}] [Stage: Glossary] Locked ${Object.keys(protectedTokens).length} protected entity tokens.`);
 
-      await this.updateJobStatus(jobId, "translating", 50, "Translation: The Linguist is translating text safely within bounded regions...");
+      // 5. Stage: TRANSLATING - Chunked / Page-by-Page Processing to prevent OOM & token truncation
+      await this.updateJobStatus(jobId, "translating", 50, "Translation: Chunking blocks page-by-page to prevent OOM...");
 
-      // 5. Translator & 7. Inspector Assertion Loop with Auto-Retry (maxRetries = 3)
+      // Partition spatial text blocks by page number
+      const pageMap = new Map<number, TextBlock[]>();
+      for (const block of blocks) {
+        const p = block.pageNumber || 1;
+        if (!pageMap.has(p)) pageMap.set(p, []);
+        pageMap.get(p)!.push(block);
+      }
+      const sortedPages = Array.from(pageMap.keys()).sort((a, b) => a - b);
+      const totalPages = sortedPages.length || 1;
+
       const maxRetries = 3;
-      let translatedBlocks: TranslatedBlock[] = [];
-      let warningPrompt: string | undefined = undefined;
+      const translatedBlocks: TranslatedBlock[] = [];
 
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          console.log(`[Job ${jobId}] [Stage: Translator] Attempt ${attempt}/${maxRetries} initiated.`);
-          const translatorRes = await this.translator.execute({
-            blocks,
-            protectedTokens,
-            sourceLang,
-            targetLang,
-            engine,
-            warningPrompt,
-          });
+      for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+        const pageNum = sortedPages[pageIdx];
+        const pageBlocks = pageMap.get(pageNum) || [];
+        if (pageBlocks.length === 0) continue;
 
-          if (!translatorRes.success || !translatorRes.data) {
-            throw new Error(`Translator failed: ${translatorRes.error}`);
+        const chunkProgress = Math.min(68, Math.round(50 + (pageIdx / totalPages) * 18));
+        await this.updateJobStatus(
+          jobId,
+          "translating",
+          chunkProgress,
+          `Translating page ${pageNum} of ${totalPages} (${pageBlocks.length} text blocks)...`
+        );
+
+        let pageTranslated: TranslatedBlock[] = [];
+        let warningPrompt: string | undefined = undefined;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(`[Job ${jobId}] [Stage: Translator] Page ${pageNum} Attempt ${attempt}/${maxRetries} initiated.`);
+            const translatorRes = await this.translator.execute({
+              blocks: pageBlocks,
+              protectedTokens,
+              sourceLang,
+              targetLang,
+              engine,
+              warningPrompt,
+            });
+
+            if (!translatorRes.success || !translatorRes.data) {
+              throw new Error(`Translator failed on page ${pageNum}: ${translatorRes.error}`);
+            }
+
+            pageTranslated = translatorRes.data.translatedBlocks;
+
+            // Inspector Assertion Engine: array parity, laziness regex, and numeric integrity
+            this.inspector.assertParityAndIntegrity(pageBlocks, pageTranslated);
+
+            console.log(`[Job ${jobId}] [Stage: Inspector] Page ${pageNum} parity, anti-laziness, and numeric integrity verified on attempt ${attempt}.`);
+            break;
+          } catch (err: any) {
+            console.warn(`[Job ${jobId}] [QA Inspector] Page ${pageNum} Attempt ${attempt}/${maxRetries} rejected: ${err.message}`);
+
+            if (attempt === maxRetries) {
+              throw new Error(`Translation QA rejected page ${pageNum} after ${maxRetries} attempts: ${err.message}`);
+            }
+
+            warningPrompt = `CRITICAL REJECTION FROM QA INSPECTOR (Page ${pageNum}, Attempt ${attempt}/${maxRetries}): ${err.message}. You MUST fix this error. Ensure exact block parity (${pageBlocks.length} blocks), NEVER use "[...]" or "same as above" or "continued", and preserve EVERY single digit from the source.`;
+            await this.updateJobStatus(
+              jobId,
+              "translating",
+              chunkProgress + attempt,
+              `Translation retry ${attempt + 1}/${maxRetries} for page ${pageNum}: Resolving QA inspection warnings...`
+            );
           }
-
-          translatedBlocks = translatorRes.data.translatedBlocks;
-
-          // Inspector Assertion Engine: array parity, laziness regex, and numeric integrity
-          this.inspector.assertParityAndIntegrity(blocks, translatedBlocks);
-
-          console.log(`[Job ${jobId}] [Stage: Inspector] Parity, anti-laziness, and numeric integrity verified on attempt ${attempt}.`);
-          break;
-        } catch (err: any) {
-          console.warn(`[Job ${jobId}] [QA Inspector] Attempt ${attempt}/${maxRetries} rejected: ${err.message}`);
-
-          if (attempt === maxRetries) {
-            throw new Error(`Translation QA rejected after ${maxRetries} attempts: ${err.message}`);
-          }
-
-          warningPrompt = `CRITICAL REJECTION FROM QA INSPECTOR (Attempt ${attempt}/${maxRetries}): ${err.message}. You MUST fix this error. Ensure exact block parity (${blocks.length} blocks), NEVER use "[...]" or "same as above" or "continued", and preserve EVERY single digit from the source.`;
-          await this.updateJobStatus(
-            jobId,
-            "translating",
-            50 + attempt * 5,
-            `Translation retry ${attempt + 1}/${maxRetries}: Resolving QA inspection warnings...`
-          );
         }
+
+        translatedBlocks.push(...pageTranslated);
       }
 
-      await this.updateJobStatus(jobId, "reconstructing", 70, "Rendering: Typesetting and injecting translated typography...");
-
-      // 6. Renderer
+      // 6. Stage: RENDERING - Typesetting, Smart Redaction & Font Injection
+      await this.updateJobStatus(jobId, "rendering", 75, "Rendering: Typesetting and injecting translated typography...");
       const rendererRes = await this.renderer.execute({ originalBuffer: sanitizedBuffer, translatedBlocks, targetLang });
       if (!rendererRes.success || !rendererRes.data) {
         throw new Error(`Renderer failed: ${rendererRes.error}`);
@@ -148,9 +202,8 @@ export class Orchestrator {
       const renderedBuffer = rendererRes.data.renderedBuffer;
       console.log(`[Job ${jobId}] [Stage: Renderer] Reconstructed document (${renderedBuffer.length} bytes).`);
 
-      await this.updateJobStatus(jobId, "qa", 85, "QA: Inspecting for visual drift, textual overflow, and geometric fidelity...");
-
-      // 7. Inspector (Physical visual drift and bounding geometry pass)
+      // 7. Stage: VERIFYING - Visual Drift QA & 5-Point Quality Gate
+      await this.updateJobStatus(jobId, "verifying", 88, "QA Inspector: Inspecting for visual drift, textual overflow, and geometric fidelity...");
       const inspectorRes = await this.inspector.execute({
         originalBuffer: sanitizedBuffer,
         renderedBuffer,
@@ -165,8 +218,7 @@ export class Orchestrator {
         console.warn(`[Job ${jobId}] QA Warnings:`, inspectorRes.data.warnings);
       }
 
-      // 8. Mandatory Automated 5-Point Verification Stage
-      await this.updateJobStatus(jobId, "qa", 95, "Verifying: Running automated certified legal verification pass...");
+      await this.updateJobStatus(jobId, "verifying", 95, "Verifying: Running automated certified legal verification pass...");
       const verification = await verifyTranslationArtifact({
         sourceBuffer: sanitizedBuffer,
         renderedBuffer,
@@ -198,7 +250,7 @@ export class Orchestrator {
       }
 
       console.log(`[Job ${jobId}] [Verification Passed] All 5 certified quality gates verified.`);
-      await this.updateJobStatus(jobId, "ready", 100, "Translation delivery ready.");
+      await this.updateJobStatus(jobId, "completed", 100, "Translation delivery ready.");
       return renderedBuffer;
 
     } catch (error: any) {

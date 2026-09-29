@@ -8,6 +8,8 @@ export type JobStatus =
   | "translating"
   | "rebuilding"
   | "reconstructing"
+  | "rendering"
+  | "verifying"
   | "qa"
   | "formatting"
   | "awaiting_review"

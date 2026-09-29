@@ -1162,8 +1162,9 @@ async function handleApiRequest(request, pathname, env, ctx) {
   }
 
   // Translation status polling API — returns real job status
-  if (pathname.startsWith('/api/translate/status/')) {
-    const jId = pathname.split('/').pop();
+  if (pathname.startsWith('/api/translate/status/') || (pathname.startsWith('/api/jobs/') && pathname.endsWith('/status'))) {
+    const parts = pathname.split('/').filter(Boolean);
+    const jId = pathname.endsWith('/status') ? parts[parts.length - 2] : parts[parts.length - 1];
     let job = (globalThis.__vlJobs || {})[jId];
 
     if (!job && typeof caches !== 'undefined' && caches.default) {
@@ -1191,14 +1192,19 @@ async function handleApiRequest(request, pathname, env, ctx) {
       });
     }
 
+    const isReady = job.status === 'ready' || job.status === 'completed';
+    const dlUrl = isReady ? '/api/jobs/' + job.id + '/download?token=' + job.downloadToken : null;
+
     return new Response(JSON.stringify({
       jobId: job.id,
       fileName: job.fileName,
       fileFormat: job.fileFormat,
       status: job.status,
+      currentPhase: job.status,
       progress: job.progress,
       currentStep: job.currentStep,
-      downloadUrl: '/api/translate/download/' + job.id + '?token=' + job.downloadToken,
+      artifactUrl: dlUrl,
+      downloadUrl: dlUrl,
       downloadToken: job.downloadToken,
       qualityGate: {
         isValidFormat: true,

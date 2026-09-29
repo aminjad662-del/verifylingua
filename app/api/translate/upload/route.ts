@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   validateInputFile,
-  processTranslationJob,
   estimateDocumentPageCount,
 } from "@/lib/translation/pipeline";
 import {
   createTranslationJob,
-  updateTranslationJob,
   deleteTranslationJob,
+  updateTranslationJob,
   getJobByCompositeKey,
 } from "@/lib/translation/store";
 import { generateCompositeKey, CURRENT_PIPELINE_VERSION } from "@/lib/translation/composite-key";
@@ -15,14 +14,22 @@ import { prisma } from "@/lib/prisma";
 import {
   getUserCreditBalance,
   reserveCreditsForJob,
+  releaseCreditsOnFailure,
 } from "@/lib/services/credit-service";
 import { getCurrentUser } from "@/lib/auth/session";
 import { putObject } from "@/lib/storage";
-import { Orchestrator } from "@/lib/agents/00_orchestrator";
-import { settleCreditsOnSuccess, releaseCreditsOnFailure } from "@/lib/services/credit-service";
+import { dispatchBackgroundJob } from "@/lib/queue/worker";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Upload API Route:
+ * Decoupled asynchronous upload endpoint.
+ * Handles parsing, validation, storage upload, job persistence, atomic credit reservation,
+ * and dispatching to the Background Worker Queue.
+ *
+ * Guarantees < 2 second execution time and returns HTTP 202 Accepted immediately.
+ */
 export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get("content-type") || "";
@@ -38,6 +45,7 @@ export async function POST(req: NextRequest) {
     let clientProvidedUserId: string | null = null;
     let simulateError: string | undefined = undefined;
 
+    // 1. Parse File & Metadata
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const file = formData.get("file") as File | null;
@@ -94,7 +102,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // In test environment, allow client-provided userId, headers, or query parameters
+    // In test environment, resolve user from client-provided override or headers
     if (isTestEnv) {
       if (clientProvidedUserId) {
         userId = clientProvidedUserId;
@@ -109,7 +117,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // In production (or if no test userId specified), strictly enforce session authentication
+    // In production, enforce authenticated session
     if (!userId) {
       try {
         const sessionUser = await getCurrentUser();
@@ -117,17 +125,17 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    // 1. Validation & MIME sniffing
+    // 2. MIME & Magic Bytes Validation
     const validation = validateInputFile(fileBuffer, fileName);
     if (validation.error) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // Estimate or calculate document page count N (minimum 1)
+    // Estimate document page count N (minimum 1)
     const estimated = await estimateDocumentPageCount(fileBuffer, validation.format);
     const N = Math.max(1, explicitPageCount && !isNaN(explicitPageCount) ? explicitPageCount : estimated);
 
-    // 2. Credit verification if userId is present
+    // 3. Pre-flight Credit Verification
     if (userId) {
       const balance = await getUserCreditBalance(userId);
       if (balance.available < N) {
@@ -145,7 +153,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate composite identity key
+    // 4. Cache Reuse Optimization
     const compositeDetails = generateCompositeKey({
       buffer: fileBuffer,
       sourceLang,
@@ -155,7 +163,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Check for legitimate cache reuse: same document + same languages + same pipeline version
-    const cachedJob = getJobByCompositeKey(compositeDetails.compositeKey);
+    const cachedJob = !simulateError ? getJobByCompositeKey(compositeDetails.compositeKey) : null;
     if (
       cachedJob &&
       (cachedJob.status === "ready" || cachedJob.status === "completed") &&
@@ -163,7 +171,6 @@ export async function POST(req: NextRequest) {
     ) {
       console.log(`[Upload] Legitimate cache hit for compositeKey: ${compositeDetails.compositeKey}`);
 
-      // If owned by same user or anonymous, reuse directly
       if (!cachedJob.userId || !userId || cachedJob.userId === userId) {
         return NextResponse.json(
           {
@@ -189,8 +196,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // If owned by a different user, create a user-scoped job pointing to cached artifact
-      // This enforces strict multi-tenant IDOR isolation while avoiding re-translating
+      // Multi-tenant isolation for cached documents
       const tenantJob = createTranslationJob({
         fileName,
         fileFormat: validation.format,
@@ -209,7 +215,6 @@ export async function POST(req: NextRequest) {
       tenantJob.qualityGate = cachedJob.qualityGate;
       tenantJob.currentStep = "Document translated with authentic layout preservation (cached).";
 
-      // Also persist to PostgreSQL if userId is present
       try {
         const ext = fileName.split(".").pop()?.toLowerCase() || validation.format;
         const userSegment = userId || "anonymous";
@@ -258,7 +263,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Create job in queue
+    // 5. Create Job Record
     const job = createTranslationJob({
       fileName,
       fileFormat: validation.format,
@@ -271,6 +276,9 @@ export async function POST(req: NextRequest) {
       options: { serviceTier, format: validation.format },
     });
     job.serviceTier = serviceTier;
+    job.status = "queued";
+    job.progress = 0;
+    job.currentStep = "Job queued for background processing";
 
     const ext = fileName.split(".").pop()?.toLowerCase() || validation.format;
     const userSegment = userId || "anonymous";
@@ -290,37 +298,38 @@ export async function POST(req: NextRequest) {
         ? "image/jpeg"
         : "application/octet-stream";
 
-    // Persist source file to storage
-    if (fileBuffer) {
-      try {
-        await putObject(sourceKey, fileBuffer, sourceMime);
-      } catch {}
+    // 6. Upload Raw File to Object Storage (S3 / R2)
+    try {
+      await putObject(sourceKey, fileBuffer, sourceMime);
+    } catch (storageErr: any) {
+      console.warn(`[Upload] Object storage warning for ${sourceKey}:`, storageErr?.message);
     }
 
-    // 4. If userId is present, persist to PostgreSQL and reserve credits
-    if (userId) {
-      try {
-        await prisma.translationJob.create({
-          data: {
-            id: job.id,
-            userId,
-            sourceKey,
-            outputKey,
-            sourceFilename: fileName,
-            sourceFormat: validation.format,
-            sourceMimeType: sourceMime,
-            sourceLanguage: sourceLang,
-            targetLanguage: targetLang,
-            status: "queued",
-            currentStep: "Job initialized and queued for processing",
-            pageCount: N,
-            downloadToken: job.downloadToken,
-          },
-        });
-      } catch (dbErr: any) {
-        console.error("[upload] Failed to persist job to database:", dbErr?.message);
-      }
+    // 7. Persist Job Record to Database
+    try {
+      await prisma.translationJob.create({
+        data: {
+          id: job.id,
+          userId,
+          sourceKey,
+          outputKey,
+          sourceFilename: fileName,
+          sourceFormat: validation.format,
+          sourceMimeType: sourceMime,
+          sourceLanguage: sourceLang,
+          targetLanguage: targetLang,
+          status: "queued",
+          currentStep: "Job initialized and queued for background processing",
+          pageCount: N,
+          downloadToken: job.downloadToken,
+        },
+      });
+    } catch (dbErr: any) {
+      console.error("[upload] Failed to persist job to database:", dbErr?.message);
+    }
 
+    // 8. Atomically Reserve Credits
+    if (userId) {
       try {
         await reserveCreditsForJob(userId, job.id, N);
       } catch (resErr: any) {
@@ -342,7 +351,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Kick off asynchronous processing
+    // Handle test simulated error if requested
     if (isTestEnv && simulateError) {
       setTimeout(async () => {
         if (userId) {
@@ -379,146 +388,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (validation.format === "docx") {
-      processTranslationJob(job, {
-        sourceLang,
-        targetLang,
-        serviceTier,
-        register: serviceTier === "automated" ? "general" : "certified_legal",
-      })
-        .then(async (updated) => {
-          updateTranslationJob(updated);
-          if (userId) {
-            try {
-              if (updated.status === "failed") {
-                await prisma.translationJob.update({
-                  where: { id: job.id },
-                  data: {
-                    status: "failed",
-                    errorMessage: updated.error || "Translation pipeline failed",
-                    completedAt: new Date(),
-                  },
-                });
-              } else {
-                await prisma.translationJob.update({
-                  where: { id: job.id },
-                  data: {
-                    status: "completed",
-                    progress: 100,
-                    currentStep: "Machine translation and layout reconstruction complete.",
-                    completedAt: new Date(),
-                    layoutPreserved: updated.layoutPreserved ?? true,
-                  },
-                });
-              }
-            } catch {}
-          }
-        })
-        .catch(async (err) => {
-          if (userId) {
-            try {
-              await releaseCreditsOnFailure(userId, job.id, N, err.message);
-              await prisma.translationJob.update({
-                where: { id: job.id },
-                data: {
-                  status: "failed",
-                  errorMessage: err.message || "Translation pipeline failed",
-                  completedAt: new Date(),
-                },
-              });
-            } catch {}
-          }
-          job.status = "failed";
-          job.error = err.message;
-          updateTranslationJob(job);
-        });
+    // 9. Dispatch to Background Worker Queue (Asynchronous, Non-Blocking)
+    await dispatchBackgroundJob(job.id);
 
-      return NextResponse.json(
-        {
-          success: true,
-          jobId: job.id,
-          fileName: job.fileName,
-          fileFormat: job.fileFormat,
-          fileSize: job.fileSize,
-          status: "queued",
-          progress: 5,
-          currentStep: "Job initialized and queued for processing",
-          downloadToken: job.downloadToken,
-        },
-        { status: 202 }
-      );
-    }
-
-    // 8-Agent State Machine for Vector PDFs and High-Resolution Documents
-    const orchestrator = new Orchestrator();
-
-    orchestrator.processDocument(
-      job.id, 
-      fileBuffer, 
-      fileName, 
-      sourceMime, 
-      sourceLang, 
-      targetLang
-    )
-      .then(async (renderedBuffer) => {
-        // Persist final rendered output to storage
-        const outputMime = "application/pdf";
-        try {
-          await putObject(outputKey, renderedBuffer, outputMime);
-        } catch (e: any) {
-          console.error(`[Job ${job.id}] Failed to upload rendered output:`, e.message);
-        }
-
-        // Settle credits and mark job fully complete in DB
-        if (userId) {
-          try {
-            await settleCreditsOnSuccess(userId, job.id, N);
-            await prisma.translationJob.update({
-              where: { id: job.id },
-              data: {
-                status: "completed",
-                outputKey,
-                progress: 100,
-                currentStep: "Machine translation and layout reconstruction complete.",
-                completedAt: new Date(),
-                layoutPreserved: true,
-              },
-            });
-          } catch (e: any) {
-            console.error(`[Job ${job.id}] Final settlement failed:`, e.message);
-          }
-        }
-        
-        // Keep in-memory store updated for immediate local polling and preview
-        job.status = "ready";
-        job.progress = 100;
-        job.currentStep = "Machine translation and layout reconstruction complete.";
-        job.outputKey = outputKey;
-        job.translatedBuffer = renderedBuffer;
-        updateTranslationJob(job);
-      })
-      .catch(async (err) => {
-        if (userId) {
-          try {
-            await releaseCreditsOnFailure(userId, job.id, N, err.message);
-            await prisma.translationJob.update({
-              where: { id: job.id },
-              data: {
-                status: "failed",
-                errorMessage: err.message || "Translation pipeline failed",
-                completedAt: new Date(),
-              },
-            });
-          } catch (e: any) {
-            console.error(`[Job ${job.id}] Credit refund failed:`, e.message);
-          }
-        }
-        
-        job.status = "failed";
-        job.error = err.message;
-        updateTranslationJob(job);
-      });
-
+    // 10. Immediately Return HTTP 202 Accepted (< 2s execution)
     return NextResponse.json(
       {
         success: true,
@@ -526,9 +399,9 @@ export async function POST(req: NextRequest) {
         fileName: job.fileName,
         fileFormat: job.fileFormat,
         fileSize: job.fileSize,
-        status: job.status,
-        progress: job.progress,
-        currentStep: job.currentStep,
+        status: "queued",
+        progress: 0,
+        currentStep: "Job initialized and queued for background processing",
         downloadToken: job.downloadToken,
       },
       {
