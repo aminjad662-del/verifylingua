@@ -66,6 +66,7 @@ export interface TranslatorInput {
   sourceLang: string;
   targetLang: string;
   engine: "deepl" | "gemini";
+  warningPrompt?: string;
 }
 
 export interface TranslatedBlock extends TextBlock {
@@ -91,6 +92,7 @@ export interface InspectorInput {
   originalBuffer: Buffer;
   renderedBuffer: Buffer;
   translatedBlocks: TranslatedBlock[];
+  sourceBlocks?: TextBlock[];
 }
 
 export interface InspectorOutput {

@@ -1,7 +1,7 @@
 import { prisma } from "../prisma";
 import {
   GatekeeperInput, ClassifierInput, ExtractorInput, GlossaryInput,
-  TranslatorInput, RendererInput, InspectorInput, AgentResult
+  TranslatorInput, RendererInput, InspectorInput, AgentResult, TranslatedBlock
 } from "../../types/agents";
 import { GatekeeperAgent } from "./01_gatekeeper";
 import { ClassifierAgent } from "./02_classifier";
@@ -93,13 +93,50 @@ export class Orchestrator {
 
       await this.updateJobStatus(jobId, "translating", 50, "Translation: The Linguist is translating text safely within bounded regions...");
 
-      // 5. Translator
-      const translatorRes = await this.translator.execute({ blocks, protectedTokens, sourceLang, targetLang, engine });
-      if (!translatorRes.success || !translatorRes.data) {
-        throw new Error(`Translator failed: ${translatorRes.error}`);
+      // 5. Translator & 7. Inspector Assertion Loop with Auto-Retry (maxRetries = 3)
+      const maxRetries = 3;
+      let translatedBlocks: TranslatedBlock[] = [];
+      let warningPrompt: string | undefined = undefined;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`[Job ${jobId}] [Stage: Translator] Attempt ${attempt}/${maxRetries} initiated.`);
+          const translatorRes = await this.translator.execute({
+            blocks,
+            protectedTokens,
+            sourceLang,
+            targetLang,
+            engine,
+            warningPrompt,
+          });
+
+          if (!translatorRes.success || !translatorRes.data) {
+            throw new Error(`Translator failed: ${translatorRes.error}`);
+          }
+
+          translatedBlocks = translatorRes.data.translatedBlocks;
+
+          // Inspector Assertion Engine: array parity, laziness regex, and numeric integrity
+          this.inspector.assertParityAndIntegrity(blocks, translatedBlocks);
+
+          console.log(`[Job ${jobId}] [Stage: Inspector] Parity, anti-laziness, and numeric integrity verified on attempt ${attempt}.`);
+          break;
+        } catch (err: any) {
+          console.warn(`[Job ${jobId}] [QA Inspector] Attempt ${attempt}/${maxRetries} rejected: ${err.message}`);
+
+          if (attempt === maxRetries) {
+            throw new Error(`Translation QA rejected after ${maxRetries} attempts: ${err.message}`);
+          }
+
+          warningPrompt = `CRITICAL REJECTION FROM QA INSPECTOR (Attempt ${attempt}/${maxRetries}): ${err.message}. You MUST fix this error. Ensure exact block parity (${blocks.length} blocks), NEVER use "[...]" or "same as above" or "continued", and preserve EVERY single digit from the source.`;
+          await this.updateJobStatus(
+            jobId,
+            "translating",
+            50 + attempt * 5,
+            `Translation retry ${attempt + 1}/${maxRetries}: Resolving QA inspection warnings...`
+          );
+        }
       }
-      const translatedBlocks = translatorRes.data.translatedBlocks;
-      console.log(`[Job ${jobId}] [Stage: Translator] Translated ${translatedBlocks.length} blocks to ${targetLang}.`);
 
       await this.updateJobStatus(jobId, "reconstructing", 70, "Rendering: Typesetting and injecting translated typography...");
 
@@ -113,8 +150,13 @@ export class Orchestrator {
 
       await this.updateJobStatus(jobId, "qa", 85, "QA: Inspecting for visual drift, textual overflow, and geometric fidelity...");
 
-      // 7. Inspector
-      const inspectorRes = await this.inspector.execute({ originalBuffer: sanitizedBuffer, renderedBuffer, translatedBlocks });
+      // 7. Inspector (Physical visual drift and bounding geometry pass)
+      const inspectorRes = await this.inspector.execute({
+        originalBuffer: sanitizedBuffer,
+        renderedBuffer,
+        translatedBlocks,
+        sourceBlocks: blocks,
+      });
       if (!inspectorRes.success || !inspectorRes.data) {
         throw new Error(`QA Inspector failed: ${inspectorRes.error}`);
       }
