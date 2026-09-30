@@ -271,19 +271,25 @@ export default {
       }
     }
 
-    // 3b. React Server Component (RSC) Payload Resolution (e.g. ?_rsc=... or RSC: 1 header)
-    const isRsc = url.searchParams.has('_rsc') || request.headers.get('rsc') === '1';
-    if (isRsc && !pathname.includes('.')) {
-      const cleanPath = pathname.replace(/\\/+$/, '');
+    // 3b. React Server Component (RSC) Payload Resolution (e.g. ?_rsc=... or RSC: 1 header or .rsc in path)
+    const isRsc = url.searchParams.has('_rsc') || request.headers.get('rsc') === '1' || pathname.endsWith('.rsc');
+    if (isRsc) {
+      const cleanPath = pathname.replace(/\\.rsc$/, '').replace(/\\/+$/, '');
       const rscCandidates = [
         cleanPath === '' ? '/index.rsc' : \`\${cleanPath}.rsc\`,
         \`\${cleanPath}/index.rsc\`
       ];
+      if (cleanPath.startsWith('/tracker/')) {
+        rscCandidates.push('/tracker/VL-DEMO1.rsc', '/tracker/VL-DEMO1/index.rsc');
+      }
+      if (cleanPath.startsWith('/order/')) {
+        rscCandidates.push('/order/VL-DEMO1.rsc', '/order/VL-DEMO1/index.rsc');
+      }
       for (const candidate of rscCandidates) {
         try {
           const rscUrl = new URL(candidate, request.url);
           const rscRes = await env.ASSETS.fetch(new Request(rscUrl, request));
-          if (rscRes && rscRes.status !== 404) {
+          if (rscRes && rscRes.status === 200) {
             const resHeaders = new Headers(rscRes.headers);
             resHeaders.set('Content-Type', 'text/x-component');
             resHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate');
@@ -311,46 +317,61 @@ export default {
         return response;
       }
 
-      // Fallback for dynamic client-side order proofing studio: /order/:id/proof
-      if (pathname.includes('/proof')) {
-        const proofFallback = new URL('/order/VL-DEMO1/proof/index.html', request.url);
-        response = await env.ASSETS.fetch(new Request(proofFallback, request));
-        if (response.status !== 404) return response;
+      // Helper to cleanly serve dynamic page fallback without 308 redirect loops
+      async function serveFallback(targetCandidate) {
+        try {
+          const fbUrl = new URL(targetCandidate, request.url);
+          let fbRes = await env.ASSETS.fetch(new Request(fbUrl, request));
+          if (fbRes && fbRes.status >= 300 && fbRes.status < 400 && fbRes.headers.get('location')) {
+            const redirectUrl = new URL(fbRes.headers.get('location'), request.url);
+            fbRes = await env.ASSETS.fetch(new Request(redirectUrl, request));
+          }
+          if (fbRes && (fbRes.status === 200 || (fbRes.status >= 200 && fbRes.status < 300))) {
+            const resHeaders = new Headers(fbRes.headers);
+            resHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate');
+            return new Response(fbRes.body, {
+              status: 200,
+              headers: resHeaders
+            });
+          }
+        } catch {}
+        return null;
       }
 
       // Fallback for dynamic client-side translation tracking: /tracker/:id
       if (pathname.startsWith('/tracker/')) {
-        const trackerFallback = new URL('/tracker/VL-DEMO1/index.html', request.url);
-        response = await env.ASSETS.fetch(new Request(trackerFallback, request));
-        if (response.status !== 404) return response;
+        const trackerFallback = await serveFallback('/tracker/VL-DEMO1/') || await serveFallback('/tracker/VL-DEMO1.html');
+        if (trackerFallback) return trackerFallback;
+      }
+
+      // Fallback for dynamic client-side order proofing studio: /order/:id/proof
+      if (pathname.includes('/proof')) {
+        const proofFallback = await serveFallback('/order/VL-DEMO1/proof/') || await serveFallback('/order/VL-DEMO1/proof/index.html');
+        if (proofFallback) return proofFallback;
       }
 
       // Fallback for dynamic client-side order tracking: /order/:id
       if (pathname.startsWith('/order/')) {
-        const orderFallback = new URL('/order/VL-DEMO1/index.html', request.url);
-        response = await env.ASSETS.fetch(new Request(orderFallback, request));
-        if (response.status !== 404) return response;
+        const orderFallback = await serveFallback('/order/VL-DEMO1/') || await serveFallback('/order/VL-DEMO1/index.html');
+        if (orderFallback) return orderFallback;
       }
 
       // Fallback for dynamic linguist CAT workbench: /translator/workbench/:id
       if (pathname.startsWith('/translator/workbench/')) {
-        const workbenchFallback = new URL('/translator/workbench/VL-DEMO1/index.html', request.url);
-        response = await env.ASSETS.fetch(new Request(workbenchFallback, request));
-        if (response.status !== 404) return response;
+        const workbenchFallback = await serveFallback('/translator/workbench/VL-DEMO1/') || await serveFallback('/translator/workbench/VL-DEMO1/index.html');
+        if (workbenchFallback) return workbenchFallback;
       }
 
       // Fallback for dynamic admin order workspace: /admin/orders/:id
       if (pathname.startsWith('/admin/orders/')) {
-        const adminFallback = new URL('/admin/orders/VL-DEMO1/index.html', request.url);
-        response = await env.ASSETS.fetch(new Request(adminFallback, request));
-        if (response.status !== 404) return response;
+        const adminFallback = await serveFallback('/admin/orders/VL-DEMO1/') || await serveFallback('/admin/orders/VL-DEMO1/index.html');
+        if (adminFallback) return adminFallback;
       }
 
       // Fallback for dynamic certificate verification: /verify/:code
       if (pathname.startsWith('/verify/')) {
-        const verifyFallback = new URL('/verify/demo/index.html', request.url);
-        response = await env.ASSETS.fetch(new Request(verifyFallback, request));
-        if (response.status !== 404) return response;
+        const verifyFallback = await serveFallback('/verify/demo/') || await serveFallback('/verify/demo/index.html');
+        if (verifyFallback) return verifyFallback;
       }
     }
 

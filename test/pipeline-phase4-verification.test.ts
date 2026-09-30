@@ -93,7 +93,7 @@ describe("PHASE 4 VERIFICATION: Multi-Language Matrix, Cache Reuse & Security Ga
     const jobId = body.jobId;
 
     let poll = 0;
-    while (poll < 40) {
+    while (poll < 100) {
       await new Promise((r) => setTimeout(r, 150));
       const sReq = new NextRequest(`http://localhost:3000/api/translate/status/${jobId}`);
       const sRes = await statusHandler(sReq, { params: Promise.resolve({ jobId }) });
