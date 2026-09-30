@@ -46,7 +46,7 @@ describe("PHASE 4: Asynchronous Background Queues, Resilience & Live Status Poll
   it("1. Upload Route Performance: Returns HTTP 202 Accepted in under 2 seconds with status: 'queued'", async () => {
     const fileBytes = getUniquePdfBuffer();
     const form = new FormData();
-    form.append("file", new Blob([fileBytes], { type: "application/pdf" }), "sample_birth_cert.pdf");
+    form.append("file", new Blob([new Uint8Array(fileBytes)], { type: "application/pdf" }), "sample_birth_cert.pdf");
     form.append("sourceLang", "en");
     form.append("targetLang", "de");
     form.append("userId", testUserId);
@@ -73,7 +73,7 @@ describe("PHASE 4: Asynchronous Background Queues, Resilience & Live Status Poll
   it("2. Live Status Polling (/api/jobs/[id]/status): Tracks granular state, progress, and artifactUrl on completion", async () => {
     const fileBytes = getUniquePdfBuffer();
     const form = new FormData();
-    form.append("file", new Blob([fileBytes], { type: "application/pdf" }), "sample_birth_cert.pdf");
+    form.append("file", new Blob([new Uint8Array(fileBytes)], { type: "application/pdf" }), "sample_birth_cert.pdf");
     form.append("sourceLang", "en");
     form.append("targetLang", "fr");
     form.append("userId", testUserId);
@@ -125,7 +125,7 @@ describe("PHASE 4: Asynchronous Background Queues, Resilience & Live Status Poll
 
     // Upload with simulated failure flag
     const form = new FormData();
-    form.append("file", new Blob([fileBytes], { type: "application/pdf" }), "sample_failing.pdf");
+    form.append("file", new Blob([new Uint8Array(fileBytes)], { type: "application/pdf" }), "sample_failing.pdf");
     form.append("sourceLang", "en");
     form.append("targetLang", "de");
     form.append("userId", testUserId);
