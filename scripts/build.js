@@ -2,13 +2,17 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ''} --max-old-space-size=4096`.trim();
+// Cloudflare Pages build containers enforce a 3GB memory limit; local dev has larger budget
+const isCloudflare = Boolean(process.env.CF_PAGES || process.env.CLOUDFLARE);
+const memoryMb = isCloudflare ? '2048' : '4096';
+let nodeOptions = (process.env.NODE_OPTIONS || '').replace(/--max-old-space-size=\d+/g, '').trim();
+process.env.NODE_OPTIONS = `${nodeOptions} --max-old-space-size=${memoryMb}`.trim();
 
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 console.log('📦 Step 1: Generating Prisma Client...');
 spawnSync(npxCmd, ['prisma', 'generate'], { stdio: 'inherit', shell: true });
 
-console.log('⚡ Step 2: Running Next.js build with 4GB heap...');
+console.log(`⚡ Step 2: Running Next.js build with ${memoryMb}MB heap (isCloudflare: ${isCloudflare})...`);
 const buildRes = spawnSync(npxCmd, ['next', 'build'], { 
   stdio: 'inherit',
   env: process.env,
