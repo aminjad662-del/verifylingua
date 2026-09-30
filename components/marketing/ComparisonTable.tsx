@@ -64,8 +64,8 @@ const COMPARISON_ROWS = [
 
 export function ComparisonTable() {
   return (
-    <section className="py-20 md:py-32 bg-canvas border-b border-border/60">
-      <div className="max-w-7xl mx-auto px-6 space-y-16">
+    <section className="py-20 md:py-32 bg-canvas border-b border-border/60 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16 w-full overflow-hidden">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">

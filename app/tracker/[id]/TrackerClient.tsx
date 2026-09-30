@@ -276,7 +276,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                     : "bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"
                 )}
               />
-              <span className="uppercase tracking-wider">
+              <span className="hidden sm:inline uppercase tracking-wider">
                 {isFailed ? "PIPELINE FAILED" : isCompleted ? "CERTIFIED & SEALED" : "LIVE TELEMETRY STREAM"}
               </span>
             </div>
@@ -291,7 +291,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
       </header>
 
       {/* Main Workspace Stage */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8 overflow-hidden">
         {/* Breadcrumb & Job Badge */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -689,7 +689,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
             {/* Telemetry Stream Console (Awwwards Legal-Tech Detail) */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span className="uppercase tracking-wider">LIVE AUDIT TELEMETRY STREAM</span>
+                <span className="hidden sm:inline uppercase tracking-wider">LIVE AUDIT TELEMETRY STREAM</span>
                 <span className="text-slate-500">REAL-TIME ATTESTATION LOGS</span>
               </div>
 

@@ -67,7 +67,7 @@ export default function VerifyCodePage() {
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-text">
       <Header />
-      <main className="flex-1 py-12 md:py-16 px-6">
+      <main className="flex-1 py-12 md:py-16 px-4 sm:px-6 overflow-hidden">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Institutional Header Banner */}
           <div className="text-center space-y-3">
@@ -84,7 +84,7 @@ export default function VerifyCodePage() {
           </div>
 
           {/* Verification Status Card */}
-          <Card className="p-8 md:p-10 rounded-[32px] bg-surface-raised border-2 border-brand-100 shadow-xl space-y-8">
+          <Card className="p-5 sm:p-8 md:p-10 rounded-[32px] bg-surface-raised border-2 border-brand-100 shadow-xl space-y-8">
             {/* Status Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
               <div className="space-y-1">

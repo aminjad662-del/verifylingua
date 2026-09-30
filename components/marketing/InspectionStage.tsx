@@ -78,7 +78,7 @@ export function InspectionStage() {
         className="relative rounded-2xl bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800/90 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] overflow-hidden text-left"
       >
         {/* Workspace Top Toolbar: Mode Switcher & Telemetry Pill */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-850 bg-neutral-50/70 dark:bg-neutral-900/60">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3 sm:px-5 py-3 border-b border-neutral-100 dark:border-neutral-850 bg-neutral-50/70 dark:bg-neutral-900/60">
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -156,7 +156,7 @@ export function InspectionStage() {
         </div>
 
         {/* Live Document Visual Comparison Surface */}
-        <div className="relative p-5 bg-neutral-100/50 dark:bg-neutral-900/30 overflow-hidden">
+        <div className="relative p-3 sm:p-5 bg-neutral-100/50 dark:bg-neutral-900/30 overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left Document: Original Spanish Civil Record */}
             {(viewMode === "split" || viewMode === "original") && (

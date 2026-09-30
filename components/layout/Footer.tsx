@@ -4,7 +4,7 @@ import { PRODUCT_NAME, SUPPORT_EMAIL } from "@/lib/constants";
 
 export function Footer() {
   return (
-    <footer className="bg-brand-ink text-white border-t border-white/10 pt-16 pb-12 px-6">
+    <footer className="bg-brand-ink text-white border-t border-white/10 pt-16 pb-12 px-4 sm:px-6 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto space-y-16">
         {/* Top CTA & Brand Line */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-12 border-b border-white/10">

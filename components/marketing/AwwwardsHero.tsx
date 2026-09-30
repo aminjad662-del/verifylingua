@@ -44,7 +44,7 @@ export function AwwwardsHero() {
       {/* Subtle Radial Atmosphere (Calibrated High-Density Navy Accent) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[350px] bg-gradient-to-b from-blue-50/80 to-transparent blur-3xl pointer-events-none -z-10" />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 w-full overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
           {/* Left Column: Bespoke Editorial Typography & Actions */}

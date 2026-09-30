@@ -41,9 +41,9 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink-soft">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 overflow-hidden w-full">
         {/* Pricing Header */}
-        <section className="pt-16 pb-12 md:pt-24 md:pb-16 bg-gradient-hero border-b border-border/60 text-center px-6">
+        <section className="pt-16 pb-12 md:pt-24 md:pb-16 bg-gradient-hero border-b border-border/60 text-center px-4 sm:px-6 overflow-hidden">
           <div className="max-w-4xl mx-auto space-y-4">
             <Badge variant="default" className="gap-1.5 py-1 px-4 text-xs font-bold uppercase tracking-wider">
               <ShieldCheck className="w-4 h-4 text-brand-500" />
@@ -64,7 +64,7 @@ export default function PricingPage() {
         </section>
 
         {/* Interactive Pricing Calculator */}
-        <section className="py-16 md:py-24 bg-surface border-b border-border/60 px-6">
+        <section className="py-16 md:py-24 bg-surface border-b border-border/60 px-4 sm:px-6 overflow-hidden">
           <div className="max-w-5xl mx-auto space-y-12">
             <div className="text-center space-y-2">
               <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">

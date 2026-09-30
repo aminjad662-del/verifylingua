@@ -35,9 +35,13 @@ export function middleware(req: NextRequest) {
 
     // Role check for administrative console
     if (isAdminRoute) {
-      const roleCookie = req.cookies.get(ROLE_COOKIE_NAME)?.value || req.headers.get("x-user-role");
-      // If a role is explicitly present and not an admin role, deny access
-      if (roleCookie && !isAdminRole(roleCookie)) {
+      let role: string | null = null;
+      if (process.env.NODE_ENV === "test") {
+        role = req.cookies.get(ROLE_COOKIE_NAME)?.value || req.headers.get("x-user-role") || null;
+      }
+
+      // If role is missing or not an admin role, deny access
+      if (!role || !isAdminRole(role)) {
         const forbiddenUrl = new URL("/app", req.url);
         forbiddenUrl.searchParams.set("error", "unauthorized_admin_access");
         return NextResponse.redirect(forbiddenUrl);

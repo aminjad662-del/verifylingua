@@ -121,5 +121,35 @@ describe("Edge Security & RBAC Route Protection Suite", () => {
       const res = middleware(req);
       expect(res.status).toBe(200);
     });
+
+    it("blocks access to /admin when role cookie is completely omitted", () => {
+      const req = new NextRequest("http://localhost:3000/admin/settings", {
+        method: "GET",
+        headers: {
+          cookie: `${SESSION_COOKIE}=${mockToken}`,
+        },
+      });
+
+      const res = middleware(req);
+      expect(res.status).toBe(307);
+      const location = res.headers.get("location");
+      expect(location).toContain("/app");
+      expect(location).toContain("error=unauthorized_admin_access");
+    });
+
+    it("blocks access to /admin when spoofed with unknown or invalid role", () => {
+      const req = new NextRequest("http://localhost:3000/admin/settings", {
+        method: "GET",
+        headers: {
+          cookie: `${SESSION_COOKIE}=${mockToken}; ${ROLE_COOKIE_NAME}=HACKER_ROLE`,
+        },
+      });
+
+      const res = middleware(req);
+      expect(res.status).toBe(307);
+      const location = res.headers.get("location");
+      expect(location).toContain("/app");
+      expect(location).toContain("error=unauthorized_admin_access");
+    });
   });
 });

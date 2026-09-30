@@ -1,0 +1,15 @@
+﻿
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mC:/Users/aminj/Downloads/SAAS 7[39m
+
+ [32mΓ£ô[39m test/flawless-renderer.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 937[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m Phase 3: Flawless Rendering & BiDi (06_renderer.ts)[2m > [22m7. Full Reconstruction Pipeline (ReconstructionAgent.execute)[2m > [22mrenders RTL Arabic blocks with proper font embedding and right alignment anchoring [33m 564[2mms[22m[39m
+ [32mΓ£ô[39m test/acceptance-master-suite.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 146[2mms[22m[39m
+ [32mΓ£ô[39m test/box-fitter.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32mΓ£ô[39m test/enterprise-pipeline-gates.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32mΓ£ô[39m test/admin-rbac-routes.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m53 passed[39m[22m[90m (53)[39m
+[2m   Start at [22m 20:17:04
+[2m   Duration [22m 11.31s[2m (transform 747ms, setup 0ms, collect 5.61s, tests 1.29s, environment 2ms, prepare 2.01s)[22m
+

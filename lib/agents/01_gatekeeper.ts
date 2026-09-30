@@ -28,20 +28,58 @@ export class GatekeeperAgent {
       if (isPng) detectedFormat = "png";
       if (isDocx) detectedFormat = "docx";
 
-      // 3. Password/Encryption Detection (PDF heuristic)
+      // 3. Real Page Count & Encryption Verification for PDFs
+      let pageCount = 1;
       let isEncrypted = false;
+
       if (isPdf) {
-        // Look for /Encrypt dictionary within the first 4KB of PDF
-        const headerSample = buffer.subarray(0, Math.min(buffer.length, 4096)).toString("ascii");
+        // Scan for /Encrypt dictionary
+        const headerSample = buffer.subarray(0, Math.min(buffer.length, 8192)).toString("latin1");
         if (headerSample.includes("/Encrypt")) {
           isEncrypted = true;
-          throw new Error("Password protected or encrypted PDFs are not supported.");
+          throw new Error("Password-protected or encrypted PDFs are not supported. Please provide an unencrypted document.");
+        }
+
+        try {
+          const { PDFDocument } = await import("pdf-lib");
+          const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: false });
+          pageCount = pdfDoc.getPageCount();
+
+          if (pageCount > 100) {
+            throw new Error(`Document exceeds maximum limit of 100 pages (found ${pageCount} pages). Please submit in smaller batches.`);
+          }
+        } catch (pdfErr: any) {
+          if (pdfErr.message?.includes("encrypted") || pdfErr.message?.includes("password") || isEncrypted) {
+            throw new Error("Password-protected or encrypted PDFs are not supported. Please provide an unencrypted document.");
+          }
+          // If corrupted or malformed PDF structure
+          throw new Error(`Malformed or corrupted PDF file: ${pdfErr.message}`);
         }
       }
 
-      // 4. Zip-bomb protection (heuristic for extremely high compression in docx)
-      if (isDocx && buffer.length < 500 && input.fileName.endsWith(".docx")) {
-        throw new Error("Suspicious file signature. Potential zip-bomb detected.");
+      // 4. Zip-bomb / Decompression bomb protection for DOCX
+      if (isDocx) {
+        try {
+          const JSZip = (await import("jszip")).default;
+          const zip = await JSZip.loadAsync(buffer);
+          let totalUncompressedSize = 0;
+          const MAX_UNCOMPRESSED_SIZE = 250 * 1024 * 1024; // 250MB cap
+
+          for (const filename of Object.keys(zip.files)) {
+            const fileEntry = zip.files[filename];
+            // @ts-ignore
+            const uncompressedSize = (fileEntry as any)._data?.uncompressedSize || 0;
+            totalUncompressedSize += uncompressedSize;
+            if (totalUncompressedSize > MAX_UNCOMPRESSED_SIZE) {
+              throw new Error("Suspicious document structure. Potential decompression bomb detected.");
+            }
+          }
+        } catch (zipErr: any) {
+          if (zipErr.message?.includes("decompression bomb")) {
+            throw zipErr;
+          }
+          throw new Error("Corrupted or invalid DOCX archive structure.");
+        }
       }
 
       return {
@@ -49,17 +87,17 @@ export class GatekeeperAgent {
         data: {
           sanitizedBuffer: buffer,
           metadata: {
-            pageCount: 1, // Page count extraction requires full parsing, mocked to 1 for this layer
+            pageCount,
             byteSize: buffer.length,
-            isEncrypted,
-            format: detectedFormat
-          }
-        }
+            isEncrypted: false,
+            format: detectedFormat,
+          },
+        },
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error.message || "Gatekeeper validation failed"
+        error: error.message || "Gatekeeper validation failed",
       };
     }
   }

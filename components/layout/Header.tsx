@@ -75,24 +75,24 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-surface-raised/90 backdrop-blur-xl transition-all">
-      <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-6">
+      <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-3.5 sm:px-6 w-full overflow-hidden">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500 text-white shadow-sm transition-transform group-hover:scale-105">
-            <ShieldCheck className="w-6 h-6" />
+          <div className="flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded-xl bg-brand-500 text-white shadow-sm transition-transform group-hover:scale-105">
+            <ShieldCheck className="w-5 sm:w-6 h-5 sm:h-6" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-extrabold tracking-tight text-brand-ink font-display">
+            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-brand-ink font-display">
               Verify<span className="text-brand-500">Lingua</span>
             </span>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">
+            <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-widest text-text-muted">
               Certified Translations
             </span>
           </div>
         </Link>
 
         {/* Desktop Navigation - 4 Clean Primary Links */}
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-6">
           {PRIMARY_NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -111,9 +111,9 @@ export function Header() {
         </nav>
 
         {/* CTA & Language Selector */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Quick Locale Selector */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-surface text-xs font-semibold text-brand-ink">
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border bg-surface text-xs font-semibold text-brand-ink">
             <Globe2 className="w-3.5 h-3.5 text-brand-500" />
             <select
               value={locale}
@@ -147,7 +147,7 @@ export function Header() {
           <Button
             asChild
             variant="outline"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl h-10 px-3.5 text-xs font-bold border-border bg-surface hover:bg-surface-raised text-brand-ink shadow-sm"
+            className="hidden lg:inline-flex items-center gap-1.5 rounded-xl h-10 px-3.5 text-xs font-bold border-border bg-surface hover:bg-surface-raised text-brand-ink shadow-sm"
           >
             <Link href="/dashboard">
               <LayoutDashboard className="w-3.5 h-3.5 text-brand-500" />
@@ -177,7 +177,7 @@ export function Header() {
           <MagneticButton>
             <Button
               asChild
-              className="hidden sm:inline-flex gap-2 rounded-full h-10 px-5 text-xs sm:text-sm font-bold bg-brand-ink hover:bg-brand-900 text-white shadow-sm active:scale-[0.97] transition-all duration-200"
+              className="hidden sm:inline-flex gap-1.5 rounded-full h-9 sm:h-10 px-3 sm:px-5 text-xs sm:text-sm font-bold bg-brand-ink hover:bg-brand-900 text-white shadow-sm active:scale-[0.97] transition-all duration-200"
             >
               <Link href="/order/triage">
                 Start translation
@@ -191,21 +191,22 @@ export function Header() {
             asChild
             variant="outline"
             size="sm"
-            className="md:hidden h-9 px-2.5 rounded-lg text-xs font-bold border-border bg-surface text-brand-ink flex items-center gap-1.5"
+            className="md:hidden h-9 w-9 sm:w-auto px-2 sm:px-2.5 rounded-lg text-xs font-bold border-border bg-surface text-brand-ink flex items-center justify-center gap-1.5"
+            aria-label="Dashboard"
           >
             <Link href="/dashboard">
-              <LayoutDashboard className="w-3.5 h-3.5 text-brand-500" />
-              <span>Dashboard</span>
+              <LayoutDashboard className="w-4 h-4 text-brand-500" />
+              <span className="hidden sm:inline">Dashboard</span>
             </Link>
           </Button>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl border border-border text-brand-ink hover:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="md:hidden h-9 w-9 flex items-center justify-center rounded-xl border border-border text-brand-ink hover:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-500"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>

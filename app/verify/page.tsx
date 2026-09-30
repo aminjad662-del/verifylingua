@@ -24,7 +24,7 @@ export default function VerifySearchPage() {
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-text">
       <Header />
-      <main className="flex-1 py-16 md:py-24 px-6">
+      <main className="flex-1 py-12 md:py-24 px-4 sm:px-6 overflow-hidden">
         <div className="max-w-3xl mx-auto space-y-8 text-center">
           <Badge variant="default" className="gap-1.5 py-1 px-4 text-xs font-bold uppercase tracking-wider mx-auto">
             <ShieldCheck className="w-4 h-4 text-brand-500" />
@@ -40,7 +40,7 @@ export default function VerifySearchPage() {
             </p>
           </div>
 
-          <Card className="p-8 md:p-10 rounded-[32px] bg-surface-raised border-2 border-brand-100 shadow-xl max-w-xl mx-auto text-left space-y-6">
+          <Card className="p-5 sm:p-8 md:p-10 rounded-[32px] bg-surface-raised border-2 border-brand-100 shadow-xl max-w-xl mx-auto text-left space-y-6">
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="verify-code-input" className="text-xs font-bold uppercase tracking-wider text-brand-ink flex items-center gap-1.5">

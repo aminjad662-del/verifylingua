@@ -11,17 +11,27 @@ import {
   pushGraphicsState,
   popGraphicsState,
   concatTransformationMatrix,
+  setCharacterSpacing,
   Color,
 } from "pdf-lib";
 import { convertArabic } from "arabic-reshaper";
 import bidiFactory from "bidi-js";
 import { Jimp } from "jimp";
 import {
+  fitTypography,
+  shapeAndReorderBidi,
+  measureTextWidth,
+  TypographyFitResult,
+} from "../typography/box-fitter";
+import {
   AgentResult,
   RendererInput,
   RendererOutput,
   TranslatedBlock,
 } from "../../types/agents";
+
+export { fitTypography, shapeAndReorderBidi, measureTextWidth };
+export type { TypographyFitResult };
 
 const bidi = bidiFactory();
 
@@ -246,151 +256,7 @@ export function parseTextColor(colorValue?: unknown): Color {
 /**
  * Reshapes Arabic glyphs and applies the Unicode Bidirectional Algorithm (BiDi).
  */
-export function shapeAndReorderBidi(text: string, isRtl: boolean): string {
-  if (!isRtl || !text) return text;
-  try {
-    const reshaped = convertArabic(text);
-    const levels = bidi.getEmbeddingLevels(reshaped);
-    return bidi.getReorderedString(reshaped, levels);
-  } catch {
-    return text;
-  }
-}
 
-export interface TypographyFitResult {
-  lines: string[];
-  fontSize: number;
-  lineHeight: number;
-  scaleX: number;
-  totalHeight: number;
-}
-
-/**
- * Advanced Typography Fitting Engine:
- * Step 1: Word-wrapping strictly within box.width.
- * Step 2: Iterative font size reduction down to 6pt if totalHeight > box.height.
- * Step 3: Horizontal transform scaling (condensed text) if overflowing at 6pt.
- */
-export function fitTypography(
-  text: string,
-  boxWidth: number,
-  boxHeight: number,
-  initialFontSize: number,
-  font: PDFFont,
-  isRtl: boolean
-): TypographyFitResult {
-  const minFontSize = 6;
-  const targetText = isRtl ? convertArabic(text) : text;
-
-  function wrap(str: string, size: number, maxWidth: number): string[] {
-    const paragraphs = str.split(/\r?\n/);
-    const result: string[] = [];
-
-    for (const para of paragraphs) {
-      if (!para.trim()) {
-        result.push("");
-        continue;
-      }
-      const words = para.split(/\s+/);
-      let line = "";
-
-      for (const word of words) {
-        const testLine = line ? `${line} ${word}` : word;
-        let testWidth = 0;
-        try {
-          testWidth = font.widthOfTextAtSize(testLine, size);
-        } catch {
-          testWidth = testLine.length * (size * 0.5);
-        }
-
-        if (testWidth <= maxWidth) {
-          line = testLine;
-        } else {
-          if (line) result.push(line);
-          line = word;
-        }
-      }
-      if (line) result.push(line);
-    }
-
-    return result.length > 0 ? result : [str];
-  }
-
-  // Step 1 & 2: Iteratively reduce font size down to 6pt
-  let currentSize = Math.max(minFontSize, initialFontSize);
-  let bestLines: string[] = [];
-  let bestHeight = 0;
-
-  while (currentSize >= minFontSize) {
-    const lines = wrap(targetText, currentSize, boxWidth);
-    const lineHeight = currentSize * 1.2;
-    const totalHeight = lines.length * lineHeight;
-
-    if (totalHeight <= boxHeight) {
-      // Reorder lines for BiDi display if RTL
-      const finalLines = isRtl
-        ? lines.map((l) => shapeAndReorderBidi(l, true))
-        : lines;
-
-      return {
-        lines: finalLines,
-        fontSize: currentSize,
-        lineHeight,
-        scaleX: 1.0,
-        totalHeight,
-      };
-    }
-
-    bestLines = lines;
-    bestHeight = totalHeight;
-    currentSize -= 0.5;
-  }
-
-  // Step 3: At 6pt, apply horizontal transform scale (condensed text)
-  currentSize = minFontSize;
-  let scaleX = 0.95;
-  const minScaleX = 0.5;
-
-  while (scaleX >= minScaleX) {
-    const effectiveWidth = boxWidth / scaleX;
-    const lines = wrap(targetText, currentSize, effectiveWidth);
-    const lineHeight = currentSize * 1.15;
-    const totalHeight = lines.length * lineHeight;
-
-    if (totalHeight <= boxHeight) {
-      const finalLines = isRtl
-        ? lines.map((l) => shapeAndReorderBidi(l, true))
-        : lines;
-
-      return {
-        lines: finalLines,
-        fontSize: currentSize,
-        lineHeight,
-        scaleX,
-        totalHeight,
-      };
-    }
-
-    bestLines = lines;
-    bestHeight = totalHeight;
-    scaleX -= 0.05;
-  }
-
-  // Hard clamp if still slightly tight
-  const finalScaleX = Math.max(minScaleX, scaleX);
-  const clampedLineHeight = Math.min(minFontSize * 1.15, boxHeight / Math.max(1, bestLines.length));
-  const finalLines = isRtl
-    ? bestLines.map((l) => shapeAndReorderBidi(l, true))
-    : bestLines;
-
-  return {
-    lines: finalLines,
-    fontSize: minFontSize,
-    lineHeight: clampedLineHeight,
-    scaleX: finalScaleX,
-    totalHeight: Math.min(boxHeight, bestLines.length * clampedLineHeight),
-  };
-}
 
 export class ReconstructionAgent {
   public async execute(input: RendererInput): Promise<AgentResult<RendererOutput>> {
@@ -485,16 +351,17 @@ export class ReconstructionAgent {
           (block as any).color ?? (block as any).fontColor ?? (block as any).textColor
         );
 
-        // Requirement 2: Exact Alignment & RTL Anchoring
+        // Requirement 2: Exact Alignment & RTL Anchoring with Letter-Spacing
         let currentLineY = pageHeight - ymin - fitting.lineHeight;
 
         for (const line of fitting.lines) {
-          let textWidth = 0;
-          try {
-            textWidth = font.widthOfTextAtSize(line, fitting.fontSize) * fitting.scaleX;
-          } catch {
-            textWidth = line.length * (fitting.fontSize * 0.5) * fitting.scaleX;
-          }
+          const textWidth = measureTextWidth(
+            line,
+            fitting.fontSize,
+            fitting.letterSpacing,
+            font,
+            fitting.scaleX
+          );
 
           let lineX: number;
           if (isRtl) {
@@ -516,6 +383,14 @@ export class ReconstructionAgent {
             } else {
               lineX = pdfX;
             }
+          }
+
+          // Safety clamp: never let lineX escape the bounding box horizontally
+          lineX = Math.max(pdfX, Math.min(xmax - textWidth, lineX));
+
+          // Set character spacing (letter-spacing)
+          if (fitting.letterSpacing !== 0) {
+            page.pushOperators(setCharacterSpacing(fitting.letterSpacing));
           }
 
           // Render with horizontal condensation transform if scaleX < 1.0
@@ -542,6 +417,11 @@ export class ReconstructionAgent {
               font,
               color: textColor,
             });
+          }
+
+          // Reset character spacing
+          if (fitting.letterSpacing !== 0) {
+            page.pushOperators(setCharacterSpacing(0));
           }
 
           currentLineY -= fitting.lineHeight;

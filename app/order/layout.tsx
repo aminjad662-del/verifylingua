@@ -28,7 +28,7 @@ export default function OrderLayout({
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 pb-20 lg:pb-12">
       {/* Minimal Focused Header - Modern SaaS Style */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 py-4">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-4 w-full overflow-hidden">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-600 text-white shadow-sm group-hover:scale-105 transition-transform">
@@ -84,7 +84,7 @@ export default function OrderLayout({
 
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
             <Lock className="w-3.5 h-3.5 text-blue-600" />
-            <span>256-Bit SSL Encrypted</span>
+            <span className="hidden sm:inline">256-Bit SSL Encrypted</span><span className="sm:hidden">SSL</span>
           </div>
         </div>
       </header>

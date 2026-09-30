@@ -238,7 +238,7 @@ function OrderTrackingContent() {
       layout
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "space-y-8 transition-colors duration-500 rounded-3xl p-2 sm:p-4",
+        "space-y-6 sm:space-y-8 transition-colors duration-500 rounded-3xl p-2 sm:p-4 w-full max-w-full overflow-hidden",
         trackerStatus === "DRAFT_READY" ? "bg-sand-warm/70" : "bg-transparent"
       )}
     >
@@ -256,7 +256,7 @@ function OrderTrackingContent() {
           </span>
         </div>
 
-        <div className="inline-flex p-1 rounded-xl bg-sand border border-border/80 gap-1 self-start sm:self-auto">
+        <div className="flex flex-wrap sm:inline-flex p-1 rounded-xl bg-sand border border-border/80 gap-1 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setTrackerStatus("TRANSLATING")}
@@ -285,7 +285,7 @@ function OrderTrackingContent() {
       </div>
 
       {/* Top Banner with Public Order ID and High-Level Status */}
-      <div className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[28px] bg-surface-raised border border-border/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 w-full overflow-hidden">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cta bg-sand px-3 py-1 rounded-full border border-border/80">
@@ -318,7 +318,7 @@ function OrderTrackingContent() {
       </div>
 
       {/* 7-Stage Visual Lifecycle Step Tracker */}
-      <div className="p-6 md:p-8 rounded-[28px] bg-surface-raised border border-border/80 space-y-4 shadow-sm">
+      <div className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-[28px] bg-surface-raised border border-border/80 space-y-4 shadow-sm w-full overflow-hidden">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-ink uppercase font-mono tracking-wider">
             Order Lifecycle Milestones
@@ -394,7 +394,7 @@ function OrderTrackingContent() {
             className="space-y-6"
           >
             {/* Central Pulsing Radar & Progress Hero */}
-            <div className="relative overflow-hidden p-8 sm:p-12 md:p-16 rounded-[32px] bg-surface-raised border border-border/80 shadow-md text-center space-y-6">
+            <div className="relative overflow-hidden p-5 sm:p-10 md:p-16 rounded-2xl sm:rounded-[32px] bg-surface-raised border border-border/80 shadow-md text-center space-y-6">
               {/* Subtle ambient paper background decoration */}
               <div className="absolute inset-0 bg-gradient-to-b from-sand/40 to-transparent pointer-events-none" />
 

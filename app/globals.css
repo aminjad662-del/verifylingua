@@ -352,6 +352,9 @@ html, body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 /* Headings (§3.3.1): Basier Square with negative optical tracking */
