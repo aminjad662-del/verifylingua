@@ -6,7 +6,7 @@ pages_build_output_dir = "dist"
 [vars]
 NEXT_TELEMETRY_DISABLED = "1"
 NODE_VERSION = "22.16.0"
-NODE_OPTIONS = "--max-old-space-size=4096"
+NODE_OPTIONS = "--max-old-space-size=2048"
 
 [env.production]
 name = "verifylingua"
@@ -16,4 +16,4 @@ compatibility_flags = ["nodejs_compat"]
 [env.production.vars]
 NEXT_TELEMETRY_DISABLED = "1"
 NODE_VERSION = "22.16.0"
-NODE_OPTIONS = "--max-old-space-size=4096"
+NODE_OPTIONS = "--max-old-space-size=2048"
