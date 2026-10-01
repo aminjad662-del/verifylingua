@@ -102,8 +102,12 @@ export default function NewTranslationPage() {
       }
 
       const data = await res.json();
-      setJobId(data.jobId);
-      pollJobStatus(data.jobId);
+      const targetId = data.jobId || data.id || data.publicCode;
+      if (!targetId || targetId === "undefined") {
+        throw new Error("Server failed to generate a valid tracking ID for this translation.");
+      }
+      setJobId(targetId);
+      pollJobStatus(targetId);
     } catch (err: any) {
       setIsProcessing(false);
       setJobStatus("failed");

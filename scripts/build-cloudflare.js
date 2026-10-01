@@ -1008,7 +1008,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
   // Translation upload API — extracts actual file, sends to Gemini for translation
   if (pathname === '/api/translate/upload') {
-    const jobId = 'job_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
+    const jobId = 'VL-' + Math.random().toString(36).substring(2, 10).toUpperCase();
     const downloadToken = 'tok_' + Math.random().toString(36).substring(2, 15);
 
     let fileName = 'document.pdf';
@@ -1171,6 +1171,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
     return new Response(JSON.stringify({
       success: true,
       jobId,
+      id: jobId,
+      publicCode: jobId,
       fileName,
       fileFormat,
       pageCount: 1,
@@ -1209,69 +1211,26 @@ async function handleApiRequest(request, pathname, env, ctx) {
     }
 
     if (!job) {
-      if (jId.startsWith('VL-') || jId.startsWith('job_') || jId === 'demo' || jId.length >= 6) {
-        if (!globalThis.__vlJobs) globalThis.__vlJobs = {};
-        const now = Date.now();
-        if (!globalThis.__vlJobStartTimes) globalThis.__vlJobStartTimes = {};
-        const initTime = globalThis.__vlJobStartTimes[jId] || now;
-        globalThis.__vlJobStartTimes[jId] = initTime;
-
-        const elapsed = now - initTime;
-        let simStatus = 'extracting';
-        let simProgress = 25;
-        let simStep = 'Extracting document layout and high-resolution OCR text blocks...';
-
-        if (elapsed > 10000) {
-          simStatus = 'completed';
-          simProgress = 100;
-          simStep = 'Certified translation verified & sealed. Ready for official submission.';
-        } else if (elapsed > 7000) {
-          simStatus = 'verifying';
-          simProgress = 92;
-          simStep = 'Validating character parity and attaching sworn ATA certification seal...';
-        } else if (elapsed > 4000) {
-          simStatus = 'rendering';
-          simProgress = 75;
-          simStep = 'Vector-preserving typesetting and dynamic typography fitting...';
-        } else if (elapsed > 1500) {
-          simStatus = 'translating';
-          simProgress = 50;
-          simStep = 'Neural legal-grade translation with USCIS 8 CFR § 103.2 precision...';
-        }
-
-        const dlToken = 'tok_' + jId;
-        const dlUrl = simStatus === 'completed' ? '/api/jobs/' + jId + '/download?token=' + dlToken : null;
-
+      if (jId === 'demo') {
         job = {
-          id: jId,
-          fileName: jId.startsWith('VL-') ? 'Certified_Legal_Document.pdf' : 'Document_Translation.pdf',
+          id: 'demo',
+          fileName: 'Sample_Legal_Document.pdf',
           fileFormat: 'pdf',
           sourceLang: 'Spanish',
           targetLang: 'English',
-          pageCount: 2,
-          status: simStatus,
-          currentPhase: simStatus,
-          progress: simProgress,
-          currentStep: simStep,
-          downloadToken: dlToken,
-          artifactUrl: dlUrl,
-          downloadUrl: dlUrl,
-          qualityGate: {
-            isValidFormat: true,
-            isQualityAcceptable: true,
-            layoutPreserved: true,
-            stampsDetected: true,
-            notes: ['USCIS 8 CFR § 103.2 format verified', 'ATA Member No. 271892 Certification Seal']
-          },
+          pageCount: 1,
+          status: 'completed',
+          currentPhase: 'completed',
+          progress: 100,
+          currentStep: 'Demo preview verified & sealed.',
+          downloadToken: 'tok_demo',
+          artifactUrl: '/api/jobs/demo/download?token=tok_demo',
+          downloadUrl: '/api/jobs/demo/download?token=tok_demo',
           fidelityScore: 99.1,
           layoutPreserved: true,
           error: null,
-          createdAt: new Date(initTime).toISOString()
+          createdAt: new Date().toISOString()
         };
-
-        if (simStatus === 'completed') {
-          globalThis.__vlJobs[jId] = job;
-        }
       }
     }
 

@@ -4,6 +4,7 @@ import { putObject, getObject } from "../storage";
 import { FidelityScoreBreakdown, FidelityIssue } from "../fidelity";
 
 import { JobStatus } from "./types";
+import { generateJobTrackingId } from "./store";
 
 export type PersistentJobStatus =
   | JobStatus

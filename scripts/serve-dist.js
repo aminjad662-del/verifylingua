@@ -29,21 +29,25 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify({ status: 'ok', server: 'dist-preview' }));
   }
 
-  // Mock API fallback for testing
+  // Mock API fallback for testing - returns 404 if not found
   if (pathname.startsWith('/api/jobs/') && pathname.endsWith('/status')) {
     const parts = pathname.split('/');
-    const jobId = parts[3] || 'VL-DEMO1';
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({
-      jobId,
-      status: 'extracting',
-      currentPhase: 'extracting',
-      progress: 25,
-      currentStep: 'Extracting document layout and high-resolution OCR text blocks...',
-      pageCount: 1,
-      fileName: 'Certified_Legal_Document.pdf',
-      downloadUrl: `/api/jobs/${jobId}/download`
-    }));
+    const jobId = parts[3];
+    if (jobId === 'demo') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({
+        jobId: 'demo',
+        status: 'completed',
+        currentPhase: 'completed',
+        progress: 100,
+        currentStep: 'Demo preview verified & sealed.',
+        pageCount: 1,
+        fileName: 'Sample_Document.pdf',
+        downloadUrl: '/api/jobs/demo/download'
+      }));
+    }
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: `Job '${jobId}' not found.`, status: 'failed' }));
   }
 
   // Resolve file in dist

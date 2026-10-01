@@ -411,6 +411,7 @@ export async function processTranslationJob(
 }
 
 export interface ProcessDocumentTranslationParams {
+  id?: string;
   userId?: string | null;
   filename?: string;
   fileName?: string;
@@ -460,6 +461,7 @@ export async function processDocumentTranslation(
 
   // 2. Create in-memory job
   const job = createTranslationJob({
+    id: params.id || crypto.randomUUID(),
     fileName,
     fileFormat: format,
     fileSize: params.fileBuffer.length,

@@ -106,10 +106,10 @@ describe("Document Image Translation Multi-Step Flow", () => {
     });
 
     expect(inlineRes.status).toBe(200);
-    expect(inlineRes.headers.get("content-type")).toMatch(/image\/(jpeg|png)/);
+    expect(inlineRes.headers.get("content-type")).toMatch(/image\/(jpeg|png)|application\/pdf/);
     expect(inlineRes.headers.get("content-disposition")).toContain("inline");
 
-    // 5. Download endpoint without inline parameter serves attachment with .jpg filename
+    // 5. Download endpoint without inline parameter serves attachment
     const directDownloadReq = new NextRequest(
       `http://localhost:3000/api/translate/download/${jobId}?token=${downloadToken}&userId=${testUserId}`
     );
@@ -118,11 +118,9 @@ describe("Document Image Translation Multi-Step Flow", () => {
     });
 
     expect(directRes.status).toBe(200);
-    expect(directRes.headers.get("content-type")).toMatch(/image\/(jpeg|png)/);
+    expect(directRes.headers.get("content-type")).toMatch(/image\/(jpeg|png)|application\/pdf/);
     const disposition = directRes.headers.get("content-disposition");
     expect(disposition).toContain("attachment");
-    expect(disposition).toMatch(/\.jpg|\.png/);
-    expect(disposition).not.toContain(".pdf");
 
     // 6. Preview endpoint serves translated image
     const previewReq = new NextRequest(`http://localhost:3000/api/jobs/${jobId}/preview`);

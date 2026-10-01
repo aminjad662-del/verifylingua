@@ -396,6 +396,8 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         jobId: job.id,
+        id: job.id,
+        publicCode: job.id,
         fileName: job.fileName,
         fileFormat: job.fileFormat,
         fileSize: job.fileSize,

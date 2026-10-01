@@ -29,6 +29,8 @@ import {
   FileDown,
   Shield,
   HelpCircle,
+  FileX,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -102,8 +104,9 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
   const router = useRouter();
 
   // Resolve tracking id from params, props, or window location
-  const paramId = (params?.id as string) || initialId;
-  const [resolvedId, setResolvedId] = React.useState<string>(paramId || "VL-DEMO1");
+  const rawParamId = (params?.id as string) || initialId || "";
+  const paramId = rawParamId === "undefined" || rawParamId === "null" ? "" : rawParamId;
+  const [resolvedId, setResolvedId] = React.useState<string>(paramId);
 
   React.useEffect(() => {
     if (paramId) {
@@ -111,14 +114,16 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
     } else if (typeof window !== "undefined") {
       const parts = window.location.pathname.split("/").filter(Boolean);
       const last = parts[parts.length - 1];
-      if (last && last !== "tracker") {
+      if (last && last !== "tracker" && last !== "undefined" && last !== "null") {
         setResolvedId(last);
       }
     }
   }, [paramId]);
 
+  const isInvalidId = !resolvedId || resolvedId.trim() === "" || resolvedId === "undefined" || resolvedId === "null";
+  const [isNotFound, setIsNotFound] = React.useState<boolean>(false);
   const [jobData, setJobData] = React.useState<JobStatusData | null>(null);
-  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [isLoading, setIsLoading] = React.useState<boolean>(!isInvalidId);
   const [pollError, setPollError] = React.useState<string | null>(null);
   const [hasCopiedId, setHasCopiedId] = React.useState<boolean>(false);
   const [auditLogs, setAuditLogs] = React.useState<{ time: string; text: string; tag: string }[]>([]);
@@ -139,11 +144,15 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
 
   // Polling with resilience and exponential backoff on 429
   React.useEffect(() => {
-    if (!resolvedId) return;
+    if (!resolvedId || isInvalidId) {
+      setIsLoading(false);
+      return;
+    }
 
     let isMounted = true;
     let timer: NodeJS.Timeout | null = null;
     let consecutive429 = 0;
+    let consecutive404 = 0;
 
     const fetchStatus = async () => {
       try {
@@ -165,13 +174,20 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
         consecutive429 = 0;
 
         if (!response.ok) {
-          // If 404 or server error, handle gracefully
           if (response.status === 404) {
-            setPollError(`Job "${resolvedId}" was not found. If you just submitted, initializing job stream...`);
+            consecutive404++;
+            // Give 3 retries (approx 6-8 seconds) for fresh jobs being committed to DB
+            if (consecutive404 >= 3) {
+              setIsNotFound(true);
+              setIsLoading(false);
+              setPollError(null);
+              return;
+            }
+            setPollError(`Initializing verification stream for "${resolvedId}"...`);
           } else {
             setPollError(`Status check failed (${response.status}). Retrying...`);
           }
-          timer = setTimeout(fetchStatus, 3000);
+          timer = setTimeout(fetchStatus, 2500);
           return;
         }
 
@@ -180,6 +196,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
 
         setJobData(data);
         setIsLoading(false);
+        setIsNotFound(false);
         setPollError(null);
 
         // Append log events based on status
@@ -212,7 +229,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
       isMounted = false;
       if (timer) clearTimeout(timer);
     };
-  }, [resolvedId, addLog]);
+  }, [resolvedId, isInvalidId, addLog]);
 
   // Determine active phase index strictly from actual backend phase / status
   const getActivePhaseIndex = (status?: string, currentPhase?: string, progress = 0): number => {
@@ -296,93 +313,154 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
 
       {/* Main Workspace Stage */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8 overflow-hidden">
-        {/* Breadcrumb & Job Badge */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wider uppercase bg-slate-800 border border-slate-700/80 text-slate-300">
-              LEGAL CERTIFICATION MATTERS
-            </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs text-slate-400 font-mono">USCIS 8 CFR § 103.2 COMPLIANT</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300">
-              <span className="text-slate-500">JOB ID:</span>
-              <span className="text-emerald-400 font-semibold">{resolvedId}</span>
-              <button
-                onClick={handleCopyId}
-                title="Copy Job ID"
-                className="ml-1 text-slate-400 hover:text-white transition-colors p-0.5"
-              >
-                {hasCopiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
+        {isInvalidId ? (
+          <Card className="border border-rose-900/40 bg-[#0C121E]/90 backdrop-blur-md rounded-lg p-8 sm:p-12 text-center max-w-2xl mx-auto my-12 shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mx-auto mb-6">
+              <FileX className="w-8 h-8" />
             </div>
-          </div>
-        </div>
-
-        {/* Hero Section */}
-        <div className="space-y-3">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white tracking-tight font-normal">
-            Certified Translation Stream
-          </h1>
-          <p className="text-sm sm:text-base text-slate-400 max-w-2xl leading-relaxed">
-            Real-time asynchronous execution monitoring. Your document is undergoing structural vector isolation, ATA-grade legal translation, and cryptographic certification.
-          </p>
-        </div>
-
-        {/* Loading Skeleton */}
-        {isLoading && !jobData && (
-          <div className="space-y-6 animate-pulse">
-            <div className="p-6 rounded-lg border border-slate-800 bg-slate-900/40 space-y-4">
-              <div className="h-4 bg-slate-800 rounded w-1/3" />
-              <div className="h-3 bg-slate-800/60 rounded w-full" />
-              <div className="h-3 bg-slate-800/60 rounded w-4/5" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono mb-4">
+              <span>INVALID IDENTIFIER</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-32 rounded-lg border border-slate-800/80 bg-slate-900/30 p-4 space-y-3">
-                  <div className="h-4 bg-slate-800 rounded w-1/2" />
-                  <div className="h-3 bg-slate-800/50 rounded w-3/4" />
+            <h2 className="text-2xl sm:text-3xl font-serif text-white font-medium mb-3">
+              Invalid Tracking Identifier
+            </h2>
+            <p className="text-sm text-slate-400 leading-relaxed mb-8 max-w-md mx-auto">
+              No valid document tracking ID was provided in the route. Please submit your document via the certified translation studio or verify your tracking URL.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/translate" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-6">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <span>Start New Translation</span>
+                </Button>
+              </Link>
+              <Link href="/order/triage" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto border-slate-700 bg-slate-800/40 text-slate-300 hover:bg-slate-800 hover:text-white">
+                  <span>Intake Studio</span>
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        ) : isNotFound ? (
+          <Card className="border border-amber-900/40 bg-[#0C121E]/90 backdrop-blur-md rounded-lg p-8 sm:p-12 text-center max-w-2xl mx-auto my-12 shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto mb-6">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono mb-4">
+              <span>HTTP 404 • NOT FOUND</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-serif text-white font-medium mb-3">
+              Document Not Found
+            </h2>
+            <p className="text-sm text-slate-400 leading-relaxed mb-3 max-w-md mx-auto">
+              No certified translation job matching ID <span className="font-mono text-amber-300 font-semibold">{resolvedId}</span> was found in the verified registry.
+            </p>
+            <p className="text-xs text-slate-500 mb-8 max-w-md mx-auto font-mono">
+              The tracking ID may be mistyped or the job record may have expired.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/translate" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-6">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <span>Start New Translation</span>
+                </Button>
+              </Link>
+              <Link href="/" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto border-slate-700 bg-slate-800/40 text-slate-300 hover:bg-slate-800 hover:text-white">
+                  <span>Return Home</span>
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          <>
+            {/* Breadcrumb & Job Badge */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-medium tracking-wider uppercase bg-slate-800 border border-slate-700/80 text-slate-300">
+                  LEGAL CERTIFICATION MATTERS
+                </span>
+                <span className="text-slate-600">•</span>
+                <span className="text-xs text-slate-400 font-mono">USCIS 8 CFR § 103.2 COMPLIANT</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300">
+                  <span className="text-slate-500">JOB ID:</span>
+                  <span className="text-emerald-400 font-semibold">{resolvedId}</span>
+                  <button
+                    onClick={handleCopyId}
+                    title="Copy Job ID"
+                    className="ml-1 text-slate-400 hover:text-white transition-colors p-0.5"
+                  >
+                    {hasCopiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Poll Warning Alert if any */}
-        {pollError && (
-          <div className="p-3.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
-              <span>{pollError}</span>
+            {/* Hero Section */}
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white tracking-tight font-normal">
+                Certified Translation Stream
+              </h1>
+              <p className="text-sm sm:text-base text-slate-400 max-w-2xl leading-relaxed">
+                Real-time asynchronous execution monitoring. Your document is undergoing structural vector isolation, ATA-grade legal translation, and cryptographic certification.
+              </p>
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-mono text-amber-400/80">
-              <RefreshCw className="w-3 h-3 animate-spin" />
-              <span>SYNCING</span>
-            </div>
-          </div>
-        )}
 
-        {/* Active Progress Interface */}
-        {jobData && (
-          <div className="space-y-8">
-            {/* Primary Status Card with Smooth Progress Bar */}
-            <Card className="border border-slate-800 bg-[#0C121E]/90 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
-              <CardContent className="p-6 sm:p-8 space-y-6">
-                {/* Meta Header */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-slate-800/70 border border-slate-700/60 flex items-center justify-center text-slate-300">
-                      <FileText className="w-5 h-5 text-emerald-400" />
+            {/* Loading Skeleton */}
+            {isLoading && !jobData && (
+              <div className="space-y-6 animate-pulse">
+                <div className="p-6 rounded-lg border border-slate-800 bg-slate-900/40 space-y-4">
+                  <div className="h-4 bg-slate-800 rounded w-1/3" />
+                  <div className="h-3 bg-slate-800/60 rounded w-full" />
+                  <div className="h-3 bg-slate-800/60 rounded w-4/5" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="h-32 rounded-lg border border-slate-800/80 bg-slate-900/30 p-4 space-y-3">
+                      <div className="h-4 bg-slate-800 rounded w-1/2" />
+                      <div className="h-3 bg-slate-800/50 rounded w-3/4" />
                     </div>
-                    <div>
-                      <div className="text-xs font-mono text-slate-400 uppercase tracking-wider">SOURCE ASSET</div>
-                      <div className="text-sm font-medium text-white truncate max-w-xs sm:max-w-md">
-                        {jobData.fileName || "Certified_Document.pdf"}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Poll Warning Alert if any */}
+            {pollError && (
+              <div className="p-3.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                  <span>{pollError}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[11px] font-mono text-amber-400/80">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>SYNCING</span>
+                </div>
+              </div>
+            )}
+
+            {/* Active Progress Interface */}
+            {jobData && (
+              <div className="space-y-8">
+                {/* Primary Status Card with Smooth Progress Bar */}
+                <Card className="border border-slate-800 bg-[#0C121E]/90 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
+                  <CardContent className="p-6 sm:p-8 space-y-6">
+                    {/* Meta Header */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded bg-slate-800/70 border border-slate-700/60 flex items-center justify-center text-slate-300">
+                          <FileText className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-mono text-slate-400 uppercase tracking-wider">SOURCE ASSET</div>
+                          <div className="text-sm font-medium text-white truncate max-w-xs sm:max-w-md">
+                            {jobData.fileName || "Document"}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
                   <div className="flex items-center gap-4 text-xs font-mono">
                     <div className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
@@ -730,6 +808,8 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
             </div>
           </div>
         )}
+        </>
+      )}
       </main>
 
       {/* High-Contrast Footer */}

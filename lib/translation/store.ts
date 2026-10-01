@@ -42,6 +42,15 @@ if (!globalThis.__translationJobsCleanupStarted) {
   }, 60 * 60 * 1000);
 }
 
+export function generateJobTrackingId(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "VL-";
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
 export function createTranslationJob(params: {
   id?: string;
   fileName: string;
@@ -54,7 +63,7 @@ export function createTranslationJob(params: {
   pageCount?: number;
   options?: Record<string, any>;
 }): TranslationJob {
-  const id = params.id || crypto.randomUUID();
+  const id = params.id || generateJobTrackingId();
   const downloadToken = crypto.randomBytes(24).toString("hex");
 
   // 24-hour expiration window

@@ -68,7 +68,11 @@ function CheckoutContent() {
       }
 
       const data = await res.json();
-      router.push(`/tracker/${data.publicCode}`);
+      const trackerId = data.jobId || data.publicCode || data.orderId || data.id;
+      if (!trackerId || trackerId === "undefined") {
+        throw new Error("Invalid tracking ID received from server.");
+      }
+      router.push(`/tracker/${trackerId}`);
     } catch (err: any) {
       setErrorMsg(err.message || "Payment processing failed. Please verify card details.");
       setIsProcessing(false);

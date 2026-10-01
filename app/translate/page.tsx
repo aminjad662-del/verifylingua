@@ -5,6 +5,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
   ArrowRightLeft,
@@ -115,6 +116,7 @@ const PIPELINE_STAGES = [
 ];
 
 export default function TranslatePage() {
+  const router = useRouter();
   // Language selections
   const [sourceLang, setSourceLang] = useState("en");
   const [targetLang, setTargetLang] = useState("es");
@@ -380,6 +382,11 @@ export default function TranslatePage() {
         }
 
         const data = await uploadRes.json();
+        const targetJobId = data.jobId || data.id || data.publicCode;
+        if (targetJobId && typeof targetJobId === "string" && targetJobId !== "undefined") {
+          router.push(`/tracker/${targetJobId}`);
+          return;
+        }
 
         let localBlobUrl: string | null = null;
         if (data.svgContent) {

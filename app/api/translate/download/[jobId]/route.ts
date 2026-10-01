@@ -44,6 +44,7 @@ export async function GET(
     let mime = "application/octet-stream";
     let downloadFileName = "translated_document";
     let compositeKeyHeader = "";
+    let isImage = false;
 
     if (job) {
       compositeKeyHeader = job.compositeKey || job.outputKey || "";
@@ -94,7 +95,7 @@ export async function GET(
       mime = MIME_MAP[job.fileFormat] || "application/pdf";
       const baseName = job.fileName.replace(/\.[^/.]+$/, "");
       const isCertified = job.serviceTier === "certified" || job.status === "certified";
-      const isImage = ["png", "jpg", "jpeg"].includes(job.fileFormat.toLowerCase());
+      isImage = ["png", "jpg", "jpeg", "webp"].includes(job.fileFormat?.toLowerCase() || "");
       const ext = isImage ? job.fileFormat.toLowerCase() : (isCertified ? "pdf" : job.fileFormat);
       downloadFileName = isCertified && !isImage
         ? `${baseName}_EN_certified.pdf`
@@ -162,7 +163,7 @@ export async function GET(
       mime = pJob.sourceMimeType || MIME_MAP[pJob.sourceFormat] || "application/pdf";
       const baseName = pJob.sourceFilename.replace(/\.[^/.]+$/, "");
       const isCertified = pJob.status === "certified" || (pJob as any).serviceTier === "certified";
-      const isImage = ["png", "jpg", "jpeg"].includes(pJob.sourceFormat.toLowerCase());
+      isImage = ["png", "jpg", "jpeg", "webp"].includes(pJob.sourceFormat?.toLowerCase() || "");
       const ext = isImage ? pJob.sourceFormat.toLowerCase() : (isCertified ? "pdf" : pJob.sourceFormat);
       downloadFileName = isCertified && !isImage
         ? `${baseName}_EN_certified.pdf`
@@ -177,6 +178,10 @@ export async function GET(
     }
 
     let finalBytes: Uint8Array;
+    let finalMime = mime;
+    const isInline = url.searchParams.get("inline") === "true";
+    let finalDisposition = `${isInline ? "inline" : "attachment"}; filename="${downloadFileName}"`;
+
     const isPdf =
       buffer.length > 4 &&
       buffer[0] === 0x25 && // %
@@ -186,7 +191,8 @@ export async function GET(
 
     if (isPdf) {
       finalBytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-    } else {
+      finalMime = "application/pdf";
+    } else if (isImage && url.searchParams.get("format") === "pdf") {
       const { PDFDocument } = await import("pdf-lib");
       const { Jimp } = await import("jimp");
       const pdfDoc = await PDFDocument.create();
@@ -230,13 +236,18 @@ export async function GET(
       });
 
       finalBytes = await pdfDoc.save();
+      finalMime = "application/pdf";
+      finalDisposition = 'inline; filename="VerifyLingua-Translation.pdf"';
+    } else {
+      // Native image (JPEG/PNG), DOCX, TXT, etc.
+      finalBytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
     }
 
     return new NextResponse(finalBytes as any, {
       status: 200,
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": 'inline; filename="VerifyLingua-Translation.pdf"',
+        "Content-Type": finalMime,
+        "Content-Disposition": finalDisposition,
         "Content-Length": finalBytes.length.toString(),
         "Cache-Control": "private, no-cache, no-store, must-revalidate",
         "Pragma": "no-cache",
