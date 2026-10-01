@@ -274,15 +274,45 @@ export class ReconstructionAgent {
         const stripped = removeVectorTextObjectsFromPdf(pdfDoc);
         isVectorPdf = stripped > 0;
       } else {
-        // Raster image input
+        // Requirement 2: Image-to-PDF Conversion (brand new PDF matching image dimensions)
         pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage([595.28, 841.89]); // A4
-        try {
-          const image = await pdfDoc.embedJpg(originalBuffer).catch(() => pdfDoc.embedPng(originalBuffer));
-          page.drawImage(image, { x: 0, y: 0, width: page.getWidth(), height: page.getHeight() });
-        } catch {
-          // Ignore embedding error if non-standard raster
+        let embeddedImage;
+        const isPng = originalBuffer.length > 4 && originalBuffer[0] === 0x89 && originalBuffer[1] === 0x50;
+        if (isPng) {
+          try {
+            embeddedImage = await pdfDoc.embedPng(originalBuffer);
+          } catch {
+            try {
+              embeddedImage = await pdfDoc.embedJpg(originalBuffer);
+            } catch {
+              const jimpImg = await Jimp.read(originalBuffer);
+              const pngBuf = await jimpImg.getBuffer("image/png" as any);
+              embeddedImage = await pdfDoc.embedPng(pngBuf);
+            }
+          }
+        } else {
+          try {
+            embeddedImage = await pdfDoc.embedJpg(originalBuffer);
+          } catch {
+            try {
+              embeddedImage = await pdfDoc.embedPng(originalBuffer);
+            } catch {
+              const jimpImg = await Jimp.read(originalBuffer);
+              const pngBuf = await jimpImg.getBuffer("image/png" as any);
+              embeddedImage = await pdfDoc.embedPng(pngBuf);
+            }
+          }
         }
+
+        const imgWidth = embeddedImage.width;
+        const imgHeight = embeddedImage.height;
+        const page = pdfDoc.addPage([imgWidth, imgHeight]);
+        page.drawImage(embeddedImage, {
+          x: 0,
+          y: 0,
+          width: imgWidth,
+          height: imgHeight,
+        });
       }
 
       // Requirement 4: Font & Unicode integration
@@ -303,11 +333,21 @@ export class ReconstructionAgent {
       const pages = pdfDoc.getPages();
 
       for (const block of translatedBlocks) {
-        const pageIdx = Math.max(0, Math.min(block.pageNumber - 1, pages.length - 1));
+        const pageIdx = Math.max(0, Math.min((block.pageNumber || 1) - 1, pages.length - 1));
         const page = pages[pageIdx];
+        const pageWidth = page.getWidth();
         const pageHeight = page.getHeight();
 
-        const [ymin, xmin, ymax, xmax] = block.box2d;
+        let [ymin, xmin, ymax, xmax] = block.box2d;
+
+        // Auto-scale normalized bounding boxes (0..1000) to actual canvas dimensions
+        if (!isVectorPdf && xmax <= 1000 && ymax <= 1000 && (pageWidth > 1000 || pageHeight > 1000)) {
+          xmin = (xmin / 1000) * pageWidth;
+          xmax = (xmax / 1000) * pageWidth;
+          ymin = (ymin / 1000) * pageHeight;
+          ymax = (ymax / 1000) * pageHeight;
+        }
+
         const boxWidth = Math.max(10, xmax - xmin);
         const boxHeight = Math.max(10, ymax - ymin);
         const pdfY = pageHeight - ymax;
@@ -445,3 +485,25 @@ export class ReconstructionAgent {
     }
   }
 }
+
+/**
+ * Direct image-to-PDF conversion helper guaranteeing that any raster image
+ * is embedded into a fresh, standard-compliant PDF document matching the image dimensions.
+ */
+export async function convertImageToPdfWithTranslation(
+  imageBuffer: Buffer,
+  translatedBlocks: TranslatedBlock[] = [],
+  targetLang: string = "en"
+): Promise<Uint8Array> {
+  const agent = new ReconstructionAgent();
+  const res = await agent.execute({
+    originalBuffer: imageBuffer,
+    translatedBlocks,
+    targetLang,
+  });
+  if (!res.success || !res.data) {
+    throw new Error(res.error || "Failed to convert image to PDF");
+  }
+  return res.data.renderedBuffer;
+}
+

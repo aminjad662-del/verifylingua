@@ -47,12 +47,32 @@ function CheckoutContent() {
     setIsProcessing(true);
     setErrorMsg(null);
 
-    // Simulate Payment Processing
-    setTimeout(() => {
-      // Mock tracking URL redirect
-      const trackingId = "VL-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      router.push(`/tracker/${trackingId}`);
-    }, 2500);
+    try {
+      const res = await fetch("/api/order/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guestEmail,
+          pageCount: pages,
+          primaryName: cardholderName,
+          needsNotarization,
+          isExpedited,
+          needsHardCopy,
+          needsApostille,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to process payment authorization.");
+      }
+
+      const data = await res.json();
+      router.push(`/tracker/${data.publicCode}`);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Payment processing failed. Please verify card details.");
+      setIsProcessing(false);
+    }
   };
 
   return (

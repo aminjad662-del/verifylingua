@@ -187,12 +187,11 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
           addLog(data.currentStep, data.status === "failed" ? "ERROR" : "PROGRESS");
         }
 
-        // Terminal states: stop polling
+        // Terminal states: stop polling strictly when real status is terminal
         const isDone =
           data.status === "completed" ||
           data.status === "ready" ||
-          data.status === "failed" ||
-          data.progress >= 100;
+          data.status === "failed";
 
         if (!isDone) {
           timer = setTimeout(fetchStatus, 2000);
@@ -215,18 +214,22 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
     };
   }, [resolvedId, addLog]);
 
-  // Determine active phase index (0 to 3)
-  const getActivePhaseIndex = (status?: string, progress = 0): number => {
-    if (!status || status === "queued") return 0;
-    if (status === "extracting" || progress < 30) return 0;
-    if (status === "translating" || progress < 70) return 1;
-    if (status === "rendering" || progress < 90) return 2;
-    if (status === "verifying" || progress < 100) return 3;
-    return 4; // all completed
+  // Determine active phase index strictly from actual backend phase / status
+  const getActivePhaseIndex = (status?: string, currentPhase?: string, progress = 0): number => {
+    const s = (currentPhase || status || "").toLowerCase();
+    if (s === "completed" || s === "ready") return 4;
+    if (s === "verifying" || s === "qa" || s === "formatting") return 3;
+    if (s === "rendering" || s === "reconstructing") return 2;
+    if (s === "translating") return 1;
+    if (s === "extracting") return 0;
+    if (progress >= 95) return 3;
+    if (progress >= 70) return 2;
+    if (progress >= 30) return 1;
+    return 0;
   };
 
-  const currentPhaseIndex = getActivePhaseIndex(jobData?.status, jobData?.progress);
-  const isCompleted = jobData?.status === "completed" || jobData?.status === "ready" || (jobData?.progress ?? 0) >= 100;
+  const currentPhaseIndex = getActivePhaseIndex(jobData?.status, jobData?.currentPhase, jobData?.progress);
+  const isCompleted = jobData?.status === "completed" || jobData?.status === "ready";
   const isFailed = jobData?.status === "failed";
 
   const handleCopyId = () => {
@@ -237,7 +240,8 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
     }
   };
 
-  const downloadHref = jobData?.downloadUrl || jobData?.artifactUrl || `/api/jobs/${resolvedId}/download`;
+  // Direct, verified download endpoint with binary integrity and exact PDF headers
+  const downloadHref = `/api/jobs/${encodeURIComponent(resolvedId)}/download`;
 
   return (
     <div className="min-h-screen bg-[#090D14] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">

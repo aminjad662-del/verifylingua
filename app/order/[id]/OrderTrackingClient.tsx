@@ -64,49 +64,62 @@ function OrderTrackingContent() {
       : "TRANSLATING"
   );
 
-  // Active translation progression telemetry
-  const [translationProgress, setTranslationProgress] = React.useState(32);
+  // Active translation progression telemetry strictly from actual backend state
+  const [translationProgress, setTranslationProgress] = React.useState(0);
   const [currentLinguistTask, setCurrentLinguistTask] = React.useState(
-    "Decrypting source scan and matching passport transliterations..."
+    "Initializing certified translation pipeline and resolving cryptographic document seal..."
   );
-  const [autoCompleteCountdown, setAutoCompleteCountdown] = React.useState(7);
 
-  // Auto-progress translation machine (eliminates the "he does nothing" stagnation)
+  // Strict backend status polling with resilience
   React.useEffect(() => {
-    if (trackerStatus !== "TRANSLATING") return;
+    if (trackerStatus === "CERTIFIED") return;
 
-    const interval = setInterval(() => {
-      setAutoCompleteCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setTranslationProgress(100);
-          setCurrentLinguistTask("Translation draft complete and certified!");
-          setTimeout(() => {
+    let isMounted = true;
+    let timer: NodeJS.Timeout | null = null;
+
+    const pollStatus = async () => {
+      try {
+        const res = await fetch(`/api/jobs/${encodeURIComponent(publicCode)}/status`, {
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
+
+        if (!isMounted) return;
+
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.progress === "number") {
+            setTranslationProgress(data.progress);
+          }
+          if (data.currentStep) {
+            setCurrentLinguistTask(data.currentStep);
+          }
+          if (data.status === "completed" || data.status === "ready") {
+            setTranslationProgress(100);
             setTrackerStatus("DRAFT_READY");
-          }, 500);
-          return 0;
+            return;
+          } else if (data.status === "certified") {
+            setTranslationProgress(100);
+            setTrackerStatus("CERTIFIED");
+            return;
+          }
         }
+      } catch {
+        // Retry next cycle
+      }
 
-        const next = prev - 1;
-        if (next === 5) {
-          setTranslationProgress(52);
-          setCurrentLinguistTask("Mirror-formatting tabular columns & stamps per USCIS 8 CFR 103.2...");
-        } else if (next === 3) {
-          setTranslationProgress(78);
-          setCurrentLinguistTask("Validating numerical dates & civil registry book/page entries...");
-        } else if (next === 2) {
-          setTranslationProgress(91);
-          setCurrentLinguistTask("Affixing ATA Member No. 271892 signature & minting tamper-proof seal...");
-        } else if (next === 1) {
-          setTranslationProgress(98);
-          setCurrentLinguistTask("Generating side-by-side Proofing Studio inspection view...");
-        }
-        return next;
-      });
-    }, 1000);
+      if (isMounted) {
+        timer = setTimeout(pollStatus, 2000);
+      }
+    };
 
-    return () => clearInterval(interval);
-  }, [trackerStatus]);
+    pollStatus();
+
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [publicCode, trackerStatus]);
 
   // Accordion state: Hide massive logs & chat by default in State A & B
   const [isLogsAccordionOpen, setIsLogsAccordionOpen] = React.useState(false);
@@ -460,8 +473,8 @@ function OrderTrackingContent() {
                     <CheckCircle2 className="w-3.5 h-3.5 text-trust shrink-0" />
                     <span>{currentLinguistTask}</span>
                   </span>
-                  <span className="shrink-0 font-bold text-cta">
-                    Draft ready in {autoCompleteCountdown}s
+                  <span className="shrink-0 font-bold text-cta font-mono">
+                    {translationProgress}% Complete
                   </span>
                 </div>
               </div>

@@ -41,11 +41,21 @@ export async function GET(
 
     const memJob = getTranslationJob(id);
 
+    // Check if id matches an Order publicCode
+    let orderRecord = null;
     if (!dbJob && !pJob && !memJob) {
-      if (id.startsWith("VL-") || id.startsWith("job_") || id === "demo") {
+      try {
+        orderRecord = await prisma.order.findUnique({
+          where: { publicCode: id },
+          include: { documents: true },
+        });
+      } catch {}
+    }
+
+    if (!dbJob && !pJob && !memJob && !orderRecord) {
+      if (id === "demo") {
         const now = Date.now();
         const startTime = now - 15000;
-        const downloadToken = `tok_${id}`;
         return NextResponse.json({
           jobId: id,
           status: "completed",
@@ -57,8 +67,8 @@ export async function GET(
           sourceLang: "es",
           targetLang: "en",
           pageCount: 2,
-          artifactUrl: `/api/jobs/${id}/download?token=${downloadToken}`,
-          downloadUrl: `/api/jobs/${id}/download?token=${downloadToken}`,
+          artifactUrl: `/api/jobs/${id}/download`,
+          downloadUrl: `/api/jobs/${id}/download`,
           layoutPreserved: true,
           error: null,
           createdAt: new Date(startTime).toISOString(),
@@ -73,19 +83,19 @@ export async function GET(
     }
 
     // Resolve unified job attributes
-    const jobId = dbJob?.id || pJob?.id || memJob?.id || id;
-    const userId = dbJob?.userId || pJob?.userId || memJob?.userId || null;
-    const rawStatus = dbJob?.status || pJob?.status || memJob?.status || "queued";
-    const progress = dbJob?.progress ?? pJob?.progress ?? memJob?.progress ?? 0;
-    const currentStep = dbJob?.currentStep || pJob?.currentStep || memJob?.currentStep || "Processing document...";
-    const fileName = dbJob?.sourceFilename || pJob?.sourceFilename || memJob?.fileName || "document.pdf";
+    const jobId = dbJob?.id || pJob?.id || memJob?.id || orderRecord?.publicCode || id;
+    const userId = dbJob?.userId || pJob?.userId || memJob?.userId || orderRecord?.userId || null;
+    const rawStatus = dbJob?.status || pJob?.status || memJob?.status || (orderRecord?.status === "PAID" ? "translating" : (orderRecord?.status?.toLowerCase() || "queued"));
+    const progress = dbJob?.progress ?? pJob?.progress ?? memJob?.progress ?? (orderRecord ? (orderRecord.status === "DELIVERED" ? 100 : 35) : 0);
+    const currentStep = dbJob?.currentStep || pJob?.currentStep || memJob?.currentStep || (orderRecord ? "ATA-accredited certified linguist assigned. Processing document..." : "Processing document...");
+    const fileName = dbJob?.sourceFilename || pJob?.sourceFilename || memJob?.fileName || orderRecord?.documents?.[0]?.fileName || "document.pdf";
     const fileFormat = dbJob?.sourceFormat || pJob?.sourceFormat || memJob?.fileFormat || "pdf";
-    const sourceLang = dbJob?.sourceLanguage || pJob?.sourceLanguage || memJob?.sourceLang || "es";
-    const targetLang = dbJob?.targetLanguage || pJob?.targetLanguage || memJob?.targetLang || "en";
-    const pageCount = dbJob?.pageCount || pJob?.pageCount || memJob?.pageCount || 1;
+    const sourceLang = dbJob?.sourceLanguage || pJob?.sourceLanguage || memJob?.sourceLang || orderRecord?.sourceLang || "es";
+    const targetLang = dbJob?.targetLanguage || pJob?.targetLanguage || memJob?.targetLang || orderRecord?.targetLang || "en";
+    const pageCount = dbJob?.pageCount || pJob?.pageCount || memJob?.pageCount || orderRecord?.pageCount || 1;
     const downloadToken = dbJob?.downloadToken || pJob?.downloadToken || memJob?.downloadToken || id;
     const errorMessage = dbJob?.errorMessage || pJob?.errorMessage || memJob?.error || null;
-    const createdAt = dbJob?.createdAt || pJob?.createdAt || memJob?.createdAt || new Date().toISOString();
+    const createdAt = dbJob?.createdAt || pJob?.createdAt || memJob?.createdAt || orderRecord?.createdAt || new Date().toISOString();
     const completedAt = dbJob?.completedAt || pJob?.completedAt || memJob?.completedAt || null;
     const layoutPreserved = dbJob?.layoutPreserved ?? pJob?.layoutPreserved ?? memJob?.layoutPreserved ?? true;
 

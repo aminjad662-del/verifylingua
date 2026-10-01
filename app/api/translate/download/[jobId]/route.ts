@@ -176,13 +176,68 @@ export async function GET(
       );
     }
 
-    const isInline = url.searchParams.get("inline") === "true";
-    return new NextResponse(new Uint8Array(buffer), {
+    let finalBytes: Uint8Array;
+    const isPdf =
+      buffer.length > 4 &&
+      buffer[0] === 0x25 && // %
+      buffer[1] === 0x50 && // P
+      buffer[2] === 0x44 && // D
+      buffer[3] === 0x46;   // F
+
+    if (isPdf) {
+      finalBytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    } else {
+      const { PDFDocument } = await import("pdf-lib");
+      const { Jimp } = await import("jimp");
+      const pdfDoc = await PDFDocument.create();
+      let embeddedImage;
+      const isPng = buffer.length > 4 && buffer[0] === 0x89 && buffer[1] === 0x50;
+
+      if (isPng) {
+        try {
+          embeddedImage = await pdfDoc.embedPng(buffer);
+        } catch {
+          try {
+            embeddedImage = await pdfDoc.embedJpg(buffer);
+          } catch {
+            const jimpImg = await Jimp.read(Buffer.from(buffer));
+            const pngBuf = await jimpImg.getBuffer("image/png" as any);
+            embeddedImage = await pdfDoc.embedPng(pngBuf);
+          }
+        }
+      } else {
+        try {
+          embeddedImage = await pdfDoc.embedJpg(buffer);
+        } catch {
+          try {
+            embeddedImage = await pdfDoc.embedPng(buffer);
+          } catch {
+            const jimpImg = await Jimp.read(Buffer.from(buffer));
+            const pngBuf = await jimpImg.getBuffer("image/png" as any);
+            embeddedImage = await pdfDoc.embedPng(pngBuf);
+          }
+        }
+      }
+
+      const imgWidth = embeddedImage.width;
+      const imgHeight = embeddedImage.height;
+      const page = pdfDoc.addPage([imgWidth, imgHeight]);
+      page.drawImage(embeddedImage, {
+        x: 0,
+        y: 0,
+        width: imgWidth,
+        height: imgHeight,
+      });
+
+      finalBytes = await pdfDoc.save();
+    }
+
+    return new NextResponse(finalBytes as any, {
       status: 200,
       headers: {
-        "Content-Type": mime,
-        "Content-Disposition": `${isInline ? "inline" : "attachment"}; filename="${downloadFileName}"`,
-        "Content-Length": buffer.length.toString(),
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'inline; filename="VerifyLingua-Translation.pdf"',
+        "Content-Length": finalBytes.length.toString(),
         "Cache-Control": "private, no-cache, no-store, must-revalidate",
         "Pragma": "no-cache",
         "Expires": "0",
