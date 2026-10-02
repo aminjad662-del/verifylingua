@@ -99,6 +99,36 @@ interface TrackerClientProps {
   initialId?: string;
 }
 
+function getDemoJobData(id: string): JobStatusData {
+  const upper = (id || "VL-DEMO1").toUpperCase();
+  const isTranscript = upper.includes("9104");
+  const isOfficialBirth = upper.includes("8921");
+  const fileName = isOfficialBirth
+    ? "Acta_De_Nacimiento_Oficial.pdf"
+    : isTranscript
+    ? "Doctoral_Degree_Transcripts.pdf"
+    : "Acta_De_Nacimiento_Jalisco.pdf";
+
+  return {
+    jobId: id || "VL-DEMO1",
+    status: "completed",
+    currentPhase: "completed",
+    progress: 100,
+    currentStep: "Certified translation verified & sealed under USCIS 8 CFR § 103.2 standards. Ready for official filing.",
+    fileName,
+    fileFormat: "pdf",
+    sourceLang: isTranscript ? "de" : "es",
+    targetLang: "en",
+    pageCount: isTranscript ? 4 : 1,
+    artifactUrl: `/api/jobs/${id}/download`,
+    downloadUrl: `/api/jobs/${id}/download`,
+    layoutPreserved: true,
+    error: null,
+    createdAt: new Date(Date.now() - 45000).toISOString(),
+    completedAt: new Date().toISOString(),
+  };
+}
+
 export default function TrackerClient({ initialId }: TrackerClientProps) {
   const params = useParams();
   const router = useRouter();
@@ -121,9 +151,29 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
   }, [paramId]);
 
   const isInvalidId = !resolvedId || resolvedId.trim() === "" || resolvedId === "undefined" || resolvedId === "null";
+  const isDemoId = React.useMemo(() => {
+    if (!resolvedId) return false;
+    const u = resolvedId.toUpperCase();
+    return u.startsWith("VL-DEMO") || u === "DEMO" || u === "VL-8921-XQ" || u === "VL-9104-MN";
+  }, [resolvedId]);
+
   const [isNotFound, setIsNotFound] = React.useState<boolean>(false);
-  const [jobData, setJobData] = React.useState<JobStatusData | null>(null);
-  const [isLoading, setIsLoading] = React.useState<boolean>(!isInvalidId);
+  const [jobData, setJobData] = React.useState<JobStatusData | null>(() => {
+    const raw = (params?.id as string) || initialId || "";
+    const u = raw.toUpperCase();
+    if (u.startsWith("VL-DEMO") || u === "DEMO" || u === "VL-8921-XQ" || u === "VL-9104-MN") {
+      return getDemoJobData(raw);
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = React.useState<boolean>(() => {
+    const raw = (params?.id as string) || initialId || "";
+    const u = raw.toUpperCase();
+    if (u.startsWith("VL-DEMO") || u === "DEMO" || u === "VL-8921-XQ" || u === "VL-9104-MN") {
+      return false;
+    }
+    return !isInvalidId;
+  });
   const [pollError, setPollError] = React.useState<string | null>(null);
   const [hasCopiedId, setHasCopiedId] = React.useState<boolean>(false);
   const [auditLogs, setAuditLogs] = React.useState<{ time: string; text: string; tag: string }[]>([]);
@@ -178,6 +228,13 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
             consecutive404++;
             // Give 3 retries (approx 6-8 seconds) for fresh jobs being committed to DB
             if (consecutive404 >= 3) {
+              if (isDemoId) {
+                setJobData(getDemoJobData(resolvedId));
+                setIsLoading(false);
+                setIsNotFound(false);
+                setPollError(null);
+                return;
+              }
               setIsNotFound(true);
               setIsLoading(false);
               setPollError(null);
@@ -217,6 +274,13 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
         }
       } catch (err: any) {
         if (!isMounted) return;
+        if (isDemoId && !jobData) {
+          setJobData(getDemoJobData(resolvedId));
+          setIsLoading(false);
+          setIsNotFound(false);
+          setPollError(null);
+          return;
+        }
         setPollError("Connection interrupted. Re-establishing telemetry link...");
         timer = setTimeout(fetchStatus, 3000);
       }

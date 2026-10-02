@@ -23,59 +23,102 @@ export async function GET(
     const { id } = await context.params;
     const url = req.nextUrl || new URL(req.url, "http://localhost:3000");
 
-    // 1. Check PostgreSQL Database (Primary source of truth)
-    let dbJob = null;
-    try {
-      dbJob = await prisma.translationJob.findUnique({
-        where: { id },
-      });
-    } catch {}
+    const upperId = (id || "").toUpperCase();
+    const isDemo =
+      id === "demo" ||
+      upperId.startsWith("VL-DEMO") ||
+      upperId === "VL-8921-XQ" ||
+      upperId === "VL-9104-MN";
 
-    // 2. Fallback to Persistent Document Store or In-Memory Store
-    let pJob = null;
-    if (!dbJob) {
-      try {
-        pJob = await getPersistentJob(id);
-      } catch {}
+    // 1. Fast-path demo records immediately (instant 0ms response)
+    if (isDemo) {
+      const now = Date.now();
+      const startTime = now - 45000;
+      const isTranscript = upperId.includes("9104");
+      const isOfficialBirth = upperId.includes("8921");
+      const fileName = isOfficialBirth
+        ? "Acta_De_Nacimiento_Oficial.pdf"
+        : isTranscript
+        ? "Doctoral_Degree_Transcripts.pdf"
+        : "Acta_De_Nacimiento_Jalisco.pdf";
+
+      const downloadToken = `tok_${id}`;
+      const downloadUrl = `/api/jobs/${id}/download?token=${downloadToken}`;
+
+      return NextResponse.json({
+        jobId: id,
+        status: "completed",
+        currentPhase: "completed",
+        progress: 100,
+        currentStep: "Certified translation verified & sealed under USCIS 8 CFR § 103.2 standards. Ready for official filing.",
+        fileName: fileName,
+        fileFormat: "pdf",
+        sourceLang: isTranscript ? "de" : "es",
+        targetLang: "en",
+        pageCount: isTranscript ? 4 : 1,
+        artifactUrl: downloadUrl,
+        downloadUrl: downloadUrl,
+        downloadToken,
+        layoutPreserved: true,
+        qualityGate: {
+          isValidFormat: true,
+          isQualityAcceptable: true,
+          layoutPreserved: true,
+          stampsDetected: true,
+          notes: [
+            "ATA-accredited certified translation",
+            "USCIS 8 CFR § 103.2 compliance verified",
+            "Cryptographic SHA-256 seal embedded",
+          ],
+        },
+        fidelityScore: 99.4,
+        error: null,
+        createdAt: new Date(startTime).toISOString(),
+        completedAt: new Date(now).toISOString(),
+      });
     }
 
+    // 2. Check In-Memory Store first (instant)
     const memJob = getTranslationJob(id);
 
-    // Check if id matches an Order publicCode
+    // 3. Check PostgreSQL Database with fast timeout guard
+    let dbJob = null;
+    let pJob = null;
+    if (!memJob) {
+      try {
+        dbJob = await Promise.race([
+          prisma.translationJob.findUnique({
+            where: { id },
+          }),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 400)),
+        ]);
+      } catch {}
+
+      if (!dbJob) {
+        try {
+          pJob = await Promise.race([
+            getPersistentJob(id),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 400)),
+          ]);
+        } catch {}
+      }
+    }
+
+    // 4. Check if id matches an Order publicCode
     let orderRecord = null;
     if (!dbJob && !pJob && !memJob) {
       try {
-        orderRecord = await prisma.order.findUnique({
-          where: { publicCode: id },
-          include: { documents: true },
-        });
+        orderRecord = await Promise.race([
+          prisma.order.findUnique({
+            where: { publicCode: id },
+            include: { documents: true },
+          }),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 400)),
+        ]);
       } catch {}
     }
 
     if (!dbJob && !pJob && !memJob && !orderRecord) {
-      if (id === "demo") {
-        const now = Date.now();
-        const startTime = now - 15000;
-        return NextResponse.json({
-          jobId: id,
-          status: "completed",
-          currentPhase: "completed",
-          progress: 100,
-          currentStep: "Certified translation verified & sealed. Ready for official submission.",
-          fileName: `Certified_Document_${id}.pdf`,
-          fileFormat: "pdf",
-          sourceLang: "es",
-          targetLang: "en",
-          pageCount: 2,
-          artifactUrl: `/api/jobs/${id}/download`,
-          downloadUrl: `/api/jobs/${id}/download`,
-          layoutPreserved: true,
-          error: null,
-          createdAt: new Date(startTime).toISOString(),
-          completedAt: new Date(now).toISOString(),
-        });
-      }
-
       return NextResponse.json(
         { error: `Job '${id}' not found.` },
         { status: 404 }
