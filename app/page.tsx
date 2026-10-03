@@ -16,7 +16,7 @@ export default function HomePage() {
       {/* 1. Global Navigation Header */}
       <Header />
       
-      <main className="flex-1 w-full overflow-hidden">
+      <main className="flex-1 w-full">
         {/* 2. Synthesia-Inspired Hero with Floating Head-to-Head Comparison Matrix */}
         <SynthesiaHero />
 
