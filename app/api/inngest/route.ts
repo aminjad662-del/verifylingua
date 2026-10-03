@@ -1,11 +1,14 @@
 import { serve } from "inngest/next";
-import { inngest } from "./client";
-import { translateDocumentJob } from "./functions";
+import { inngest } from "@/src/inngest/client";
+import { processTranslationJob } from "@/src/inngest/functions";
 
-// Hna kanch3lo l-API w kan-3tiwh l-Agent 2 bach y-khdem f l-kawaliss
+/**
+ * Inngest Next.js App Router API Route handler.
+ * Serves the Inngest API endpoint exposing the Inngest client and registered functions.
+ */
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
-    translateDocumentJob, // Zidna l-mouhimma hna
+    processTranslationJob,
   ],
 });
