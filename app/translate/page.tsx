@@ -353,6 +353,12 @@ export default function TranslatePage() {
 
           const required = errData.requiredCredits || 1;
           const available = errData.availableCredits ?? (availableCredits ?? 20);
+          const errorMsg =
+            errData.message ||
+            errData.error ||
+            (uploadRes.status >= 500
+              ? "Database persistence error: Failed to save translation job in Supabase."
+              : "Upload processing error.");
 
           setJob((prev) =>
             prev
@@ -361,7 +367,7 @@ export default function TranslatePage() {
                   status: "failed",
                   error: isCreditError
                     ? "INSUFFICIENT_CREDITS"
-                    : errData.error || errData.message || "Upload processing error.",
+                    : errorMsg,
                   creditError: isCreditError
                     ? {
                         required,
@@ -373,20 +379,34 @@ export default function TranslatePage() {
                   progress: 0,
                   currentStep: isCreditError
                     ? "Insufficient page credits for this document."
-                    : "Upload failed.",
+                    : `Upload failed: ${errorMsg}`,
                 }
               : null
           );
           fetchBalance();
+
+          if (uploadRes.status >= 500 || errData.error === "DATABASE_INSERT_FAILED") {
+            if (typeof window !== "undefined") {
+              alert(
+                `Upload Error (500): ${errorMsg}\n\nThe translation job could not be saved to the database. Please try uploading again.`
+              );
+            }
+          }
           return;
         }
 
         const data = await uploadRes.json();
         const targetJobId = data.jobId || data.id || data.publicCode;
-        if (targetJobId && typeof targetJobId === "string" && targetJobId !== "undefined") {
-          router.push(`/tracker/${targetJobId}`);
+        if (!targetJobId || typeof targetJobId !== "string" || targetJobId === "undefined" || targetJobId === "null") {
+          if (typeof window !== "undefined") {
+            alert("Upload Error: Server returned an invalid tracking ID without confirmed database persistence.");
+          }
+          setJob((prev) => prev ? { ...prev, status: "failed", error: "Missing valid job tracking ID from server.", progress: 0 } : null);
           return;
         }
+
+        router.push(`/tracker/${targetJobId}`);
+        return;
 
         let localBlobUrl: string | null = null;
         if (data.svgContent) {
@@ -570,27 +590,27 @@ export default function TranslatePage() {
     : "";
 
   return (
-    <div className="h-screen w-full flex flex-col bg-slate-50 text-slate-900 overflow-hidden selection:bg-slate-200">
+    <div className="h-screen w-full flex flex-col bg-canvas text-brand-ink overflow-hidden selection:bg-amber-100 selection:text-amber-900">
       
-      {/* Minimalist Top Nav */}
-      <header className="shrink-0 h-14 border-b border-slate-200 flex items-center justify-between px-6 z-50 bg-slate-50">
+      {/* Minimalist Studio Top Nav */}
+      <header className="shrink-0 h-14 border-b border-black/[0.06] flex items-center justify-between px-6 z-50 bg-white/80 backdrop-blur-xl">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-slate-900 hover:opacity-80 transition-opacity">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center">
-                <Shield className="w-3 h-3" />
+          <Link href="/" className="text-brand-ink hover:opacity-85 transition-opacity">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-brand-ink text-white flex items-center justify-center shadow-xs">
+                <Shield className="w-3.5 h-3.5 text-amber-400" />
               </div>
-              <span className="font-semibold tracking-tight text-sm">VerifyLingua Studio</span>
+              <span className="font-bold tracking-tight text-sm font-sans">Verify<span className="text-amber-800">Lingua</span> Studio</span>
             </div>
           </Link>
-          <div className="h-4 w-[1px] bg-slate-200"></div>
-          <span className="text-xs text-slate-500 font-mono tracking-wider">SECURE WORKSPACE</span>
+          <div className="h-4 w-[1px] bg-black/[0.08]"></div>
+          <span className="text-[10px] text-neutral-500 font-mono tracking-wider uppercase font-semibold">SECURE WORKSPACE</span>
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white">
-            <Coins className="w-3.5 h-3.5 text-slate-700" />
-            <span className="text-xs font-mono font-medium">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/[0.08] text-amber-900">
+            <Coins className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-xs font-mono font-bold">
               {availableCredits !== null ? `${availableCredits} Credits` : "..."}
             </span>
           </div>

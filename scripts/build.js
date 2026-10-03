@@ -2,9 +2,9 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-// Cloudflare Pages build containers enforce a 3GB memory limit; local dev has larger budget
+// Cloudflare Pages and local Windows build memory budget
 const isCloudflare = Boolean(process.env.CF_PAGES || process.env.CLOUDFLARE);
-const memoryMb = isCloudflare ? '2048' : '4096';
+const memoryMb = '2048';
 let nodeOptions = (process.env.NODE_OPTIONS || '').replace(/--max-old-space-size=\d+/g, '').trim();
 process.env.NODE_OPTIONS = `${nodeOptions} --max-old-space-size=${memoryMb}`.trim();
 

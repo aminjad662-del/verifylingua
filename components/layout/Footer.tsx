@@ -1,40 +1,42 @@
 import Link from "next/link";
-import { ShieldCheck, Lock, Globe2, FileCheck, CheckCircle, ArrowRight } from "lucide-react";
+import { ShieldCheck, Lock, Globe2, FileCheck, CheckCircle, ArrowRight, Activity } from "lucide-react";
 import { PRODUCT_NAME, SUPPORT_EMAIL } from "@/lib/constants";
 
 export function Footer() {
   return (
-    <footer className="bg-brand-ink text-white border-t border-white/10 pt-16 pb-12 px-4 sm:px-6 w-full overflow-hidden">
-      <div className="max-w-7xl mx-auto space-y-16">
+    <footer className="bg-obsidian-950 text-white border-t border-white/[0.08] pt-16 pb-12 px-4 sm:px-6 w-full overflow-hidden relative">
+      <div className="max-w-7xl mx-auto space-y-16 relative z-10">
         {/* Top CTA & Brand Line */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-12 border-b border-white/10">
-          <div className="space-y-3 max-w-xl">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-12 border-b border-white/[0.08]">
+          <div className="space-y-3 max-w-xl text-left">
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-500 text-white">
-                <ShieldCheck className="w-5 h-5" />
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white border border-white/10">
+                <ShieldCheck className="w-5 h-5 text-amber-statutory" />
               </div>
-              <span className="text-2xl font-black tracking-tight text-white font-display">
-                Verify<span className="text-brand-300">Lingua</span>
+              <span className="text-2xl font-black tracking-tight text-white font-sans">
+                Verify<span className="text-amber-statutory">Lingua</span>
               </span>
             </div>
-            <p className="text-sm text-white/60 leading-relaxed">
-              The certified translation platform engineered to eliminate rejection risk for USCIS, universities, courts, and consulates.
+            <p className="text-sm text-neutral-400 leading-relaxed">
+              The certified translation platform engineered to eliminate rejection risk for USCIS, federal courts, universities, and consulates.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3.5">
             <Link
               href="/order/triage"
-              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-brand-500 hover:bg-brand-700 text-white text-sm font-bold shadow-sm transition-colors"
+              className="inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-full bg-white hover:bg-neutral-100 text-obsidian-950 text-sm font-bold shadow-sm transition-all cursor-pointer group"
             >
-              Start translation
-              <ArrowRight className="w-4 h-4" />
+              <span>Start translation</span>
+              <div className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                <ArrowRight className="w-3.5 h-3.5 text-obsidian-950" />
+              </div>
             </Link>
             <Link
               href="/verify/demo"
-              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white text-sm font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition-colors"
             >
-              <Globe2 className="w-4 h-4 text-brand-300" />
+              <Globe2 className="w-4 h-4 text-amber-400" />
               Public Verification Portal
             </Link>
           </div>
@@ -44,20 +46,20 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 text-sm">
           {/* Column 1: Services */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-white/50 font-bold">Services & Enterprise</h3>
-            <ul className="space-y-2.5 text-white/80">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Services & Enterprise</h3>
+            <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
                   Certified USCIS Translation
                 </Link>
               </li>
               <li>
-                <Link href="/counsel" className="hover:text-white transition-colors font-medium text-brand-300">
+                <Link href="/counsel" className="hover:text-white transition-colors font-medium text-amber-400">
                   CounselDesk™ Law Firm Portal
                 </Link>
               </li>
               <li>
-                <Link href="/defense/rfe" className="hover:text-white transition-colors font-medium text-status-warning">
+                <Link href="/defense/rfe" className="hover:text-white transition-colors font-medium text-amber-300">
                   USCIS RFE Defense Shield
                 </Link>
               </li>
@@ -81,8 +83,8 @@ export function Footer() {
 
           {/* Column 2: Popular Documents */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-white/50 font-bold">Popular Documents</h3>
-            <ul className="space-y-2.5 text-white/80">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Popular Documents</h3>
+            <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/documents/birth-certificate" className="hover:text-white transition-colors">
                   Birth Certificate Translation
@@ -104,7 +106,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/documents" className="text-brand-300 hover:text-white transition-colors font-medium">
+                <Link href="/documents" className="text-amber-400 hover:text-white transition-colors font-medium">
                   View all 25+ documents →
                 </Link>
               </li>
@@ -113,8 +115,8 @@ export function Footer() {
 
           {/* Column 3: Languages */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-white/50 font-bold">Languages</h3>
-            <ul className="space-y-2.5 text-white/80">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Languages</h3>
+            <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/languages/spanish" className="hover:text-white transition-colors">
                   Spanish to English Translation
@@ -136,7 +138,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/languages" className="text-brand-300 hover:text-white transition-colors font-medium">
+                <Link href="/languages" className="text-amber-400 hover:text-white transition-colors font-medium">
                   View all 70+ languages →
                 </Link>
               </li>
@@ -145,8 +147,8 @@ export function Footer() {
 
           {/* Column 4: Trust & Verification */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-white/50 font-bold">Trust & Institutional</h3>
-            <ul className="space-y-2.5 text-white/80">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Trust & Institutional</h3>
+            <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/how-it-works" className="hover:text-white transition-colors">
                   Acceptance Pre-Check Wizard
@@ -168,11 +170,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/translator/workbench/VL-DEMO1" className="hover:text-white transition-colors">
-                  Linguist Studio™ CAT Workbench
-                </Link>
-              </li>
-              <li>
                 <Link href="/use-cases" className="hover:text-white transition-colors">
                   Filing Use Cases & Guidelines
                 </Link>
@@ -182,62 +179,43 @@ export function Footer() {
                   USCIS Legal Knowledge Hub
                 </Link>
               </li>
-              <li className="pt-3 border-t border-white/10">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-brand-300 block mb-1 font-bold">
-                  Competitor Alternatives
-                </span>
-                <div className="space-y-1.5 text-xs text-white/70">
-                  <div>
-                    <Link href="/compare/immitranslate" className="hover:text-white transition-colors">
-                      vs. ImmiTranslate
-                    </Link>
-                  </div>
-                  <div>
-                    <Link href="/compare/rushtranslate" className="hover:text-white transition-colors">
-                      vs. RushTranslate
-                    </Link>
-                  </div>
-                  <div>
-                    <Link href="/compare/translayte" className="hover:text-white transition-colors">
-                      vs. Translayte
-                    </Link>
-                  </div>
-                </div>
-              </li>
             </ul>
           </div>
         </div>
 
         {/* Institutional Trust Badges */}
-        <div className="pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
-            <CheckCircle className="w-4 h-4 text-status-success shrink-0" />
+        <div className="pt-8 border-t border-neutral-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300">
+            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>100% USCIS Guaranteed</span>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
-            <ShieldCheck className="w-4 h-4 text-brand-300 shrink-0" />
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300">
+            <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
             <span>ATA Corporate Standards</span>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
-            <Lock className="w-4 h-4 text-brand-300 shrink-0" />
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300">
+            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
             <span>256-Bit SSE-KMS Vault</span>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 hover:bg-white/8 transition-colors duration-200">
-            <FileCheck className="w-4 h-4 text-status-info shrink-0" />
+          <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300">
+            <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>Public SHA-256 QR Code</span>
           </div>
         </div>
 
         {/* Bottom copyright & legal */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10 text-xs text-white/50">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-neutral-800 text-xs text-neutral-500">
           <p>© {new Date().getFullYear()} {PRODUCT_NAME}, Inc. All rights reserved. Not affiliated with USCIS or the U.S. Federal Government.</p>
           <div className="flex items-center gap-6">
-            <span>Support: {SUPPORT_EMAIL}</span>
+            <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>All Systems Operational</span>
+            </div>
             <Link href="/privacy" className="hover:text-white transition-colors">
-              Privacy & Security
+              Privacy
             </Link>
             <Link href="/terms" className="hover:text-white transition-colors">
-              Terms of Service
+              Terms
             </Link>
           </div>
         </div>

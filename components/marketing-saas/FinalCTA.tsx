@@ -4,60 +4,64 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
 import { motion } from "motion/react";
+import { springConfig } from "@/lib/motion";
 
 export function FinalCTA() {
   return (
-    <section className="w-full bg-slate-900 text-white py-24 px-6 relative overflow-hidden">
-      {/* Background Grid */}
+    <section className="w-full bg-obsidian-950 text-white py-24 sm:py-28 px-4 sm:px-6 relative overflow-hidden border-t border-white/[0.08]">
+      {/* Background Architectural Grid */}
       <div 
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+        className="absolute inset-0 opacity-[0.05] pointer-events-none"
         style={{
-          backgroundImage: "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
-          backgroundSize: "40px 40px"
+          backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)",
+          backgroundSize: "32px 32px"
         }}
       />
       
-      {/* Subtle Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-500/15 blur-[120px] pointer-events-none" />
+      {/* Subtle Warm Brass Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-amber-500/[0.05] blur-[140px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto flex flex-col items-center text-center relative z-10 space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-mono font-bold tracking-wider">
-          <ShieldCheck className="w-3.5 h-3.5" />
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 text-xs font-mono font-semibold tracking-wider">
+          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
           <span>ZERO RISK • 100% USCIS MONEY-BACK GUARANTEE</span>
         </div>
 
-        <h2 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
+        <h2 className="text-4xl sm:text-6xl font-extrabold tracking-[-0.03em] text-white leading-tight font-display">
           Ready to file your translation <br />
-          <span className="text-slate-400 font-serif italic font-normal">
+          <span className="text-amber-300/90 font-serif italic font-normal">
             with absolute confidence?
           </span>
         </h2>
 
-        <p className="text-base sm:text-lg text-slate-300 max-w-xl font-normal leading-relaxed">
+        <p className="text-base sm:text-lg text-neutral-300 max-w-xl font-normal leading-relaxed">
           Upload any legal record now. Receive a verified, ATA-certified translation with authentic formatting in under 90 seconds.
         </p>
 
-        <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
+        <div className="pt-3 flex flex-col sm:flex-row items-center gap-3.5">
           <Link href="/order/triage">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="h-14 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-[0_8px_25px_rgba(37,99,235,0.35)] flex items-center gap-2.5 transition-colors cursor-pointer"
+              transition={springConfig}
+              className="h-14 px-8 rounded-full bg-white hover:bg-neutral-100 text-obsidian-950 font-bold text-sm sm:text-base shadow-[0_12px_32px_rgba(255,255,255,0.15)] flex items-center gap-3 transition-all cursor-pointer group"
             >
-              <Sparkles className="w-4 h-4 text-blue-200" />
+              <Sparkles className="w-4 h-4 text-amber-600" />
               <span>Start Instant Translation</span>
-              <ArrowRight className="w-4 h-4" />
+              <div className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                <ArrowRight className="w-3.5 h-3.5 text-obsidian-950" />
+              </div>
             </motion.button>
           </Link>
           
           <Link href="/help">
-            <button className="h-14 px-6 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-semibold text-sm transition-colors cursor-pointer">
+            <button className="h-14 px-7 rounded-full border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-neutral-200 font-semibold text-sm transition-all cursor-pointer">
               Speak with Compliance Specialist
             </button>
           </Link>
         </div>
 
-        <div className="pt-4 text-xs font-mono text-slate-500">
+        <div className="pt-3 text-xs font-mono text-neutral-500">
           No credit card required to inspect document • 2,400+ law firms trust VerifyLingua
         </div>
       </div>

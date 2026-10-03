@@ -53,6 +53,44 @@ export async function GET(
         });
       }
 
+      // Check if jobId matches an Order publicCode or Order ID
+      try {
+        const orderRecord = await prisma.order.findFirst({
+          where: {
+            OR: [{ publicCode: jobId }, { id: jobId }],
+          },
+          include: { documents: true },
+        });
+
+        if (orderRecord) {
+          const rawStatus = orderRecord.status === "PAID" ? "translating" : (orderRecord.status?.toLowerCase() || "queued");
+          const progress = orderRecord.status === "DELIVERED" ? 100 : 35;
+          const currentStep = "ATA-accredited certified linguist assigned. Processing document...";
+          const fileName = orderRecord.documents?.[0]?.fileName || "uploaded_document.pdf";
+          const isReady = orderRecord.status === "DELIVERED";
+
+          return NextResponse.json({
+            jobId: orderRecord.publicCode,
+            fileName,
+            fileFormat: "pdf",
+            fileSize: 0,
+            sourceLang: orderRecord.sourceLang || "es",
+            targetLang: orderRecord.targetLang || "en",
+            status: rawStatus,
+            progress,
+            currentStep,
+            createdAt: orderRecord.createdAt,
+            completedAt: null,
+            downloadUrl: isReady
+              ? `/api/jobs/${orderRecord.publicCode}/download?token=${orderRecord.publicCode}`
+              : null,
+            qualityGate: null,
+            layoutPreserved: true,
+            error: null,
+          });
+        }
+      } catch {}
+
       return NextResponse.json(
         { error: `Translation job '${jobId}' was not found or has expired.` },
         { status: 404 }

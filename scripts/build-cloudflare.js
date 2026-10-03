@@ -280,7 +280,7 @@ export default {
         \`\${cleanPath}/index.rsc\`
       ];
       if (cleanPath.startsWith('/tracker/')) {
-        rscCandidates.push('/tracker/VL-DEMO1.rsc', '/tracker/VL-DEMO1/index.rsc');
+        rscCandidates.push('/tracker/view.rsc', '/tracker/view/index.rsc');
       }
       if (cleanPath.startsWith('/order/')) {
         rscCandidates.push('/order/VL-DEMO1.rsc', '/order/VL-DEMO1/index.rsc');
@@ -340,7 +340,7 @@ export default {
 
       // Fallback for dynamic client-side translation tracking: /tracker/:id
       if (pathname.startsWith('/tracker/')) {
-        const trackerFallback = await serveFallback('/tracker/VL-DEMO1/') || await serveFallback('/tracker/VL-DEMO1.html');
+        const trackerFallback = await serveFallback('/tracker/view/') || await serveFallback('/tracker/view.html') || await serveFallback('/tracker/view/index.html');
         if (trackerFallback) return trackerFallback;
       }
 
@@ -865,9 +865,86 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
   // Order creation API
   if (pathname === '/api/order/create') {
+    const code = 'VL-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    const ordId = 'ord_' + Math.random().toString(36).substring(2, 11);
+    const orderJob = {
+      id: code,
+      jobId: code,
+      publicCode: code,
+      orderId: code,
+      fileName: 'uploaded_document.pdf',
+      fileFormat: 'pdf',
+      sourceLang: 'es',
+      targetLang: 'en',
+      status: 'translating',
+      progress: 35,
+      currentStep: 'ATA-accredited certified linguist assigned. Processing document...',
+      downloadToken: 'tok_' + Math.random().toString(36).substring(2, 15),
+      createdAt: new Date().toISOString()
+    };
+    if (!globalThis.__vlJobs) globalThis.__vlJobs = {};
+    globalThis.__vlJobs[code] = orderJob;
+    globalThis.__vlJobs[ordId] = orderJob;
+
+    // Cache in Cloudflare Edge Cache across isolates
+    try {
+      if (typeof caches !== 'undefined' && caches.default) {
+        const cache = caches.default;
+        const cacheResp1 = new Response(JSON.stringify(orderJob), {
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400, s-maxage=86400' }
+        });
+        const cacheResp2 = cacheResp1.clone();
+        const put1 = cache.put(new Request(new URL('/api/internal/jobs/' + code, request.url).toString()), cacheResp1);
+        const put2 = cache.put(new Request(new URL('/api/internal/jobs/' + ordId, request.url).toString()), cacheResp2);
+        if (ctx && typeof ctx.waitUntil === 'function') {
+          ctx.waitUntil(Promise.all([put1, put2]));
+        } else {
+          await Promise.all([put1, put2]);
+        }
+      }
+    } catch (cacheErr) {}
+
+    // Persist to Supabase if configured in edge environment
+    if (typeof env !== 'undefined' && env.SUPABASE_URL && (env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY)) {
+      try {
+        const sbKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
+        const sbPromise = fetch(env.SUPABASE_URL + '/rest/v1/Order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': sbKey,
+            'Authorization': 'Bearer ' + sbKey,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            publicCode: code,
+            status: 'PAID',
+            sourceLang: 'es',
+            targetLang: 'en',
+            serviceType: 'CERTIFIED',
+            pageCount: 1,
+            wordCount: 250,
+            subtotal: 39.99,
+            addOnTotal: 0,
+            total: 39.99,
+            receivingParty: 'USCIS',
+            createdAt: new Date().toISOString()
+          })
+        });
+        if (ctx && typeof ctx.waitUntil === 'function') {
+          ctx.waitUntil(sbPromise);
+        } else {
+          await sbPromise;
+        }
+      } catch (sbErr) {}
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      orderId: 'ord_' + Math.random().toString(36).substring(2, 11),
+      orderId: code,
+      jobId: code,
+      id: code,
+      publicCode: code,
       status: 'AWAITING_PAYMENT',
       checkoutUrl: '/order/checkout'
     }), {
@@ -1007,7 +1084,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
   }
 
   // Translation upload API — extracts actual file, sends to Gemini for translation
-  if (pathname === '/api/translate/upload') {
+  if (pathname === '/api/translate/upload' || pathname === '/api/upload') {
     const jobId = 'VL-' + Math.random().toString(36).substring(2, 10).toUpperCase();
     const downloadToken = 'tok_' + Math.random().toString(36).substring(2, 15);
 
@@ -1180,6 +1257,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
       progress: 100,
       currentStep: 'Translation, layout reconstruction & verification complete.',
       downloadToken,
+      fileUrl: '/api/jobs/' + jobId + '/download?token=' + downloadToken,
       downloadUrl: '/api/translate/download/' + jobId + '?token=' + downloadToken,
       fidelityScore: 98.4,
       layoutPreserved: true,
@@ -1210,45 +1288,76 @@ async function handleApiRequest(request, pathname, env, ctx) {
       } catch (e) {}
     }
 
-    if (!job) {
-      const upperId = (jId || '').toUpperCase();
-      if (
-        jId === 'demo' ||
-        upperId.startsWith('VL-DEMO') ||
-        upperId === 'VL-8921-XQ' ||
-        upperId === 'VL-9104-MN'
-      ) {
-        const isTranscript = upperId.includes('9104');
-        const isOfficialBirth = upperId.includes('8921');
-        const fileName = isOfficialBirth
-          ? 'Acta_De_Nacimiento_Oficial.pdf'
-          : isTranscript
-          ? 'Doctoral_Degree_Transcripts.pdf'
-          : 'Acta_De_Nacimiento_Jalisco.pdf';
+    // Check Supabase REST API for TranslationJob or Order if available
+    if (!job && typeof env !== 'undefined' && env.SUPABASE_URL && (env.SUPABASE_ANON_KEY || env.SUPABASE_SERVICE_ROLE_KEY)) {
+      try {
+        const sbKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
+        const jobUrl = env.SUPABASE_URL + '/rest/v1/TranslationJob?select=*&id=eq.' + encodeURIComponent(jId);
+        const jobRes = await fetch(jobUrl, {
+          headers: {
+            'apikey': sbKey,
+            'Authorization': 'Bearer ' + sbKey,
+            'Accept': 'application/json'
+          }
+        });
+        if (jobRes.ok) {
+          const rows = await jobRes.json();
+          if (rows && rows.length > 0) {
+            const r = rows[0];
+            job = {
+              id: r.id,
+              fileName: r.sourceFilename || 'document.pdf',
+              fileFormat: r.sourceFormat || 'pdf',
+              sourceLang: r.sourceLanguage || 'es',
+              targetLang: r.targetLanguage || 'en',
+              status: r.status,
+              progress: r.progress || 0,
+              currentStep: r.currentStep || 'Processing...',
+              pageCount: r.pageCount || 1,
+              downloadToken: r.downloadToken || r.id,
+              downloadUrl: '/api/jobs/' + r.id + '/download?token=' + (r.downloadToken || r.id),
+              createdAt: r.createdAt
+            };
+            if (!globalThis.__vlJobs) globalThis.__vlJobs = {};
+            globalThis.__vlJobs[jId] = job;
+          }
+        }
 
-        const downloadToken = 'tok_' + jId;
-        const downloadUrl = '/api/jobs/' + jId + '/download?token=' + downloadToken;
-
-        job = {
-          id: jId,
-          fileName: fileName,
-          fileFormat: 'pdf',
-          sourceLang: isTranscript ? 'de' : 'es',
-          targetLang: 'en',
-          pageCount: isTranscript ? 4 : 1,
-          status: 'completed',
-          currentPhase: 'completed',
-          progress: 100,
-          currentStep: 'Certified translation verified & sealed under USCIS 8 CFR § 103.2 standards. Ready for official filing.',
-          downloadToken: downloadToken,
-          artifactUrl: downloadUrl,
-          downloadUrl: downloadUrl,
-          fidelityScore: 99.4,
-          layoutPreserved: true,
-          error: null,
-          createdAt: new Date(Date.now() - 60000).toISOString()
-        };
-      }
+        if (!job) {
+          const orderUrl = env.SUPABASE_URL + '/rest/v1/Order?select=*,documents(*)&or=(publicCode.eq.' + encodeURIComponent(jId) + ',id.eq.' + encodeURIComponent(jId) + ')';
+          const ordRes = await fetch(orderUrl, {
+            headers: {
+              'apikey': sbKey,
+              'Authorization': 'Bearer ' + sbKey,
+              'Accept': 'application/json'
+            }
+          });
+          if (ordRes.ok) {
+            const ordRows = await ordRes.json();
+            if (ordRows && ordRows.length > 0) {
+              const o = ordRows[0];
+              const ordStatus = o.status === 'PAID' ? 'translating' : (o.status?.toLowerCase() || 'queued');
+              job = {
+                id: o.publicCode || o.id,
+                publicCode: o.publicCode,
+                fileName: o.documents?.[0]?.fileName || 'uploaded_document.pdf',
+                fileFormat: 'pdf',
+                sourceLang: o.sourceLang || 'es',
+                targetLang: o.targetLang || 'en',
+                status: ordStatus,
+                progress: o.status === 'DELIVERED' ? 100 : 35,
+                currentStep: 'ATA-accredited certified linguist assigned. Processing document...',
+                pageCount: o.pageCount || 1,
+                downloadToken: o.publicCode,
+                downloadUrl: '/api/jobs/' + (o.publicCode || o.id) + '/download?token=' + o.publicCode,
+                createdAt: o.createdAt
+              };
+              if (!globalThis.__vlJobs) globalThis.__vlJobs = {};
+              globalThis.__vlJobs[jId] = job;
+            }
+          }
+        }
+      } catch (sbQueryErr) {}
     }
 
     if (!job) {

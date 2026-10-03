@@ -3,6 +3,32 @@
 @import "tailwindcss";
 
 @theme {
+  --color-obsidian-950: var(--obsidian-950);
+  --color-obsidian-900: var(--obsidian-900);
+  --color-obsidian-850: var(--obsidian-850);
+  --color-obsidian-800: var(--obsidian-800);
+  --color-obsidian-750: var(--obsidian-750);
+  --color-obsidian-700: var(--obsidian-700);
+  --color-obsidian-600: var(--obsidian-600);
+  --color-obsidian-card: var(--obsidian-card);
+  --color-obsidian-elevated: var(--obsidian-elevated);
+  --color-obsidian-border: var(--obsidian-border);
+
+  --color-amber-statutory: var(--amber-statutory);
+  --color-amber-statutory-dark: var(--amber-statutory-dark);
+  --color-court-emerald: var(--court-emerald);
+  --color-court-emerald-dark: var(--court-emerald-dark);
+
+  --color-charcoal-900: var(--charcoal-900);
+  --color-charcoal-800: var(--charcoal-800);
+  --color-charcoal-700: var(--charcoal-700);
+  --color-charcoal-600: var(--charcoal-600);
+
+  --color-canvas-light: var(--canvas-light);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-aluminum: var(--surface-aluminum);
+  --color-seal-teal: var(--seal-teal);
+
   --color-brand-ink: var(--brand-ink);
   --color-brand-900: var(--brand-900);
   --color-brand-800: var(--brand-800);
@@ -77,12 +103,12 @@
   --radius-xl: var(--r-xl);
   --radius-2xl: var(--r-2xl);
 
-  --font-display: var(--font-basier-square), "Basier Square", "BasierSquare", sans-serif;
-  --font-heading: var(--font-basier-square), "Basier Square", "BasierSquare", sans-serif;
-  --font-body: var(--font-san-francisco), "San Francisco", "SF Pro Text", "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-sans: var(--font-san-francisco), "San Francisco", "SF Pro Text", "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "Instrument Serif", "Fraunces", "Playfair Display", "New York", "Didot", "Georgia", "Cambria", serif;
-  --font-mono: "Basier Square Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: "Plus Jakarta Sans", var(--font-basier-square), "Basier Square", sans-serif;
+  --font-heading: "Plus Jakarta Sans", var(--font-basier-square), "Basier Square", sans-serif;
+  --font-body: "Plus Jakarta Sans", var(--font-san-francisco), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Plus Jakarta Sans", var(--font-san-francisco), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Instrument Serif", "Fraunces", "Playfair Display", "Georgia", "Cambria", serif;
+  --font-mono: "JetBrains Mono", "Basier Square Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .font-serif {
@@ -164,6 +190,33 @@
 }
 
 :root {
+  /* ─── Ultra-Premium Legal Tech Obsidian System */
+  --obsidian-950:     #05070A;
+  --obsidian-900:     #090D14;
+  --obsidian-850:     #0C111D;
+  --obsidian-800:     #0D131D;
+  --obsidian-750:     #121824;
+  --obsidian-700:     #1A2233;
+  --obsidian-600:     #242F45;
+  --obsidian-card:    #0C121E;
+  --obsidian-elevated:#111927;
+  --obsidian-border:  rgba(255, 255, 255, 0.08);
+
+  --amber-statutory:      #F59E0B;
+  --amber-statutory-dark: #D97706;
+  --court-emerald:        #10B981;
+  --court-emerald-dark:   #059669;
+
+  --charcoal-900:     #050505;
+  --charcoal-800:     #111111;
+  --charcoal-700:     #1A1A1A;
+  --charcoal-600:     #222222;
+
+  --canvas-light:     #FBFBF9;
+  --surface-soft:     #F7F6F2;
+  --surface-aluminum: #EFEFEA;
+  --seal-teal:        #278190;
+
   /* ─── Ink: headings, dark bands, footer (§3.2.1) */
   --brand-ink:        #0A2540;
   --brand-900:        #0D1130;

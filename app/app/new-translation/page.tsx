@@ -98,12 +98,23 @@ export default function NewTranslationPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to upload document.");
+        const errMsg = errorData.error || errorData.message || "Failed to upload document.";
+        if (res.status >= 500 || errorData.error === "DATABASE_INSERT_FAILED") {
+          if (typeof window !== "undefined") {
+            alert(
+              `Upload Error (500): ${errMsg}\n\nThe document could not be saved to the database. Please try uploading again.`
+            );
+          }
+        }
+        throw new Error(errMsg);
       }
 
       const data = await res.json();
       const targetId = data.jobId || data.id || data.publicCode;
       if (!targetId || targetId === "undefined") {
+        if (typeof window !== "undefined") {
+          alert("Upload Error: Server returned an invalid tracking ID without confirmed database persistence.");
+        }
         throw new Error("Server failed to generate a valid tracking ID for this translation.");
       }
       setJobId(targetId);

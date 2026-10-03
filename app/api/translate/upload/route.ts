@@ -215,15 +215,36 @@ export async function POST(req: NextRequest) {
       tenantJob.qualityGate = cachedJob.qualityGate;
       tenantJob.currentStep = "Document translated with authentic layout preservation (cached).";
 
+      // Ensure valid user in DB if userId provided (prevents foreign key constraint violations)
+      let validUserId: string | null = null;
+      if (userId) {
+        try {
+          await prisma.user.upsert({
+            where: { id: userId },
+            update: {},
+            create: {
+              id: userId,
+              email: `${userId}@verifylingua.internal`,
+              name: userId,
+              isGuest: true,
+            },
+          });
+          validUserId = userId;
+        } catch {
+          const existing = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null);
+          validUserId = existing ? userId : null;
+        }
+      }
+
       try {
         const ext = fileName.split(".").pop()?.toLowerCase() || validation.format;
-        const userSegment = userId || "anonymous";
+        const userSegment = validUserId || "anonymous";
         const sourceKey = tenantJob.sourceKey || `jobs/${userSegment}/${tenantJob.id}/source.${ext}`;
         const outputKey = tenantJob.outputKey || `jobs/${userSegment}/${tenantJob.id}/output.pdf`;
-        await prisma.translationJob.create({
+        const dbRecord = await prisma.translationJob.create({
           data: {
             id: tenantJob.id,
-            userId,
+            userId: validUserId,
             sourceKey,
             outputKey,
             sourceFilename: fileName,
@@ -235,9 +256,26 @@ export async function POST(req: NextRequest) {
             currentStep: tenantJob.currentStep,
             pageCount: N,
             downloadToken: tenantJob.downloadToken,
+            layoutPreserved: true,
           },
         });
-      } catch {}
+
+        if (!dbRecord || !dbRecord.id) {
+          throw new Error("Supabase insert confirmation missing.");
+        }
+      } catch (dbErr: any) {
+        console.error("[upload] Failed to persist cached job to database:", dbErr?.message);
+        deleteTranslationJob(tenantJob.id);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "DATABASE_INSERT_FAILED",
+            message: "Failed to persist document to database. Supabase insertion error.",
+            detail: dbErr?.message,
+          },
+          { status: 500 }
+        );
+      }
 
       return NextResponse.json(
         {
@@ -305,12 +343,33 @@ export async function POST(req: NextRequest) {
       console.warn(`[Upload] Object storage warning for ${sourceKey}:`, storageErr?.message);
     }
 
-    // 7. Persist Job Record to Database
+    // Ensure valid user in DB if userId provided (prevents foreign key constraint violations)
+    let validUserId: string | null = null;
+    if (userId) {
+      try {
+        await prisma.user.upsert({
+          where: { id: userId },
+          update: {},
+          create: {
+            id: userId,
+            email: `${userId}@verifylingua.internal`,
+            name: userId,
+            isGuest: true,
+          },
+        });
+        validUserId = userId;
+      } catch {
+        const existing = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null);
+        validUserId = existing ? userId : null;
+      }
+    }
+
+    // 7. Persist Job Record to Database (Must strictly await and confirm persistence)
     try {
-      await prisma.translationJob.create({
+      const dbRecord = await prisma.translationJob.create({
         data: {
           id: job.id,
-          userId,
+          userId: validUserId,
           sourceKey,
           outputKey,
           sourceFilename: fileName,
@@ -322,10 +381,25 @@ export async function POST(req: NextRequest) {
           currentStep: "Job initialized and queued for background processing",
           pageCount: N,
           downloadToken: job.downloadToken,
+          layoutPreserved: true,
         },
       });
+
+      if (!dbRecord || !dbRecord.id) {
+        throw new Error("Supabase insert confirmation missing.");
+      }
     } catch (dbErr: any) {
       console.error("[upload] Failed to persist job to database:", dbErr?.message);
+      deleteTranslationJob(job.id);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "DATABASE_INSERT_FAILED",
+          message: "Failed to persist document to database. Supabase insertion error.",
+          detail: dbErr?.message,
+        },
+        { status: 500 }
+      );
     }
 
     // 8. Atomically Reserve Credits
@@ -376,9 +450,13 @@ export async function POST(req: NextRequest) {
         {
           success: true,
           jobId: job.id,
+          id: job.id,
+          publicCode: job.id,
           fileName: job.fileName,
           fileFormat: job.fileFormat,
           fileSize: job.fileSize,
+          fileUrl: `/api/jobs/${job.id}/download?token=${job.downloadToken}`,
+          downloadUrl: `/api/jobs/${job.id}/download?token=${job.downloadToken}`,
           status: "queued",
           progress: 5,
           currentStep: "Job initialized and queued for processing",
@@ -401,6 +479,8 @@ export async function POST(req: NextRequest) {
         fileName: job.fileName,
         fileFormat: job.fileFormat,
         fileSize: job.fileSize,
+        fileUrl: `/api/jobs/${job.id}/download?token=${job.downloadToken}`,
+        downloadUrl: `/api/jobs/${job.id}/download?token=${job.downloadToken}`,
         status: "queued",
         progress: 0,
         currentStep: "Job initialized and queued for background processing",

@@ -99,81 +99,62 @@ interface TrackerClientProps {
   initialId?: string;
 }
 
-function getDemoJobData(id: string): JobStatusData {
-  const upper = (id || "VL-DEMO1").toUpperCase();
-  const isTranscript = upper.includes("9104");
-  const isOfficialBirth = upper.includes("8921");
-  const fileName = isOfficialBirth
-    ? "Acta_De_Nacimiento_Oficial.pdf"
-    : isTranscript
-    ? "Doctoral_Degree_Transcripts.pdf"
-    : "Acta_De_Nacimiento_Jalisco.pdf";
-
-  return {
-    jobId: id || "VL-DEMO1",
-    status: "completed",
-    currentPhase: "completed",
-    progress: 100,
-    currentStep: "Certified translation verified & sealed under USCIS 8 CFR § 103.2 standards. Ready for official filing.",
-    fileName,
-    fileFormat: "pdf",
-    sourceLang: isTranscript ? "de" : "es",
-    targetLang: "en",
-    pageCount: isTranscript ? 4 : 1,
-    artifactUrl: `/api/jobs/${id}/download`,
-    downloadUrl: `/api/jobs/${id}/download`,
-    layoutPreserved: true,
-    error: null,
-    createdAt: new Date(Date.now() - 45000).toISOString(),
-    completedAt: new Date().toISOString(),
-  };
+function extractValidJobId(candidate?: string | null): string {
+  if (!candidate) return "";
+  const cleaned = candidate.trim();
+  if (
+    !cleaned ||
+    cleaned === "undefined" ||
+    cleaned === "null" ||
+    cleaned === "view" ||
+    cleaned === "tracker" ||
+    cleaned.toUpperCase() === "VL-DEMO1" ||
+    cleaned.toLowerCase() === "demo"
+  ) {
+    return "";
+  }
+  return cleaned;
 }
 
 export default function TrackerClient({ initialId }: TrackerClientProps) {
   const params = useParams();
   const router = useRouter();
 
-  // Resolve tracking id from params, props, or window location
-  const rawParamId = (params?.id as string) || initialId || "";
-  const paramId = rawParamId === "undefined" || rawParamId === "null" ? "" : rawParamId;
-  const [resolvedId, setResolvedId] = React.useState<string>(paramId);
-
-  React.useEffect(() => {
-    if (paramId) {
-      setResolvedId(paramId);
-    } else if (typeof window !== "undefined") {
+  // Resolve tracking id from window location, params, or props strictly
+  const [resolvedId, setResolvedId] = React.useState<string>(() => {
+    if (typeof window !== "undefined") {
       const parts = window.location.pathname.split("/").filter(Boolean);
       const last = parts[parts.length - 1];
-      if (last && last !== "tracker" && last !== "undefined" && last !== "null") {
-        setResolvedId(last);
+      const validFromUrl = extractValidJobId(last);
+      if (validFromUrl) return validFromUrl;
+    }
+    const fromParam = extractValidJobId(params?.id as string);
+    if (fromParam) return fromParam;
+    return extractValidJobId(initialId);
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      const last = parts[parts.length - 1];
+      const validFromUrl = extractValidJobId(last);
+      if (validFromUrl) {
+        setResolvedId(validFromUrl);
+        return;
       }
     }
-  }, [paramId]);
+    const fromParam = extractValidJobId(params?.id as string);
+    if (fromParam) {
+      setResolvedId(fromParam);
+      return;
+    }
+  }, [params?.id]);
 
-  const isInvalidId = !resolvedId || resolvedId.trim() === "" || resolvedId === "undefined" || resolvedId === "null";
-  const isDemoId = React.useMemo(() => {
-    if (!resolvedId) return false;
-    const u = resolvedId.toUpperCase();
-    return u.startsWith("VL-DEMO") || u === "DEMO" || u === "VL-8921-XQ" || u === "VL-9104-MN";
-  }, [resolvedId]);
+  const isInvalidId = !resolvedId || resolvedId.trim() === "";
 
   const [isNotFound, setIsNotFound] = React.useState<boolean>(false);
-  const [jobData, setJobData] = React.useState<JobStatusData | null>(() => {
-    const raw = (params?.id as string) || initialId || "";
-    const u = raw.toUpperCase();
-    if (u.startsWith("VL-DEMO") || u === "DEMO" || u === "VL-8921-XQ" || u === "VL-9104-MN") {
-      return getDemoJobData(raw);
-    }
-    return null;
-  });
-  const [isLoading, setIsLoading] = React.useState<boolean>(() => {
-    const raw = (params?.id as string) || initialId || "";
-    const u = raw.toUpperCase();
-    if (u.startsWith("VL-DEMO") || u === "DEMO" || u === "VL-8921-XQ" || u === "VL-9104-MN") {
-      return false;
-    }
-    return !isInvalidId;
-  });
+  const [jobData, setJobData] = React.useState<JobStatusData | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(!isInvalidId);
   const [pollError, setPollError] = React.useState<string | null>(null);
   const [hasCopiedId, setHasCopiedId] = React.useState<boolean>(false);
   const [auditLogs, setAuditLogs] = React.useState<{ time: string; text: string; tag: string }[]>([]);
@@ -228,19 +209,12 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
             consecutive404++;
             // Give 3 retries (approx 6-8 seconds) for fresh jobs being committed to DB
             if (consecutive404 >= 3) {
-              if (isDemoId) {
-                setJobData(getDemoJobData(resolvedId));
-                setIsLoading(false);
-                setIsNotFound(false);
-                setPollError(null);
-                return;
-              }
               setIsNotFound(true);
               setIsLoading(false);
               setPollError(null);
               return;
             }
-            setPollError(`Initializing verification stream for "${resolvedId}"...`);
+            setPollError(`Connecting to registry for job "${resolvedId}"...`);
           } else {
             setPollError(`Status check failed (${response.status}). Retrying...`);
           }
@@ -274,13 +248,6 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
         }
       } catch (err: any) {
         if (!isMounted) return;
-        if (isDemoId && !jobData) {
-          setJobData(getDemoJobData(resolvedId));
-          setIsLoading(false);
-          setIsNotFound(false);
-          setPollError(null);
-          return;
-        }
         setPollError("Connection interrupted. Re-establishing telemetry link...");
         timer = setTimeout(fetchStatus, 3000);
       }
@@ -325,9 +292,9 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
   const downloadHref = `/api/jobs/${encodeURIComponent(resolvedId)}/download`;
 
   return (
-    <div className="min-h-screen bg-[#090D14] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="min-h-screen bg-obsidian-950 text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
       {/* Top High-Density Legal Header */}
-      <header className="border-b border-slate-800/80 bg-[#0B101B]/90 backdrop-blur-md sticky top-0 z-30 px-4 lg:px-8 py-3.5">
+      <header className="border-b border-slate-800/80 bg-obsidian-950/90 backdrop-blur-md sticky top-0 z-30 px-4 lg:px-8 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
@@ -378,7 +345,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
       {/* Main Workspace Stage */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8 overflow-hidden">
         {isInvalidId ? (
-          <Card className="border border-rose-900/40 bg-[#0C121E]/90 backdrop-blur-md rounded-lg p-8 sm:p-12 text-center max-w-2xl mx-auto my-12 shadow-2xl">
+          <Card className="border border-rose-900/40 bg-obsidian-card/90 backdrop-blur-md rounded-lg p-8 sm:p-12 text-center max-w-2xl mx-auto my-12 shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mx-auto mb-6">
               <FileX className="w-8 h-8" />
             </div>
@@ -406,7 +373,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
             </div>
           </Card>
         ) : isNotFound ? (
-          <Card className="border border-amber-900/40 bg-[#0C121E]/90 backdrop-blur-md rounded-lg p-8 sm:p-12 text-center max-w-2xl mx-auto my-12 shadow-2xl">
+          <Card className="border border-amber-900/40 bg-obsidian-card/90 backdrop-blur-md rounded-lg p-8 sm:p-12 text-center max-w-2xl mx-auto my-12 shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto mb-6">
               <AlertCircle className="w-8 h-8" />
             </div>
@@ -473,21 +440,42 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
               </p>
             </div>
 
-            {/* Loading Skeleton */}
+            {/* Loading Spinner & Status Retrieval State */}
             {isLoading && !jobData && (
-              <div className="space-y-6 animate-pulse">
-                <div className="p-6 rounded-lg border border-slate-800 bg-slate-900/40 space-y-4">
-                  <div className="h-4 bg-slate-800 rounded w-1/3" />
-                  <div className="h-3 bg-slate-800/60 rounded w-full" />
-                  <div className="h-3 bg-slate-800/60 rounded w-4/5" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  {[0, 1, 2, 3].map((i) => (
-                    <div key={i} className="h-32 rounded-lg border border-slate-800/80 bg-slate-900/30 p-4 space-y-3">
-                      <div className="h-4 bg-slate-800 rounded w-1/2" />
-                      <div className="h-3 bg-slate-800/50 rounded w-3/4" />
-                    </div>
-                  ))}
+              <div className="space-y-6">
+                <Card className="border border-slate-800 bg-obsidian-card/90 backdrop-blur-md rounded-lg p-8 sm:p-12 text-center max-w-xl mx-auto my-6 shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto mb-6">
+                    <RefreshCw className="w-8 h-8 animate-spin" />
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono mb-4">
+                    <span>CONNECTING TO DATABASE</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-serif text-white font-medium mb-3">
+                    Retrieving Translation Status
+                  </h2>
+                  <p className="text-sm text-slate-400 leading-relaxed mb-4 max-w-md mx-auto">
+                    Querying verified database records for job <span className="font-mono text-emerald-300 font-semibold">{resolvedId}</span>...
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-xs font-mono text-slate-500">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Synchronizing certified translation telemetry</span>
+                  </div>
+                </Card>
+
+                <div className="space-y-4 animate-pulse">
+                  <div className="p-6 rounded-lg border border-slate-800 bg-slate-900/40 space-y-4">
+                    <div className="h-4 bg-slate-800 rounded w-1/3" />
+                    <div className="h-3 bg-slate-800/60 rounded w-full" />
+                    <div className="h-3 bg-slate-800/60 rounded w-4/5" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="h-32 rounded-lg border border-slate-800/80 bg-slate-900/30 p-4 space-y-3">
+                        <div className="h-4 bg-slate-800 rounded w-1/2" />
+                        <div className="h-3 bg-slate-800/50 rounded w-3/4" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -510,7 +498,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
             {jobData && (
               <div className="space-y-8">
                 {/* Primary Status Card with Smooth Progress Bar */}
-                <Card className="border border-slate-800 bg-[#0C121E]/90 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
+                <Card className="border border-slate-800 bg-obsidian-card/90 backdrop-blur-md rounded-lg overflow-hidden shadow-xl">
                   <CardContent className="p-6 sm:p-8 space-y-6">
                     {/* Meta Header */}
                     <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
@@ -629,10 +617,10 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                       className={cn(
                         "relative rounded-lg p-5 border transition-all duration-200 flex flex-col justify-between",
                         isPhaseDone
-                          ? "bg-[#0B151F] border-emerald-500/40 text-slate-200 shadow-[0_0_15px_rgba(16,185,129,0.06)]"
+                          ? "bg-obsidian-card border-emerald-500/40 text-slate-200 shadow-[0_0_15px_rgba(16,185,129,0.06)]"
                           : isPhaseActive
-                          ? "bg-[#0D1826] border-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.2)] ring-1 ring-emerald-400/50"
-                          : "bg-[#0A0E17] border-slate-800/80 text-slate-500"
+                          ? "bg-obsidian-elevated border-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.2)] ring-1 ring-emerald-400/50"
+                          : "bg-obsidian-950 border-slate-800/80 text-slate-500"
                       )}
                     >
                       {/* Active Breathing Indicator */}
@@ -704,7 +692,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ type: "spring", stiffness: 70, damping: 14 }}
-                  className="rounded-lg border border-emerald-500/40 bg-gradient-to-b from-[#0C1D21] to-[#0A161B] p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden"
+                  className="rounded-lg border border-emerald-500/40 bg-gradient-to-b from-obsidian-card to-obsidian-950 p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden"
                 >
                   {/* Subtle Top Border Highlight */}
                   <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-emerald-300 to-emerald-500" />
@@ -715,7 +703,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                         <span className="px-2.5 py-0.5 rounded text-xs font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                           OFFICIALLY CERTIFIED
                         </span>
-                        <span className="text-xs font-mono text-emerald-400/80">ATA ACCREDITED #271892</span>
+                        <span className="text-xs font-mono text-emerald-400/80">ATA ACCREDITED No. 271892</span>
                       </div>
                       <h3 className="text-2xl sm:text-3xl font-serif text-white font-medium">
                         Your Certified Packet is Ready
@@ -781,7 +769,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ type: "spring", stiffness: 70, damping: 14 }}
-                  className="rounded-lg border border-rose-500/40 bg-gradient-to-b from-[#1F1115] to-[#160B0E] p-6 sm:p-8 space-y-6 shadow-2xl relative"
+                  className="rounded-lg border border-rose-500/40 bg-gradient-to-b from-rose-950/40 to-obsidian-950 p-6 sm:p-8 space-y-6 shadow-2xl relative"
                 >
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div className="space-y-3">
@@ -839,7 +827,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                 <span className="text-slate-500">REAL-TIME ATTESTATION LOGS</span>
               </div>
 
-              <div className="rounded-lg border border-slate-800/90 bg-[#070B12] p-4 font-mono text-xs text-slate-300 space-y-2 overflow-x-auto shadow-inner">
+              <div className="rounded-lg border border-slate-800/90 bg-obsidian-950 p-4 font-mono text-xs text-slate-300 space-y-2 overflow-x-auto shadow-inner">
                 {auditLogs.length === 0 ? (
                   <div className="text-slate-600 italic">Listening for job socket telemetry events...</div>
                 ) : (
@@ -877,7 +865,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
       </main>
 
       {/* High-Contrast Footer */}
-      <footer className="border-t border-slate-800/80 bg-[#0B101B] py-6 px-4 text-center text-xs font-mono text-slate-500">
+      <footer className="border-t border-slate-800/80 bg-obsidian-950 py-6 px-4 text-center text-xs font-mono text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             VerifyLingua Legal-Tech Platform • USCIS 8 CFR § 103.2 Sworn Certification

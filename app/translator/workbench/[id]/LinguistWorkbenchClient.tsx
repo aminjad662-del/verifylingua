@@ -43,7 +43,7 @@ interface LockedTerm {
 function LinguistStudioContent() {
   const params = useParams();
   const router = useRouter();
-  const rawId = (params.id as string) || "VL-DEMO1";
+  const rawId = (params.id as string) || "";
   const publicCode = rawId.toUpperCase();
 
   const [loading, setLoading] = React.useState(true);
@@ -62,6 +62,10 @@ function LinguistStudioContent() {
   const [submissionSuccess, setSubmissionSuccess] = React.useState(false);
 
   React.useEffect(() => {
+    if (!publicCode) {
+      setLoading(false);
+      return;
+    }
     async function fetchWorkbench() {
       try {
         const res = await fetch(`/api/translator/workbench/${publicCode}`);

@@ -8,6 +8,8 @@
  * - Accessible: respects prefers-reduced-motion
  */
 
+export const springConfig = { type: "spring" as const, stiffness: 400, damping: 30, mass: 0.8 };
+
 export const SPRING_MICRO = {
   type: "spring" as const,
   stiffness: 380,

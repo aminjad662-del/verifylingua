@@ -38,40 +38,6 @@ export async function GET(
     }
 
     if (!binary) {
-      const upperId = (id || "").toUpperCase();
-      if (
-        id === "demo" ||
-        upperId.startsWith("VL-DEMO") ||
-        upperId === "VL-8921-XQ" ||
-        upperId === "VL-9104-MN"
-      ) {
-        const { PDFDocument } = await import("pdf-lib");
-        const demoDoc = await PDFDocument.create();
-        const page = demoDoc.addPage([612, 792]);
-        page.drawText("VerifyLingua — Certified Legal Translation Sample Preview", {
-          x: 50,
-          y: 720,
-          size: 16,
-        });
-        page.drawText("Certified under USCIS 8 CFR § 103.2 Standards • ATA Accredited #271892", {
-          x: 50,
-          y: 695,
-          size: 10,
-        });
-        const demoPdfBytes = await demoDoc.save();
-
-        return new NextResponse(demoPdfBytes as any, {
-          status: 200,
-          headers: {
-            "Content-Type": "application/pdf",
-            "Content-Disposition": `inline; filename="preview_${id}.pdf"`,
-            "Cache-Control": "private, no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-          },
-        });
-      }
-
       return NextResponse.json({ error: "Preview not available." }, { status: 404 });
     }
 

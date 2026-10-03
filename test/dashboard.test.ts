@@ -77,16 +77,32 @@ describe("Customer Dashboard & Onboarding Tests (Phase 6)", () => {
   it("streams uploaded evidentiary original document via /api/order/[id]/original with non-deletion guarantee headers", async () => {
     const { GET } = await import("@/app/api/order/[id]/original/route");
     const { NextRequest } = await import("next/server");
+    const { createTranslationJob } = await import("@/lib/translation/store");
+    const { PDFDocument } = await import("pdf-lib");
 
-    const req = new NextRequest("http://localhost:3000/api/order/VL-DEMO1/original");
-    const res = await GET(req, { params: Promise.resolve({ id: "VL-DEMO1" }) });
+    const samplePdf = await PDFDocument.create();
+    samplePdf.addPage([600, 400]);
+    const pdfBytes = Buffer.from(await samplePdf.save());
+
+    createTranslationJob({
+      id: "VL-ORDER-EVID1",
+      fileName: "VL-ORDER-EVID1_evidence.pdf",
+      fileFormat: "pdf",
+      fileSize: pdfBytes.length,
+      sourceLang: "es",
+      targetLang: "en",
+      originalBuffer: pdfBytes,
+    });
+
+    const req = new NextRequest("http://localhost:3000/api/order/VL-ORDER-EVID1/original");
+    const res = await GET(req, { params: Promise.resolve({ id: "VL-ORDER-EVID1" }) });
 
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("application/pdf");
     expect(res.headers.get("x-verifylingua-vault")).toBe("PERMANENT-RETENTION-ACTIVE");
     expect(res.headers.get("x-verifylingua-policy")).toBe("CANNOT-DELETE-ACTIVE-REVIEW");
     expect(res.headers.get("x-verifylingua-compliance")).toBe("8-CFR-204.2-EVIDENTIARY-HOLD");
-    expect(res.headers.get("content-disposition")).toContain("original_VL-DEMO1_evidence.pdf");
+    expect(res.headers.get("content-disposition")).toContain("original_VL-ORDER-EVID1_evidence.pdf");
 
     const fileBytes = new Uint8Array(await res.arrayBuffer());
     expect(fileBytes.length).toBeGreaterThan(500);

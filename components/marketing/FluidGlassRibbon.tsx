@@ -44,34 +44,34 @@ export function FluidGlassRibbon({ className = "" }: { className?: string }) {
         <defs>
           {/* Main Ribbon Emerald Gradient */}
           <linearGradient id="ribbonGrad1" x1="0%" y1="20%" x2="100%" y2="80%">
-            <stop offset="0%" stopColor="#059669" stopOpacity="0.85" />
-            <stop offset="25%" stopColor="#10B981" stopOpacity="0.9" />
-            <stop offset="50%" stopColor="#34D399" stopOpacity="0.75" />
-            <stop offset="75%" stopColor="#84CC16" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#047857" stopOpacity="0.85" />
+            <stop offset="0%" stopColor="rgb(5, 150, 105)" stopOpacity="0.85" />
+            <stop offset="25%" stopColor="rgb(16, 185, 129)" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="rgb(52, 211, 153)" stopOpacity="0.75" />
+            <stop offset="75%" stopColor="rgb(132, 204, 22)" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="rgb(4, 120, 87)" stopOpacity="0.85" />
           </linearGradient>
 
           {/* Deep Underside Shadow Gradient */}
           <linearGradient id="ribbonDark" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#064E3B" stopOpacity="0.9" />
-            <stop offset="40%" stopColor="#065F46" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#047857" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#022C22" stopOpacity="0.95" />
+            <stop offset="0%" stopColor="rgb(6, 78, 59)" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="rgb(6, 95, 70)" stopOpacity="0.8" />
+            <stop offset="70%" stopColor="rgb(4, 120, 87)" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="rgb(2, 44, 34)" stopOpacity="0.95" />
           </linearGradient>
 
           {/* Glass Specular Refraction Highlight */}
           <linearGradient id="ribbonHighlight" x1="10%" y1="0%" x2="90%" y2="100%">
-            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.6" />
-            <stop offset="30%" stopColor="#ECFDF5" stopOpacity="0.2" />
-            <stop offset="70%" stopColor="#FFFFFF" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.1" />
+            <stop offset="0%" stopColor="rgb(255, 255, 255)" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="rgb(236, 253, 245)" stopOpacity="0.2" />
+            <stop offset="70%" stopColor="rgb(255, 255, 255)" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="rgb(255, 255, 255)" stopOpacity="0.1" />
           </linearGradient>
 
           {/* Lime Accent Gradient */}
           <linearGradient id="ribbonLime" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#65A30D" stopOpacity="0.7" />
-            <stop offset="50%" stopColor="#A3E635" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#10B981" stopOpacity="0.7" />
+            <stop offset="0%" stopColor="rgb(101, 163, 13)" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="rgb(163, 230, 53)" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="rgb(16, 185, 129)" stopOpacity="0.7" />
           </linearGradient>
 
           {/* Soft Blur Filter for Depth of Field */}
@@ -114,7 +114,7 @@ export function FluidGlassRibbon({ className = "" }: { className?: string }) {
         {/* Layer 5: Secondary Specular Inner Reflection */}
         <path
           d="M -90 432 C 230 632, 465 232, 800 462 C 1135 692, 1375 302, 1690 402"
-          stroke="#FFFFFF"
+          stroke="rgb(255, 255, 255)"
           strokeWidth="2.5"
           strokeLinecap="round"
           opacity="0.75"
@@ -133,7 +133,7 @@ export function FluidGlassRibbon({ className = "" }: { className?: string }) {
         {/* Layer 7: Fine Specular Accent Line on Counter-Twist */}
         <path
           d="M -50 558 C 280 418, 550 778, 900 518 C 1250 258, 1450 618, 1750 488"
-          stroke="#FFFFFF"
+          stroke="rgb(255, 255, 255)"
           strokeWidth="2"
           opacity="0.5"
         />

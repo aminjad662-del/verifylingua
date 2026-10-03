@@ -140,10 +140,28 @@ describe("Precision Image-to-PDF Conversion & Download Binary Integrity", () => 
       expect(loadedPdf.getPageCount()).toBe(1);
     });
 
-    it("returns a valid PDF for the demo showcase without corrupted xref offsets", async () => {
-      const req = new NextRequest("http://localhost:3000/api/jobs/demo/download");
+    it("returns a valid PDF for a real completed job without corrupted xref offsets", async () => {
+      const { createTranslationJob, updateTranslationJob } = await import("@/lib/translation/store");
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.addPage([600, 800]);
+      const pdfBytes = Buffer.from(await pdfDoc.save());
+
+      const realJob = createTranslationJob({
+        id: "VL-PDF-DL-TEST1",
+        fileName: "Downloaded_Doc.pdf",
+        fileFormat: "pdf",
+        fileSize: pdfBytes.length,
+        sourceLang: "es",
+        targetLang: "en",
+        originalBuffer: pdfBytes,
+      });
+      realJob.status = "completed";
+      realJob.translatedBuffer = pdfBytes;
+      updateTranslationJob(realJob);
+
+      const req = new NextRequest(`http://localhost:3000/api/jobs/${realJob.id}/download`);
       const response = await downloadJobHandler(req, {
-        params: Promise.resolve({ id: "demo" }),
+        params: Promise.resolve({ id: realJob.id }),
       });
 
       expect(response.status).toBe(200);

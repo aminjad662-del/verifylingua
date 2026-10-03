@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Check, ShieldCheck, Zap } from "lucide-react";
+import { Check, ShieldCheck, Zap, Lock, FileText, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { springConfig } from "@/lib/motion";
 
 const PLANS = [
   {
@@ -19,7 +20,7 @@ const PLANS = [
     features: [
       "25 Certified translation pages",
       "USCIS 8 CFR § 103.2 certification affidavit",
-      "ATA Corporate Member seal #278190",
+      "ATA Corporate Member seal ID 278190",
       "Sub-pixel layout & table preservation",
       "Public QR code verification portal",
       "Permanent encrypted vault access"
@@ -68,101 +69,116 @@ const PLANS = [
 
 export function PricingSection() {
   return (
-    <section className="w-full bg-slate-50 py-24 px-6 border-t border-slate-200">
-      <div className="max-w-7xl mx-auto flex flex-col items-center">
+    <section className="w-full bg-obsidian-950 py-24 sm:py-28 px-4 sm:px-6 border-t border-white/[0.08] text-white relative overflow-hidden">
+      {/* Background Architectural Grid */}
+      <div 
+        className="absolute inset-0 opacity-[0.2] pointer-events-none"
+        style={{
+          backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)",
+          backgroundSize: "32px 32px"
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto flex flex-col items-center relative z-10 text-left">
         
         {/* Section Header */}
-        <div className="text-center mb-16 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-800 text-xs font-mono font-bold tracking-wider">
-            <Zap className="w-3.5 h-3.5 text-blue-600" />
+        <div className="text-center mb-16 max-w-3xl space-y-3.5 mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-300 text-xs font-mono font-semibold tracking-wider">
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
             <span>TRANSPARENT US-LEGAL PRICING</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-[-0.03em] text-white leading-tight font-display">
             Certified legal translations from $0.24 / page.
           </h2>
-          <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
+          <p className="text-base sm:text-lg text-neutral-300 font-normal leading-relaxed">
             Zero subscription lock-in. Zero surprise rush fees. All packages include statutory ATA certification and 100% money-back USCIS acceptance guarantee.
           </p>
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full items-stretch">
+        {/* Pricing Cards Grid (Double-Bezel Architecture) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 w-full items-stretch">
           {PLANS.map((plan) => (
             <motion.div
               key={plan.id}
               whileHover={{ y: -4 }}
-              transition={{ type: "spring", stiffness: 350, damping: 26 }}
-              className={`rounded-2xl p-8 border flex flex-col justify-between relative transition-shadow ${
+              transition={springConfig}
+              className={`rounded-2xl p-1.5 transition-all relative ${
                 plan.popular
-                  ? "bg-white border-blue-500 shadow-xl ring-2 ring-blue-500/20 md:-translate-y-3"
-                  : "bg-white border-slate-200 shadow-sm"
+                  ? "bg-amber-500/15 border border-amber-500/40 shadow-xl ring-1 ring-amber-500/20 md:-translate-y-2"
+                  : "bg-obsidian-900 border border-white/[0.08] shadow-2xs"
               }`}
             >
-              {plan.popular && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">
-                  Most Popular
+              <div className="rounded-xl p-6 sm:p-8 bg-obsidian-900/90 border border-white/[0.06] flex flex-col justify-between h-full relative">
+                
+                {plan.popular && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-obsidian-850 text-amber-300 border border-amber-500/40 px-3.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider shadow-sm">
+                    Most Popular
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-white font-display">{plan.name}</h3>
+                    <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-white/5 text-neutral-300 border border-white/10">
+                      {plan.pages}
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline gap-1.5 mb-1.5">
+                    <span className="text-4xl font-extrabold text-white tracking-tight">{plan.price}</span>
+                    <span className="text-neutral-400 text-sm font-medium">{plan.period}</span>
+                  </div>
+
+                  <div className="text-xs font-mono font-bold text-amber-400 mb-6">
+                    {plan.unitPrice}
+                  </div>
+
+                  <p className="text-sm text-neutral-300 mb-6 pb-6 border-b border-white/[0.08] leading-relaxed">
+                    {plan.description}
+                  </p>
+
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-300">
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span className="leading-snug">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              )}
 
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
-                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded bg-slate-100 text-slate-700">
-                    {plan.pages}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline gap-1.5 mb-2">
-                  <span className="text-4xl font-extrabold text-slate-900">{plan.price}</span>
-                  <span className="text-slate-500 text-sm font-medium">{plan.period}</span>
-                </div>
-
-                <div className="text-xs font-mono font-semibold text-blue-600 mb-6">
-                  {plan.unitPrice}
-                </div>
-
-                <p className="text-sm text-slate-600 mb-8 pb-6 border-b border-slate-100 leading-relaxed">
-                  {plan.description}
-                </p>
-
-                <ul className="space-y-3.5 mb-8">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-slate-700">
-                      <Check className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                      <span className="leading-snug">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                <Link href={`/order/triage?plan=${plan.id}`}>
+                  <button
+                    className={`w-full py-3.5 rounded-full font-semibold text-xs sm:text-sm transition-all cursor-pointer shadow-xs active:scale-[0.98] flex items-center justify-center gap-2 group ${
+                      plan.popular
+                        ? "bg-white hover:bg-neutral-100 text-obsidian-950 font-bold"
+                        : "bg-white/10 hover:bg-white/15 text-white border border-white/10"
+                    }`}
+                  >
+                    <span>{plan.cta}</span>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </Link>
               </div>
-
-              <Link href={`/order/triage?plan=${plan.id}`}>
-                <button
-                  className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all cursor-pointer shadow-sm ${
-                    plan.popular
-                      ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
-                      : "bg-slate-900 hover:bg-slate-800 text-white"
-                  }`}
-                >
-                  {plan.cta}
-                </button>
-              </Link>
             </motion.div>
           ))}
         </div>
 
         {/* Security & Money Back Reassurance */}
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-xs font-mono text-slate-500">
+        <div className="mt-14 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-mono text-neutral-400">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>100% USCIS Acceptance Money-Back Guarantee</span>
           </div>
-          <span className="hidden sm:inline text-slate-300">|</span>
+          <span className="hidden sm:inline text-neutral-700">|</span>
           <div className="flex items-center gap-2">
-            <span>🔒 Stripe 256-Bit Encrypted Checkout</span>
+            <Lock className="w-3.5 h-3.5 text-neutral-400" />
+            <span>Stripe 256-Bit Encrypted Checkout</span>
           </div>
-          <span className="hidden sm:inline text-slate-300">|</span>
+          <span className="hidden sm:inline text-neutral-700">|</span>
           <div className="flex items-center gap-2">
-            <span>📄 Official ATA Corporate Seal #278190</span>
+            <FileText className="w-3.5 h-3.5 text-amber-400" />
+            <span>Official ATA Corporate Seal ID 278190</span>
           </div>
         </div>
 

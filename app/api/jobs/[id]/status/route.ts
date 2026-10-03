@@ -21,126 +21,96 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
+    const cleanId = (id || "").trim();
     const url = req.nextUrl || new URL(req.url, "http://localhost:3000");
 
-    const upperId = (id || "").toUpperCase();
-    const isDemo =
-      id === "demo" ||
-      upperId.startsWith("VL-DEMO") ||
-      upperId === "VL-8921-XQ" ||
-      upperId === "VL-9104-MN";
+    // 1. Check In-Memory Store first (instant)
+    const memJob = getTranslationJob(cleanId);
 
-    // 1. Fast-path demo records immediately (instant 0ms response)
-    if (isDemo) {
-      const now = Date.now();
-      const startTime = now - 45000;
-      const isTranscript = upperId.includes("9104");
-      const isOfficialBirth = upperId.includes("8921");
-      const fileName = isOfficialBirth
-        ? "Acta_De_Nacimiento_Oficial.pdf"
-        : isTranscript
-        ? "Doctoral_Degree_Transcripts.pdf"
-        : "Acta_De_Nacimiento_Jalisco.pdf";
-
-      const downloadToken = `tok_${id}`;
-      const downloadUrl = `/api/jobs/${id}/download?token=${downloadToken}`;
-
-      return NextResponse.json({
-        jobId: id,
-        status: "completed",
-        currentPhase: "completed",
-        progress: 100,
-        currentStep: "Certified translation verified & sealed under USCIS 8 CFR § 103.2 standards. Ready for official filing.",
-        fileName: fileName,
-        fileFormat: "pdf",
-        sourceLang: isTranscript ? "de" : "es",
-        targetLang: "en",
-        pageCount: isTranscript ? 4 : 1,
-        artifactUrl: downloadUrl,
-        downloadUrl: downloadUrl,
-        downloadToken,
-        layoutPreserved: true,
-        qualityGate: {
-          isValidFormat: true,
-          isQualityAcceptable: true,
-          layoutPreserved: true,
-          stampsDetected: true,
-          notes: [
-            "ATA-accredited certified translation",
-            "USCIS 8 CFR § 103.2 compliance verified",
-            "Cryptographic SHA-256 seal embedded",
-          ],
-        },
-        fidelityScore: 99.4,
-        error: null,
-        createdAt: new Date(startTime).toISOString(),
-        completedAt: new Date(now).toISOString(),
-      });
-    }
-
-    // 2. Check In-Memory Store first (instant)
-    const memJob = getTranslationJob(id);
-
-    // 3. Check PostgreSQL Database with fast timeout guard
+    // 2. Check PostgreSQL Database (TranslationJob table, id or documentId column)
     let dbJob = null;
-    let pJob = null;
     if (!memJob) {
       try {
-        dbJob = await Promise.race([
-          prisma.translationJob.findUnique({
-            where: { id },
-          }),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 400)),
-        ]);
-      } catch {}
-
-      if (!dbJob) {
-        try {
-          pJob = await Promise.race([
-            getPersistentJob(id),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 400)),
-          ]);
-        } catch {}
+        dbJob = await prisma.translationJob.findFirst({
+          where: {
+            OR: [{ id: cleanId }, { documentId: cleanId }],
+          },
+        });
+      } catch (err: any) {
+        console.warn("[api/jobs/status] Prisma translationJob query error:", err?.message);
       }
     }
 
-    // 4. Check if id matches an Order publicCode
-    let orderRecord = null;
-    if (!dbJob && !pJob && !memJob) {
+    // 3. Fallback to persistent-store if direct prisma query was null
+    if (!dbJob && !memJob) {
       try {
-        orderRecord = await Promise.race([
-          prisma.order.findUnique({
-            where: { publicCode: id },
-            include: { documents: true },
-          }),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 400)),
-        ]);
-      } catch {}
+        const pJob = await getPersistentJob(cleanId);
+        if (pJob) {
+          dbJob = {
+            id: pJob.id,
+            userId: pJob.userId,
+            documentId: pJob.documentId,
+            sourceKey: pJob.sourceKey,
+            outputKey: pJob.outputKey,
+            sourceFilename: pJob.sourceFilename,
+            sourceFormat: pJob.sourceFormat,
+            sourceMimeType: pJob.sourceMimeType,
+            sourceLanguage: pJob.sourceLanguage,
+            targetLanguage: pJob.targetLanguage,
+            status: pJob.status,
+            currentStep: pJob.currentStep,
+            progress: pJob.progress,
+            pageCount: pJob.pageCount,
+            downloadToken: pJob.downloadToken,
+            errorMessage: pJob.errorMessage,
+            createdAt: pJob.createdAt,
+            completedAt: pJob.completedAt,
+            layoutPreserved: pJob.layoutPreserved,
+          };
+        }
+      } catch (err: any) {
+        console.warn("[api/jobs/status] getPersistentJob query error:", err?.message);
+      }
     }
 
-    if (!dbJob && !pJob && !memJob && !orderRecord) {
+    // 4. Check if id matches an Order publicCode or Order ID
+    let orderRecord = null;
+    if (!dbJob && !memJob) {
+      try {
+        orderRecord = await prisma.order.findFirst({
+          where: {
+            OR: [{ publicCode: cleanId }, { id: cleanId }],
+          },
+          include: { documents: true },
+        });
+      } catch (err: any) {
+        console.warn("[api/jobs/status] Prisma order query error:", err?.message);
+      }
+    }
+
+    if (!dbJob && !memJob && !orderRecord) {
       return NextResponse.json(
-        { error: `Job '${id}' not found.` },
+        { error: `Job '${cleanId}' not found.` },
         { status: 404 }
       );
     }
 
     // Resolve unified job attributes
-    const jobId = dbJob?.id || pJob?.id || memJob?.id || orderRecord?.publicCode || id;
-    const userId = dbJob?.userId || pJob?.userId || memJob?.userId || orderRecord?.userId || null;
-    const rawStatus = dbJob?.status || pJob?.status || memJob?.status || (orderRecord?.status === "PAID" ? "translating" : (orderRecord?.status?.toLowerCase() || "queued"));
-    const progress = dbJob?.progress ?? pJob?.progress ?? memJob?.progress ?? (orderRecord ? (orderRecord.status === "DELIVERED" ? 100 : 35) : 0);
-    const currentStep = dbJob?.currentStep || pJob?.currentStep || memJob?.currentStep || (orderRecord ? "ATA-accredited certified linguist assigned. Processing document..." : "Processing document...");
-    const fileName = dbJob?.sourceFilename || pJob?.sourceFilename || memJob?.fileName || orderRecord?.documents?.[0]?.fileName || "document.pdf";
-    const fileFormat = dbJob?.sourceFormat || pJob?.sourceFormat || memJob?.fileFormat || "pdf";
-    const sourceLang = dbJob?.sourceLanguage || pJob?.sourceLanguage || memJob?.sourceLang || orderRecord?.sourceLang || "es";
-    const targetLang = dbJob?.targetLanguage || pJob?.targetLanguage || memJob?.targetLang || orderRecord?.targetLang || "en";
-    const pageCount = dbJob?.pageCount || pJob?.pageCount || memJob?.pageCount || orderRecord?.pageCount || 1;
-    const downloadToken = dbJob?.downloadToken || pJob?.downloadToken || memJob?.downloadToken || id;
-    const errorMessage = dbJob?.errorMessage || pJob?.errorMessage || memJob?.error || null;
-    const createdAt = dbJob?.createdAt || pJob?.createdAt || memJob?.createdAt || orderRecord?.createdAt || new Date().toISOString();
-    const completedAt = dbJob?.completedAt || pJob?.completedAt || memJob?.completedAt || null;
-    const layoutPreserved = dbJob?.layoutPreserved ?? pJob?.layoutPreserved ?? memJob?.layoutPreserved ?? true;
+    const jobId = dbJob?.id || memJob?.id || orderRecord?.publicCode || cleanId;
+    const userId = dbJob?.userId || memJob?.userId || orderRecord?.userId || null;
+    const rawStatus = dbJob?.status || memJob?.status || (orderRecord?.status === "PAID" ? "translating" : (orderRecord?.status?.toLowerCase() || "queued"));
+    const progress = dbJob?.progress ?? memJob?.progress ?? (orderRecord ? (orderRecord.status === "DELIVERED" ? 100 : 35) : 0);
+    const currentStep = dbJob?.currentStep || memJob?.currentStep || (orderRecord ? "ATA-accredited certified linguist assigned. Processing document..." : "Processing document...");
+    const fileName = dbJob?.sourceFilename || memJob?.fileName || orderRecord?.documents?.[0]?.fileName || "document.pdf";
+    const fileFormat = dbJob?.sourceFormat || memJob?.fileFormat || "pdf";
+    const sourceLang = dbJob?.sourceLanguage || memJob?.sourceLang || orderRecord?.sourceLang || "es";
+    const targetLang = dbJob?.targetLanguage || memJob?.targetLang || orderRecord?.targetLang || "en";
+    const pageCount = dbJob?.pageCount || memJob?.pageCount || orderRecord?.pageCount || 1;
+    const downloadToken = dbJob?.downloadToken || memJob?.downloadToken || cleanId;
+    const errorMessage = dbJob?.errorMessage || memJob?.error || null;
+    const createdAt = dbJob?.createdAt || memJob?.createdAt || orderRecord?.createdAt || new Date().toISOString();
+    const completedAt = dbJob?.completedAt || memJob?.completedAt || null;
+    const layoutPreserved = dbJob?.layoutPreserved ?? memJob?.layoutPreserved ?? true;
 
     // Resolve user authorization (multi-tenant IDOR protection)
     const isTestEnv = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);

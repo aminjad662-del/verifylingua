@@ -93,7 +93,7 @@ export function HeroSection() {
                <div className="mx-auto h-6 w-64 bg-slate-100 rounded-md"></div>
              </div>
              
-             <div className="p-8 flex gap-8 h-full bg-[#F8FAFC]">
+             <div className="p-8 flex gap-8 h-full bg-slate-50">
                {/* Sidebar */}
                <div className="w-48 hidden md:flex flex-col gap-3">
                  <div className="h-4 w-24 bg-slate-200 rounded"></div>

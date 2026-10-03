@@ -36,24 +36,6 @@ export async function GET(
       });
     }
 
-    // 2. Default evidentiary demo document for order tracking demo codes (e.g. VL-DEMO1)
-    const fixturesDir = path.join(process.cwd(), "fixtures");
-    const fallbackPath = path.join(fixturesDir, "sample_birth_cert.pdf");
-
-    if (fs.existsSync(fallbackPath)) {
-      const fileBuffer = fs.readFileSync(fallbackPath);
-      return new NextResponse(new Uint8Array(fileBuffer), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="original_${id}_evidence.pdf"`,
-          "X-VerifyLingua-Vault": "PERMANENT-RETENTION-ACTIVE",
-          "X-VerifyLingua-Policy": "CANNOT-DELETE-ACTIVE-REVIEW",
-          "X-VerifyLingua-Compliance": "8-CFR-204.2-EVIDENTIARY-HOLD",
-        },
-      });
-    }
-
     return NextResponse.json(
       { error: `Original evidentiary file for order '${id}' was not found in vault.` },
       { status: 404 }

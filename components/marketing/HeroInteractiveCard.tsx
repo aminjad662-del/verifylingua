@@ -192,7 +192,7 @@ export function HeroInteractiveCard() {
                   <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] font-mono text-zinc-400">
                     <div>
                       <span className="block text-zinc-200 font-bold">Elena Rostova, CT</span>
-                      <span>ATA Member #278190</span>
+                      <span>ATA Member ID 278190</span>
                     </div>
                     <div className="text-right">
                       <span className="text-emerald-400 font-bold block">Wet-Ink Signed</span>
@@ -292,7 +292,7 @@ export function HeroInteractiveCard() {
         <Award className="w-5 h-5 text-emerald-400" />
         <div className="text-left pr-1">
           <p className="text-[11px] font-bold leading-tight">ATA Corporate Member</p>
-          <p className="text-[9px] font-mono text-zinc-400">ID #278190</p>
+          <p className="text-[9px] font-mono text-zinc-400">ID No. 278190</p>
         </div>
       </motion.div>
     </div>

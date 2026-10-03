@@ -64,12 +64,23 @@ function CheckoutContent() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to process payment authorization.");
+        const errMsg = err.error || err.message || "Failed to process payment authorization.";
+        if (res.status >= 500 || err.error === "DATABASE_INSERT_FAILED") {
+          if (typeof window !== "undefined") {
+            alert(
+              `Order Error (500): ${errMsg}\n\nThe order could not be saved to the database. Please try again.`
+            );
+          }
+        }
+        throw new Error(errMsg);
       }
 
       const data = await res.json();
-      const trackerId = data.jobId || data.publicCode || data.orderId || data.id;
-      if (!trackerId || trackerId === "undefined") {
+      const trackerId = data.publicCode || data.jobId || data.id || data.orderId;
+      if (!trackerId || trackerId === "undefined" || trackerId === "null") {
+        if (typeof window !== "undefined") {
+          alert("Order Error: Server returned an invalid tracking ID without confirmed database persistence.");
+        }
         throw new Error("Invalid tracking ID received from server.");
       }
       router.push(`/tracker/${trackerId}`);
