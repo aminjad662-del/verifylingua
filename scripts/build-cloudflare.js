@@ -142,6 +142,32 @@ for (const iconPath of iconCandidates) {
   }
 }
 
+// Ensure sitemap.xml is present in dist
+const sitemapCandidates = [
+  path.join(NEXT_DIR, 'server', 'app', 'sitemap.xml.body'),
+  path.join(PUBLIC_DIR, 'sitemap.xml'),
+];
+for (const sitemapPath of sitemapCandidates) {
+  if (fs.existsSync(sitemapPath)) {
+    fs.copyFileSync(sitemapPath, path.join(DIST_DIR, 'sitemap.xml'));
+    console.log(`✅ Ensured dist/sitemap.xml from ${path.basename(sitemapPath)}`);
+    break;
+  }
+}
+
+// Ensure robots.txt is present in dist
+const robotsCandidates = [
+  path.join(NEXT_DIR, 'server', 'app', 'robots.txt.body'),
+  path.join(PUBLIC_DIR, 'robots.txt'),
+];
+for (const robotsPath of robotsCandidates) {
+  if (fs.existsSync(robotsPath)) {
+    fs.copyFileSync(robotsPath, path.join(DIST_DIR, 'robots.txt'));
+    console.log(`✅ Ensured dist/robots.txt from ${path.basename(robotsPath)}`);
+    break;
+  }
+}
+
 // 5. Generate _routes.json for Cloudflare Pages
 const routesConfig = {
   version: 1,
@@ -206,7 +232,7 @@ export default {
     const pathname = url.pathname;
 
     // 1. Health check endpoint (for uptime monitors and verification)
-    if (pathname === '/cdn-cgi/healthz' || pathname === '/api/health') {
+    if (pathname === '/healthz' || pathname === '/health' || pathname === '/api/health' || pathname === '/cdn-cgi/healthz') {
       return new Response(JSON.stringify({
         status: 'healthy',
         service: 'verifylingua',
