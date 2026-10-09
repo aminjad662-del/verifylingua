@@ -21,7 +21,6 @@ const nextConfig: NextConfig = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      "framer-motion": path.resolve(__dirname, "node_modules/motion/dist/es/react/index.mjs"),
       "@vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": path.resolve(
         __dirname,
         "lib/shims/turbopack-hmr-shim.js"
