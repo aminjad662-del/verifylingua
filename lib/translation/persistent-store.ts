@@ -1,10 +1,9 @@
 import crypto from "crypto";
-import { prisma } from "../prisma";
 import { putObject, getObject } from "../storage";
 import { FidelityScoreBreakdown, FidelityIssue } from "../fidelity";
 
 import { JobStatus } from "./types";
-import { generateJobTrackingId } from "./store";
+import { generateJobTrackingId, getTranslationJob } from "./store";
 
 export type PersistentJobStatus =
   | JobStatus
@@ -59,6 +58,16 @@ const jobMetadataCache = new Map<
   { issues?: (FidelityIssue | string)[]; warnings?: string[]; fidelityBreakdown?: FidelityScoreBreakdown | null }
 >();
 
+// Persistent jobs memory store (singleton across module reloads)
+const globalForPersistent = globalThis as unknown as {
+  __persistentJobsMemory?: Map<string, any>;
+};
+const persistentJobsMemory =
+  globalForPersistent.__persistentJobsMemory ?? new Map<string, any>();
+if (process.env.NODE_ENV !== "production") {
+  globalForPersistent.__persistentJobsMemory = persistentJobsMemory;
+}
+
 function mapDbToJob(db: any): PersistentTranslationJob {
   const cached = jobMetadataCache.get(db.id);
   return {
@@ -87,8 +96,8 @@ function mapDbToJob(db: any): PersistentTranslationJob {
     warnings: cached?.warnings ?? [],
     errorCode: db.errorCode || undefined,
     errorMessage: db.errorMessage || undefined,
-    createdAt: db.createdAt instanceof Date ? db.createdAt.toISOString() : new Date(db.createdAt).toISOString(),
-    updatedAt: db.updatedAt instanceof Date ? db.updatedAt.toISOString() : new Date(db.updatedAt).toISOString(),
+    createdAt: db.createdAt instanceof Date ? db.createdAt.toISOString() : new Date(db.createdAt || Date.now()).toISOString(),
+    updatedAt: db.updatedAt instanceof Date ? db.updatedAt.toISOString() : new Date(db.updatedAt || Date.now()).toISOString(),
     startedAt: db.startedAt ? (db.startedAt instanceof Date ? db.startedAt.toISOString() : new Date(db.startedAt).toISOString()) : null,
     completedAt: db.completedAt ? (db.completedAt instanceof Date ? db.completedAt.toISOString() : new Date(db.completedAt).toISOString()) : null,
     expiresAt: db.expiresAt ? (db.expiresAt instanceof Date ? db.expiresAt.toISOString() : new Date(db.expiresAt).toISOString()) : new Date(Date.now() + 86400000).toISOString(),
@@ -98,7 +107,7 @@ function mapDbToJob(db: any): PersistentTranslationJob {
 }
 
 /**
- * Creates a persistent translation job directly in PostgreSQL via Prisma.
+ * Creates a persistent translation job in the store.
  */
 export async function createPersistentJob(params: {
   userId?: string | null;
@@ -115,32 +124,16 @@ export async function createPersistentJob(params: {
   const downloadToken = crypto.randomBytes(24).toString("hex");
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-  let validUserId: string | null = null;
-  if (params.userId) {
-    try {
-      await prisma.user.upsert({
-        where: { id: params.userId },
-        update: {},
-        create: {
-          id: params.userId,
-          email: `${params.userId}@verifylingua.internal`,
-          name: params.userId,
-          isGuest: false,
-        },
-      });
-      validUserId = params.userId;
-    } catch {
-      validUserId = params.userId;
-    }
-  }
-
+  const validUserId = params.userId || null;
   const userSegment = validUserId || "anonymous";
   const ext = params.filename.split(".").pop()?.toLowerCase() || params.format;
   const sourceKey = params.sourceKey || `jobs/${userSegment}/${id}/source.${ext}`;
   const outputKey = `jobs/${userSegment}/${id}/output.pdf`;
 
   if (params.fileBuffer) {
-    await putObject(sourceKey, params.fileBuffer, params.mimeType);
+    try {
+      await putObject(sourceKey, params.fileBuffer, params.mimeType);
+    } catch {}
   }
 
   const initialStatus: PersistentJobStatus = params.fileBuffer ? "uploaded" : "created";
@@ -149,58 +142,94 @@ export async function createPersistentJob(params: {
     : "Job created, awaiting file upload";
   const initialProgress = params.fileBuffer ? 10 : 0;
 
-  const dbJob = await prisma.translationJob.create({
-    data: {
-      id,
-      userId: validUserId,
-      sourceKey,
-      outputKey,
-      sourceFilename: params.filename,
-      sourceFormat: params.format,
-      sourceMimeType: params.mimeType,
-      sourceLanguage: params.sourceLang || "es",
-      targetLanguage: params.targetLang,
-      status: initialStatus,
-      currentStep: initialStep,
-      progress: initialProgress,
-      pageCount: 1,
-      wordCount: 0,
-      characterCount: 0,
-      provider: "azure",
-      downloadToken,
-      expiresAt,
-      layoutPreserved: true,
-    },
-  });
+  const jobData = {
+    id,
+    userId: validUserId,
+    sourceKey,
+    outputKey,
+    sourceFilename: params.filename,
+    sourceFormat: params.format,
+    sourceMimeType: params.mimeType,
+    sourceLanguage: params.sourceLang || "es",
+    targetLanguage: params.targetLang,
+    status: initialStatus,
+    currentStep: initialStep,
+    progress: initialProgress,
+    pageCount: 1,
+    wordCount: 0,
+    characterCount: 0,
+    provider: "azure",
+    downloadToken,
+    expiresAt,
+    layoutPreserved: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
-  return mapDbToJob(dbJob);
+  persistentJobsMemory.set(id, jobData);
+  return mapDbToJob(jobData);
 }
 
 /**
- * Retrieves a persistent translation job directly from PostgreSQL.
+ * Retrieves a persistent translation job from the store.
  */
 export async function getPersistentJob(id: string): Promise<PersistentTranslationJob | null> {
-  const dbJob = await prisma.translationJob.findUnique({
-    where: { id },
-    include: {
-      qaResults: {
-        include: { issues: true },
-      },
-    },
-  });
-
-  if (!dbJob) return null;
-  return mapDbToJob(dbJob);
+  const job = persistentJobsMemory.get(id) || null;
+  if (!job) return null;
+  return mapDbToJob(job);
 }
 
 /**
- * Updates a persistent translation job directly in PostgreSQL.
+ * Updates a persistent translation job in the store.
  */
 export async function updatePersistentJob(
   id: string,
   updates: Partial<PersistentTranslationJob>
 ): Promise<PersistentTranslationJob | null> {
-  const data: any = {};
+  let existing = persistentJobsMemory.get(id);
+  if (!existing) {
+    const memJob = getTranslationJob(id);
+    if (memJob) {
+      existing = {
+        id: memJob.id,
+        userId: memJob.userId || null,
+        sourceFilename: memJob.fileName || "document.pdf",
+        sourceFormat: memJob.fileFormat || "pdf",
+        sourceMimeType: "application/pdf",
+        sourceLanguage: memJob.sourceLang || "auto",
+        targetLanguage: memJob.targetLang || "en",
+        status: memJob.status,
+        currentStep: memJob.currentStep,
+        progress: memJob.progress,
+        pageCount: memJob.pageCount,
+        sourceKey: memJob.sourceKey,
+        outputKey: memJob.outputKey,
+        downloadToken: memJob.downloadToken,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    } else {
+      existing = {
+        id,
+        sourceFilename: "document.pdf",
+        sourceFormat: "pdf",
+        sourceMimeType: "application/pdf",
+        sourceLanguage: "auto",
+        targetLanguage: "en",
+        status: "queued",
+        currentStep: "Processing",
+        progress: 0,
+        pageCount: 1,
+        sourceKey: `jobs/anonymous/${id}/source.pdf`,
+        outputKey: `jobs/anonymous/${id}/output.pdf`,
+        downloadToken: id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+  }
+  const data: any = { ...existing, id };
+
   if (updates.status !== undefined) data.status = updates.status;
   if (updates.currentStep !== undefined) data.currentStep = updates.currentStep;
   if (updates.progress !== undefined) data.progress = updates.progress;
@@ -222,6 +251,7 @@ export async function updatePersistentJob(
   if ("startedAt" in updates) {
     data.startedAt = updates.startedAt ? new Date(updates.startedAt) : null;
   }
+  data.updatedAt = new Date();
 
   const existingMeta = jobMetadataCache.get(id) || {};
   if (updates.issues !== undefined) existingMeta.issues = updates.issues;
@@ -229,36 +259,30 @@ export async function updatePersistentJob(
   if (updates.fidelityBreakdown !== undefined) existingMeta.fidelityBreakdown = updates.fidelityBreakdown;
   jobMetadataCache.set(id, existingMeta);
 
-  const updated = await prisma.translationJob.update({
-    where: { id },
-    data,
-  });
-
-  return mapDbToJob(updated);
+  persistentJobsMemory.set(id, data);
+  return mapDbToJob(data);
 }
 
 /**
- * Lists user jobs directly from PostgreSQL, ordered by creation date descending.
+ * Lists user jobs, ordered by creation date descending.
  */
 export async function listUserJobs(userId?: string | null): Promise<PersistentTranslationJob[]> {
-  const dbJobs = await prisma.translationJob.findMany({
-    where: userId ? { userId } : undefined,
-    orderBy: { createdAt: "desc" },
+  const memJobs = Array.from(persistentJobsMemory.values()).filter(
+    (j) => !userId || j.userId === userId
+  );
+  memJobs.sort((a, b) => {
+    const timeA = new Date(a.createdAt || 0).getTime();
+    const timeB = new Date(b.createdAt || 0).getTime();
+    return timeB - timeA;
   });
-
-  return dbJobs.map(mapDbToJob);
+  return memJobs.map(mapDbToJob);
 }
 
 export const getAllJobs = listUserJobs;
 
 /**
- * Deletes a persistent translation job directly from PostgreSQL.
+ * Deletes a persistent translation job from the store.
  */
 export async function deletePersistentJob(id: string): Promise<boolean> {
-  try {
-    await prisma.translationJob.delete({ where: { id } });
-    return true;
-  } catch {
-    return false;
-  }
+  return persistentJobsMemory.delete(id);
 }

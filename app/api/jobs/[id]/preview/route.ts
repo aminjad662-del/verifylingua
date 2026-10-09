@@ -15,26 +15,33 @@ export async function GET(
     let filename = "preview_document";
 
     const job = await getPersistentJob(id);
-    if (job && job.outputKey) {
-      binary = await getObject(job.outputKey);
-      mime = job.sourceMimeType || "application/octet-stream";
-      filename = `preview_${job.sourceFilename}`;
+    const { getTranslationJob } = await import("@/lib/translation/store");
+    const memJob = getTranslationJob(id);
+
+    const format =
+      job?.sourceFormat ||
+      memJob?.fileFormat ||
+      job?.sourceFilename?.split(".").pop()?.toLowerCase() ||
+      memJob?.fileName?.split(".").pop()?.toLowerCase();
+
+    if (format === "jpg" || format === "jpeg") {
+      mime = "image/jpeg";
+    } else if (format === "png") {
+      mime = "image/png";
+    } else if (job?.sourceMimeType && job.sourceMimeType !== "application/octet-stream") {
+      mime = job.sourceMimeType;
     } else {
-      const { getTranslationJob } = await import("@/lib/translation/store");
-      const memJob = getTranslationJob(id);
-      if (memJob) {
-        if (memJob.translatedBuffer) {
-          binary = memJob.translatedBuffer;
-        } else if (memJob.outputKey) {
-          binary = await getObject(memJob.outputKey);
-        }
-        mime = memJob.fileFormat === "png"
-          ? "image/png"
-          : memJob.fileFormat === "jpg"
-          ? "image/jpeg"
-          : "application/pdf";
-        filename = `preview_${memJob.fileName}`;
-      }
+      mime = "application/pdf";
+    }
+
+    filename = `preview_${job?.sourceFilename || memJob?.fileName || "document"}`;
+
+    if (memJob?.translatedBuffer) {
+      binary = memJob.translatedBuffer;
+    } else if (job?.outputKey) {
+      binary = await getObject(job.outputKey);
+    } else if (memJob?.outputKey) {
+      binary = await getObject(memJob.outputKey);
     }
 
     if (!binary) {

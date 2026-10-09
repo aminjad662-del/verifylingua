@@ -18,13 +18,21 @@ export class ExtractionAgent {
         const format = isJpeg ? "jpg" : "png";
         const result = await extractImageSpatialBlocks(buffer, format);
         rawBlocks = result.blocks;
+      } else if (buffer.length > 4 && buffer.subarray(0, 4).toString("ascii") === "PK\x03\x04") {
+        const { groupDocxParagraphRuns } = await import("../translation/spatial");
+        const docxData = await groupDocxParagraphRuns(buffer);
+        rawBlocks = docxData.paragraphs.map((p, idx) => ({
+          id: p.id,
+          text: p.fullText,
+          x: 50,
+          y: 50 + idx * 20,
+          width: 500,
+          height: 16,
+          page: 0,
+          fontSize: 11,
+        }));
       } else {
-        // Fallback for DOCX or unknown: mock structural block for now
-        rawBlocks = [{
-          id: `block_fallback_${Date.now()}`,
-          text: "Fallback block for unsupported extraction format",
-          x: 0, y: 0, width: 100, height: 100, page: 1, fontSize: 12
-        }];
+        throw new Error("Unsupported document format for extraction. Supported formats: PDF, PNG, JPG, DOCX.");
       }
 
       // Map to orchestrator schema

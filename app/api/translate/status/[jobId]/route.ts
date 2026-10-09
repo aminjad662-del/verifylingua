@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTranslationJob } from "@/lib/translation/store";
-import { prisma } from "@/lib/prisma";
+import { getPersistentJob } from "@/lib/translation/persistent-store";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 
 export const dynamic = "force-dynamic";
+
+function getSupabaseClient() {
+  try {
+    return createAdminClient();
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(
   req: NextRequest,
@@ -11,86 +21,100 @@ export async function GET(
   try {
     const { jobId } = await context.params;
 
-    // 1. Check PostgreSQL Database first for freshest worker state
-    let dbJob = null;
-    try {
-      dbJob = await prisma.translationJob.findUnique({
-        where: { id: jobId },
-      });
-    } catch {}
-
+    // 1. Check in-memory store
     let job = getTranslationJob(jobId);
 
-    if (!job && !dbJob) {
-      const { getPersistentJob } = await import("@/lib/translation/persistent-store");
-      const pJob = await getPersistentJob(jobId);
-      if (pJob) {
-        return NextResponse.json({
-          jobId: pJob.id,
-          fileName: pJob.sourceFilename,
-          fileFormat: pJob.sourceFormat,
-          fileSize: 0,
-          sourceLang: pJob.sourceLanguage,
-          targetLang: pJob.targetLanguage,
-          status: pJob.status === "completed" || pJob.status === "completed_with_warnings" ? "ready" : pJob.status,
-          progress: pJob.progress,
-          currentStep: pJob.currentStep,
-          createdAt: pJob.createdAt,
-          completedAt: pJob.completedAt,
-          downloadUrl: pJob.status === "completed" || pJob.status === "completed_with_warnings"
-            ? `/api/jobs/${pJob.id}/download?token=${pJob.downloadToken}`
-            : null,
-          qualityGate: pJob.fidelityBreakdown ? {
-            notes: pJob.warnings || [],
-            byteSize: 1024,
-            verifiedAt: pJob.completedAt || pJob.updatedAt,
-          } : null,
-          fidelityScore: pJob.fidelityScore,
-          fidelityBreakdown: pJob.fidelityBreakdown,
-          warnings: pJob.warnings || [],
-          layoutPreserved: pJob.layoutPreserved ?? true,
-          error: pJob.errorMessage || null,
-        });
-      }
-
-      // Check if jobId matches an Order publicCode or Order ID
+    // 2. Check persistent store
+    let pJob = null;
+    if (!job) {
       try {
-        const orderRecord = await prisma.order.findFirst({
-          where: {
-            OR: [{ publicCode: jobId }, { id: jobId }],
-          },
-          include: { documents: true },
-        });
-
-        if (orderRecord) {
-          const rawStatus = orderRecord.status === "PAID" ? "translating" : (orderRecord.status?.toLowerCase() || "queued");
-          const progress = orderRecord.status === "DELIVERED" ? 100 : 35;
-          const currentStep = "ATA-accredited certified linguist assigned. Processing document...";
-          const fileName = orderRecord.documents?.[0]?.fileName || "uploaded_document.pdf";
-          const isReady = orderRecord.status === "DELIVERED";
-
-          return NextResponse.json({
-            jobId: orderRecord.publicCode,
-            fileName,
-            fileFormat: "pdf",
-            fileSize: 0,
-            sourceLang: orderRecord.sourceLang || "es",
-            targetLang: orderRecord.targetLang || "en",
-            status: rawStatus,
-            progress,
-            currentStep,
-            createdAt: orderRecord.createdAt,
-            completedAt: null,
-            downloadUrl: isReady
-              ? `/api/jobs/${orderRecord.publicCode}/download?token=${orderRecord.publicCode}`
-              : null,
-            qualityGate: null,
-            layoutPreserved: true,
-            error: null,
-          });
-        }
+        pJob = await getPersistentJob(jobId);
       } catch {}
+    }
 
+    if (pJob) {
+      return NextResponse.json({
+        jobId: pJob.id,
+        fileName: pJob.sourceFilename,
+        fileFormat: pJob.sourceFormat,
+        fileSize: 0,
+        sourceLang: pJob.sourceLanguage,
+        targetLang: pJob.targetLanguage,
+        status: pJob.status === "completed" || pJob.status === "completed_with_warnings" ? "ready" : pJob.status,
+        progress: pJob.progress,
+        currentStep: pJob.currentStep,
+        createdAt: pJob.createdAt,
+        completedAt: pJob.completedAt,
+        downloadUrl: pJob.status === "completed" || pJob.status === "completed_with_warnings"
+          ? `/api/jobs/${pJob.id}/download?token=${pJob.downloadToken}`
+          : null,
+        qualityGate: pJob.fidelityBreakdown ? {
+          notes: pJob.warnings || [],
+          byteSize: 1024,
+          verifiedAt: pJob.completedAt || pJob.updatedAt,
+        } : null,
+        fidelityScore: pJob.fidelityScore,
+        fidelityBreakdown: pJob.fidelityBreakdown,
+        warnings: pJob.warnings || [],
+        layoutPreserved: pJob.layoutPreserved ?? true,
+        error: pJob.errorMessage || null,
+      });
+    }
+
+    // 3. Check Supabase (translation_jobs and orders tables)
+    let supabaseJob: any = null;
+    let orderRecord: any = null;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const isMockPlaceholderUrl = Boolean(!supabaseUrl || supabaseUrl.includes("your-project") || !serviceRoleKey);
+
+    if (!job && !pJob && !isMockPlaceholderUrl) {
+      try {
+        const supabase = getSupabaseClient();
+        if (!supabase) throw new Error("Supabase client unavailable");
+
+        const timeoutPromise = new Promise<{ data: null; error: any }>((resolve) =>
+          setTimeout(() => resolve({ data: null, error: new Error("Supabase status query timeout") }), 2000)
+        );
+
+        // Check translation_jobs
+        const queryJobsPromise = supabase
+          .from("translation_jobs")
+          .select("*, orders(*)")
+          .or(`id.eq.${jobId},order_id.eq.${jobId}`)
+          .maybeSingle();
+
+        const { data: jobData } = await Promise.race([queryJobsPromise, timeoutPromise]);
+
+        if (jobData) {
+          supabaseJob = jobData;
+          if (jobData.orders) orderRecord = jobData.orders;
+        }
+
+        // Check orders
+        if (!supabaseJob) {
+          const queryOrdersPromise = supabase
+            .from("orders")
+            .select("*, translation_jobs(*)")
+            .or(`id.eq.${jobId},public_code.eq.${jobId}`)
+            .maybeSingle();
+
+          const { data: orderData } = await Promise.race([queryOrdersPromise, timeoutPromise]);
+
+          if (orderData) {
+            orderRecord = orderData;
+            if (orderData.translation_jobs && orderData.translation_jobs.length > 0) {
+              supabaseJob = orderData.translation_jobs[0];
+            }
+          }
+        }
+      } catch (err: any) {
+        console.error("Supabase Error:", err);
+        console.warn("[api/translate/status] Supabase query error:", err?.message);
+      }
+    }
+
+    if (!job && !pJob && !supabaseJob && !orderRecord) {
       return NextResponse.json(
         { error: `Translation job '${jobId}' was not found or has expired.` },
         { status: 404 }
@@ -98,30 +122,36 @@ export async function GET(
     }
 
     // Resolve unified status
-    const status = dbJob ? (dbJob.status === "completed" ? "ready" : dbJob.status) : job!.status;
-    const progress = dbJob ? dbJob.progress : job!.progress;
-    const currentStep = dbJob ? dbJob.currentStep : job!.currentStep;
-    const error = dbJob ? (dbJob.errorMessage || null) : (job!.error || null);
-    const downloadToken = dbJob?.downloadToken || job?.downloadToken || jobId;
+    const status = supabaseJob
+      ? (supabaseJob.status === "completed" ? "ready" : supabaseJob.status)
+      : (orderRecord ? (orderRecord.status === "paid" ? "translating" : orderRecord.status) : job!.status);
+
+    const progress = supabaseJob
+      ? (supabaseJob.status === "completed" ? 100 : 50)
+      : (orderRecord ? (orderRecord.status === "completed" ? 100 : 35) : job!.progress);
+
+    const currentStep = supabaseJob?.current_phase || (orderRecord ? "Processing document..." : job!.currentStep);
+    const error = (supabaseJob?.error_log ? String(supabaseJob.error_log) : null) || (job?.error || null);
+    const downloadToken = job?.downloadToken || orderRecord?.public_code || jobId;
     const isReady = status === "ready" || status === "completed";
 
     return NextResponse.json({
       jobId: jobId,
-      fileName: dbJob?.sourceFilename || job?.fileName || "document.pdf",
-      fileFormat: dbJob?.sourceFormat || job?.fileFormat || "pdf",
+      fileName: job?.fileName || "document.pdf",
+      fileFormat: job?.fileFormat || "pdf",
       fileSize: job?.fileSize || 0,
-      sourceLang: dbJob?.sourceLanguage || job?.sourceLang || "es",
-      targetLang: dbJob?.targetLanguage || job?.targetLang || "en",
+      sourceLang: job?.sourceLang || "es",
+      targetLang: job?.targetLang || "en",
       status: status,
       progress: progress,
       currentStep: currentStep,
-      createdAt: dbJob?.createdAt || job?.createdAt,
-      completedAt: dbJob?.completedAt || job?.completedAt,
+      createdAt: supabaseJob?.created_at || orderRecord?.created_at || job?.createdAt,
+      completedAt: supabaseJob?.updated_at || job?.completedAt,
       downloadUrl: isReady
         ? `/api/translate/download/${jobId}?token=${downloadToken}`
         : null,
       qualityGate: job?.qualityGate || null,
-      layoutPreserved: dbJob?.layoutPreserved ?? job?.layoutPreserved ?? true,
+      layoutPreserved: true,
       error: error,
     });
   } catch (err: any) {

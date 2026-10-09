@@ -1,4 +1,3 @@
-import { prisma } from "../prisma";
 import { inngest } from "../inngest/client";
 import { getObject, putObject } from "../storage";
 import { Orchestrator } from "../agents/00_orchestrator";
@@ -8,11 +7,9 @@ import {
   getTranslationJob,
   updateTranslationJob,
 } from "../translation/store";
-import {
-  settleCreditsOnSuccess,
-  releaseCreditsOnFailure,
-} from "../services/credit-service";
-import { updatePersistentJob } from "../translation/persistent-store";
+import { settleCreditsOnSuccess, releaseCreditsOnFailure } from "../services/credit-service";
+import { getPersistentJob, updatePersistentJob } from "../translation/persistent-store";
+import { createAdminClient } from "@/supabase/admin";
 
 /**
  * Dispatches a translation job to the asynchronous background worker queue.
@@ -20,18 +17,18 @@ import { updatePersistentJob } from "../translation/persistent-store";
  * - Triggers local detached async worker runner for zero-timeout execution.
  */
 export async function dispatchBackgroundJob(jobId: string): Promise<void> {
-  // 1. Dispatch event to Inngest background queue
-  try {
-    await inngest.send({
+  // 1. Dispatch event to Inngest background queue non-blockingly
+  inngest
+    .send({
       name: "document.processing.requested",
       data: { jobId },
+    })
+    .catch((err: any) => {
+      // Inngest dispatch is non-blocking; fallback to local async worker runner
+      if (process.env.NODE_ENV !== "test" && !process.env.VITEST) {
+        console.warn(`[Queue] Inngest event dispatch warning for job ${jobId}:`, err?.message);
+      }
     });
-  } catch (err: any) {
-    // Inngest dispatch is non-blocking; fallback to local async worker runner
-    if (process.env.NODE_ENV !== "test" && !process.env.VITEST) {
-      console.warn(`[Queue] Inngest event dispatch warning for job ${jobId}:`, err?.message);
-    }
-  }
 
   // 2. Trigger asynchronous background worker execution completely detached from HTTP lifecycle
   setImmediate(async () => {
@@ -48,27 +45,23 @@ export async function dispatchBackgroundJob(jobId: string): Promise<void> {
  * Completely immune to HTTP timeouts (runs asynchronously in worker environment).
  */
 export async function executeBackgroundTranslationJob(jobId: string): Promise<void> {
-  // Fetch job metadata from Prisma (or fallback to in-memory store)
-  let dbJob = null;
-  try {
-    dbJob = await prisma.translationJob.findUnique({ where: { id: jobId } });
-  } catch {}
-
+  // Fetch job metadata from persistent store or in-memory store
+  const pJob = await getPersistentJob(jobId);
   const memJob = getTranslationJob(jobId);
-  if (!dbJob && !memJob) {
+  if (!pJob && !memJob) {
     console.error(`[Background Worker] Job ${jobId} not found in database or memory store.`);
     return;
   }
 
-  const userId = dbJob?.userId || memJob?.userId || null;
-  const pageCount = dbJob?.pageCount || memJob?.pageCount || 1;
-  const fileName = dbJob?.sourceFilename || memJob?.fileName || "document.pdf";
-  const sourceFormat = (dbJob?.sourceFormat || memJob?.fileFormat || "pdf").toLowerCase();
-  const sourceMime = dbJob?.sourceMimeType || "application/pdf";
-  const sourceLang = dbJob?.sourceLanguage || memJob?.sourceLang || "es";
-  const targetLang = dbJob?.targetLanguage || memJob?.targetLang || "en";
-  const sourceKey = dbJob?.sourceKey || memJob?.sourceKey || `jobs/${userId || "anonymous"}/${jobId}/source.${sourceFormat}`;
-  const outputKey = dbJob?.outputKey || memJob?.outputKey || `jobs/${userId || "anonymous"}/${jobId}/output.${sourceFormat}`;
+  const userId = pJob?.userId || memJob?.userId || null;
+  const pageCount = pJob?.pageCount || memJob?.pageCount || 1;
+  const fileName = pJob?.sourceFilename || memJob?.fileName || "document.pdf";
+  const sourceFormat = (pJob?.sourceFormat || memJob?.fileFormat || "pdf").toLowerCase();
+  const sourceMime = pJob?.sourceMimeType || "application/pdf";
+  const sourceLang = pJob?.sourceLanguage || memJob?.sourceLang || "es";
+  const targetLang = pJob?.targetLanguage || memJob?.targetLang || "en";
+  const sourceKey = pJob?.sourceKey || memJob?.sourceKey || `jobs/${userId || "anonymous"}/${jobId}/source.${sourceFormat}`;
+  const outputKey = pJob?.outputKey || memJob?.outputKey || `jobs/${userId || "anonymous"}/${jobId}/output.${sourceFormat}`;
 
   // Retrieve raw document buffer from Object Storage or in-memory buffer
   let fileBuffer: Buffer | null = memJob?.originalBuffer || null;
@@ -84,9 +77,10 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
         } catch {}
       }
       try {
-        await prisma.translationJob.update({
-          where: { id: jobId },
-          data: { status: "failed", errorMessage: errMsg, completedAt: new Date() },
+        await updatePersistentJob(jobId, {
+          status: "failed",
+          errorMessage: errMsg,
+          completedAt: new Date().toISOString(),
         });
       } catch {}
       if (memJob) {
@@ -144,20 +138,6 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
       }
 
       try {
-        await prisma.translationJob.update({
-          where: { id: jobId },
-          data: {
-            status: "completed",
-            outputKey,
-            progress: 100,
-            currentStep: "Document translated and formatted successfully.",
-            completedAt: new Date(),
-            layoutPreserved: true,
-          },
-        });
-      } catch {}
-
-      try {
         await updatePersistentJob(jobId, {
           status: "completed",
           progress: 100,
@@ -176,13 +156,10 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
         } catch {}
       }
       try {
-        await prisma.translationJob.update({
-          where: { id: jobId },
-          data: {
-            status: "failed",
-            errorMessage: docxErr.message,
-            completedAt: new Date(),
-          },
+        await updatePersistentJob(jobId, {
+          status: "failed",
+          errorMessage: docxErr.message,
+          completedAt: new Date().toISOString(),
         });
       } catch {}
       if (memJob) {
@@ -214,6 +191,39 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
       console.error(`[Background Worker] Failed to upload output artifact to ${outputKey}:`, e.message);
     }
 
+    // Explicitly upload to Supabase translated_documents bucket and update translation_jobs
+    if (!process.env.VITEST) {
+      try {
+        const supabaseAdmin = createAdminClient();
+        if (supabaseAdmin?.storage) {
+          const storagePath = `${jobId}/translated_document.pdf`;
+          const { error: uploadError } = await supabaseAdmin.storage
+            .from("translated_documents")
+            .upload(storagePath, renderedBuffer, {
+              contentType: "application/pdf",
+              upsert: true,
+            });
+
+          if (uploadError) {
+            console.error(`[Background Worker] Supabase Storage upload to translated_documents error:`, uploadError);
+            throw new Error(`Upload failed: ${uploadError.message}`);
+          }
+
+          await supabaseAdmin
+            .from("translation_jobs")
+            .update({
+              file_url: storagePath,
+              status: "completed",
+              current_phase: "completed",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", jobId);
+        }
+      } catch (sbErr: any) {
+        console.warn("[Background Worker] Supabase storage upload warning:", sbErr?.message);
+      }
+    }
+
     // Settle credits atomically
     if (userId) {
       try {
@@ -222,21 +232,6 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
         console.error(`[Background Worker] Credit settlement warning for job ${jobId}:`, settleErr.message);
       }
     }
-
-    // Update database to completed
-    try {
-      await prisma.translationJob.update({
-        where: { id: jobId },
-        data: {
-          status: "completed",
-          outputKey,
-          progress: 100,
-          currentStep: "Machine translation and layout reconstruction complete.",
-          completedAt: new Date(),
-          layoutPreserved: true,
-        },
-      });
-    } catch {}
 
     // Update in-memory job store for zero-latency local polling
     if (memJob) {
@@ -270,17 +265,6 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
         console.error(`[Background Worker] Credit refund warning for job ${jobId}:`, refundErr.message);
       }
     }
-
-    try {
-      await prisma.translationJob.update({
-        where: { id: jobId },
-        data: {
-          status: "failed",
-          errorMessage: err.message,
-          completedAt: new Date(),
-        },
-      });
-    } catch {}
 
     if (memJob) {
       memJob.status = "failed";

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 import { getPersistentJob } from "@/lib/translation/persistent-store";
 import { getTranslationJob } from "@/lib/translation/store";
 import { releaseCreditsOnFailure } from "@/lib/services/credit-service";
@@ -7,13 +8,17 @@ import { getCurrentUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
+function getSupabaseClient() {
+  return createAdminClient();
+}
+
 /**
  * Live Status Polling Endpoint:
  * GET /api/jobs/[id]/status
  *
  * Returns granular job state, current pipeline phase (extracting, translating, rendering, verifying),
  * progress percentage (0-100%), and the final artifact URL upon completion.
- * Automatically ensures failed jobs trigger reserved credit refunds.
+ * Backed by Supabase orders & translation_jobs tables and in-memory caches.
  */
 export async function GET(
   req: NextRequest,
@@ -27,68 +32,69 @@ export async function GET(
     // 1. Check In-Memory Store first (instant)
     const memJob = getTranslationJob(cleanId);
 
-    // 2. Check PostgreSQL Database (TranslationJob table, id or documentId column)
-    let dbJob = null;
+    // 2. Check Persistent Store
+    let pJob = null;
     if (!memJob) {
       try {
-        dbJob = await prisma.translationJob.findFirst({
-          where: {
-            OR: [{ id: cleanId }, { documentId: cleanId }],
-          },
-        });
+        pJob = await getPersistentJob(cleanId);
       } catch (err: any) {
-        console.warn("[api/jobs/status] Prisma translationJob query error:", err?.message);
+        console.warn("[api/jobs/status] persistent-store query error:", err?.message);
       }
     }
 
-    // 3. Fallback to persistent-store if direct prisma query was null
-    if (!dbJob && !memJob) {
+    // 3. Check Supabase (orders and translation_jobs tables)
+    let supabaseJob: any = null;
+    let orderRecord: any = null;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isMockPlaceholderUrl = Boolean(supabaseUrl?.includes("your-project"));
+
+    if (!memJob && !pJob && (!supabaseUrl || !isMockPlaceholderUrl)) {
       try {
-        const pJob = await getPersistentJob(cleanId);
-        if (pJob) {
-          dbJob = {
-            id: pJob.id,
-            userId: pJob.userId,
-            documentId: pJob.documentId,
-            sourceKey: pJob.sourceKey,
-            outputKey: pJob.outputKey,
-            sourceFilename: pJob.sourceFilename,
-            sourceFormat: pJob.sourceFormat,
-            sourceMimeType: pJob.sourceMimeType,
-            sourceLanguage: pJob.sourceLanguage,
-            targetLanguage: pJob.targetLanguage,
-            status: pJob.status,
-            currentStep: pJob.currentStep,
-            progress: pJob.progress,
-            pageCount: pJob.pageCount,
-            downloadToken: pJob.downloadToken,
-            errorMessage: pJob.errorMessage,
-            createdAt: pJob.createdAt,
-            completedAt: pJob.completedAt,
-            layoutPreserved: pJob.layoutPreserved,
-          };
+        const supabase = getSupabaseClient();
+
+        const queryOrdersPromise = supabase
+          .from("orders")
+          .select("*, translation_jobs(*)")
+          .or(`id.eq.${cleanId},public_code.eq.${cleanId}`)
+          .maybeSingle();
+
+        const timeoutPromise = new Promise<{ data: null; error: any }>((resolve) =>
+          setTimeout(() => resolve({ data: null, error: new Error("Supabase status query timeout") }), 2000)
+        );
+
+        const { data: orderData } = await Promise.race([queryOrdersPromise, timeoutPromise]);
+
+        if (orderData) {
+          orderRecord = orderData;
+          if (orderData.translation_jobs && orderData.translation_jobs.length > 0) {
+            supabaseJob = orderData.translation_jobs[0];
+          }
         }
-      } catch (err: any) {
-        console.warn("[api/jobs/status] getPersistentJob query error:", err?.message);
+
+        // Check translation_jobs table directly by id or order_id
+        if (!supabaseJob) {
+          const queryJobsPromise = supabase
+            .from("translation_jobs")
+            .select("*, orders(*)")
+            .or(`id.eq.${cleanId},order_id.eq.${cleanId}`)
+            .maybeSingle();
+
+          const { data: jobData } = await Promise.race([queryJobsPromise, timeoutPromise]);
+
+          if (jobData) {
+            supabaseJob = jobData;
+            if (jobData.orders) {
+              orderRecord = jobData.orders;
+            }
+          }
+        }
+      } catch (supabaseErr: any) {
+        console.error("Supabase Error:", supabaseErr);
+        console.warn("[api/jobs/status] Supabase query error:", supabaseErr?.message);
       }
     }
 
-    // 4. Check if id matches an Order publicCode or Order ID
-    let orderRecord = null;
-    if (!dbJob && !memJob) {
-      try {
-        orderRecord = await prisma.order.findFirst({
-          where: {
-            OR: [{ publicCode: cleanId }, { id: cleanId }],
-          },
-          include: { documents: true },
-        });
-      } catch (err: any) {
-        console.warn("[api/jobs/status] Prisma order query error:", err?.message);
-      }
-    }
-
-    if (!dbJob && !memJob && !orderRecord) {
+    if (!supabaseJob && !pJob && !memJob && !orderRecord) {
       return NextResponse.json(
         { error: `Job '${cleanId}' not found.` },
         { status: 404 }
@@ -96,21 +102,51 @@ export async function GET(
     }
 
     // Resolve unified job attributes
-    const jobId = dbJob?.id || memJob?.id || orderRecord?.publicCode || cleanId;
-    const userId = dbJob?.userId || memJob?.userId || orderRecord?.userId || null;
-    const rawStatus = dbJob?.status || memJob?.status || (orderRecord?.status === "PAID" ? "translating" : (orderRecord?.status?.toLowerCase() || "queued"));
-    const progress = dbJob?.progress ?? memJob?.progress ?? (orderRecord ? (orderRecord.status === "DELIVERED" ? 100 : 35) : 0);
-    const currentStep = dbJob?.currentStep || memJob?.currentStep || (orderRecord ? "ATA-accredited certified linguist assigned. Processing document..." : "Processing document...");
-    const fileName = dbJob?.sourceFilename || memJob?.fileName || orderRecord?.documents?.[0]?.fileName || "document.pdf";
-    const fileFormat = dbJob?.sourceFormat || memJob?.fileFormat || "pdf";
-    const sourceLang = dbJob?.sourceLanguage || memJob?.sourceLang || orderRecord?.sourceLang || "es";
-    const targetLang = dbJob?.targetLanguage || memJob?.targetLang || orderRecord?.targetLang || "en";
-    const pageCount = dbJob?.pageCount || memJob?.pageCount || orderRecord?.pageCount || 1;
-    const downloadToken = dbJob?.downloadToken || memJob?.downloadToken || cleanId;
-    const errorMessage = dbJob?.errorMessage || memJob?.error || null;
-    const createdAt = dbJob?.createdAt || memJob?.createdAt || orderRecord?.createdAt || new Date().toISOString();
-    const completedAt = dbJob?.completedAt || memJob?.completedAt || null;
-    const layoutPreserved = dbJob?.layoutPreserved ?? memJob?.layoutPreserved ?? true;
+    const jobId = supabaseJob?.id || pJob?.id || memJob?.id || orderRecord?.public_code || cleanId;
+    const userId = supabaseJob?.user_id || pJob?.userId || memJob?.userId || orderRecord?.user_id || null;
+    const rawStatus =
+      supabaseJob?.status ||
+      pJob?.status ||
+      memJob?.status ||
+      (orderRecord?.status === "paid" ? "translating" : (orderRecord?.status?.toLowerCase() || "queued"));
+
+    const progress =
+      pJob?.progress ??
+      memJob?.progress ??
+      (orderRecord ? (orderRecord.status === "completed" ? 100 : 35) : 0);
+
+    const currentStep =
+      supabaseJob?.current_phase ||
+      pJob?.currentStep ||
+      memJob?.currentStep ||
+      (orderRecord ? "ATA-accredited certified linguist assigned. Processing document..." : "Processing document...");
+
+    const fileName = pJob?.sourceFilename || memJob?.fileName || "document.pdf";
+    const fileFormat = pJob?.sourceFormat || memJob?.fileFormat || "pdf";
+    const sourceLang = pJob?.sourceLanguage || memJob?.sourceLang || "es";
+    const targetLang = pJob?.targetLanguage || memJob?.targetLang || "en";
+    const pageCount = pJob?.pageCount || memJob?.pageCount || 1;
+    const downloadToken = pJob?.downloadToken || memJob?.downloadToken || cleanId;
+    const errorMessage =
+      (supabaseJob?.error_log ? String(supabaseJob.error_log) : null) ||
+      pJob?.errorMessage ||
+      memJob?.error ||
+      null;
+
+    const createdAt =
+      supabaseJob?.created_at ||
+      pJob?.createdAt ||
+      memJob?.createdAt ||
+      orderRecord?.created_at ||
+      new Date().toISOString();
+
+    const completedAt =
+      supabaseJob?.updated_at ||
+      pJob?.completedAt ||
+      memJob?.completedAt ||
+      null;
+
+    const layoutPreserved = pJob?.layoutPreserved ?? memJob?.layoutPreserved ?? true;
 
     // Resolve user authorization (multi-tenant IDOR protection)
     const isTestEnv = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);

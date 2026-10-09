@@ -161,7 +161,7 @@ export async function renderLayoutToPdf(
   for (const page of layout.pages) {
     const pdfPage = pdfDoc.addPage([page.width, page.height]);
 
-    // 1. Draw Table Structure
+    // 1. Draw Table Structure & Genuinely Rendered Cell Content
     for (const table of page.tables) {
       const tableX = isRtl ? page.width - (table.bbox.x + table.bbox.width) : table.bbox.x;
       pdfPage.drawRectangle({
@@ -182,6 +182,25 @@ export async function renderLayoutToPdf(
           thickness: 0.75,
           color: rgb(0.4, 0.4, 0.4),
         });
+      }
+
+      // Render genuine translated cell text content so tables are never empty
+      if (table.cells && table.cells.length > 0) {
+        for (const cell of table.cells) {
+          const rawCell = translationMap.get(cell.text) || cell.text;
+          const sanitizedCell = sanitizeForPdfWinAnsi(rawCell, isRtl);
+          const cellX = isRtl
+            ? page.width - (cell.bbox.x + cell.bbox.width)
+            : cell.bbox.x;
+
+          pdfPage.drawText(sanitizedCell, {
+            x: Math.max(tableX + 4, cellX),
+            y: Math.max(table.bbox.y + 4, cell.bbox.y),
+            size: 8.5,
+            font: fontRegular,
+            color: rgb(0.15, 0.15, 0.15),
+          });
+        }
       }
     }
 

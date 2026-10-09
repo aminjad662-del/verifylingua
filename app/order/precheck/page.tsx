@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Building2, Landmark, CheckCircle2, Check, ArrowRight, Shield, GraduationCap, Scale, Car, Globe2, Briefcase } from "lucide-react";
+import { Building2, Landmark, CheckCircle2, Check, ArrowRight, Shield, GraduationCap, Scale, Car, Globe2, Briefcase, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECEIVING_PARTIES } from "@/lib/constants";
 import { calculatePricing } from "@/lib/pricing";
+import { safeNavigate, safePrefetch } from "@/lib/navigation";
 
 const AGENCY_ICONS: Record<string, React.ElementType> = {
   USCIS: Building2,
@@ -20,8 +21,43 @@ function PreCheckContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const pages = parseInt(searchParams.get("pages") || "1", 10);
-  const words = parseInt(searchParams.get("words") || "250", 10);
+  const queryPages = searchParams.get("pages");
+  const queryWords = searchParams.get("words");
+
+  // Read query params with sessionStorage fallback
+  const [pages] = useState<number>(() => {
+    if (queryPages) {
+      const p = parseInt(queryPages, 10);
+      if (!isNaN(p) && p > 0) return p;
+    }
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("pending_upload");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.pageCount) return Number(parsed.pageCount);
+        }
+      } catch {}
+    }
+    return 1;
+  });
+
+  const [words] = useState<number>(() => {
+    if (queryWords) {
+      const w = parseInt(queryWords, 10);
+      if (!isNaN(w) && w > 0) return w;
+    }
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("pending_upload");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.wordCount) return Number(parsed.wordCount);
+        }
+      } catch {}
+    }
+    return 250;
+  });
 
   const pricing = calculatePricing({
     serviceType: "CERTIFIED",
@@ -30,11 +66,36 @@ function PreCheckContent() {
   });
 
   const [selectedAgencyId, setSelectedAgencyId] = useState<string>("USCIS");
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const selectedAgency = RECEIVING_PARTIES.find((p) => p.id === selectedAgencyId) || RECEIVING_PARTIES[0];
+  const targetUrl = `/order/configure?pages=${pages}&words=${words}&notarize=${selectedAgency.requiresNotarization}`;
+
+  useEffect(() => {
+    safePrefetch(router, targetUrl);
+  }, [router, targetUrl]);
 
   const handleContinue = () => {
-    router.push(`/order/configure?pages=${pages}&words=${words}&notarize=${selectedAgency.requiresNotarization}`);
+    setIsNavigating(true);
+
+    try {
+      const current = sessionStorage.getItem("pending_upload");
+      const parsed = current ? JSON.parse(current) : {};
+      sessionStorage.setItem(
+        "pending_upload",
+        JSON.stringify({
+          ...parsed,
+          pageCount: pages,
+          wordCount: words,
+          receivingParty: selectedAgency.id,
+          requiresNotarization: selectedAgency.requiresNotarization,
+        })
+      );
+    } catch (e) {
+      console.warn("[PreCheck] Failed to cache state in sessionStorage:", e);
+    }
+
+    safeNavigate(router, targetUrl, { fallbackTimeoutMs: 1500 });
   };
 
   return (
@@ -192,11 +253,29 @@ function PreCheckContent() {
 
             <div className="pt-4 flex justify-end relative z-10">
               <button
+                type="button"
                 onClick={handleContinue}
-                className="w-full sm:w-auto h-14 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(37,99,235,0.25)] transition-all hover:-translate-y-0.5 active:scale-95"
+                onMouseEnter={() => safePrefetch(router, targetUrl)}
+                onFocus={() => safePrefetch(router, targetUrl)}
+                disabled={isNavigating}
+                className={cn(
+                  "w-full sm:w-auto h-14 px-8 rounded-xl font-bold flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(37,99,235,0.25)] transition-all",
+                  isNavigating
+                    ? "bg-blue-400 text-white cursor-wait"
+                    : "bg-blue-600 hover:bg-blue-700 text-white hover:-translate-y-0.5 active:scale-95"
+                )}
               >
-                <span>Continue to Configure</span>
-                <ArrowRight className="w-5 h-5" />
+                {isNavigating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Loading Next Step...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue to Configure</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -233,10 +312,26 @@ function PreCheckContent() {
              </div>
 
              <button
+               type="button"
                onClick={handleContinue}
-               className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors shadow-lg active:scale-95"
+               onMouseEnter={() => safePrefetch(router, targetUrl)}
+               onFocus={() => safePrefetch(router, targetUrl)}
+               disabled={isNavigating}
+               className={cn(
+                 "w-full py-4 rounded-xl font-bold transition-colors shadow-lg flex items-center justify-center gap-2",
+                 isNavigating
+                   ? "bg-slate-700 text-slate-200 cursor-wait"
+                   : "bg-slate-900 text-white hover:bg-slate-800 active:scale-95"
+               )}
              >
-               Continue
+               {isNavigating ? (
+                 <>
+                   <Loader2 className="w-5 h-5 animate-spin" />
+                   <span>Proceeding...</span>
+                 </>
+               ) : (
+                 <span>Continue</span>
+               )}
              </button>
           </div>
         </div>

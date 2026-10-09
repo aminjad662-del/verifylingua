@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 import { getTranslationJob, updateTranslationJob } from "@/lib/translation/store";
 import { getPersistentJob, updatePersistentJob } from "@/lib/translation/persistent-store";
+import { updateJobDbStatus } from "@/lib/services/credit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -98,16 +100,27 @@ export async function POST(
       updateTranslationJob(mJob);
     }
 
-    // Update PostgreSQL
+    await updateJobDbStatus(id, "certified");
+    await updatePersistentJob(id, {
+      status: "certified" as any,
+      currentStep,
+      completedAt: certifiedAt,
+    });
+
+    // Update Supabase translation_jobs table
     try {
-      await prisma.translationJob.update({
-        where: { id },
-        data: {
-          status: updatedStatus,
-          currentStep,
-          completedAt: new Date(certifiedAt),
-        },
-      });
+      const supabase =
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? createAdminClient()
+          : await createClient();
+      await supabase
+        .from("translation_jobs")
+        .update({
+          status: "completed",
+          current_phase: currentStep,
+          updated_at: certifiedAt,
+        })
+        .or(`id.eq.${id},order_id.eq.${id}`);
     } catch {}
 
     return NextResponse.json({

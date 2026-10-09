@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 
 // In-memory revision ledger for instant updates and fallback
 const orderRevisionsStore = new Map<string, any[]>();
@@ -58,28 +59,25 @@ export async function POST(
 
     // Update order status or translation job version in database
     try {
-      const queryPromise = prisma.order.findFirst({
-        where: { OR: [{ id }, { publicCode }] },
-      });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("DB_TIMEOUT")), 300)
-      );
-      const order: any = await Promise.race([queryPromise, timeoutPromise]);
+      const supabase =
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? createAdminClient()
+          : await createClient();
+
+      const { data: order } = await supabase
+        .from("orders")
+        .select("*")
+        .or(`id.eq.${id},public_code.eq.${publicCode}`)
+        .maybeSingle();
 
       if (order) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            status: "NEEDS_CUSTOMER_INPUT",
-            events: {
-              create: {
-                type: "CUSTOMER_ACTION",
-                message: `Customer requested revision on ${segmentId}: "${suggestedText.substring(0, 60)}..."`,
-                actor: "CUSTOMER",
-              },
-            },
-          },
-        });
+        await supabase
+          .from("orders")
+          .update({
+            status: "processing",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", order.id);
       }
     } catch {
       // ignore in dev without db connection

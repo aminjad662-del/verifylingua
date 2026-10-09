@@ -12,10 +12,21 @@ import * as routeHandlers from "@/app/api/inngest/route";
 const mockUpdate = vi.fn();
 const mockEq = vi.fn();
 const mockFrom = vi.fn();
+const mockUpload = vi.fn().mockResolvedValue({ data: { path: "mock-path" }, error: null });
+const mockGetPublicUrl = vi.fn().mockReturnValue({
+  data: { publicUrl: "https://mock.supabase.co/storage/v1/object/public/translated_documents/mock.pdf" },
+});
+const mockStorageFrom = vi.fn(() => ({
+  upload: mockUpload,
+  getPublicUrl: mockGetPublicUrl,
+}));
 
 vi.mock("@/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
     from: mockFrom,
+    storage: {
+      from: mockStorageFrom,
+    },
   })),
 }));
 
@@ -132,17 +143,92 @@ describe("Distributed Inngest Queue Infrastructure (Step 1.2)", () => {
       expect(mockFrom).toHaveBeenCalledWith("translation_jobs");
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: "processing",
-          current_phase: "processing",
+          status: "translating",
+          current_phase: "translating",
         })
       );
+
+      // Verify Supabase Storage upload to translated_documents bucket
+      expect(mockStorageFrom).toHaveBeenCalledWith("translated_documents");
+      expect(mockUpload).toHaveBeenCalledWith(
+        `${targetJobId}/translated_document.pdf`,
+        expect.any(Buffer),
+        expect.objectContaining({
+          contentType: "application/pdf",
+          upsert: true,
+        })
+      );
+
+      // Verify translation_jobs updated with completed status and exact storage path
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
+          file_url: `${targetJobId}/translated_document.pdf`,
           status: "completed",
           current_phase: "completed",
         })
       );
       expect(mockEq).toHaveBeenCalledWith("id", targetJobId);
+    });
+
+    it("throws explicit Error when Supabase Storage upload returns an error object (strict mode)", async () => {
+      mockUpload.mockResolvedValueOnce({
+        data: null,
+        error: { message: "Bucket translated_documents access denied: RLS policy violation" },
+      });
+
+      const event = {
+        name: "document.translate" as const,
+        data: {
+          jobId: "strict-fail-job",
+          fileUrl: "https://example.com/fail.pdf",
+        },
+      };
+
+      const step = {
+        run: vi.fn(async (_id: string, fn: () => Promise<any>) => fn()),
+        sleep: vi.fn(),
+      };
+
+      const handler = (processTranslationJob as any).fn;
+      await expect(handler({ event, step })).rejects.toThrow(
+        "Upload failed: Bucket translated_documents access denied: RLS policy violation"
+      );
+    });
+
+    it("dynamically scopes storage destination path to orderId when orderId is provided", async () => {
+      const event = {
+        name: "document.translate" as const,
+        data: {
+          jobId: "child-job-999",
+          orderId: "parent-order-444",
+          fileUrl: "https://example.com/doc.pdf",
+        },
+      };
+
+      const step = {
+        run: vi.fn(async (_id: string, fn: () => Promise<any>) => fn()),
+        sleep: vi.fn(),
+      };
+
+      const handler = (processTranslationJob as any).fn;
+      await handler({ event, step });
+
+      expect(mockUpload).toHaveBeenCalledWith(
+        "parent-order-444/translated_document.pdf",
+        expect.any(Buffer),
+        expect.objectContaining({
+          contentType: "application/pdf",
+          upsert: true,
+        })
+      );
+
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          file_url: "parent-order-444/translated_document.pdf",
+          status: "completed",
+          current_phase: "completed",
+        })
+      );
     });
 
     it("throws error if Supabase status update fails", async () => {

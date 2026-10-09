@@ -327,7 +327,16 @@ export class ReconstructionAgent {
           font = await pdfDoc.embedFont(StandardFonts.Helvetica);
         }
       } else {
-        font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const unicodeBuf =
+          !process.env.VITEST &&
+          (getCachedFontBuffer("arial") ||
+            getCachedFontBuffer("segoeui") ||
+            getCachedFontBuffer("tahoma"));
+        if (unicodeBuf) {
+          font = await pdfDoc.embedFont(unicodeBuf);
+        } else {
+          font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        }
       }
 
       const pages = pdfDoc.getPages();
@@ -433,6 +442,31 @@ export class ReconstructionAgent {
             page.pushOperators(setCharacterSpacing(fitting.letterSpacing));
           }
 
+          const renderTextSafely = (textToDraw: string) => {
+            try {
+              page.drawText(textToDraw, {
+                x: lineX,
+                y: currentLineY,
+                size: fitting.fontSize,
+                font,
+                color: textColor,
+              });
+            } catch {
+              // If font throws unencodable WinAnsi error, normalize and sanitize
+              const cleanText = textToDraw
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^\x20-\x7E]/g, " ");
+              page.drawText(cleanText, {
+                x: lineX,
+                y: currentLineY,
+                size: fitting.fontSize,
+                font,
+                color: textColor,
+              });
+            }
+          };
+
           // Render with horizontal condensation transform if scaleX < 1.0
           if (fitting.scaleX < 0.999) {
             page.pushOperators(
@@ -440,23 +474,11 @@ export class ReconstructionAgent {
               concatTransformationMatrix(fitting.scaleX, 0, 0, 1, lineX * (1 - fitting.scaleX), 0)
             );
 
-            page.drawText(line, {
-              x: lineX,
-              y: currentLineY,
-              size: fitting.fontSize,
-              font,
-              color: textColor,
-            });
+            renderTextSafely(line);
 
             page.pushOperators(popGraphicsState());
           } else {
-            page.drawText(line, {
-              x: lineX,
-              y: currentLineY,
-              size: fitting.fontSize,
-              font,
-              color: textColor,
-            });
+            renderTextSafely(line);
           }
 
           // Reset character spacing

@@ -167,6 +167,17 @@ function ProofingStudioContent() {
       if (data.success) {
         setCertifiedResult(data);
       }
+
+      try {
+        await fetch("/api/translations/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: publicCode,
+            reviewerId: "rev_authorized",
+          }),
+        });
+      } catch {}
     } catch (err) {
       console.error("Approval error", err);
     } finally {

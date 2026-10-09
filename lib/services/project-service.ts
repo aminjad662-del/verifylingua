@@ -53,11 +53,11 @@ if (process.env.NODE_ENV !== "production") {
 function normalizeJobToProject(job: PersistentTranslationJob): ProjectSummary {
   const revisions = projectRevisions.get(job.id) || [];
   return {
-    id: job.id,
-    name: job.sourceFilename,
+    id: job.id || "job_unknown",
+    name: job.sourceFilename || "document.pdf",
     sourceLang: job.sourceLanguage || "auto",
-    targetLang: job.targetLanguage,
-    status: job.status.toUpperCase(),
+    targetLang: job.targetLanguage || "en",
+    status: (job.status || "QUEUED").toUpperCase(),
     progress: job.progress || 0,
     currentStep: job.currentStep || "Processing",
     format: job.sourceFormat || "pdf",
@@ -68,8 +68,8 @@ function normalizeJobToProject(job: PersistentTranslationJob): ProjectSummary {
     downloadUrl: job.status === "completed" || (job.status as string) === "ready"
       ? `/api/translate/download/${job.id}?token=${job.downloadToken}`
       : undefined,
-    createdAt: job.createdAt,
-    updatedAt: job.updatedAt,
+    createdAt: job.createdAt || new Date().toISOString(),
+    updatedAt: job.updatedAt || new Date().toISOString(),
     userId: job.userId || undefined,
     revisionCount: revisions.length,
   };
@@ -124,9 +124,9 @@ export class ProjectService {
       const q = options.search.toLowerCase();
       projects = projects.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.id.toLowerCase().includes(q) ||
-          p.sourceLang.toLowerCase().includes(q)
+          (p.name && p.name.toLowerCase().includes(q)) ||
+          (p.id && p.id.toLowerCase().includes(q)) ||
+          (p.sourceLang && p.sourceLang.toLowerCase().includes(q))
       );
     }
 

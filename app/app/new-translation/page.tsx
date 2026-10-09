@@ -117,6 +117,22 @@ export default function NewTranslationPage() {
         }
         throw new Error("Server failed to generate a valid tracking ID for this translation.");
       }
+
+      try {
+        await fetch("/api/translations/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: targetId,
+            userId: data.userId || "client_user",
+            sourcePath: data.sourceKey || `source_documents/${targetId}/${file.name}`,
+            sourceLang,
+            targetLang,
+            docType: serviceTier === "certified" ? "certified_translation" : "document",
+          }),
+        });
+      } catch {}
+
       setJobId(targetId);
       pollJobStatus(targetId);
     } catch (err: any) {
@@ -129,19 +145,25 @@ export default function NewTranslationPage() {
   const pollJobStatus = (id: string) => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/translate/status/${id}`);
+        let res = await fetch(`/api/translate/status/${id}`);
+        if (!res.ok && res.status === 404) {
+          const transRes = await fetch(`/api/translations/${id}`);
+          if (transRes.ok) {
+            res = transRes;
+          }
+        }
         if (!res.ok) return;
 
         const data = await res.json();
-        setProgress(data.progress || 0);
+        setProgress(data.progress || (data.status === "ready" || data.status === "completed" || data.status === "delivered" ? 100 : 50));
         setCurrentStep(data.currentStep || "Processing...");
         setJobStatus(data.status);
 
-        if (data.status === "ready" || data.status === "completed") {
+        if (data.status === "ready" || data.status === "completed" || data.status === "delivered") {
           clearInterval(interval);
           setIsProcessing(false);
           setDownloadUrl(data.downloadUrl);
-          setQualityGate(data.qualityGate);
+          setQualityGate(data.qualityGate || data.qaReport);
           setStage("result");
         } else if (data.status === "failed") {
           clearInterval(interval);

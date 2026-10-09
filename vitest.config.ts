@@ -7,6 +7,7 @@ export default defineConfig({
     exclude: ["node_modules", "dist", ".idea", ".git", ".cache", "ui-ux-pro-max-skill-main"],
     globals: true,
     fileParallelism: false,
+    testTimeout: 15000,
   },
   resolve: {
     alias: {

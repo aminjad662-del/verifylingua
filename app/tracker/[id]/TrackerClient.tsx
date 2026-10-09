@@ -187,10 +187,68 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
 
     const fetchStatus = async () => {
       try {
-        const response = await fetch(`/api/jobs/${encodeURIComponent(resolvedId)}/status`, {
+        let response = await fetch(`/api/jobs/${encodeURIComponent(resolvedId)}/status`, {
           headers: { Accept: "application/json" },
           cache: "no-store",
         });
+
+        if (!response.ok && response.status === 404) {
+          try {
+            const transRes = await fetch(`/api/translations/${encodeURIComponent(resolvedId)}`, {
+              headers: { Accept: "application/json" },
+              cache: "no-store",
+            });
+            if (transRes.ok) {
+              const transData = await transRes.json();
+              const statusMap: Record<string, string> = {
+                uploaded: "queued",
+                extracting: "extracting",
+                translating: "translating",
+                qa_checking: "verifying",
+                rendering: "rendering",
+                pending_review: "verifying",
+                approved: "completed",
+                delivered: "completed",
+                failed: "failed",
+              };
+              const mappedStatus = statusMap[transData.status] || transData.status;
+              const normalizedData: JobStatusData = {
+                jobId: transData.orderId || resolvedId,
+                status: mappedStatus,
+                currentPhase: mappedStatus,
+                progress: transData.status === "delivered" || transData.status === "approved" ? 100 : transData.status === "pending_review" ? 85 : transData.status === "rendering" ? 70 : transData.status === "translating" ? 50 : 25,
+                currentStep: transData.status === "approved" || transData.status === "delivered"
+                  ? "Official sworn affidavit and certified seal minted."
+                  : transData.status === "pending_review"
+                  ? "Translation draft ready for certified reviewer signature."
+                  : "Certified pipeline processing active.",
+                fileName: "certified_document.pdf",
+                fileFormat: "pdf",
+                sourceLang: transData.sourceLang || "es",
+                targetLang: transData.targetLang || "en",
+                pageCount: 1,
+                downloadUrl: transData.downloadUrl,
+                artifactUrl: transData.downloadUrl,
+                layoutPreserved: true,
+                createdAt: transData.createdAt,
+                completedAt: transData.updatedAt,
+              };
+
+              setJobData(normalizedData);
+              setIsLoading(false);
+              setIsNotFound(false);
+              setPollError(null);
+              if (normalizedData.currentStep) {
+                addLog(normalizedData.currentStep, normalizedData.status === "failed" ? "ERROR" : "PROGRESS");
+              }
+              const isDone = mappedStatus === "completed" || mappedStatus === "failed";
+              if (!isDone) {
+                timer = setTimeout(fetchStatus, 2000);
+              }
+              return;
+            }
+          } catch {}
+        }
 
         if (!isMounted) return;
 
@@ -289,7 +347,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
   };
 
   // Direct, verified download endpoint with binary integrity and exact PDF headers
-  const downloadHref = `/api/jobs/${encodeURIComponent(resolvedId)}/download`;
+  const downloadHref = jobData?.downloadUrl || jobData?.artifactUrl || `/api/jobs/${encodeURIComponent(resolvedId)}/download`;
 
   return (
     <div className="min-h-screen bg-obsidian-950 text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">

@@ -1,10 +1,10 @@
 import crypto from "crypto";
-import { prisma } from "../prisma";
 import {
   getUserCreditBalance,
   reserveCreditsForJob,
   settleCreditsOnSuccess,
   releaseCreditsOnFailure,
+  updateJobDbStatus,
 } from "../services/credit-service";
 import { createTranslationJob, updateTranslationJob } from "./store";
 import { putObject } from "../storage";
@@ -489,35 +489,6 @@ export async function processDocumentTranslation(
     );
   } catch {}
 
-  // 3. Persist job to PostgreSQL if DB available
-  try {
-    await prisma.translationJob.create({
-      data: {
-        id: job.id,
-        userId: userId,
-        sourceKey,
-        outputKey,
-        sourceFilename: fileName,
-        sourceFormat: format,
-        sourceMimeType:
-          format === "pdf"
-            ? "application/pdf"
-            : format === "docx"
-            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            : "application/octet-stream",
-        sourceLanguage: sourceLang,
-        targetLanguage: targetLang,
-        status: "translating",
-        currentStep: "Translating document...",
-        progress: 10,
-        pageCount,
-        downloadToken: job.downloadToken,
-      },
-    });
-  } catch (dbErr: any) {
-    // Non-blocking in mock/memory-only test runs
-  }
-
   // 4. Atomically reserve credits for the job
   if (userId) {
     await reserveCreditsForJob(userId, job.id, pageCount);
@@ -534,7 +505,7 @@ export async function processDocumentTranslation(
 
   const processed = await processTranslationJob(job, options);
 
-  // 6. Update PostgreSQL state and finalize
+  // 6. Finalize output and artifact persistence
   if (processed.status === "ready" || (processed.status as string) === "completed") {
     if (serviceTier === "certified") {
       processed.status = "awaiting_review" as any;
@@ -549,18 +520,6 @@ export async function processDocumentTranslation(
           await putObject(outputKey, processed.translatedBuffer, mime);
         } catch {}
       }
-      try {
-        await prisma.translationJob.update({
-          where: { id: job.id },
-          data: {
-            status: "awaiting_review",
-            outputKey,
-            progress: 95,
-            currentStep: "Translation and QA complete. Awaiting sworn translator review and digital signature.",
-            layoutPreserved: processed.layoutPreserved ?? true,
-          },
-        });
-      } catch {}
     } else {
       processed.status = "completed" as any;
       if (processed.translatedBuffer) {
@@ -572,34 +531,12 @@ export async function processDocumentTranslation(
           await putObject(outputKey, processed.translatedBuffer, mime);
         } catch {}
       }
-      try {
-        await prisma.translationJob.update({
-          where: { id: job.id },
-          data: {
-            status: "completed",
-            outputKey,
-            progress: 100,
-            currentStep: "Document machine translation and layout reconstruction complete.",
-            completedAt: new Date(),
-            layoutPreserved: processed.layoutPreserved ?? true,
-          },
-        });
-      } catch {}
     }
   } else {
     processed.status = "failed";
-    try {
-      await prisma.translationJob.update({
-        where: { id: job.id },
-        data: {
-          status: "failed",
-          errorMessage: processed.error || "Translation failed",
-          completedAt: new Date(),
-        },
-      });
-    } catch {}
   }
 
   updateTranslationJob(processed);
+  await updateJobDbStatus(processed.id, processed.status);
   return processed;
 }

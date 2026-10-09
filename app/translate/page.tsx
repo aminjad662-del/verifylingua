@@ -190,7 +190,13 @@ export default function TranslatePage() {
     stopPolling();
     pollRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/translate/status/${jobId}`);
+        let res = await fetch(`/api/translate/status/${jobId}`);
+        if (!res.ok && res.status === 404) {
+          const transRes = await fetch(`/api/translations/${jobId}`);
+          if (transRes.ok) {
+            res = transRes;
+          }
+        }
         if (!res.ok) {
           // 404 means job expired or doesn't exist — stop polling
           if (res.status === 404) {
@@ -404,6 +410,21 @@ export default function TranslatePage() {
           setJob((prev) => prev ? { ...prev, status: "failed", error: "Missing valid job tracking ID from server.", progress: 0 } : null);
           return;
         }
+
+        try {
+          await fetch("/api/translations/request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: targetJobId,
+              userId: data.userId || "client_user",
+              sourcePath: data.sourceKey || `source_documents/${targetJobId}/${file.name}`,
+              sourceLang,
+              targetLang,
+              docType: serviceTier === "certified" ? "certified_translation" : "document",
+            }),
+          });
+        } catch {}
 
         router.push(`/tracker/${targetJobId}`);
         return;

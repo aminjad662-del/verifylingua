@@ -1,5 +1,6 @@
 import { prisma } from "../prisma";
 import { CreditTransactionType } from "@prisma/client";
+import { getTranslationJob } from "@/lib/translation/store";
 
 export interface UserCreditBalance {
   available: number;
@@ -109,10 +110,36 @@ export async function reserveCreditsForJob(
     });
 
     // Verify if translation job exists in DB for foreign key integrity
-    const jobExists = await tx.translationJob.findUnique({
+    let jobExists = await tx.translationJob.findUnique({
       where: { id: jobId },
       select: { id: true },
     });
+
+    if (!jobExists) {
+      const memJob = getTranslationJob(jobId);
+      const ext = memJob?.fileFormat || (memJob?.fileName ? memJob.fileName.split(".").pop()?.toLowerCase() : "docx") || "docx";
+      const userSegment = userId || "anonymous";
+      const sourceKey = memJob?.sourceKey || `jobs/${userSegment}/${jobId}/source.${ext}`;
+      const outputKey = memJob?.outputKey || `jobs/${userSegment}/${jobId}/output.pdf`;
+
+      const createdJob = await tx.translationJob.create({
+        data: {
+          id: jobId,
+          userId,
+          sourceKey,
+          outputKey,
+          sourceFilename: memJob?.fileName || "document",
+          sourceFormat: memJob?.fileFormat || ext,
+          sourceMimeType: "application/octet-stream",
+          sourceLanguage: memJob?.sourceLang || "auto",
+          targetLanguage: memJob?.targetLang || "en",
+          status: "queued",
+          pageCount: pages,
+          provider: "azure",
+        },
+      });
+      jobExists = { id: createdJob.id };
+    }
 
     await tx.creditTransaction.create({
       data: {
@@ -186,6 +213,24 @@ export async function settleCreditsOnSuccess(
       select: { id: true },
     });
 
+    if (jobExists) {
+      try {
+        const memJob = getTranslationJob(jobId);
+        const resolvedStatus =
+          memJob?.serviceTier === "certified" || memJob?.status === "awaiting_review"
+            ? "awaiting_review"
+            : "completed";
+
+        await tx.translationJob.update({
+          where: { id: jobId },
+          data: {
+            status: resolvedStatus,
+            completedAt: new Date(),
+          },
+        });
+      } catch {}
+    }
+
     await tx.creditTransaction.create({
       data: {
         userId,
@@ -197,6 +242,21 @@ export async function settleCreditsOnSuccess(
       },
     });
   });
+}
+
+/**
+ * Updates the database status of a translation job directly in PostgreSQL via Prisma.
+ */
+export async function updateJobDbStatus(jobId: string, status: string): Promise<void> {
+  try {
+    await prisma.translationJob.update({
+      where: { id: jobId },
+      data: {
+        status,
+        updatedAt: new Date(),
+      },
+    });
+  } catch {}
 }
 
 /**
@@ -255,6 +315,19 @@ export async function releaseCreditsOnFailure(
       where: { id: jobId },
       select: { id: true },
     });
+
+    if (jobExists) {
+      try {
+        await tx.translationJob.update({
+          where: { id: jobId },
+          data: {
+            status: "failed",
+            errorMessage: reason,
+            completedAt: new Date(),
+          },
+        });
+      } catch {}
+    }
 
     await tx.creditTransaction.create({
       data: {

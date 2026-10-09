@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 
 export async function GET(
   req: Request,
@@ -9,27 +10,26 @@ export async function GET(
     const { id } = await params;
     const publicCode = id.toUpperCase();
 
-    // Try finding in database with rapid fallback if disconnected
+    // Query order from Supabase
     let order: any = null;
-    try {
-      const queryPromise = prisma.order.findFirst({
-        where: {
-          OR: [{ id }, { publicCode }],
-        },
-        include: {
-          documents: true,
-          glossaryTerms: true,
-          events: { orderBy: { createdAt: "desc" } },
-          certificate: true,
-        },
-      });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("DB_TIMEOUT")), 300)
-      );
-      order = await Promise.race([queryPromise, timeoutPromise]);
-    } catch {
-      // Prisma disconnected or timeout in local dev fallback
-      order = null;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isMockPlaceholderUrl = Boolean(!supabaseUrl || supabaseUrl.includes("your-project"));
+
+    if (!isMockPlaceholderUrl) {
+      try {
+        const supabase =
+          process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+            ? createAdminClient()
+            : await createClient();
+        const { data } = await supabase
+          .from("orders")
+          .select("*, translation_jobs(*)")
+          .or(`id.eq.${id},public_code.eq.${publicCode}`)
+          .maybeSingle();
+        order = data;
+      } catch {
+        order = null;
+      }
     }
 
     const defaultSourceLang = order?.sourceLang || "Spanish";

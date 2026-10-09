@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 import crypto from "crypto";
 
 export async function POST(
@@ -26,52 +27,25 @@ export async function POST(
       .digest("hex");
 
     try {
-      const queryPromise = prisma.order.findFirst({
-        where: { OR: [{ id }, { publicCode }] },
-      });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("DB_TIMEOUT")), 300)
-      );
-      const order: any = await Promise.race([queryPromise, timeoutPromise]);
+      const supabase =
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? createAdminClient()
+          : await createClient();
+
+      const { data: order } = await supabase
+        .from("orders")
+        .select("*")
+        .or(`id.eq.${id},public_code.eq.${publicCode}`)
+        .maybeSingle();
 
       if (order) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            status: "CERTIFIED",
-            deliveredAt: new Date(),
-            events: {
-              create: [
-                {
-                  type: "STATUS_CHANGE",
-                  message: `Customer approved translation in Proofing Studio (${signatureName || "Sign-off"}).`,
-                  actor: "CUSTOMER",
-                },
-                {
-                  type: "CERTIFICATE_ISSUED",
-                  message: `Certificate of Accuracy issued with verification code ${verifyCode}.`,
-                  actor: "SYSTEM",
-                },
-              ],
-            },
-          },
-        });
-
-        await prisma.certificate.upsert({
-          where: { orderId: order.id },
-          create: {
-            orderId: order.id,
-            verifyCode,
-            pdfS3Key: `vault/certificates/${verifyCode}.pdf`,
-            documentSha256,
-            translatorName: "Elena V.",
-            translatorCredentials: "ATA Member No. 271892 • Certified Legal Translator",
-          },
-          update: {
-            verifyCode,
-            documentSha256,
-          },
-        });
+        await supabase
+          .from("orders")
+          .update({
+            status: "completed",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", order.id);
       }
     } catch {
       // ignore db errors in fallback

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 import { getPersistentJob } from "@/lib/translation/persistent-store";
 import { getTranslationJob } from "@/lib/translation/store";
 import { getObject, generatePresignedDownloadUrl } from "@/lib/storage";
@@ -40,10 +41,28 @@ export async function GET(
       } catch {}
     }
 
-    let dbJob = null;
+    let dbJob: any = null;
     if (!memJob && !pJob) {
       try {
-        dbJob = await prisma.translationJob.findUnique({ where: { id } });
+        const supabase =
+          process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+            ? createAdminClient()
+            : await createClient();
+        const { data } = await supabase
+          .from("translation_jobs")
+          .select("*, orders(*)")
+          .or(`id.eq.${id},order_id.eq.${id}`)
+          .maybeSingle();
+
+        if (data) {
+          dbJob = {
+            id: data.id,
+            userId: data.orders?.user_id || null,
+            status: data.status,
+            outputKey: data.file_url,
+            downloadToken: id,
+          };
+        }
       } catch {}
     }
 

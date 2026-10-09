@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CreditCard, ShieldCheck, Lock, AlertCircle, Mail, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculatePricing } from "@/lib/pricing";
+import { safeNavigate } from "@/lib/navigation";
 
 function CheckoutContent() {
   const router = useRouter();
@@ -83,7 +84,23 @@ function CheckoutContent() {
         }
         throw new Error("Invalid tracking ID received from server.");
       }
-      router.push(`/tracker/${trackerId}`);
+
+      try {
+        await fetch("/api/translations/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: trackerId,
+            userId: data.userId || guestEmail,
+            sourcePath: data.sourcePath || `source_documents/order_${trackerId}.pdf`,
+            sourceLang: searchParams.get("source") || "es",
+            targetLang: searchParams.get("target") || "en",
+            docType: "certified_translation",
+          }),
+        });
+      } catch {}
+
+      safeNavigate(router, `/tracker/${trackerId}`, { fallbackTimeoutMs: 1500 });
     } catch (err: any) {
       setErrorMsg(err.message || "Payment processing failed. Please verify card details.");
       setIsProcessing(false);

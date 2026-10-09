@@ -16,7 +16,6 @@ export type OrderStatus =
 
 export type TranslationJobStatus =
   | "pending"
-  | "processing"
   | "extracting"
   | "translating"
   | "qa"

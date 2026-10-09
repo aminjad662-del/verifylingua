@@ -1,5 +1,6 @@
 import { TranslationOptions } from "./types";
 import { GoogleGenAI } from "@google/genai";
+import { getGeminiApiKey, getDeepLApiKey } from "../services/env";
 
 let genAIInstance: GoogleGenAI | null = null;
 let deepLCooldownUntil = 0;
@@ -180,8 +181,8 @@ export async function translateText(
   const shouldBypassTestMock = Boolean(options.bypassTestMock || process.env.FORCE_LIVE_TRANSLATION === "true");
 
   // 3. Check DeepL Neural Translation API
-  const deeplKey = process.env.DEEPL_API_KEY;
-  if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
+  const deeplKey = getDeepLApiKey();
+  if (deeplKey && deeplKey !== "mock" && deeplKey.length > 5 && (!process.env.VITEST || shouldBypassTestMock)) {
     try {
       const translated = await callDeepLTranslation(trimmed, options, deeplKey);
       if (translated) return translated;
@@ -191,13 +192,13 @@ export async function translateText(
   }
 
   // 4. If Gemini API key is configured, call LLM with strict translation prompt
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey && apiKey !== "mock" && apiKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
+  const apiKey = getGeminiApiKey();
+  if (apiKey && apiKey !== "mock" && apiKey.length > 5 && (!process.env.VITEST || shouldBypassTestMock)) {
     try {
       const translated = await callGeminiTranslation(trimmed, options, apiKey);
       if (translated) return translated;
     } catch {
-      // Fall through to resilient deterministic translator on rate limit or network glitch
+      // Fall through to resilient fallback on rate limit or network glitch
     }
   }
 
@@ -229,8 +230,8 @@ export async function translateStructuredBlocks(
   const resultMap = new Map<string, string>();
   if (blocks.length === 0) return resultMap;
 
-  const deeplKey = process.env.DEEPL_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const deeplKey = getDeepLApiKey();
+  const geminiKey = getGeminiApiKey();
 
   // Chunk blocks into semantic batches of up to 50 blocks (matches 20-60 prompt spec)
   const CHUNK_SIZE = 50;
@@ -242,7 +243,7 @@ export async function translateStructuredBlocks(
     const shouldBypassTestMock = Boolean(options.bypassTestMock || process.env.FORCE_LIVE_TRANSLATION === "true");
 
     // 1. Try DeepL Neural Translation
-    if (deeplKey && deeplKey !== "mock" && deeplKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
+    if (deeplKey && deeplKey !== "mock" && deeplKey.length > 5 && (!process.env.VITEST || shouldBypassTestMock)) {
       try {
         const deeplResults = await callDeepLBatchTranslation(
           chunk.map((b) => b.text),
@@ -261,7 +262,7 @@ export async function translateStructuredBlocks(
     }
 
     // 2. Fall back to Gemini structured LLM
-    if (!chunkTranslations && geminiKey && geminiKey !== "mock" && geminiKey.length > 10 && (!process.env.VITEST || shouldBypassTestMock)) {
+    if (!chunkTranslations && geminiKey && geminiKey !== "mock" && geminiKey.length > 5 && (!process.env.VITEST || shouldBypassTestMock)) {
       chunkTranslations = await callGeminiStructuredBatch(chunk, options, geminiKey);
     }
 
@@ -376,11 +377,8 @@ async function callGeminiStructuredBatch(
   options: TranslationOptions,
   apiKey: string
 ): Promise<{ id: string; translatedText: string }[] | null> {
-  if (Date.now() < geminiCooldownUntil) {
-    return null;
-  }
-
-  const ai = getGenAI(apiKey);
+  const cleanKey = apiKey.replace(/^["']|["']$/g, "").trim();
+  const modelsToTry = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.8-flash"];
   const prompt = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the following structured text blocks from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL REQUIREMENTS:
@@ -393,29 +391,50 @@ CRITICAL REQUIREMENTS:
 Input blocks:
 ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          temperature: 0.1,
-          responseMimeType: "application/json",
-          maxOutputTokens: 4096,
-        },
-      });
+  for (const model of modelsToTry) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.1,
+            },
+          }),
+        });
 
-      const rawJson = res.text;
-      if (!rawJson) return null;
+        if (res.status === 429) {
+          const delay = Math.pow(2, attempt) * 1000;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
 
-      const parsed = JSON.parse(rawJson);
-      if (Array.isArray(parsed.translations)) {
-        return parsed.translations;
+        if (!res.ok) {
+          break; // Try next model
+        }
+
+        const data = await res.json();
+        const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawJson) continue;
+
+        let cleaned = rawJson.trim();
+        if (cleaned.startsWith("```json")) {
+          cleaned = cleaned.replace(/^```json\s*/i, "").replace(/\s*```$/, "");
+        } else if (cleaned.startsWith("```")) {
+          cleaned = cleaned.replace(/^```\s*/, "").replace(/\s*```$/, "");
+        }
+
+        const parsed = JSON.parse(cleaned);
+        if (Array.isArray(parsed.translations)) {
+          return parsed.translations;
+        }
+      } catch {
+        // Attempt next retry or model
       }
-      return null;
-    } catch (err: any) {
-      geminiCooldownUntil = Date.now() + 60000;
-      return null;
     }
   }
 
@@ -424,16 +443,16 @@ ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
 
 function translateToArabicDeterministic(text: string): string {
   const lower = text.toLowerCase();
-  if (lower.includes("republica") || lower.includes("republic")) return "الجمهورية الرسمية";
-  if (lower.includes("nacimiento") || lower.includes("birth")) return "شهادة ميلاد رسمية";
-  if (lower.includes("registro civil") || lower.includes("civil registry")) return "سجل الأحوال المدنية";
+  if (lower.includes("republica") || lower.includes("republic")) return "جمهورية كولومبيا";
+  if (lower.includes("nacimiento") || lower.includes("birth")) return "شهادة الميلاد الرسمية";
+  if (lower.includes("registro civil") || lower.includes("civil registry")) return "السجل المدني للمواليد";
   if (lower.includes("nombre") || lower.includes("name")) return "الاسم الكامل:";
   if (lower.includes("fecha") || lower.includes("date")) return "تاريخ الإصدار:";
   if (lower.includes("lugar") || lower.includes("place")) return "مكان الولادة:";
   if (lower.includes("titulo") || lower.includes("degree")) return "الشهادة الجامعية المعتمدة";
   if (lower.includes("diploma")) return "شهادة التخرج الرسمية";
   if (lower.includes("identidad") || lower.includes("identity")) return "بطاقة الهوية الوطنية";
-  return `[مترجم: ${text}]`;
+  return text;
 }
 
 async function callGeminiTranslation(
@@ -441,11 +460,8 @@ async function callGeminiTranslation(
   options: TranslationOptions,
   apiKey: string
 ): Promise<string | null> {
-  if (Date.now() < geminiCooldownUntil) {
-    return null;
-  }
-
-  const ai = getGenAI(apiKey);
+  const cleanKey = apiKey.replace(/^["']|["']$/g, "").trim();
+  const modelsToTry = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.8-flash"];
   const systemInstruction = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the input text from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL RULES:
@@ -454,23 +470,43 @@ CRITICAL RULES:
 3. Maintain the formal legal register.
 4. ZERO PROMOTIONAL FILLER. Never add adjectives, adverbs, or marketing words not present in source.`;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `${systemInstruction}\n\nTranslate this:\n${text}`,
-        config: {
-          temperature: 0.1,
-          maxOutputTokens: 1024,
-        },
-      });
-      const candidate = res.text;
-      return candidate ? candidate.trim() : null;
-    } catch (err: any) {
-      geminiCooldownUntil = Date.now() + 60000;
-      return null;
+  for (const model of modelsToTry) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+            contents: [{ role: "user", parts: [{ text: text }] }],
+            generationConfig: {
+              temperature: 0.1,
+            },
+          }),
+        });
+
+        if (res.status === 429) {
+          const delay = Math.pow(2, attempt) * 1000;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        if (!res.ok) {
+          break; // Try next model
+        }
+
+        const data = await res.json();
+        const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidate) {
+          return candidate.trim();
+        }
+      } catch {
+        // Attempt next retry or model
+      }
     }
   }
+
   return null;
 }
 

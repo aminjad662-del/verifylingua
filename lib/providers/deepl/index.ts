@@ -4,7 +4,9 @@ export class DeepLProvider implements TranslationProvider {
   name = "deepl";
 
   private getApiKey(): string | null {
-    return process.env.DEEPL_API_KEY || "7dbfa8c2-d1fc-4453-940a-4cfda3861f97:fx";
+    const raw = process.env.DEEPL_API_KEY || "";
+    const clean = raw.replace(/^["']|["']$/g, "").trim();
+    return clean || null;
   }
 
   isAvailable(): boolean {

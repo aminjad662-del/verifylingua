@@ -8,6 +8,7 @@ import { z } from "zod";
 export const documentTranslatePayloadSchema = z.object({
   jobId: z.string().min(1, "jobId must be a non-empty string"),
   fileUrl: z.string().min(1, "fileUrl must be a non-empty string"),
+  orderId: z.string().optional(),
 });
 
 export type DocumentTranslatePayload = z.infer<typeof documentTranslatePayloadSchema>;
@@ -31,4 +32,5 @@ export type InngestEvents = {
 export const inngest = new Inngest({
   id: "verifylingua-translation-saas",
   eventKey: process.env.INNGEST_EVENT_KEY,
+  isDev: process.env.NODE_ENV !== "production" || !process.env.INNGEST_EVENT_KEY,
 });

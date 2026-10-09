@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { PRODUCT_NAME } from "@/lib/constants";
+import { SonnerProvider } from "@/components/ui/sonner-provider";
 
 /* Authentic Basier Square (atipo) font configuration */
 const basierSquare = localFont({
@@ -60,6 +61,7 @@ const sanFrancisco = localFont({
 });
 
 import { THEME_COLOR_LIGHT, THEME_COLOR_DARK } from "@/lib/theme-constants";
+import { ChunkErrorListener } from "@/components/chunk-error-listener";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -96,7 +98,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${basierSquare.variable} ${sanFrancisco.variable} min-h-screen bg-canvas text-ink-soft antialiased`}>
+        <ChunkErrorListener />
         {children}
+        <SonnerProvider />
       </body>
     </html>
   );

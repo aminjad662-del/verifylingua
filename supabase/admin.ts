@@ -10,7 +10,10 @@ import type { Database } from "./types";
  */
 export function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error(
@@ -25,3 +28,14 @@ export function createAdminClient() {
     },
   });
 }
+
+/**
+ * Lazily initialized singleton proxy for supabaseAdmin.
+ * Bypasses Row Level Security (RLS) using SUPABASE_SERVICE_ROLE_KEY.
+ */
+export const supabaseAdmin = new Proxy({} as ReturnType<typeof createAdminClient>, {
+  get(_target, prop) {
+    const client = createAdminClient();
+    return (client as any)[prop];
+  },
+});

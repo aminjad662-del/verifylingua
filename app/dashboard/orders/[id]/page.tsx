@@ -115,6 +115,17 @@ export default function OrderDetailsPage() {
       if (res.ok) {
         fetchOrder();
       }
+
+      try {
+        await fetch("/api/translations/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: order.publicCode || order.id,
+            reviewerId: "admin_reviewer",
+          }),
+        });
+      } catch {}
     } catch (err) {
       console.error("Failed to approve order:", err);
     } finally {

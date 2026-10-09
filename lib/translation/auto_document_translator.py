@@ -44,7 +44,7 @@ def translate_document_image(input_path, output_path, target_lang="es", api_key=
     with open(input_path, "rb") as f:
         img_b64 = base64.b64encode(f.read()).decode("utf-8")
         
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={key}"
     target_name = LANGUAGE_NAMES.get(target_lang.lower(), target_lang)
     
     prompt = f"""You are a master document translator and layout reconstruction engineer.

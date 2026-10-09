@@ -1,4 +1,3 @@
-import { prisma } from "../prisma";
 import {
   GatekeeperInput, ClassifierInput, ExtractorInput, GlossaryInput,
   TranslatorInput, RendererInput, InspectorInput, AgentResult, TranslatedBlock, TextBlock
@@ -31,21 +30,6 @@ export class Orchestrator {
     currentStep: string,
     error?: string
   ): Promise<void> {
-    try {
-      await prisma.translationJob.update({
-        where: { id: jobId },
-        data: {
-          status,
-          progress,
-          currentStep,
-          errorMessage: error || null,
-          updatedAt: new Date(),
-          ...(status === "completed" || status === "ready" ? { completedAt: new Date() } : {}),
-        },
-      });
-    } catch (e) {
-      // Database update fallback for non-persistent / offline testing
-    }
 
     // Sync in-memory store for instant status polling and zero-latency preview
     try {

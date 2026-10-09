@@ -79,10 +79,22 @@ function OrderTrackingContent() {
 
     const pollStatus = async () => {
       try {
-        const res = await fetch(`/api/jobs/${encodeURIComponent(publicCode)}/status`, {
+        let res = await fetch(`/api/jobs/${encodeURIComponent(publicCode)}/status`, {
           cache: "no-store",
           headers: { Accept: "application/json" },
         });
+
+        if (!res.ok && res.status === 404) {
+          try {
+            const transRes = await fetch(`/api/translations/${encodeURIComponent(publicCode)}`, {
+              cache: "no-store",
+              headers: { Accept: "application/json" },
+            });
+            if (transRes.ok) {
+              res = transRes;
+            }
+          } catch {}
+        }
 
         if (!isMounted) return;
 
@@ -94,11 +106,19 @@ function OrderTrackingContent() {
           if (data.currentStep) {
             setCurrentLinguistTask(data.currentStep);
           }
-          if (data.status === "completed" || data.status === "ready") {
+          if (
+            data.status === "completed" ||
+            data.status === "ready" ||
+            data.status === "pending_review"
+          ) {
             setTranslationProgress(100);
             setTrackerStatus("DRAFT_READY");
             return;
-          } else if (data.status === "certified") {
+          } else if (
+            data.status === "certified" ||
+            data.status === "approved" ||
+            data.status === "delivered"
+          ) {
             setTranslationProgress(100);
             setTrackerStatus("CERTIFIED");
             return;

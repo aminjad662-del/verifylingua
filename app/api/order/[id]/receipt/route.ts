@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateReceiptPdf } from "@/lib/receipt";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/supabase/server";
+import { createAdminClient } from "@/supabase/admin";
 
 export async function GET(
   req: NextRequest,
@@ -12,16 +13,24 @@ export async function GET(
 
     // Look up in database or use standard fallback for mock orders
     let orderInfo: any = null;
-    try {
-      const queryPromise = prisma.order.findFirst({
-        where: { OR: [{ id }, { publicCode }] },
-      });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("DB_TIMEOUT")), 300)
-      );
-      orderInfo = await Promise.race([queryPromise, timeoutPromise]);
-    } catch {
-      // ignore in dev without db
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const isMockPlaceholderUrl = Boolean(!supabaseUrl || supabaseUrl.includes("your-project"));
+
+    if (!isMockPlaceholderUrl) {
+      try {
+        const supabase =
+          process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+            ? createAdminClient()
+            : await createClient();
+        const { data } = await supabase
+          .from("orders")
+          .select("*")
+          .or(`id.eq.${id},public_code.eq.${publicCode}`)
+          .maybeSingle();
+        orderInfo = data;
+      } catch {
+        // ignore in dev without db
+      }
     }
 
     const documentName =

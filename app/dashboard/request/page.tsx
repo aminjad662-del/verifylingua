@@ -215,6 +215,24 @@ export default function NewTranslationRequestWizard() {
         const data = await res.json();
         setSubmittedOrder(data.order);
         setCurrentStep(5);
+
+        const orderId = data.order?.id || data.order?.publicCode || data.id;
+        if (orderId) {
+          try {
+            await fetch("/api/translations/request", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: String(orderId),
+                userId: clientEmail || "client_dashboard",
+                sourcePath: uploadedFiles[0]?.name ? `source_documents/${uploadedFiles[0].name}` : "source_documents/doc.pdf",
+                sourceLang: sourceLang === "Spanish" ? "es" : sourceLang.toLowerCase().slice(0, 2),
+                targetLang: targetLang === "English" ? "en" : targetLang.toLowerCase().slice(0, 2),
+                docType: docType || "official_record",
+              }),
+            });
+          } catch {}
+        }
       }
     } catch (err) {
       console.error("Submission failed:", err);
