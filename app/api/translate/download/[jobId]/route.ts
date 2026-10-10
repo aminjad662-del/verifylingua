@@ -203,7 +203,8 @@ export async function GET(
     }
 
     if (!isVerifiedPdf) {
-      const wantsPdf = url.searchParams.get("format") === "pdf" || downloadFileName.endsWith(".pdf") || !isImage;
+      const isDocx = (job?.fileFormat === "docx" || (job as any)?.sourceFormat === "docx" || downloadFileName.endsWith(".docx"));
+      const wantsPdf = url.searchParams.get("format") === "pdf" || downloadFileName.endsWith(".pdf") || (!isImage && !isDocx);
       if (wantsPdf) {
         try {
           const { PDFDocument } = await import("pdf-lib");
