@@ -31,7 +31,7 @@ import {
   Layers,
 } from "lucide-react";
 
-type TrackerStatus = "TRANSLATING" | "DRAFT_READY" | "CERTIFIED";
+type TrackerStatus = "TRANSLATING" | "DRAFT_READY" | "CERTIFIED" | "FAILED" | "NEEDS_MANUAL";
 
 interface OrderEventItem {
   id: string;
@@ -121,6 +121,20 @@ function OrderTrackingContent() {
           ) {
             setTranslationProgress(100);
             setTrackerStatus("CERTIFIED");
+            return;
+          } else if (
+            data.status === "failed" ||
+            data.status === "needs_manual"
+          ) {
+            setTranslationProgress(0);
+            if (data.status === "needs_manual") {
+              setTrackerStatus("NEEDS_MANUAL");
+            } else {
+              setTrackerStatus("FAILED");
+            }
+            if (data.currentStep) {
+              setCurrentLinguistTask(data.currentStep);
+            }
             return;
           }
         }
@@ -332,6 +346,10 @@ function OrderTrackingContent() {
           <h1 className="text-2xl sm:text-3xl font-black text-ink tracking-tight font-serif">
             {trackerStatus === "DRAFT_READY"
               ? "Draft Completed — Action Required"
+              : trackerStatus === "FAILED"
+              ? "Translation Failed — Order Protected"
+              : trackerStatus === "NEEDS_MANUAL"
+              ? "Manual Certified Review Required"
               : "Translation in Progress — In Certified Hands"}
           </h1>
 

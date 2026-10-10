@@ -18,7 +18,8 @@ export type JobStatus =
   | "ready"
   | "completed"
   | "completed_with_warnings"
-  | "failed";
+  | "failed"
+  | "needs_manual";
 
 export interface SpatialTextBlock {
   id: string;

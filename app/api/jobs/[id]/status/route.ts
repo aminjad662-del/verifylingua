@@ -110,16 +110,40 @@ export async function GET(
       memJob?.status ||
       (orderRecord?.status === "paid" ? "translating" : (orderRecord?.status?.toLowerCase() || "queued"));
 
-    const progress =
-      pJob?.progress ??
-      memJob?.progress ??
-      (orderRecord ? (orderRecord.status === "completed" ? 100 : 35) : 0);
+    const isFailedStatus =
+      rawStatus === "failed" ||
+      rawStatus === "needs_manual" ||
+      supabaseJob?.status === "failed" ||
+      supabaseJob?.status === "needs_manual" ||
+      orderRecord?.status === "failed" ||
+      orderRecord?.status === "needs_manual";
 
-    const currentStep =
-      supabaseJob?.current_phase ||
-      pJob?.currentStep ||
-      memJob?.currentStep ||
-      (orderRecord ? "ATA-accredited certified linguist assigned. Processing document..." : "Processing document...");
+    const normalizedStatus =
+      rawStatus === "needs_manual" || supabaseJob?.status === "needs_manual" || orderRecord?.status === "needs_manual"
+        ? "needs_manual"
+        : isFailedStatus
+        ? "failed"
+        : rawStatus;
+
+    const progress = isFailedStatus
+      ? 0
+      : (pJob?.progress ??
+         memJob?.progress ??
+         (orderRecord ? (orderRecord.status === "completed" ? 100 : 35) : 0));
+
+    const errorMessage =
+      (supabaseJob?.error_log ? String(supabaseJob.error_log) : null) ||
+      (supabaseJob?.reason_code ? `Pipeline error: ${supabaseJob.reason_code}` : null) ||
+      pJob?.errorMessage ||
+      memJob?.error ||
+      null;
+
+    const currentStep = isFailedStatus
+      ? (errorMessage || (normalizedStatus === "needs_manual" ? "Translation requires manual certified review" : "Translation pipeline failed"))
+      : (supabaseJob?.current_phase ||
+         pJob?.currentStep ||
+         memJob?.currentStep ||
+         (orderRecord ? "ATA-accredited certified linguist assigned. Processing document..." : "Processing document..."));
 
     const fileName = pJob?.sourceFilename || memJob?.fileName || "document.pdf";
     const fileFormat = pJob?.sourceFormat || memJob?.fileFormat || "pdf";
@@ -127,11 +151,6 @@ export async function GET(
     const targetLang = pJob?.targetLanguage || memJob?.targetLang || "en";
     const pageCount = pJob?.pageCount || memJob?.pageCount || 1;
     const downloadToken = pJob?.downloadToken || memJob?.downloadToken || cleanId;
-    const errorMessage =
-      (supabaseJob?.error_log ? String(supabaseJob.error_log) : null) ||
-      pJob?.errorMessage ||
-      memJob?.error ||
-      null;
 
     const createdAt =
       supabaseJob?.created_at ||
@@ -168,8 +187,8 @@ export async function GET(
       );
     }
 
-    // Automatic resilience: If status is failed and user has reserved credits, guarantee refund
-    if (rawStatus === "failed" && userId) {
+    // Automatic resilience: If status is failed or needs_manual and user has reserved credits, guarantee refund
+    if ((normalizedStatus === "failed" || normalizedStatus === "needs_manual") && userId) {
       try {
         await releaseCreditsOnFailure(
           userId,
@@ -183,9 +202,9 @@ export async function GET(
     }
 
     const isCompleted =
-      rawStatus === "completed" ||
-      rawStatus === "completed_with_warnings" ||
-      rawStatus === "ready";
+      normalizedStatus === "completed" ||
+      normalizedStatus === "completed_with_warnings" ||
+      normalizedStatus === "ready";
 
     const downloadUrl = isCompleted
       ? `/api/jobs/${jobId}/download?token=${downloadToken}`
@@ -193,8 +212,8 @@ export async function GET(
 
     return NextResponse.json({
       jobId,
-      status: rawStatus,
-      currentPhase: rawStatus,
+      status: normalizedStatus,
+      currentPhase: normalizedStatus,
       progress,
       currentStep,
       fileName,
@@ -206,6 +225,12 @@ export async function GET(
       downloadUrl,
       layoutPreserved,
       error: errorMessage,
+      reasonCode:
+        supabaseJob?.reason_code ||
+        (errorMessage?.startsWith("Pipeline error: ")
+          ? errorMessage.replace("Pipeline error: ", "").trim()
+          : null) ||
+        null,
       createdAt,
       completedAt,
     });

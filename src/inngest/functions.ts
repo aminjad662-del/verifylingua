@@ -18,7 +18,82 @@ export const processTranslationJob = inngest.createFunction(
   {
     id: "process-translation-job",
     name: "Process Translation Job",
+    retries: 3,
     triggers: [{ event: "document.translate" }],
+    onFailure: async ({ error, event }: any) => {
+      const originalEvent = (event?.data as any)?.event || event;
+      const eventPayload = originalEvent?.data || (event?.data as any) || {};
+      const unwrapped = eventPayload?.data || eventPayload?.payload || eventPayload;
+
+      const orderId =
+        (unwrapped?.orderId as string) ||
+        (unwrapped?.order_id as string) ||
+        (unwrapped?.jobId as string) ||
+        (unwrapped?.job_id as string) ||
+        (eventPayload?.orderId as string) ||
+        (eventPayload?.order_id as string) ||
+        (eventPayload?.jobId as string) ||
+        (eventPayload?.job_id as string) ||
+        ((event?.data as any)?.orderId as string) ||
+        ((event?.data as any)?.jobId as string) ||
+        "unknown";
+
+      const jobId =
+        (unwrapped?.jobId as string) ||
+        (unwrapped?.job_id as string) ||
+        (unwrapped?.orderId as string) ||
+        (unwrapped?.order_id as string) ||
+        (eventPayload?.jobId as string) ||
+        (eventPayload?.job_id as string) ||
+        (eventPayload?.orderId as string) ||
+        (eventPayload?.order_id as string) ||
+        orderId;
+
+      const errMsg = error?.message || String(error || "");
+      let reasonCode = (error as any)?.reasonCode || (error as any)?.cause?.reasonCode;
+      if (!reasonCode) {
+        if (/missing gemini api key/i.test(errMsg)) reasonCode = "missing_gemini_api_key";
+        else if (/validation|zod|syntaxerror/i.test(errMsg)) reasonCode = "llm_validation_failed";
+        else if (/timeout|timed out/i.test(errMsg)) reasonCode = "llm_timeout";
+        else if (/qa_integrity_failure|qa integrity/i.test(errMsg)) reasonCode = "qa_integrity_failure";
+        else if (/scan_not_supported/i.test(errMsg)) reasonCode = "scan_not_supported";
+        else if (/scan_illegible/i.test(errMsg)) reasonCode = "scan_illegible";
+        else reasonCode = "pipeline_failure";
+      }
+
+      const failureStatus =
+        reasonCode === "qa_integrity_failure" || reasonCode === "scan_not_supported" || reasonCode === "scan_illegible"
+          ? "needs_manual"
+          : "failed";
+
+      try {
+        const supabase = createAdminClient();
+        const targets = Array.from(new Set([jobId, orderId].filter((id) => id && id !== "unknown")));
+        for (const targetId of targets) {
+          await (supabase as any)
+            .from("translation_jobs")
+            .update({
+              status: failureStatus,
+              reason_code: reasonCode,
+              error_log: errMsg,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", targetId);
+
+          await (supabase as any)
+            .from("translation_jobs")
+            .update({
+              status: failureStatus,
+              reason_code: reasonCode,
+              error_log: errMsg,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("order_id", targetId);
+        }
+      } catch (dbErr) {
+        console.error("[Inngest processTranslationJob onFailure Error]:", dbErr);
+      }
+    },
   },
   async ({ event, step }) => {
     // Defensively parse payload from event.data, nested objects, or stringified payload

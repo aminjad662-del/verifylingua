@@ -1,6 +1,7 @@
 import { serve } from "inngest/next";
 import { inngest } from "@/src/inngest/client";
 import { processTranslationJob } from "@/src/inngest/functions";
+import { translateDocumentJob } from "./functions";
 
 /**
  * Inngest Next.js App Router API Route handler.
@@ -10,5 +11,6 @@ export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
     processTranslationJob,
+    translateDocumentJob,
   ],
 });

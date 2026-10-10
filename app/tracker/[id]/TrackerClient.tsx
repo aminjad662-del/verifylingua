@@ -210,17 +210,31 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                 approved: "completed",
                 delivered: "completed",
                 failed: "failed",
+                needs_manual: "needs_manual",
               };
               const mappedStatus = statusMap[transData.status] || transData.status;
+              const isFallbackFailed = mappedStatus === "failed" || mappedStatus === "needs_manual";
               const normalizedData: JobStatusData = {
                 jobId: transData.orderId || resolvedId,
                 status: mappedStatus,
                 currentPhase: mappedStatus,
-                progress: transData.status === "delivered" || transData.status === "approved" ? 100 : transData.status === "pending_review" ? 85 : transData.status === "rendering" ? 70 : transData.status === "translating" ? 50 : 25,
+                progress: isFallbackFailed
+                  ? 0
+                  : transData.status === "delivered" || transData.status === "approved"
+                  ? 100
+                  : transData.status === "pending_review"
+                  ? 85
+                  : transData.status === "rendering"
+                  ? 70
+                  : transData.status === "translating"
+                  ? 50
+                  : 25,
                 currentStep: transData.status === "approved" || transData.status === "delivered"
                   ? "Official sworn affidavit and certified seal minted."
                   : transData.status === "pending_review"
                   ? "Translation draft ready for certified reviewer signature."
+                  : isFallbackFailed
+                  ? "Translation pipeline encountered an issue. ATA reviewer notified."
                   : "Certified pipeline processing active.",
                 fileName: "certified_document.pdf",
                 fileFormat: "pdf",
@@ -239,9 +253,9 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
               setIsNotFound(false);
               setPollError(null);
               if (normalizedData.currentStep) {
-                addLog(normalizedData.currentStep, normalizedData.status === "failed" ? "ERROR" : "PROGRESS");
+                addLog(normalizedData.currentStep, isFallbackFailed ? "ERROR" : "PROGRESS");
               }
-              const isDone = mappedStatus === "completed" || mappedStatus === "failed";
+              const isDone = mappedStatus === "completed" || mappedStatus === "failed" || mappedStatus === "needs_manual";
               if (!isDone) {
                 timer = setTimeout(fetchStatus, 2000);
               }
@@ -297,7 +311,8 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
         const isDone =
           data.status === "completed" ||
           data.status === "ready" ||
-          data.status === "failed";
+          data.status === "failed" ||
+          data.status === "needs_manual";
 
         if (!isDone) {
           timer = setTimeout(fetchStatus, 2000);
@@ -336,7 +351,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
 
   const currentPhaseIndex = getActivePhaseIndex(jobData?.status, jobData?.currentPhase, jobData?.progress);
   const isCompleted = jobData?.status === "completed" || jobData?.status === "ready";
-  const isFailed = jobData?.status === "failed";
+  const isFailed = jobData?.status === "failed" || jobData?.status === "needs_manual";
 
   const handleCopyId = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {

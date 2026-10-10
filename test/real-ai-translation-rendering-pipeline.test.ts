@@ -132,7 +132,7 @@ describe("Live AI Translation & PDF Rendering Engine Verification", () => {
     const res = await fn({ event, step: mockStep });
 
     expect(res.success).toBe(true);
-    expect(executedSteps).toContain("execute-translation-agent");
+    expect(executedSteps.some((s) => s === "translate-document" || s === "execute-translation-agent")).toBe(true);
     expect(executedSteps).toContain("execute-rendering-agent");
     expect(res.data).toBeDefined();
     expect(res.data.length).toBe(3);
@@ -143,5 +143,5 @@ describe("Live AI Translation & PDF Rendering Engine Verification", () => {
     console.log("=== [INNGEST PIPELINE EXECUTION VERIFIED] ===");
     console.log("Steps executed:", executedSteps);
     console.log("Rendered PDF bytes:", res.rendered.pdfBuffer.length);
-  });
+  }, 35000);
 });

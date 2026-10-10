@@ -6,6 +6,7 @@ import {
   type DocumentTranslatePayload,
 } from "@/src/inngest/client";
 import { processTranslationJob } from "@/src/inngest/functions";
+import { translateDocumentJob } from "@/app/api/inngest/functions";
 import * as routeHandlers from "@/app/api/inngest/route";
 
 // Mock Supabase admin client
@@ -257,6 +258,33 @@ describe("Distributed Inngest Queue Infrastructure (Step 1.2)", () => {
         /Failed to update job status to processing/
       );
     });
+
+    it("handles failure via onFailure hook by marking translation_jobs as failed with reason_code", async () => {
+      const fnOpts = (processTranslationJob as any).opts;
+      expect(fnOpts.onFailure).toBeDefined();
+
+      const failureEvent = {
+        data: {
+          event: {
+            data: {
+              jobId: "failed-job-999",
+              orderId: "failed-order-999",
+            },
+          },
+        },
+      };
+
+      const error = new Error("Missing Gemini API Key");
+      await fnOpts.onFailure({ error, event: failureEvent });
+
+      expect(mockFrom).toHaveBeenCalledWith("translation_jobs");
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "failed",
+          reason_code: "missing_gemini_api_key",
+        })
+      );
+    });
   });
 
   describe("3. Inngest API Route Endpoint", () => {
@@ -267,6 +295,172 @@ describe("Distributed Inngest Queue Infrastructure (Step 1.2)", () => {
       expect(routeHandlers.GET).toBeTypeOf("function");
       expect(routeHandlers.POST).toBeTypeOf("function");
       expect(routeHandlers.PUT).toBeTypeOf("function");
+    });
+  });
+
+  describe("4. Strict LLM Translation Job Hardening (translateDocumentJob)", () => {
+    it("throws NonRetriableError('Missing Gemini API Key') when GEMINI_API_KEY is missing", async () => {
+      const originalKey = process.env.GEMINI_API_KEY;
+      delete process.env.GEMINI_API_KEY;
+
+      try {
+        const handler = (translateDocumentJob as any).fn;
+        const event = {
+          data: {
+            jobId: "job-missing-key",
+            orderId: "order-missing-key",
+            extractedBlocks: [{ id: "b1", text: "Test text" }],
+          },
+        };
+        const step = {
+          run: vi.fn(async (_id: string, fn: () => Promise<any>) => fn()),
+        };
+
+        await expect(handler({ event, step, attempt: 0 })).rejects.toThrow("Missing Gemini API Key");
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: "failed",
+            reason_code: "missing_gemini_api_key",
+          })
+        );
+      } finally {
+        if (originalKey) process.env.GEMINI_API_KEY = originalKey;
+      }
+    });
+
+    it("allows retry on Zod validation error for attempt < 3 and throws NonRetriableError for attempt >= 3", async () => {
+      const originalKey = process.env.GEMINI_API_KEY;
+      process.env.GEMINI_API_KEY = "test-gemini-key";
+
+      const translatorModule = await import("../services/translator");
+      const spyRunAgent2 = vi.spyOn(translatorModule, "runAgent2");
+
+      try {
+        const valErr = new Error("LLM output failed Zod schema validation: invalid structure");
+        (valErr as any).name = "ZodError";
+        (valErr as any).isValidationError = true;
+        spyRunAgent2.mockRejectedValue(valErr);
+
+        const handler = (translateDocumentJob as any).fn;
+        const event = {
+          data: {
+            jobId: "job-val-err",
+            orderId: "order-val-err",
+            extractedBlocks: [{ id: "b1", text: "Sample" }],
+          },
+        };
+        const step = {
+          run: vi.fn(async (_id: string, fn: () => Promise<any>) => fn()),
+        };
+
+        // Attempt 0: retryable error
+        await expect(handler({ event, step, attempt: 0 })).rejects.toThrow(
+          /LLM structured output validation failed \(attempt 1 of 3\)/
+        );
+
+        // Attempt 3: fatal NonRetriableError
+        await expect(handler({ event, step, attempt: 3 })).rejects.toThrow(
+          "LLM structured output validation failed"
+        );
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: "failed",
+            reason_code: "llm_validation_failed",
+          })
+        );
+      } finally {
+        spyRunAgent2.mockRestore();
+        if (originalKey) process.env.GEMINI_API_KEY = originalKey;
+        else delete process.env.GEMINI_API_KEY;
+      }
+    });
+
+    it("handles LLM timeout and throws NonRetriableError after 3 retries", async () => {
+      const originalKey = process.env.GEMINI_API_KEY;
+      process.env.GEMINI_API_KEY = "test-gemini-key";
+
+      const translatorModule = await import("../services/translator");
+      const spyRunAgent2 = vi.spyOn(translatorModule, "runAgent2");
+
+      try {
+        const timeoutErr = new Error("Gemini API call timed out after 35s");
+        (timeoutErr as any).name = "TimeoutError";
+        (timeoutErr as any).isTimeout = true;
+        spyRunAgent2.mockRejectedValue(timeoutErr);
+
+        const handler = (translateDocumentJob as any).fn;
+        const event = {
+          data: {
+            jobId: "job-timeout-err",
+            orderId: "order-timeout-err",
+            extractedBlocks: [{ id: "b1", text: "Sample" }],
+          },
+        };
+        const step = {
+          run: vi.fn(async (_id: string, fn: () => Promise<any>) => fn()),
+        };
+
+        // Attempt 0: retryable error
+        await expect(handler({ event, step, attempt: 0 })).rejects.toThrow(
+          /Gemini API call timed out \(attempt 1 of 3\)/
+        );
+
+        // Attempt 3: fatal NonRetriableError
+        await expect(handler({ event, step, attempt: 3 })).rejects.toThrow(
+          "Gemini API call timed out after 3 retries"
+        );
+        expect(mockUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: "failed",
+            reason_code: "llm_timeout",
+          })
+        );
+      } finally {
+        spyRunAgent2.mockRestore();
+        if (originalKey) process.env.GEMINI_API_KEY = originalKey;
+        else delete process.env.GEMINI_API_KEY;
+      }
+    });
+
+    it("translateDocumentJob onFailure hook updates Supabase status and reason_code", async () => {
+      const fnOpts = (translateDocumentJob as any).opts;
+      expect(fnOpts.onFailure).toBeDefined();
+
+      const failureEvent = {
+        data: {
+          event: {
+            data: {
+              jobId: "failed-job-888",
+              orderId: "failed-order-888",
+            },
+          },
+        },
+      };
+
+      // Test validation error -> status: failed, reason_code: llm_validation_failed
+      const valError = new Error("LLM structured output validation failed");
+      (valError as any).reasonCode = "llm_validation_failed";
+      await fnOpts.onFailure({ error: valError, event: failureEvent });
+
+      expect(mockFrom).toHaveBeenCalledWith("translation_jobs");
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "failed",
+          reason_code: "llm_validation_failed",
+        })
+      );
+
+      // Test QA error -> status: needs_manual, reason_code: qa_integrity_failure
+      const qaError = new Error("QA integrity check failed");
+      (qaError as any).reasonCode = "qa_integrity_failure";
+      await fnOpts.onFailure({ error: qaError, event: failureEvent });
+
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "needs_manual",
+          reason_code: "qa_integrity_failure",
+        })
+      );
     });
   });
 });

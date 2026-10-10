@@ -21,7 +21,8 @@ export type TranslationJobStatus =
   | "qa"
   | "rendering"
   | "completed"
-  | "failed";
+  | "failed"
+  | "needs_manual";
 
 export interface Database {
   public: {
@@ -72,6 +73,7 @@ export interface Database {
           status: TranslationJobStatus;
           current_phase: string;
           error_log: Json | null;
+          reason_code?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -82,6 +84,7 @@ export interface Database {
           status?: TranslationJobStatus;
           current_phase?: string;
           error_log?: Json | null;
+          reason_code?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -92,6 +95,7 @@ export interface Database {
           status?: TranslationJobStatus;
           current_phase?: string;
           error_log?: Json | null;
+          reason_code?: string | null;
           created_at?: string;
           updated_at?: string;
         };
