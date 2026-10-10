@@ -209,6 +209,14 @@ export default function TranslatePage() {
         }
         const data = await res.json();
 
+        if (data.svgContent && !translatedBlobUrl) {
+          try {
+            const blob = new Blob([data.svgContent], { type: "image/svg+xml;charset=utf-8" });
+            const localBlobUrl = URL.createObjectURL(blob);
+            setTranslatedBlobUrl(localBlobUrl);
+          } catch {}
+        }
+
         setJob((prev) =>
           prev
             ? {
@@ -426,8 +434,10 @@ export default function TranslatePage() {
           });
         } catch {}
 
-        router.push(`/tracker/${targetJobId}`);
-        return;
+        if (serviceTier === "certified") {
+          router.push(`/tracker/${targetJobId}`);
+          return;
+        }
 
         let localBlobUrl: string | null = null;
         if (data.svgContent) {
@@ -439,7 +449,7 @@ export default function TranslatePage() {
         }
 
         setJob({
-          jobId: data.jobId || `job_${Date.now()}`,
+          jobId: targetJobId,
           fileName: data.fileName || file.name,
           fileFormat: data.fileFormat || file.name.split(".").pop()?.toLowerCase() || "pdf",
           status: data.status || "translating",
@@ -458,7 +468,7 @@ export default function TranslatePage() {
         if (data.status === "ready") {
           stopPolling();
         } else {
-          startPolling(data.jobId);
+          startPolling(targetJobId);
         }
         fetchBalance();
       } catch (err: any) {
@@ -539,14 +549,25 @@ export default function TranslatePage() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = (formatOverride?: "pdf" | "svg") => {
     if (!job?.jobId && !translatedBlobUrl) return;
     const cleanBaseName = (job?.fileName || "translated_document").replace(/\.[^/.]+$/, "");
-    const ext = translatedBlobUrl ? "svg" : (job?.fileFormat || "pdf");
-    const downloadHref = translatedBlobUrl || `/api/translate/download/${job?.jobId}?token=${job?.downloadToken}&lang=${targetLang}`;
+    const targetFormat = formatOverride || (isImageJob ? (job?.fileFormat || "png") : "pdf");
+    
+    let downloadHref = "";
+    if (targetFormat === "svg" && translatedBlobUrl) {
+      downloadHref = translatedBlobUrl;
+    } else if (job?.jobId) {
+      downloadHref = `/api/translate/download/${job.jobId}?token=${job.downloadToken || ""}&lang=${targetLang}&format=${targetFormat}`;
+    } else if (translatedBlobUrl) {
+      downloadHref = translatedBlobUrl;
+    }
+
+    if (!downloadHref) return;
+
     const a = document.createElement("a");
     a.href = downloadHref;
-    a.download = `${cleanBaseName}_${targetLang.toUpperCase()}_translated.${ext}`;
+    a.download = `${cleanBaseName}_${targetLang.toUpperCase()}_translated.${targetFormat}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -758,6 +779,42 @@ export default function TranslatePage() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-2">Translation Service Level</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setServiceTier("automated")}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        serviceTier === "automated"
+                          ? "border-blue-600 bg-blue-50/50 shadow-xs"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-xs font-semibold text-slate-900 flex items-center justify-between">
+                        <span>Automated MT</span>
+                        {serviceTier === "automated" && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1">Instant layout-preserving machine translation</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setServiceTier("certified")}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        serviceTier === "certified"
+                          ? "border-blue-600 bg-blue-50/50 shadow-xs"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-xs font-semibold text-slate-900 flex items-center justify-between">
+                        <span>Certified USCIS</span>
+                        {serviceTier === "certified" && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1">Official ATA affidavit & sworn compliance packet</p>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="p-4 rounded-xl border border-slate-200 bg-white">
                   <div className="flex items-center gap-3 mb-2">
                     <CheckCircle2 className="w-4 h-4 text-slate-700" />
@@ -776,7 +833,7 @@ export default function TranslatePage() {
                   className="w-full py-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  Begin Vector-Preserving Translation
+                  {serviceTier === "certified" ? "Submit for Certified USCIS Translation" : "Begin Vector-Preserving Translation"}
                 </motion.button>
               </motion.div>
             )}

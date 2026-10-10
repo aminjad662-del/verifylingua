@@ -261,18 +261,32 @@ export const translateDocumentJob = inngest.createFunction(
       });
     });
 
-    // 3. Update status in Supabase translation_jobs to completed
+    // 3. Update status in Supabase translation_jobs to completed and persist rendered PDF
     await step.run("update-status-to-completed", async () => {
       const target = orderId || jobId;
       if (target && target !== "unknown") {
         try {
           const { createAdminClient } = await import("@/supabase/admin");
           const supabase = createAdminClient();
+          const filePath = `${target}/translated_document.pdf`;
+
+          if (renderedResult?.pdfBuffer) {
+            try {
+              await supabase.storage
+                .from("translated_documents")
+                .upload(filePath, Buffer.from(renderedResult.pdfBuffer), {
+                  contentType: "application/pdf",
+                  upsert: true,
+                });
+            } catch {}
+          }
+
           await supabase
             .from("translation_jobs")
             .update({
               status: "completed",
               current_phase: "completed",
+              file_url: renderedResult?.pdfBuffer ? filePath : undefined,
               updated_at: new Date().toISOString(),
             })
             .eq("id", target);
@@ -282,6 +296,7 @@ export const translateDocumentJob = inngest.createFunction(
             .update({
               status: "completed",
               current_phase: "completed",
+              file_url: renderedResult?.pdfBuffer ? filePath : undefined,
               updated_at: new Date().toISOString(),
             })
             .eq("order_id", target);
@@ -297,6 +312,32 @@ export const translateDocumentJob = inngest.createFunction(
                 .eq("id", orderId);
             } catch {}
           }
+
+          // Sync in-memory store for instant download availability
+          try {
+            const { getTranslationJob, updateTranslationJob } = await import("@/lib/translation/store");
+            for (const key of [jobId, orderId].filter(Boolean)) {
+              const mem = getTranslationJob(key);
+              if (mem) {
+                mem.status = "completed";
+                mem.progress = 100;
+                if (renderedResult?.pdfBuffer) {
+                  mem.translatedBuffer = Buffer.from(renderedResult.pdfBuffer);
+                }
+                updateTranslationJob(mem);
+              }
+            }
+          } catch {}
+
+          // Sync persistent store
+          try {
+            const { updatePersistentJob } = await import("@/lib/translation/persistent-store");
+            await updatePersistentJob(target, {
+              status: "completed",
+              progress: 100,
+              outputKey: filePath,
+            });
+          } catch {}
         } catch {}
       }
       return { status: "completed" };
