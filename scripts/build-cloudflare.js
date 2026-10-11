@@ -748,7 +748,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
   }
 
   // Order Approval API
-  if (pathname.includes('/approve')) {
+  if ((pathname.includes('/order/') || pathname.includes('/orders/')) && pathname.endsWith('/approve')) {
     const verifyCode = 'VL-' + Math.random().toString(36).substring(2, 7).toUpperCase();
     return new Response(JSON.stringify({
       success: true,
@@ -2097,6 +2097,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
       status: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
+  }
+
   // Certified & Standard Translation Request API
   if (pathname === '/api/translations/request' && request.method === 'POST') {
     let payload = {};
