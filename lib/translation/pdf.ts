@@ -125,8 +125,9 @@ export async function translatePdf(
           color: textColor,
         });
       } catch {
-        // Fallback to basic ascii if special glyph fails
-        page.drawText(sanitized.replace(/[^\x20-\x7E]/g, "?"), {
+        // Fallback: decompose diacritics if font lacks specific glyph
+        const cleanFallback = sanitized.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, " ");
+        page.drawText(cleanFallback, {
           x: drawX,
           y: block.y,
           size: fittedSize,
@@ -540,14 +541,32 @@ export function sanitizeForPdfWinAnsi(text: string, isRtl: boolean = false): str
     return `[AR] ${romanized}`;
   }
 
-  // Filter unencodable WinAnsi glyphs
-  let clean = "";
+  const punctuationMap: Record<string, string> = {
+    "\u2022": "•",
+    "\u2014": "—",
+    "\u2013": "–",
+    "\u201C": '"',
+    "\u201D": '"',
+    "\u2018": "'",
+    "\u2019": "'",
+    "\u2026": "...",
+  };
+
+  let mapped = "";
   for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    if ((code >= 32 && code <= 126) || (code >= 160 && code <= 255)) {
-      clean += text[i];
+    const ch = text[i];
+    mapped += punctuationMap[ch] || ch;
+  }
+
+  // Filter unencodable WinAnsi glyphs: preserve ASCII (32-126) and Latin-1 (160-255)
+  let clean = "";
+  for (let i = 0; i < mapped.length; i++) {
+    const code = mapped.charCodeAt(i);
+    if ((code >= 32 && code <= 126) || (code >= 160 && code <= 255) || mapped[i] === "•") {
+      clean += mapped[i];
     } else {
-      clean += " ";
+      const decomp = mapped[i].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      clean += (decomp && decomp.charCodeAt(0) >= 32 && decomp.charCodeAt(0) <= 126) ? decomp : " ";
     }
   }
   return clean.trim() || text;

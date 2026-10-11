@@ -95,6 +95,20 @@ const FONT_5X7: Record<string, number[]> = {
   "x": [0x44, 0x28, 0x10, 0x28, 0x44],
   "y": [0x0c, 0x50, 0x50, 0x50, 0x3c],
   "z": [0x44, 0x64, 0x54, 0x4c, 0x44],
+  "á": [0x20, 0x54, 0x56, 0x54, 0x78],
+  "é": [0x38, 0x54, 0x56, 0x54, 0x18],
+  "í": [0, 0x44, 0x7d, 0x42, 0],
+  "ó": [0x38, 0x44, 0x46, 0x44, 0x38],
+  "ú": [0x3c, 0x40, 0x42, 0x20, 0x7c],
+  "ñ": [0x7c, 0x0a, 0x05, 0x04, 0x78],
+  "Á": [0x7e, 0x11, 0x13, 0x11, 0x7e],
+  "É": [0x7f, 0x49, 0x4b, 0x49, 0x41],
+  "Í": [0, 0x41, 0x7f, 0x43, 0],
+  "Ó": [0x3e, 0x41, 0x43, 0x41, 0x3e],
+  "Ú": [0x3f, 0x40, 0x42, 0x40, 0x3f],
+  "Ñ": [0x7f, 0x06, 0x09, 0x10, 0x7f],
+  "¿": [0x30, 0x48, 0x45, 0x40, 0x20],
+  "¡": [0, 0, 0x7d, 0, 0],
   "•": [0, 0x18, 0x18, 0, 0],
 };
 
@@ -106,7 +120,7 @@ function drawBitmapChar(
   color: number,
   scale: number = 1
 ) {
-  const glyph = FONT_5X7[char] || FONT_5X7["?"];
+  const glyph = FONT_5X7[char] || FONT_5X7[char.normalize("NFD").replace(/[\u0300-\u036f]/g, "")] || FONT_5X7["?"];
   for (let col = 0; col < 5; col++) {
     const colByte = glyph[col] || 0;
     for (let row = 0; row < 7; row++) {
@@ -385,10 +399,12 @@ function wrapTextToWidth(text: string, maxChars: number): string[] {
 
 function sanitizeForImageBitmap(text: string, isRtl: boolean = false): string {
   if (isRtl) {
-    // If Arabic script, format cleanly for ASCII bitmap font
-    return `[AR] ${text.replace(/[^\x20-\x7E]/g, "").trim() || "Certified Arabic Translation"}`;
+    const hasArabic = /[\u0600-\u06FF]/.test(text);
+    if (hasArabic) {
+      return `[AR] ${text.trim() || "Certified Arabic Translation"}`;
+    }
   }
-  // Strip characters not in ASCII 32-126
-  return text.replace(/[^\x20-\x7E]/g, "");
+  // Strip control characters but preserve accented Latin and international characters
+  return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 }
 

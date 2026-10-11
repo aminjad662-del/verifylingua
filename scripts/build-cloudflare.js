@@ -790,16 +790,85 @@ async function handleApiRequest(request, pathname, env, ctx) {
       { text: 'Digital Verification: Cryptographically Anchored under 8 CFR § 103.2(b)(3)' }
     ];
 
+    const WIN_ANSI_SPECIAL = {
+      '\u20AC': 0x80, // €
+      '\u201A': 0x82, // ‚
+      '\u0192': 0x83, // ƒ
+      '\u201E': 0x84, // „
+      '\u2026': 0x85, // …
+      '\u2020': 0x86, // †
+      '\u2021': 0x87, // ‡
+      '\u02C6': 0x88, // ˆ
+      '\u2030': 0x89, // ‰
+      '\u0160': 0x8A, // Š
+      '\u2039': 0x8B, // ‹
+      '\u0152': 0x8C, // Œ
+      '\u017D': 0x8E, // Ž
+      '\u2018': 0x91, // ‘
+      '\u2019': 0x92, // ’
+      '\u201C': 0x93, // “
+      '\u201D': 0x94, // ”
+      '\u2022': 0x95, // •
+      '\u2013': 0x96, // –
+      '\u2014': 0x97, // —
+      '\u02DC': 0x98, // ˜
+      '\u2122': 0x99, // ™
+      '\u0161': 0x9A, // š
+      '\u203A': 0x9B, // ›
+      '\u0153': 0x9C, // œ
+      '\u017E': 0x9E, // ž
+      '\u0178': 0x9F  // Ÿ
+    };
+
     function escapePdf(str) {
       const s = String(str || '');
       let out = '';
       for (let i = 0; i < s.length; i++) {
-        let code = s.charCodeAt(i);
-        let ch = (code < 32 || code > 126) ? ' ' : s[i];
-        if (ch === '(' || ch === ')' || ch === '\\\\') out += '\\\\';
-        out += ch;
+        const ch = s[i];
+        const code = s.charCodeAt(i);
+        if (code === 40) {
+          out += '\\\\(';
+        } else if (code === 41) {
+          out += '\\\\)';
+        } else if (code === 92) {
+          out += '\\\\\\\\';
+        } else if (code >= 32 && code <= 126) {
+          out += ch;
+        } else if (code >= 160 && code <= 255) {
+          out += '\\\\' + code.toString(8).padStart(3, '0');
+        } else if (WIN_ANSI_SPECIAL[ch] !== undefined) {
+          out += '\\\\' + WIN_ANSI_SPECIAL[ch].toString(8).padStart(3, '0');
+        } else {
+          const decomposed = ch.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+          if (decomposed && decomposed.charCodeAt(0) >= 32 && decomposed.charCodeAt(0) <= 126) {
+            const decCode = decomposed.charCodeAt(0);
+            if (decCode === 40) out += '\\\\(';
+            else if (decCode === 41) out += '\\\\)';
+            else if (decCode === 92) out += '\\\\\\\\';
+            else out += decomposed[0];
+          } else {
+            out += ' ';
+          }
+        }
       }
       return out;
+    }
+
+    function wrapText(text, maxChars) {
+      const words = String(text || '').trim().split(/\\s+/);
+      const lines = [];
+      let current = '';
+      for (const w of words) {
+        if (!w) continue;
+        if ((current + ' ' + w).trim().length <= maxChars) {
+          current = (current + ' ' + w).trim();
+        } else {
+          if (current) lines.push(current);
+          current = w;
+        }
+      }
+      if (current) lines.push(current);
+      return lines;
     }
 
     const streamOps = [];
@@ -853,27 +922,39 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
     let curY = 608;
     for (let bi = 0; bi < blocks.length; bi++) {
-      if (curY < 180) break;
+      if (curY < 170) break;
       const b = blocks[bi];
       const txt = typeof b === 'string' ? b : (b.translated_text || b.text || '');
       if (!txt.trim()) continue;
       const isHdr = Boolean(b.isHeader || (b.font_size_tier && b.font_size_tier.includes('head')));
 
-      streamOps.push('BT');
       if (isHdr) {
-        streamOps.push('/F2 12 Tf');
-        streamOps.push('0.1 0.15 0.25 rg');
-        streamOps.push('36 ' + curY + ' Td');
-        streamOps.push('(' + escapePdf(txt.slice(0, 100)) + ') Tj');
-        curY -= 22;
+        const lines = wrapText(txt, 65);
+        for (const line of lines) {
+          if (curY < 170) break;
+          streamOps.push('BT');
+          streamOps.push('/F2 11 Tf');
+          streamOps.push('0.1 0.15 0.25 rg');
+          streamOps.push('36 ' + curY + ' Td');
+          streamOps.push('(' + escapePdf(line) + ') Tj');
+          streamOps.push('ET');
+          curY -= 18;
+        }
+        curY -= 4;
       } else {
-        streamOps.push('/F1 10 Tf');
-        streamOps.push('0.15 0.18 0.22 rg');
-        streamOps.push('42 ' + curY + ' Td');
-        streamOps.push('(' + escapePdf(txt.slice(0, 110)) + ') Tj');
-        curY -= 18;
+        const lines = wrapText(txt, 85);
+        for (const line of lines) {
+          if (curY < 170) break;
+          streamOps.push('BT');
+          streamOps.push('/F1 9.5 Tf');
+          streamOps.push('0.15 0.18 0.22 rg');
+          streamOps.push('42 ' + curY + ' Td');
+          streamOps.push('(' + escapePdf(line) + ') Tj');
+          streamOps.push('ET');
+          curY -= 15;
+        }
+        curY -= 3;
       }
-      streamOps.push('ET');
     }
 
     if (isCertified) {
@@ -931,9 +1012,9 @@ async function handleApiRequest(request, pathname, env, ctx) {
     addObj('1 0 obj' + NL + '<< /Type /Catalog /Pages 2 0 R >>' + NL + 'endobj');
     addObj('2 0 obj' + NL + '<< /Type /Pages /Kids [3 0 R] /Count 1 >>' + NL + 'endobj');
     addObj('3 0 obj' + NL + '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R /F3 6 0 R >> >> /Contents 7 0 R >>' + NL + 'endobj');
-    addObj('4 0 obj' + NL + '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>' + NL + 'endobj');
-    addObj('5 0 obj' + NL + '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>' + NL + 'endobj');
-    addObj('6 0 obj' + NL + '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>' + NL + 'endobj');
+    addObj('4 0 obj' + NL + '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>' + NL + 'endobj');
+    addObj('5 0 obj' + NL + '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>' + NL + 'endobj');
+    addObj('6 0 obj' + NL + '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>' + NL + 'endobj');
     addObj('7 0 obj' + NL + '<< /Length ' + streamLen + ' >>' + NL + 'stream' + NL + streamContent + NL + 'endstream' + NL + 'endobj');
 
     const startxref = out.length;
@@ -1226,6 +1307,64 @@ async function handleApiRequest(request, pathname, env, ctx) {
   // Renders authentic layout-preserving vector SVG / Image on preview & download
   // ========================================================================
 
+  function getImageDimensions(fileBase64, fileMime) {
+    if (!fileBase64) return null;
+    try {
+      const binaryString = (typeof atob !== 'undefined') ? atob(fileBase64.slice(0, 16384)) : Buffer.from(fileBase64.slice(0, 16384), 'base64').toString('binary');
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+
+      // PNG: Header is 8 bytes, followed by IHDR chunk
+      if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+        if (bytes.length >= 24) {
+          const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+          const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+          if (width > 0 && height > 0) return { width, height };
+        }
+      }
+
+      // JPEG: Starts with 0xFF 0xD8
+      if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
+        let offset = 2;
+        while (offset + 9 < bytes.length) {
+          if (bytes[offset] !== 0xFF) { offset++; continue; }
+          const marker = bytes[offset + 1];
+          if ([0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF].includes(marker)) {
+            const height = (bytes[offset + 5] << 8) | bytes[offset + 6];
+            const width = (bytes[offset + 7] << 8) | bytes[offset + 8];
+            if (width > 0 && height > 0) return { width, height };
+          }
+          if (marker === 0xD9 || marker === 0xDA) break;
+          const chunkLen = (bytes[offset + 2] << 8) | bytes[offset + 3];
+          if (chunkLen <= 0) break;
+          offset += 2 + chunkLen;
+        }
+      }
+
+      // WebP: RIFF ... WEBP
+      if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+          bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+        if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x20) {
+          const width = (bytes[26] | (bytes[27] << 8)) & 0x3fff;
+          const height = (bytes[28] | (bytes[29] << 8)) & 0x3fff;
+          if (width > 0 && height > 0) return { width, height };
+        }
+        if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x4C) {
+          const b1 = bytes[21], b2 = bytes[22], b3 = bytes[23], b4 = bytes[24];
+          const width = 1 + (((b2 & 0x3F) << 8) | b1);
+          const height = 1 + ((((b4 & 0xF) << 10) | (b3 << 2) | ((b2 & 0xC0) >> 6)));
+          if (width > 0 && height > 0) return { width, height };
+        }
+        if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x58) {
+          const width = 1 + (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16));
+          const height = 1 + (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16));
+          if (width > 0 && height > 0) return { width, height };
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
   function generateTranslatedSvg(job) {
     let docData = null;
     try {
@@ -1234,20 +1373,24 @@ async function handleApiRequest(request, pathname, env, ctx) {
       docData = null;
     }
 
-    const w = 820;
-    const h = 1100;
     const langUpper = (job.targetLang || 'es').toUpperCase();
-
-    const svgParts = [
-      '<?xml version="1.0" encoding="UTF-8"?>',
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="100%">'
-    ];
-
     const blocks = (job.blocks && job.blocks.length > 0) ? job.blocks : (docData && Array.isArray(docData.blocks) ? docData.blocks : []);
     const sections = docData && Array.isArray(docData.sections) ? docData.sections : [];
 
-    if (job.fileBase64 && job.fileMime && job.fileMime.startsWith('image/')) {
-      svgParts.push('  <image href="data:' + job.fileMime + ';base64,' + job.fileBase64 + '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid meet" />');
+    const isImage = Boolean(job.fileBase64 && job.fileMime && job.fileMime.startsWith('image/'));
+    const dims = isImage ? getImageDimensions(job.fileBase64, job.fileMime) : null;
+    const w = dims ? dims.width : 820;
+    const h = dims ? dims.height : 1100;
+    const footerH = 38;
+    const totalH = isImage ? (h + footerH) : h;
+
+    const svgParts = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + totalH + '" width="100%" height="100%">'
+    ];
+
+    if (isImage) {
+      svgParts.push('  <image href="data:' + job.fileMime + ';base64,' + job.fileBase64 + '" x="0" y="0" width="' + w + '" height="' + h + '" preserveAspectRatio="none" />');
 
       for (const b of blocks) {
         if (!b.box_2d || b.box_2d.length !== 4) continue;
@@ -1256,24 +1399,60 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const left = (xmin * w) / 1000;
         const height = ((ymax - ymin) * h) / 1000;
         const width = ((xmax - xmin) * w) / 1000;
-        const tier = b.font_size_tier || 'body';
-        const fs = tier === 'title' ? 22 : tier === 'heading' ? 16 : tier === 'caption' ? 11 : 13;
-        const fw = (tier === 'title' || tier === 'heading') ? 'bold' : 'normal';
-        const text = (b.translated_text || b.text || '')
+        if (width <= 0 || height <= 0) continue;
+
+        const rawText = (b.translated_text || b.text || '');
+        const text = rawText
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
+        if (!text.trim()) continue;
 
-        // Inpaint mask: clean white box over original text to prevent collisions
-        svgParts.push('  <rect x="' + Math.max(0, left - 2).toFixed(1) + '" y="' + Math.max(0, top - 2).toFixed(1) + '" width="' + (width + 4).toFixed(1) + '" height="' + (height + 4).toFixed(1) + '" fill="#ffffff" />');
+        const tier = b.font_size_tier || 'body';
+        const isTitle = tier === 'title';
+        const isHeading = tier === 'heading' || isTitle;
+        const fw = isHeading ? 'bold' : 'normal';
 
-        // Clean wrapped text in foreignObject
-        svgParts.push('  <foreignObject x="' + left.toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + width.toFixed(1) + '" height="' + (height + 25).toFixed(1) + '">');
-        svgParts.push('    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #18181b; line-height: 1.35; word-wrap: break-word; overflow: hidden;">');
+        // Calculate dynamic font size to prevent multi-line overflow and collisions
+        let fs = isTitle ? Math.min(26, Math.max(14, Math.floor(height * 0.72)))
+               : tier === 'heading' ? Math.min(18, Math.max(12, Math.floor(height * 0.65)))
+               : tier === 'caption' ? Math.min(12, Math.max(9, Math.floor(height * 0.55)))
+               : 14;
+
+        if (!isHeading) {
+          for (let candidateFs = fs; candidateFs >= 8; candidateFs--) {
+            const charsPerLine = Math.max(8, Math.floor(width / (candidateFs * 0.52)));
+            const estimatedLines = Math.ceil(rawText.length / charsPerLine);
+            const estimatedHeight = estimatedLines * candidateFs * 1.25;
+            if (estimatedHeight <= height * 1.05 || candidateFs === 8) {
+              fs = candidateFs;
+              break;
+            }
+          }
+        }
+
+        // Inpaint mask: clean white box over original text with adaptive padding to cover all background text
+        const padX = Math.max(3, Math.min(8, width * 0.02));
+        const padY = Math.max(2, Math.min(6, height * 0.03));
+        const maskX = Math.max(0, left - padX);
+        const maskY = Math.max(0, top - padY);
+        const maskW = Math.min(w - maskX, width + padX * 2);
+        const maskH = Math.min(h - maskY, height + padY * 2);
+
+        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" fill="#ffffff" />');
+
+        // Clean wrapped text in foreignObject strictly bounded to box height
+        svgParts.push('  <foreignObject x="' + left.toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + width.toFixed(1) + '" height="' + height.toFixed(1) + '">');
+        svgParts.push('    <div xmlns="http://www.w3.org/1999/xhtml" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #18181b; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis;">');
         svgParts.push('      ' + text);
         svgParts.push('    </div>');
         svgParts.push('  </foreignObject>');
       }
+
+      // Official Certified Translation Seal Footer Bar placed cleanly below the document image
+      svgParts.push('  <rect x="0" y="' + h + '" width="' + w + '" height="' + footerH + '" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />');
+      svgParts.push('  <text x="25" y="' + (h + 18) + '" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#0f172a">AUTHENTICATED TRANSLATION RECORD • ATA MEMBER NO. 278190</text>');
+      svgParts.push('  <text x="25" y="' + (h + 31) + '" font-family="Arial, sans-serif" font-size="9" fill="#64748b">Verified layout fidelity • Original filename: ' + (job.fileName || 'document').replace(/&/g, '&amp;') + '</text>');
     } else {
       // PDF / DOCX or clean document template
       svgParts.push('  <rect width="' + w + '" height="' + h + '" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />');
@@ -1305,12 +1484,13 @@ async function handleApiRequest(request, pathname, env, ctx) {
         svgParts.push('  </foreignObject>');
         curY += 55;
       }
+
+      // Official Certified Translation Seal Footer
+      svgParts.push('  <rect x="0" y="' + (h - 40) + '" width="' + w + '" height="40" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />');
+      svgParts.push('  <text x="25" y="' + (h - 22) + '" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#0f172a">AUTHENTICATED TRANSLATION RECORD • ATA MEMBER NO. 278190</text>');
+      svgParts.push('  <text x="25" y="' + (h - 9) + '" font-family="Arial, sans-serif" font-size="9" fill="#64748b">Verified layout fidelity • Original filename: ' + (job.fileName || 'document').replace(/&/g, '&amp;') + '</text>');
     }
 
-    // Official Certified Translation Seal Footer
-    svgParts.push('  <rect x="0" y="' + (h - 40) + '" width="' + w + '" height="40" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />');
-    svgParts.push('  <text x="25" y="' + (h - 22) + '" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#0f172a">AUTHENTICATED TRANSLATION RECORD • ATA MEMBER NO. 278190</text>');
-    svgParts.push('  <text x="25" y="' + (h - 9) + '" font-family="Arial, sans-serif" font-size="9" fill="#64748b">Verified layout fidelity • Original filename: ' + (job.fileName || 'document').replace(/&/g, '&amp;') + '</text>');
     svgParts.push('</svg>');
 
     return svgParts.join('\\n');
@@ -1415,11 +1595,12 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const prompt = 'You are an expert document OCR and layout preservation translation engine.\\n' +
           'Analyze this document. Identify every distinct text block (titles, headings, narrative paragraphs, table cells, labels, headers, footers).\\n' +
           'For each block:\\n' +
-          '1. "box_2d": [ymin, xmin, ymax, xmax] coordinates normalized from 0 to 1000.\\n' +
+          '1. "box_2d": [ymin, xmin, ymax, xmax] coordinates normalized from 0 to 1000. It is CRITICAL that box_2d completely bounds ALL original text in the block from the leftmost character to the rightmost character and top to bottom, leaving zero characters unmasked.\\n' +
           '2. "original_text": verbatim source text.\\n' +
-          '3. "translated_text": faithful, natural translation into ' + targetName + '. Preserve all proper nouns, numbers, dates, punctuation, identifiers.\\n' +
+          '3. "translated_text": faithful, natural translation into ' + targetName + '. Preserve all proper nouns, numbers, dates, punctuation, and all international accents and diacritical marks (e.g., in Spanish: á, é, í, ó, ú, ñ, ¿, ¡; in French: é, è, ê, à, ç, etc.).\\n' +
           '4. "font_size_tier": "title" | "heading" | "body" | "caption"\\n' +
           '5. "align": "left" | "center" | "right"\\n\\n' +
+          'If a paragraph wraps around an illustration or has varying line widths, separate it into individual distinct rectangular blocks so each block bounding box precisely and fully encompasses its text.\\n\\n' +
           'Return ONLY valid JSON matching:\\n' +
           '{\\n  "title": "document title",\\n  "blocks": [\\n    {\\n      "box_2d": [ymin, xmin, ymax, xmax],\\n      "original_text": "...",\\n      "translated_text": "...",\\n      "font_size_tier": "body",\\n      "align": "left"\\n    }\\n  ]\\n}';
 
