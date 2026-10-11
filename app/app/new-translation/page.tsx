@@ -157,7 +157,9 @@ export default function NewTranslationPage() {
         const data = await res.json();
         setProgress(data.progress || (data.status === "ready" || data.status === "completed" || data.status === "delivered" ? 100 : 50));
         setCurrentStep(data.currentStep || "Processing...");
-        setJobStatus(data.status);
+        if (data.status) {
+          setJobStatus(data.status);
+        }
 
         if (data.status === "ready" || data.status === "completed" || data.status === "delivered") {
           clearInterval(interval);
@@ -475,7 +477,7 @@ export default function NewTranslationPage() {
               />
             </div>
             <div className="flex justify-between text-[11px] font-mono text-text-muted">
-              <span>Status: {jobStatus.toUpperCase()}</span>
+              <span>Status: {(jobStatus || "PROCESSING").toUpperCase()}</span>
               <span>{progress}%</span>
             </div>
           </div>

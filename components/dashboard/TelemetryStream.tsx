@@ -171,10 +171,10 @@ export function TelemetryStream({ jobs, onRefresh, loading }: TelemetryStreamPro
                             : "bg-white/10 text-neutral-300"
                         }`}
                       >
-                        {job.status.toUpperCase()}
+                        {(job.status || "QUEUED").toUpperCase()}
                       </span>
                       <span className="text-xs text-neutral-400 font-mono">
-                        {job.sourceLang} → {job.targetLang}
+                        {(job.sourceLang || "auto").toUpperCase()} → {(job.targetLang || "en").toUpperCase()}
                       </span>
                       <span className="text-xs text-neutral-500 font-mono">
                         {(job.fileSize / 1024).toFixed(1)} KB
@@ -213,7 +213,7 @@ export function TelemetryStream({ jobs, onRefresh, loading }: TelemetryStreamPro
                       >
                         <a href={job.downloadUrl} download>
                           <Download className="w-3.5 h-3.5" />
-                          Download .{job.fileFormat.toUpperCase()}
+                          Download .{(job.fileFormat || "PDF").toUpperCase()}
                         </a>
                       </Button>
                     ) : !isFailed ? (

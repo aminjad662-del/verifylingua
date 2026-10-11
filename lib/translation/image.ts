@@ -250,7 +250,7 @@ export async function translateImage(
     blocks.map((b) => ({
       id: b.id,
       text: b.text,
-      context: `Image text region on ${format.toUpperCase()}`,
+      context: `Image text region on ${(format || "IMAGE").toUpperCase()}`,
       isRtl,
     })),
     options
@@ -327,8 +327,8 @@ export async function translateImage(
   }
 
   const headerText = isAutomated
-    ? `VERIFYLINGUA AUTOMATED TRANSLATION • MACHINE PROCESSED [${options.targetLang.toUpperCase()}]`
-    : `VERIFYLINGUA CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT [${options.targetLang.toUpperCase()}]`;
+    ? `VERIFYLINGUA AUTOMATED TRANSLATION • MACHINE PROCESSED [${(options.targetLang || "EN").toUpperCase()}]`
+    : `VERIFYLINGUA CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT [${(options.targetLang || "EN").toUpperCase()}]`;
   const headerScale = width > 800 ? 2 : 1;
   drawBitmapText(img, headerText, 12, Math.floor((bannerHeight - 7 * headerScale) / 2), isAutomated ? colorDarkText : colorNavyText, headerScale);
 

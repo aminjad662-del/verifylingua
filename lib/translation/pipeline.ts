@@ -342,7 +342,7 @@ export async function processTranslationJob(
           x: 36, y: height - 48, size: 9, font: fontBold, color: rgb(0.12, 0.25, 0.75),
         });
         page.drawText(
-          `Original file: ${job.fileName} | Target: ${job.targetLang.toUpperCase()} | Reason: ${err.message?.slice(0, 120) || "Reconstruction error"}`,
+          `Original file: ${job.fileName} | Target: ${(job.targetLang || "EN").toUpperCase()} | Reason: ${err.message?.slice(0, 120) || "Reconstruction error"}`,
           { x: 36, y: height - 66, size: 7.5, font, color: rgb(0.45, 0.5, 0.55) }
         );
         page.drawLine({ start: { x: 36, y: height - 76 }, end: { x: width - 36, y: height - 76 }, thickness: 0.5, color: rgb(0.8, 0.82, 0.85) });

@@ -31,7 +31,7 @@ export default async function ProjectDetailPage({
   const pipelineStages = [
     { name: "Secure Ingestion & Validation", status: "completed", desc: "SHA-256 hash verified, virus scan clean" },
     { name: "Spatial OCR & Text Extraction", status: "completed", desc: "Coordinates and bounding boxes extracted" },
-    { name: "Neural Context-Aware Translation", status: project.progress >= 65 ? "completed" : "in_progress", desc: `Translated ${project.sourceLang.toUpperCase()} → ${project.targetLang.toUpperCase()}` },
+    { name: "Neural Context-Aware Translation", status: project.progress >= 65 ? "completed" : "in_progress", desc: `Translated ${(project.sourceLang || "auto").toUpperCase()} → ${(project.targetLang || "en").toUpperCase()}` },
     { name: "1:1 Spatial Layout Reconstruction", status: project.progress >= 85 ? "completed" : project.progress >= 65 ? "in_progress" : "pending", desc: "Font scaling, table reflow, background masking" },
     { name: "Automated Quality Gate & Verification", status: project.progress === 100 ? "completed" : "pending", desc: "Zero-fake-completion check, checksum & parity audit" },
   ];

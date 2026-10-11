@@ -567,7 +567,7 @@ export default function TranslatePage() {
 
     const a = document.createElement("a");
     a.href = downloadHref;
-    a.download = `${cleanBaseName}_${targetLang.toUpperCase()}_translated.${targetFormat}`;
+    a.download = `${cleanBaseName}_${(targetLang || "es").toUpperCase()}_translated.${targetFormat}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

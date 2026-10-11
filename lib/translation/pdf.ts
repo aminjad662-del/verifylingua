@@ -151,8 +151,8 @@ export async function translatePdf(
       });
 
       const bannerText = isAutomated
-        ? `[AUTOMATED TRANSLATION • MACHINE PROCESSED • TARGET: ${options.targetLang.toUpperCase()}${hasMultiColumn ? " • MULTI-COLUMN PRESERVED" : ""}]`
-        : `[CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT • TARGET: ${options.targetLang.toUpperCase()}${hasMultiColumn ? " • MULTI-COLUMN PRESERVED" : ""}]`;
+        ? `[AUTOMATED TRANSLATION • MACHINE PROCESSED • TARGET: ${(options.targetLang || "EN").toUpperCase()}${hasMultiColumn ? " • MULTI-COLUMN PRESERVED" : ""}]`
+        : `[CERTIFIED TRANSLATION • 8 CFR 103.2 COMPLIANT • TARGET: ${(options.targetLang || "EN").toUpperCase()}${hasMultiColumn ? " • MULTI-COLUMN PRESERVED" : ""}]`;
 
       page.drawText(
         bannerText,
@@ -328,7 +328,7 @@ export function appendCertificationAffidavitPage(
     color: rgb(0.18, 0.35, 0.95),
   });
 
-  const langName = params.sourceLang.toUpperCase();
+  const langName = (params.sourceLang || "ES").toUpperCase();
   const translatorName = params.translatorName || "Elena Rostova, Authorized Sworn Translator";
   const certDate = params.certificationDate || new Date().toISOString().split("T")[0];
 
@@ -382,7 +382,7 @@ export function appendCertificationAffidavitPage(
     color: rgb(0.2, 0.25, 0.3),
   });
 
-  page.drawText(`Language Pair: ${params.sourceLang.toUpperCase()} -> ${params.targetLang.toUpperCase()} (English)`, {
+  page.drawText(`Language Pair: ${(params.sourceLang || "ES").toUpperCase()} -> ${(params.targetLang || "EN").toUpperCase()} (English)`, {
     x: 75,
     y: currentY - 43,
     size: 8,

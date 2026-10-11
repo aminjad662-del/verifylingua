@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
 import { inngest } from "@/src/inngest/client";
 
 // Mock Supabase admin client
@@ -57,6 +57,8 @@ vi.mock("@/lib/queue/worker", () => ({
 }));
 
 describe("Inngest Event Dispatch Verification", () => {
+  const originalEnv = { ...process.env };
+
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example-project.supabase.co";
@@ -77,6 +79,10 @@ describe("Inngest Event Dispatch Verification", () => {
       select: mockSelect,
       update: mockUpdate,
     });
+  });
+
+  afterAll(() => {
+    process.env = { ...originalEnv };
   });
 
   it("verifies POST /api/upload dispatches document.translate event to Inngest immediately after Supabase insert", async () => {

@@ -1719,7 +1719,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
     }
 
     const cleanBaseName = (job && job.fileName ? job.fileName : 'translated_document').replace(/\.[^/.]+$/, '');
-    const targetLangCode = targetLang.toUpperCase();
+    const targetLangCode = (targetLang || 'es').toUpperCase();
     const isSvgFormat = url.searchParams.get('format') === 'svg';
 
     if (isInline || isSvgFormat) {

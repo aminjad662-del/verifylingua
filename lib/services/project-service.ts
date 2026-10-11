@@ -95,9 +95,9 @@ export class ProjectService {
         projects.push({
           id: order.id,
           name: firstFile?.name || `Document_${order.publicCode}.pdf`,
-          sourceLang: order.sourceLang,
-          targetLang: order.targetLangs?.[0] || "en",
-          status: order.status,
+          sourceLang: order.sourceLang || "auto",
+          targetLang: order.targetLangs?.[0] || (order as any).targetLang || "en",
+          status: (order.status || "PENDING").toUpperCase(),
           progress: order.status === "COMPLETED" ? 100 : 65,
           currentStep: order.timeline[order.timeline.length - 1]?.title || "Processing",
           format: "pdf",
@@ -132,7 +132,7 @@ export class ProjectService {
 
     // Filter by status
     if (options?.status && options.status !== "ALL") {
-      projects = projects.filter((p) => p.status.toUpperCase() === options.status?.toUpperCase());
+      projects = projects.filter((p) => (p.status || "").toUpperCase() === (options.status || "").toUpperCase());
     }
 
     // Sort newest first

@@ -118,7 +118,7 @@ export default async function ClientAppOverviewPage() {
                   <div>
                     <h3 className="text-xs font-bold text-text truncate max-w-xs">{p.name}</h3>
                     <p className="text-[11px] font-mono text-text-muted mt-0.5">
-                      {p.sourceLang.toUpperCase()} → {p.targetLang.toUpperCase()} • {p.pageCount} page(s)
+                      {(p.sourceLang || "auto").toUpperCase()} → {(p.targetLang || "en").toUpperCase()} • {p.pageCount || 1} page(s)
                     </p>
                   </div>
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-brand-50 text-brand-600 border border-brand-200 animate-pulse">
@@ -214,7 +214,7 @@ export default async function ClientAppOverviewPage() {
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-text-muted">
-                        {project.sourceLang.toUpperCase()} → {project.targetLang.toUpperCase()}
+                        {(project.sourceLang || "auto").toUpperCase()} → {(project.targetLang || "en").toUpperCase()}
                       </td>
                       <td className="py-3.5 px-4">
                         <span

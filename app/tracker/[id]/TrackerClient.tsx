@@ -212,40 +212,41 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                 failed: "failed",
                 needs_manual: "needs_manual",
               };
-              const mappedStatus = statusMap[transData.status] || transData.status;
+              const rawStatus = transData?.status || transData?.job?.status || "queued";
+              const mappedStatus = statusMap[rawStatus] || rawStatus || "queued";
               const isFallbackFailed = mappedStatus === "failed" || mappedStatus === "needs_manual";
               const normalizedData: JobStatusData = {
-                jobId: transData.orderId || resolvedId,
-                status: mappedStatus,
-                currentPhase: mappedStatus,
+                jobId: transData?.orderId || transData?.job?.order_id || transData?.job?.id || resolvedId,
+                status: mappedStatus || "queued",
+                currentPhase: mappedStatus || "queued",
                 progress: isFallbackFailed
                   ? 0
-                  : transData.status === "delivered" || transData.status === "approved"
+                  : rawStatus === "delivered" || rawStatus === "approved"
                   ? 100
-                  : transData.status === "pending_review"
+                  : rawStatus === "pending_review"
                   ? 85
-                  : transData.status === "rendering"
+                  : rawStatus === "rendering"
                   ? 70
-                  : transData.status === "translating"
+                  : rawStatus === "translating"
                   ? 50
                   : 25,
-                currentStep: transData.status === "approved" || transData.status === "delivered"
+                currentStep: rawStatus === "approved" || rawStatus === "delivered"
                   ? "Official sworn affidavit and certified seal minted."
-                  : transData.status === "pending_review"
+                  : rawStatus === "pending_review"
                   ? "Translation draft ready for certified reviewer signature."
                   : isFallbackFailed
                   ? "Translation pipeline encountered an issue. ATA reviewer notified."
                   : "Certified pipeline processing active.",
-                fileName: "certified_document.pdf",
-                fileFormat: "pdf",
-                sourceLang: transData.sourceLang || "es",
-                targetLang: transData.targetLang || "en",
-                pageCount: 1,
-                downloadUrl: transData.downloadUrl,
-                artifactUrl: transData.downloadUrl,
+                fileName: transData?.fileName || transData?.job?.draft_path?.split("/").pop() || "certified_document.pdf",
+                fileFormat: transData?.fileFormat || "pdf",
+                sourceLang: transData?.sourceLang || transData?.job?.source_lang || "es",
+                targetLang: transData?.targetLang || transData?.job?.target_lang || "en",
+                pageCount: transData?.pageCount || 1,
+                downloadUrl: transData?.downloadUrl,
+                artifactUrl: transData?.downloadUrl,
                 layoutPreserved: true,
-                createdAt: transData.createdAt,
-                completedAt: transData.updatedAt,
+                createdAt: transData?.createdAt || transData?.job?.created_at,
+                completedAt: transData?.updatedAt || transData?.job?.updated_at,
               };
 
               setJobData(normalizedData);
@@ -655,7 +656,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                       "w-1.5 h-1.5 rounded-full",
                       isCompleted ? "bg-emerald-400" : isFailed ? "bg-rose-500" : "bg-emerald-400 animate-ping"
                     )} />
-                    <span>STATUS: {jobData.status.toUpperCase()}</span>
+                    <span>STATUS: {(jobData.status || "PROCESSING").toUpperCase()}</span>
                   </div>
                   <div>
                     ESTIMATED FINISH: {isCompleted ? "DONE" : "< 15 SECONDS"}

@@ -47,7 +47,7 @@ export async function runAgent2(
     const modelsToTry = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash"];
     const systemPrompt = `SYSTEM DIRECTIVE: STRICT CERTIFIED LEGAL TRANSLATOR
 You are a professional certified translator.
-Translate the input text blocks from ${sourceLang.toUpperCase()} to ${targetLang.toUpperCase()}.
+Translate the input text blocks from ${(sourceLang || "auto").toUpperCase()} to ${(targetLang || "en").toUpperCase()}.
 CRITICAL RULES:
 1. Preserve every date, number, proper name, registration code, and ID exactly.
 2. Return ONLY a valid JSON object matching the schema:
@@ -168,7 +168,8 @@ CRITICAL RULES:
       ? "https://api-free.deepl.com/v2/translate"
       : "https://api.deepl.com/v2/translate";
 
-    const targetMapped = targetLang.toUpperCase() === "EN" ? "EN-US" : targetLang.toUpperCase();
+    const safeTarget = (targetLang || "EN").toUpperCase();
+    const targetMapped = safeTarget === "EN" ? "EN-US" : safeTarget;
     const res = await fetch(endpoint, {
       method: "POST",
       headers: {

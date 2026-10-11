@@ -44,12 +44,12 @@ export function OrderVault({ orders, onSelectOrder }: OrderVaultProps) {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return (
-        ord.publicCode.toLowerCase().includes(q) ||
-        ord.documentName.toLowerCase().includes(q) ||
-        ord.sourceLang.toLowerCase().includes(q) ||
-        ord.targetLang.toLowerCase().includes(q) ||
+        (ord.publicCode || "").toLowerCase().includes(q) ||
+        (ord.documentName || "").toLowerCase().includes(q) ||
+        (ord.sourceLang || "").toLowerCase().includes(q) ||
+        (ord.targetLang || "").toLowerCase().includes(q) ||
         (ord.matterNumber && ord.matterNumber.toLowerCase().includes(q)) ||
-        ord.translator.toLowerCase().includes(q)
+        (ord.translator || "").toLowerCase().includes(q)
       );
     });
   }, [orders, activeTab, searchQuery]);
