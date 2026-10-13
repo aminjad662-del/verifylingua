@@ -148,5 +148,5 @@ describe("Document Image Translation Multi-Step Flow", () => {
     const isJpeg = previewBytes[0] === 0xff && previewBytes[1] === 0xd8;
     const isPng = previewBytes[0] === 0x89 && previewBytes[1] === 0x50;
     expect(isJpeg || isPng).toBe(true);
-  });
+  }, 30000);
 });

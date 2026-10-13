@@ -91,25 +91,24 @@ function copyAppRoutes(currentDir, relativePath = '') {
 
     if (entry.isDirectory()) {
       copyAppRoutes(fullPath, relItemPath);
-    } else if (entry.name.endsWith('.html') || entry.name.endsWith('.rsc')) {
+    } else if (entry.name.endsWith('.html')) {
+      htmlCount++;
+      const routeName = entry.name.slice(0, -5);
+      if (routeName === 'index') {
+        const targetPath = path.join(DIST_DIR, relItemPath);
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+        fs.copyFileSync(fullPath, targetPath);
+      } else if (routeName === '_not-found') {
+        fs.copyFileSync(fullPath, path.join(DIST_DIR, '404.html'));
+      } else {
+        const dirForRoute = path.join(DIST_DIR, relativePath, routeName);
+        fs.mkdirSync(dirForRoute, { recursive: true });
+        fs.copyFileSync(fullPath, path.join(dirForRoute, 'index.html'));
+      }
+    } else if (entry.name.endsWith('.rsc')) {
       const targetPath = path.join(DIST_DIR, relItemPath);
       fs.mkdirSync(path.dirname(targetPath), { recursive: true });
       fs.copyFileSync(fullPath, targetPath);
-
-      // If it's a page HTML (e.g. pricing.html), also write pricing/index.html for clean URL CDN fallback
-      if (entry.name.endsWith('.html')) {
-        htmlCount++;
-        const routeName = entry.name.slice(0, -5); // remove .html
-        if (routeName === 'index') {
-          // dist/index.html is already placed
-        } else if (routeName === '_not-found') {
-          fs.copyFileSync(fullPath, path.join(DIST_DIR, '404.html'));
-        } else {
-          const dirForRoute = path.join(DIST_DIR, relativePath, routeName);
-          fs.mkdirSync(dirForRoute, { recursive: true });
-          fs.copyFileSync(fullPath, path.join(dirForRoute, 'index.html'));
-        }
-      }
     }
   }
 }
@@ -1448,7 +1447,10 @@ async function handleApiRequest(request, pathname, env, ctx) {
     if (isImage) {
       svgParts.push('  <image href="data:' + job.fileMime + ';base64,' + job.fileBase64 + '" x="0" y="0" width="' + w + '" height="' + h + '" preserveAspectRatio="none" />');
 
-      for (const b of blocks) {
+      // Resolve coordinates and sort vertically for collision prevention
+      const resolved = [];
+      for (let bi = 0; bi < blocks.length; bi++) {
+        const b = blocks[bi];
         let top = 0, left = 0, width = 0, height = 0;
         const rawBox = b.box_2d || b.box2d || b.bbox;
         if (rawBox && rawBox.length === 4) {
@@ -1471,81 +1473,144 @@ async function handleApiRequest(request, pathname, env, ctx) {
         }
         if (width <= 0 || height <= 0) continue;
 
-        const rawText = (b.translated_text || b.translatedText || b.text || b.original_text || '');
-        const text = rawText
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        if (!text.trim()) continue;
+        const rawText = (b.translated_text || b.translatedText || b.text || b.original_text || '').trim();
+        if (!rawText) continue;
 
-        const tier = b.font_size_tier || 'body';
-        const isTitle = tier === 'title';
-        const isHeading = tier === 'heading' || isTitle;
+        resolved.push({
+          left,
+          top,
+          width,
+          height,
+          rawText,
+          tier: b.font_size_tier || 'body',
+          align: b.align || 'left'
+        });
+      }
+
+      resolved.sort((a, b) => a.top - b.top);
+
+      for (let idx = 0; idx < resolved.length; idx++) {
+        const b = resolved[idx];
+        const nextBlock = resolved.slice(idx + 1).find(
+          (next) => next.top > b.top && !(next.left >= b.left + b.width || next.left + next.width <= b.left)
+        );
+        const maxAllowedBottom = nextBlock ? nextBlock.top - 6 : h - 8;
+        const maxAvailableH = Math.max(16, maxAllowedBottom - b.top);
+
+        const isTitle = b.tier === 'title';
+        const isHeading = b.tier === 'heading' || isTitle;
         const fw = isHeading ? 'bold' : 'normal';
 
-        let fs = isTitle ? Math.min(26, Math.max(14, Math.floor(height * 0.72)))
-               : tier === 'heading' ? Math.min(18, Math.max(12, Math.floor(height * 0.65)))
-               : tier === 'caption' ? Math.min(12, Math.max(9, Math.floor(height * 0.55)))
-               : 14;
+        let initialFs = isTitle
+          ? Math.min(24, Math.max(14, Math.floor(b.height * 0.70)))
+          : b.tier === 'heading'
+          ? Math.min(16, Math.max(12, Math.floor(b.height * 0.62)))
+          : b.tier === 'caption'
+          ? Math.min(11, Math.max(8, Math.floor(b.height * 0.50)))
+          : Math.min(13.5, Math.max(9.5, Math.floor(b.height * 0.56)));
 
-        if (!isHeading) {
-          for (let candidateFs = fs; candidateFs >= 8; candidateFs--) {
-            const charsPerLine = Math.max(8, Math.floor(width / (candidateFs * 0.52)));
-            const estimatedLines = Math.ceil(rawText.length / charsPerLine);
-            const estimatedHeight = estimatedLines * candidateFs * 1.25;
-            if (estimatedHeight <= height * 1.05 || candidateFs === 8) {
-              fs = candidateFs;
-              break;
+        let fs = initialFs;
+        let lines = [];
+        let lineHeight = Math.max(11, Math.round(fs * 1.25));
+
+        for (let candidateFs = initialFs; candidateFs >= 7.5; candidateFs -= 0.5) {
+          const maxChars = Math.max(8, Math.floor((b.width - 6) / (candidateFs * 0.52)));
+          const words = b.rawText.split(/\\s+/);
+          const candidateLines = [];
+          let currentLine = '';
+          for (const word of words) {
+            if ((currentLine + ' ' + word).trim().length <= maxChars) {
+              currentLine = (currentLine + ' ' + word).trim();
+            } else {
+              if (currentLine) candidateLines.push(currentLine);
+              if (word.length > maxChars) {
+                let remaining = word;
+                while (remaining.length > maxChars) {
+                  candidateLines.push(remaining.slice(0, maxChars - 1) + '-');
+                  remaining = remaining.slice(maxChars - 1);
+                }
+                currentLine = remaining;
+              } else {
+                currentLine = word;
+              }
             }
           }
-        }
+          if (currentLine) candidateLines.push(currentLine);
 
-        // Inpaint mask: clean white box over original text with adaptive padding
-        const padX = Math.max(3, Math.min(8, width * 0.02));
-        const padY = Math.max(2, Math.min(6, height * 0.03));
-        const maskX = Math.max(0, left - padX);
-        const maskY = Math.max(0, top - padY);
-        const maskW = Math.min(w - maskX, width + padX * 2);
-        const maskH = Math.min(h - maskY, height + padY * 2);
+          const candidateLh = Math.max(10, Math.round(candidateFs * 1.25));
+          const totalTextH = candidateLines.length * candidateLh;
 
-        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" fill="#ffffff" stroke="#ffffff" stroke-width="1" />');
-
-        // Standard SVG <text> with wrapped <tspan> lines for universal visibility inside <img> tags
-        const words = rawText.split(/\s+/);
-        const lines = [];
-        let currentLine = '';
-        const maxChars = Math.max(8, Math.floor(width / (fs * 0.52)));
-        for (const word of words) {
-          if ((currentLine + ' ' + word).trim().length <= maxChars) {
-            currentLine = (currentLine + ' ' + word).trim();
-          } else {
-            if (currentLine) lines.push(currentLine);
-            currentLine = word;
+          if (totalTextH <= maxAvailableH || candidateFs === 7.5) {
+            fs = candidateFs;
+            lineHeight = candidateLh;
+            lines = candidateLines;
+            if (totalTextH > maxAvailableH) {
+              const maxLines = Math.max(1, Math.floor(maxAvailableH / candidateLh));
+              if (candidateLines.length > maxLines) {
+                lines = candidateLines.slice(0, maxLines);
+                if (lines.length > 0) {
+                  lines[lines.length - 1] = lines[lines.length - 1].replace(/\\s+\\S*$/, '') + '…';
+                }
+              }
+            }
+            break;
           }
         }
-        if (currentLine) lines.push(currentLine);
 
-        const textLineHeight = Math.max(fs * 1.2, 12);
-        const textStartX = left + 2;
-        const textStartY = top + fs;
+        const renderedTextH = lines.length * lineHeight;
+        const effectiveBoxH = Math.min(maxAvailableH, Math.max(b.height, renderedTextH + 4));
 
-        svgParts.push('  <switch>');
-        svgParts.push('    <foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" x="' + left.toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + width.toFixed(1) + '" height="' + height.toFixed(1) + '">');
-        svgParts.push('      <div xmlns="http://www.w3.org/1999/xhtml" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #18181b; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis;">');
-        svgParts.push('        ' + text);
-        svgParts.push('      </div>');
-        svgParts.push('    </foreignObject>');
-        svgParts.push('    <text x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '" font-family="Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="#18181b">');
+        const padX = Math.max(3, Math.min(6, b.width * 0.015));
+        const padY = Math.max(2, Math.min(4, b.height * 0.02));
+        const maskX = Math.max(0, b.left - padX);
+        const maskY = Math.max(0, b.top - padY);
+        const maskW = Math.min(w - maskX, b.width + padX * 2);
+        const maskH = Math.min(maxAllowedBottom - maskY, effectiveBoxH + padY * 2);
+
+        const clipId = 'clip-cf-' + idx;
+        svgParts.push('  <defs>');
+        svgParts.push('    <clipPath id="' + clipId + '">');
+        svgParts.push('      <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" rx="4" ry="4" />');
+        svgParts.push('    </clipPath>');
+        svgParts.push('  </defs>');
+
+        // Harmonious rounded background inpainting mask with subtle border
+        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" rx="4" ry="4" fill="#ffffff" fill-opacity="0.98" stroke="#e2e8f0" stroke-width="0.75" />');
+
+        const textAlign = b.align === 'center' ? 'center' : b.align === 'right' ? 'right' : 'left';
+        let textAnchor = 'start';
+        let textStartX = b.left + 4;
+        if (b.align === 'center') {
+          textAnchor = 'middle';
+          textStartX = b.left + b.width / 2;
+        } else if (b.align === 'right') {
+          textAnchor = 'end';
+          textStartX = b.left + b.width - 4;
+        }
+
+        const verticalPadding = Math.max(1, (effectiveBoxH - renderedTextH) / 2);
+        const textStartY = b.top + verticalPadding + fs * 0.9;
+        const textEscaped = b.rawText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        svgParts.push('  <g clip-path="url(#' + clipId + ')">');
+        svgParts.push('    <switch>');
+        svgParts.push('      <foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" x="' + b.left.toFixed(1) + '" y="' + b.top.toFixed(1) + '" width="' + b.width.toFixed(1) + '" height="' + effectiveBoxH.toFixed(1) + '">');
+        svgParts.push('        <div xmlns="http://www.w3.org/1999/xhtml" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ' + textAlign + ';">');
+        svgParts.push('          ' + textEscaped);
+        svgParts.push('        </div>');
+        svgParts.push('      </foreignObject>');
+        svgParts.push('      <text x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '" font-family="Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="#0f172a" text-anchor="' + textAnchor + '">');
         lines.forEach((line, lineIdx) => {
           const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           if (lineIdx === 0) {
-            svgParts.push('      <tspan x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '">' + escapedLine + '</tspan>');
+            svgParts.push('        <tspan x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '">' + escapedLine + '</tspan>');
           } else {
-            svgParts.push('      <tspan x="' + textStartX.toFixed(1) + '" dy="' + textLineHeight.toFixed(1) + '">' + escapedLine + '</tspan>');
+            svgParts.push('        <tspan x="' + textStartX.toFixed(1) + '" dy="' + lineHeight.toFixed(1) + '">' + escapedLine + '</tspan>');
           }
         });
-        svgParts.push('    </text>');
-        svgParts.push('  </switch>');
+        svgParts.push('      </text>');
+        svgParts.push('    </switch>');
+        svgParts.push('  </g>');
       }
 
       // Official Certified Translation Seal Footer Bar placed cleanly below the document image

@@ -306,40 +306,61 @@ export async function translateImage(
   const colorGrayText = 0x475569ff;
   const colorMaskBg = 0xffffffff;
 
-  // Inpaint original text regions and render translated text with dynamic fitting
-  for (const block of blocks) {
+  // Sort blocks by y coordinate for collision prevention
+  const sortedBlocks = [...blocks].sort((a, b) => a.y - b.y);
+
+  // Inpaint original text regions and render translated text with collision prevention
+  for (let bIdx = 0; bIdx < sortedBlocks.length; bIdx++) {
+    const block = sortedBlocks[bIdx];
     const rawTranslated = translationMap.get(block.id) || block.text;
     const translated = sanitizeForImageBitmap(rawTranslated, isRtl);
 
-    // Localized inpainting: mask the original text bounding box cleanly
-    fillRect(
-      img,
-      Math.max(0, block.x - 2),
-      Math.max(0, block.y - 2),
-      Math.min(block.width + 4, width - block.x),
-      Math.min(block.height + 4, height - block.y),
-      colorMaskBg
+    const nextBlock = sortedBlocks.slice(bIdx + 1).find(
+      (nb) => nb.y > block.y && !(nb.x >= block.x + block.width || nb.x + nb.width <= block.x)
     );
+    const maxBottom = nextBlock ? nextBlock.y - 4 : height - 44;
+    const availableH = Math.max(12, maxBottom - block.y);
 
     // Dynamic scale selection: calculate font scale so text fits in bounding box
     let scale = block.fontSize > 16 && block.width > 300 ? 2 : 1;
     let charsPerLine = Math.max(Math.floor(block.width / (6 * scale)), 10);
 
-    // If single line exceeds bounding box width, drop scale or wrap lines
-    if (translated.length > charsPerLine && scale > 1) {
+    let lines = wrapTextToWidth(translated, charsPerLine);
+    let lineHeight = 8 * scale + 2;
+
+    // If lines exceed available height, drop scale to 1
+    if (lines.length * lineHeight > availableH && scale > 1) {
       scale = 1;
       charsPerLine = Math.max(Math.floor(block.width / (6 * scale)), 10);
+      lines = wrapTextToWidth(translated, charsPerLine);
+      lineHeight = 8 * scale + 2;
     }
 
-    const lines = wrapTextToWidth(translated, charsPerLine);
-    const lineHeight = 8 * scale + 2;
+    // Clamp lines so text never exceeds available clearance
+    if (lines.length * lineHeight > availableH) {
+      const maxLines = Math.max(1, Math.floor(availableH / lineHeight));
+      lines = lines.slice(0, maxLines);
+    }
+
+    const renderedHeight = Math.max(block.height, lines.length * lineHeight + 2);
+    const maskHeight = Math.min(maxBottom - Math.max(0, block.y - 2), renderedHeight + 4);
+
+    // Localized inpainting: mask the original text bounding box cleanly
+    fillRect(
+      img,
+      Math.max(0, block.x - 3),
+      Math.max(0, block.y - 2),
+      Math.min(block.width + 6, width - block.x),
+      maskHeight,
+      colorMaskBg
+    );
 
     for (let lIdx = 0; lIdx < lines.length; lIdx++) {
       const lineText = lines[lIdx];
       const linePixelWidth = lineText.length * 6 * scale;
       const curY = block.y + lIdx * lineHeight;
 
-      if (curY + lineHeight > height - 40) break; // Don't overflow into footer
+      if (curY + lineHeight > maxBottom) break; // Don't overflow into next block or footer
 
       // RTL right-alignment vs standard left-alignment
       let curX = block.x;
