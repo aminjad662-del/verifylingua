@@ -135,6 +135,15 @@ export default function TranslatePage() {
   const [grantingCredits, setGrantingCredits] = useState(false);
   const [lastUploadedFile, setLastUploadedFile] = useState<File | null>(null);
   const [translatedBlobUrl, setTranslatedBlobUrl] = useState<string | null>(null);
+  const translatedBlobUrlRef = useRef<string | null>(null);
+
+  const setBlobUrl = useCallback((url: string | null) => {
+    if (translatedBlobUrlRef.current && translatedBlobUrlRef.current !== url) {
+      URL.revokeObjectURL(translatedBlobUrlRef.current);
+    }
+    translatedBlobUrlRef.current = url;
+    setTranslatedBlobUrl(url);
+  }, []);
 
   // Comparison & detail inspect state for result view (Step 5)
   const [comparisonTab, setComparisonTab] = useState<"side-by-side" | "translated" | "original">("side-by-side");
@@ -168,16 +177,13 @@ export default function TranslatePage() {
   // CRITICAL: Invalidate stale translation blob whenever target language changes.
   // Without this, switching language shows the PREVIOUS language's translated SVG.
   useEffect(() => {
-    if (translatedBlobUrl) {
-      URL.revokeObjectURL(translatedBlobUrl);
-      setTranslatedBlobUrl(null);
-    }
+    setBlobUrl(null);
     // If there's an active job result, clear it so user must re-translate
     if (job?.status === "ready") {
       setJob(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetLang]);
+  }, [targetLang, setBlobUrl]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -209,11 +215,11 @@ export default function TranslatePage() {
         }
         const data = await res.json();
 
-        if (data.svgContent && !translatedBlobUrl) {
+        if (data.svgContent && !translatedBlobUrlRef.current) {
           try {
             const blob = new Blob([data.svgContent], { type: "image/svg+xml;charset=utf-8" });
             const localBlobUrl = URL.createObjectURL(blob);
-            setTranslatedBlobUrl(localBlobUrl);
+            setBlobUrl(localBlobUrl);
           } catch {}
         }
 
@@ -251,10 +257,7 @@ export default function TranslatePage() {
   // Stage a file for review & configuration
   const handleStageFile = useCallback((file: File) => {
     // CRITICAL: Revoke any previous translated blob URL to prevent stale preview
-    if (translatedBlobUrl) {
-      URL.revokeObjectURL(translatedBlobUrl);
-      setTranslatedBlobUrl(null);
-    }
+    setBlobUrl(null);
     // Clear any existing job state so old results never bleed into new uploads
     stopPolling();
     setJob(null);
@@ -284,22 +287,19 @@ export default function TranslatePage() {
     } else {
       setDetectedLangInfo({ lang: "en", confidence: 98.9, label: "Auto-detected English (US)" });
     }
-  }, [translatedBlobUrl, stopPolling, sourceLang]);
+  }, [setBlobUrl, stopPolling, sourceLang]);
 
   const handleClearStaged = useCallback(() => {
     if (stagedPreviewUrl) {
       URL.revokeObjectURL(stagedPreviewUrl);
     }
-    if (translatedBlobUrl) {
-      URL.revokeObjectURL(translatedBlobUrl);
-      setTranslatedBlobUrl(null);
-    }
+    setBlobUrl(null);
     setStagedFile(null);
     setStagedPreviewUrl(null);
     setStagedDimensions(null);
     setDetectedLangInfo(null);
     setJob(null);
-  }, [stagedPreviewUrl, translatedBlobUrl]);
+  }, [stagedPreviewUrl, setBlobUrl]);
 
   // Load sample worksheet file
   const handleLoadSample = useCallback(async () => {
@@ -324,10 +324,7 @@ export default function TranslatePage() {
   const executeUpload = useCallback(
     async (file: File, overridePageCount?: number) => {
       stopPolling();
-      if (translatedBlobUrl) {
-        URL.revokeObjectURL(translatedBlobUrl);
-        setTranslatedBlobUrl(null);
-      }
+      setBlobUrl(null);
       setLastUploadedFile(file);
       setJob({
         jobId: "",
@@ -444,7 +441,7 @@ export default function TranslatePage() {
           try {
             const blob = new Blob([data.svgContent], { type: "image/svg+xml;charset=utf-8" });
             localBlobUrl = URL.createObjectURL(blob);
-            setTranslatedBlobUrl(localBlobUrl);
+            setBlobUrl(localBlobUrl);
           } catch {}
         }
 
@@ -575,10 +572,7 @@ export default function TranslatePage() {
 
   const handleReset = () => {
     stopPolling();
-    if (translatedBlobUrl) {
-      URL.revokeObjectURL(translatedBlobUrl);
-      setTranslatedBlobUrl(null);
-    }
+    setBlobUrl(null);
     setJob(null);
     handleClearStaged();
     setFeedbackSent(false);
@@ -924,7 +918,10 @@ export default function TranslatePage() {
 
                 <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden flex items-center justify-center p-4">
                   {translatedPreviewSrc ? (
-                    isImageJob || translatedBlobUrl ? (
+                    translatedBlobUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={translatedPreviewSrc} alt="Translated" className="max-w-full max-h-full object-contain cursor-zoom-in" onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }} />
+                    ) : isImageJob && !translatedPreviewSrc.toLowerCase().includes(".pdf") ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={translatedPreviewSrc} alt="Translated" className="max-w-full max-h-full object-contain cursor-zoom-in" onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }} />
                     ) : (

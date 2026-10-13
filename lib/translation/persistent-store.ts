@@ -51,11 +51,19 @@ export interface PersistentTranslationJob {
   expiresAt: string;
   downloadToken: string;
   layoutPreserved?: boolean;
+  svgContent?: string | null;
+  blocks?: any[] | null;
 }
 
 const jobMetadataCache = new Map<
   string,
-  { issues?: (FidelityIssue | string)[]; warnings?: string[]; fidelityBreakdown?: FidelityScoreBreakdown | null }
+  {
+    issues?: (FidelityIssue | string)[];
+    warnings?: string[];
+    fidelityBreakdown?: FidelityScoreBreakdown | null;
+    svgContent?: string | null;
+    blocks?: any[] | null;
+  }
 >();
 
 // Persistent jobs memory store (singleton across module reloads)
@@ -70,6 +78,7 @@ if (process.env.NODE_ENV !== "production") {
 
 function mapDbToJob(db: any): PersistentTranslationJob {
   const cached = jobMetadataCache.get(db.id);
+  const mem = getTranslationJob(db.id);
   return {
     id: db.id,
     userId: db.userId || null,
@@ -103,6 +112,8 @@ function mapDbToJob(db: any): PersistentTranslationJob {
     expiresAt: db.expiresAt ? (db.expiresAt instanceof Date ? db.expiresAt.toISOString() : new Date(db.expiresAt).toISOString()) : new Date(Date.now() + 86400000).toISOString(),
     downloadToken: db.downloadToken || db.id,
     layoutPreserved: db.layoutPreserved ?? true,
+    svgContent: cached?.svgContent ?? db.svgContent ?? mem?.svgContent ?? null,
+    blocks: cached?.blocks ?? db.blocks ?? mem?.blocks ?? [],
   };
 }
 
@@ -195,7 +206,7 @@ export async function updatePersistentJob(
         userId: memJob.userId || null,
         sourceFilename: memJob.fileName || "document.pdf",
         sourceFormat: memJob.fileFormat || "pdf",
-        sourceMimeType: "application/pdf",
+        sourceMimeType: memJob.fileFormat === "png" ? "image/png" : memJob.fileFormat === "jpg" ? "image/jpeg" : "application/pdf",
         sourceLanguage: memJob.sourceLang || "auto",
         targetLanguage: memJob.targetLang || "en",
         status: memJob.status,
@@ -205,6 +216,8 @@ export async function updatePersistentJob(
         sourceKey: memJob.sourceKey,
         outputKey: memJob.outputKey,
         downloadToken: memJob.downloadToken,
+        svgContent: memJob.svgContent || null,
+        blocks: memJob.blocks || [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -223,6 +236,8 @@ export async function updatePersistentJob(
         sourceKey: `jobs/anonymous/${id}/source.pdf`,
         outputKey: `jobs/anonymous/${id}/output.pdf`,
         downloadToken: id,
+        svgContent: null,
+        blocks: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -241,6 +256,8 @@ export async function updatePersistentJob(
   if (updates.fidelityScore !== undefined) data.fidelityScore = updates.fidelityScore;
   if (updates.outputKey !== undefined) data.outputKey = updates.outputKey;
   if (updates.previewKey !== undefined) data.previewKey = updates.previewKey;
+  if (updates.svgContent !== undefined) data.svgContent = updates.svgContent;
+  if (updates.blocks !== undefined) data.blocks = updates.blocks;
   if ("errorCode" in updates) data.errorCode = updates.errorCode ?? null;
   if ("errorMessage" in updates) data.errorMessage = updates.errorMessage ?? null;
   if (updates.downloadToken !== undefined) data.downloadToken = updates.downloadToken;
@@ -257,6 +274,8 @@ export async function updatePersistentJob(
   if (updates.issues !== undefined) existingMeta.issues = updates.issues;
   if (updates.warnings !== undefined) existingMeta.warnings = updates.warnings;
   if (updates.fidelityBreakdown !== undefined) existingMeta.fidelityBreakdown = updates.fidelityBreakdown;
+  if (updates.svgContent !== undefined) existingMeta.svgContent = updates.svgContent;
+  if (updates.blocks !== undefined) existingMeta.blocks = updates.blocks;
   jobMetadataCache.set(id, existingMeta);
 
   persistentJobsMemory.set(id, data);

@@ -97,6 +97,18 @@ describe("Document Image Translation Multi-Step Flow", () => {
 
     expect(["ready", "completed"]).toContain(finalStatus);
 
+    // Verify SVG content with inpaint masks, text, and structured blocks are present
+    const finalPollRes = await statusHandler(statusReq, {
+      params: Promise.resolve({ jobId }),
+    });
+    const finalPollBody = await finalPollRes.json();
+    expect(finalPollBody.svgContent).toBeTruthy();
+    expect(finalPollBody.svgContent).toContain("<rect");
+    expect(finalPollBody.svgContent).toContain("<text");
+    expect(finalPollBody.svgContent).toContain("<foreignObject");
+    expect(Array.isArray(finalPollBody.blocks)).toBe(true);
+    expect(finalPollBody.blocks.length).toBeGreaterThan(0);
+
     // 4. Download endpoint with ?inline=true serves image inline
     const inlineDownloadReq = new NextRequest(
       `http://localhost:3000/api/translate/download/${jobId}?token=${downloadToken}&inline=true&userId=${testUserId}`
@@ -122,7 +134,7 @@ describe("Document Image Translation Multi-Step Flow", () => {
     const disposition = directRes.headers.get("content-disposition");
     expect(disposition).toContain("attachment");
 
-    // 6. Preview endpoint serves translated image
+    // 6. Preview endpoint serves translated image with authentic binary magic bytes
     const previewReq = new NextRequest(`http://localhost:3000/api/jobs/${jobId}/preview`);
     const previewRes = await previewHandler(previewReq, {
       params: Promise.resolve({ id: jobId }),
@@ -131,5 +143,10 @@ describe("Document Image Translation Multi-Step Flow", () => {
     expect(previewRes.status).toBe(200);
     expect(previewRes.headers.get("content-type")).toMatch(/image\/(jpeg|png)/);
     expect(previewRes.headers.get("content-disposition")).toContain("inline");
+    const previewBytes = Buffer.from(await previewRes.arrayBuffer());
+    expect(previewBytes.length).toBeGreaterThan(100);
+    const isJpeg = previewBytes[0] === 0xff && previewBytes[1] === 0xd8;
+    const isPng = previewBytes[0] === 0x89 && previewBytes[1] === 0x50;
+    expect(isJpeg || isPng).toBe(true);
   });
 });

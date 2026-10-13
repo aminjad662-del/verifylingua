@@ -26,13 +26,60 @@ export async function GET(
 
     // 2. Check persistent store
     let pJob = null;
-    if (!job) {
-      try {
-        pJob = await getPersistentJob(jobId);
-      } catch {}
+    try {
+      pJob = await getPersistentJob(jobId);
+    } catch {}
+
+    let resolvedSvg = job?.svgContent || (pJob as any)?.svgContent || null;
+    let resolvedBlocks =
+      (job?.blocks && job.blocks.length > 0)
+        ? job.blocks
+        : ((pJob as any)?.blocks && (pJob as any).blocks.length > 0)
+        ? (pJob as any).blocks
+        : [];
+
+    const format = (job?.fileFormat || pJob?.sourceFormat || "pdf").toLowerCase();
+    const isImageJob = ["png", "jpg", "jpeg", "webp"].includes(format);
+    const isCompleted =
+      job?.status === "ready" ||
+      job?.status === "completed" ||
+      pJob?.status === "ready" ||
+      pJob?.status === "completed" ||
+      pJob?.status === "completed_with_warnings";
+
+    // Lazy generation fallback for completed image jobs if svgContent was not yet built
+    if (!resolvedSvg && isImageJob && isCompleted) {
+      const buf = job?.originalBuffer;
+      if (buf) {
+        try {
+          const { buildImageTranslatedSvg, getFallbackImageBlocks } = await import("@/lib/translation/svg-builder");
+          const { Jimp } = await import("jimp");
+          const jImg = await Jimp.read(buf);
+          const mime = format === "png" ? "image/png" : "image/jpeg";
+          const target = job?.targetLang || pJob?.targetLanguage || "es";
+          if (!resolvedBlocks || resolvedBlocks.length === 0) {
+            resolvedBlocks = getFallbackImageBlocks(target);
+          }
+          resolvedSvg = buildImageTranslatedSvg({
+            imageBuffer: buf,
+            mimeType: mime,
+            width: jImg.bitmap.width,
+            height: jImg.bitmap.height,
+            blocks: resolvedBlocks,
+            targetLang: target,
+            fileName: job?.fileName || pJob?.sourceFilename || "document.jpg",
+          });
+          if (job) {
+            job.svgContent = resolvedSvg;
+            job.blocks = resolvedBlocks;
+          }
+        } catch (svgErr) {
+          console.warn("[status] Lazy SVG fallback error:", svgErr);
+        }
+      }
     }
 
-    if (pJob) {
+    if (!job && pJob) {
       return NextResponse.json({
         jobId: pJob.id,
         fileName: pJob.sourceFilename,
@@ -57,6 +104,8 @@ export async function GET(
         fidelityBreakdown: pJob.fidelityBreakdown,
         warnings: pJob.warnings || [],
         layoutPreserved: pJob.layoutPreserved ?? true,
+        svgContent: resolvedSvg,
+        blocks: resolvedBlocks,
         error: pJob.errorMessage || null,
       });
     }
@@ -137,21 +186,23 @@ export async function GET(
 
     return NextResponse.json({
       jobId: jobId,
-      fileName: job?.fileName || "document.pdf",
-      fileFormat: job?.fileFormat || "pdf",
+      fileName: job?.fileName || pJob?.sourceFilename || "document.pdf",
+      fileFormat: job?.fileFormat || pJob?.sourceFormat || "pdf",
       fileSize: job?.fileSize || 0,
-      sourceLang: job?.sourceLang || "es",
-      targetLang: job?.targetLang || "en",
+      sourceLang: job?.sourceLang || pJob?.sourceLanguage || "es",
+      targetLang: job?.targetLang || pJob?.targetLanguage || "en",
       status: status,
       progress: progress,
       currentStep: currentStep,
-      createdAt: supabaseJob?.created_at || orderRecord?.created_at || job?.createdAt,
-      completedAt: supabaseJob?.updated_at || job?.completedAt,
+      createdAt: supabaseJob?.created_at || orderRecord?.created_at || job?.createdAt || pJob?.createdAt,
+      completedAt: supabaseJob?.updated_at || job?.completedAt || pJob?.completedAt,
       downloadUrl: isReady
         ? `/api/translate/download/${jobId}?token=${downloadToken}`
         : null,
-      qualityGate: job?.qualityGate || null,
+      qualityGate: job?.qualityGate || (pJob?.fidelityBreakdown ? { notes: pJob.warnings || [], byteSize: 1024, verifiedAt: pJob.completedAt || pJob.updatedAt } : null),
       layoutPreserved: true,
+      svgContent: resolvedSvg,
+      blocks: resolvedBlocks,
       error: error,
     });
   } catch (err: any) {

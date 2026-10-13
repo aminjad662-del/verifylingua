@@ -120,6 +120,8 @@ export interface TranslationJob {
   qaReport?: any;
   reviewedAt?: string;
   translatorId?: string;
+  svgContent?: string;
+  blocks?: any[];
 }
 
 export interface TranslationOptions {

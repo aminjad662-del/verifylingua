@@ -177,6 +177,16 @@ export interface ImageExtractionResult {
   mimeType: "image/png" | "image/jpeg";
   certifiedTimestamp: string;
   spatialBlockCount?: number;
+  blocks?: Array<{
+    id: string;
+    text: string;
+    translatedText?: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    fontSize?: number;
+  }>;
 }
 
 export async function translateImage(
@@ -197,6 +207,7 @@ export async function translateImage(
       if (fs.existsSync(scriptPath)) {
         const tmpInput = path.join(os.tmpdir(), `vl_in_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${format}`);
         const tmpOutput = path.join(os.tmpdir(), `vl_out_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${format}`);
+        const tmpBlocks = path.join(os.tmpdir(), `vl_blk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.json`);
         await fs.promises.writeFile(tmpInput, imageBuffer);
 
         const geminiKey = process.env.GEMINI_API_KEY || "";
@@ -205,6 +216,7 @@ export async function translateImage(
           "--input", tmpInput,
           "--output", tmpOutput,
           "--target-lang", options.targetLang || "es",
+          "--blocks-output", tmpBlocks,
         ];
         if (geminiKey) {
           pyArgs.push("--api-key", geminiKey);
@@ -228,6 +240,14 @@ export async function translateImage(
 
         if (success && fs.existsSync(tmpOutput)) {
           const outBuffer = await fs.promises.readFile(tmpOutput);
+          let parsedBlocks: any[] = [];
+          if (fs.existsSync(tmpBlocks)) {
+            try {
+              const blocksJson = await fs.promises.readFile(tmpBlocks, "utf8");
+              parsedBlocks = JSON.parse(blocksJson);
+            } catch {}
+            fs.promises.unlink(tmpBlocks).catch(() => {});
+          }
           fs.promises.unlink(tmpInput).catch(() => {});
           fs.promises.unlink(tmpOutput).catch(() => {});
 
@@ -239,10 +259,12 @@ export async function translateImage(
               height: img.bitmap.height,
               mimeType: format === "png" ? "image/png" : "image/jpeg",
               certifiedTimestamp: new Date().toISOString(),
-              spatialBlockCount: 20,
+              spatialBlockCount: parsedBlocks.length || 20,
+              blocks: parsedBlocks,
             },
           };
         }
+        if (fs.existsSync(tmpBlocks)) fs.promises.unlink(tmpBlocks).catch(() => {});
         fs.promises.unlink(tmpInput).catch(() => {});
         fs.promises.unlink(tmpOutput).catch(() => {});
       }
@@ -367,6 +389,17 @@ export async function translateImage(
 
   const outputBuffer = await img.getBuffer(mimeType as any);
 
+  const exportedBlocks = blocks.map((b) => ({
+    id: b.id,
+    text: b.text,
+    translatedText: translationMap.get(b.id) || b.text,
+    x: b.x,
+    y: b.y,
+    width: b.width,
+    height: b.height,
+    fontSize: b.fontSize,
+  }));
+
   return {
     buffer: outputBuffer,
     metadata: {
@@ -375,6 +408,7 @@ export async function translateImage(
       mimeType,
       certifiedTimestamp: new Date().toISOString(),
       spatialBlockCount: blocks.length,
+      blocks: exportedBlocks,
     },
   };
 }

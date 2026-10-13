@@ -35,7 +35,7 @@ LANGUAGE_NAMES = {
     "ko": "Korean",
 }
 
-def translate_document_image(input_path, output_path, target_lang="es", api_key=None):
+def translate_document_image(input_path, output_path, target_lang="es", api_key=None, blocks_output=None):
     orig = Image.open(input_path).convert("RGB")
     w, h = orig.size
     
@@ -44,7 +44,6 @@ def translate_document_image(input_path, output_path, target_lang="es", api_key=
     with open(input_path, "rb") as f:
         img_b64 = base64.b64encode(f.read()).decode("utf-8")
         
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={key}"
     target_name = LANGUAGE_NAMES.get(target_lang.lower(), target_lang)
     
     prompt = f"""You are a master document translator and layout reconstruction engineer.
@@ -72,7 +71,7 @@ Return ONLY valid JSON matching:
     payload = {
         "contents": [{
             "parts": [
-                {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}},
+                {"inlineData": {"mimeType": "image/jpeg", "data": img_b64}},
                 {"text": prompt}
             ]
         }],
@@ -82,20 +81,41 @@ Return ONLY valid JSON matching:
         }
     }
 
+    candidate_models = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.8-flash"]
     blocks = []
-    try:
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"}
-        )
-        with urllib.request.urlopen(req, timeout=45) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            parsed_text = data["candidates"][0]["content"]["parts"][0]["text"]
-            doc_data = json.loads(parsed_text)
-            blocks = doc_data.get("blocks", [])
-    except Exception as e:
-        print(f"Gemini translation failed: {e}", file=sys.stderr)
+    last_err = None
+
+    if key:
+        for model in candidate_models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"}
+                )
+                with urllib.request.urlopen(req, timeout=35) as resp:
+                    resp_bytes = resp.read().decode("utf-8")
+                    data = json.loads(resp_bytes)
+                    parsed_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                    clean_text = parsed_text.strip()
+                    json_start = clean_text.find('{')
+                    json_end = clean_text.rfind('}')
+                    if json_start != -1 and json_end != -1 and json_end > json_start:
+                        clean_text = clean_text[json_start:json_end + 1]
+                    doc_data = json.loads(clean_text)
+                    extracted = doc_data.get("blocks", [])
+                    if extracted and len(extracted) > 0:
+                        blocks = extracted
+                        break
+            except Exception as e:
+                last_err = e
+                print(f"Model {model} failed: {e}", file=sys.stderr)
+
+    if not blocks:
+        err_msg = f"Gemini translation failed across models: {last_err or 'No API key or 0 blocks extracted'}"
+        print(err_msg, file=sys.stderr)
+        raise RuntimeError(err_msg)
         
     canvas = orig.copy()
     draw = ImageDraw.Draw(canvas)
@@ -183,7 +203,15 @@ Return ONLY valid JSON matching:
     else:
         canvas.save(output_path, format="PNG", dpi=(300, 300))
         
-    print(f"Successfully generated translated document: {output_path}")
+    if blocks_output:
+        try:
+            os.makedirs(os.path.dirname(os.path.abspath(blocks_output)), exist_ok=True)
+            with open(blocks_output, "w", encoding="utf-8") as bf:
+                json.dump(blocks, bf, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Warning: Failed to write blocks JSON: {e}", file=sys.stderr)
+
+    print(f"Successfully generated translated document: {output_path} with {len(blocks)} blocks")
     return output_path
 
 def main():
@@ -192,9 +220,14 @@ def main():
     parser.add_argument("--output", required=True, help="Output image path")
     parser.add_argument("--target-lang", default="es", help="Target language (es, fr, de, el, en, etc.)")
     parser.add_argument("--api-key", default=None, help="Gemini API Key")
+    parser.add_argument("--blocks-output", default=None, help="Path to write blocks JSON")
     args = parser.parse_args()
     
-    translate_document_image(args.input, args.output, args.target_lang, args.api_key)
+    try:
+        translate_document_image(args.input, args.output, args.target_lang, args.api_key, args.blocks_output)
+    except Exception as e:
+        print(f"Fatal translation error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

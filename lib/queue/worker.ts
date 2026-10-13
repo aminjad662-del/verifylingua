@@ -171,7 +171,127 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
     }
   }
 
-  // Handle PDF & Image translation via Orchestrator (8-Agent State Machine)
+  // Handle PNG / JPG / Image translation via Image Pipeline + Authentic Vector SVG
+  if (sourceFormat === "png" || sourceFormat === "jpg" || sourceFormat === "jpeg" || sourceFormat === "webp") {
+    try {
+      const activeJob =
+        memJob ||
+        createTranslationJob({
+          id: jobId,
+          fileName,
+          fileFormat: sourceFormat === "png" ? "png" : "jpg",
+          fileSize: fileBuffer.length,
+          sourceLang,
+          targetLang,
+          originalBuffer: fileBuffer,
+          userId,
+          pageCount,
+          options: { serviceTier: (memJob?.serviceTier as any) || "automated", format: sourceFormat },
+        });
+
+      const updated = await processTranslationJob(activeJob, {
+        sourceLang,
+        targetLang,
+        serviceTier: (activeJob.serviceTier as any) || "automated",
+        register: "general",
+      });
+
+      updateTranslationJob(updated);
+
+      if (updated.status === "failed") {
+        throw new Error(updated.error || "Image translation failed");
+      }
+
+      const imgBuffer = updated.translatedBuffer || fileBuffer;
+      const imgMime = sourceFormat === "png" ? "image/png" : "image/jpeg";
+
+      // Persist translated image output to storage
+      try {
+        await putObject(outputKey, imgBuffer, imgMime);
+      } catch (putErr: any) {
+        console.error(`[Background Worker] Failed to upload image artifact to ${outputKey}:`, putErr.message);
+      }
+
+      // Generate authentic SVG representation with masks and dual-rendered text
+      const { buildImageTranslatedSvg } = await import("../translation/svg-builder");
+      const { Jimp } = await import("jimp");
+      let imgWidth = 820;
+      let imgHeight = 1100;
+      try {
+        const jimpImg = await Jimp.read(fileBuffer);
+        imgWidth = jimpImg.bitmap.width;
+        imgHeight = jimpImg.bitmap.height;
+      } catch {}
+
+      const svgContent =
+        updated.svgContent ||
+        buildImageTranslatedSvg({
+          imageBuffer: fileBuffer,
+          mimeType: imgMime,
+          width: imgWidth,
+          height: imgHeight,
+          blocks: (updated as any).blocks || [],
+          targetLang,
+          fileName,
+        });
+
+      // Update in-memory job store for zero-latency local polling
+      const targetJob = memJob || activeJob;
+      targetJob.status = "ready";
+      targetJob.progress = 100;
+      targetJob.currentStep = "Machine translation and layout reconstruction complete.";
+      targetJob.outputKey = outputKey;
+      targetJob.translatedBuffer = imgBuffer;
+      targetJob.svgContent = svgContent;
+      targetJob.blocks = (updated as any).blocks || [];
+      updateTranslationJob(targetJob);
+
+      try {
+        await updatePersistentJob(jobId, {
+          status: "completed",
+          progress: 100,
+          currentStep: "Machine translation and layout reconstruction complete.",
+          outputKey,
+          svgContent,
+          blocks: (updated as any).blocks || [],
+          completedAt: new Date().toISOString(),
+        });
+      } catch {}
+
+      if (userId) {
+        try {
+          await settleCreditsOnSuccess(userId, jobId, pageCount);
+        } catch (settleErr: any) {
+          console.warn(`[Background Worker] Credit settlement warning for job ${jobId}:`, settleErr.message);
+        }
+      }
+
+      console.log(`[Background Worker] [Job ${jobId}] SUCCESS: Image translated and stored at ${outputKey}.`);
+      return;
+    } catch (imgErr: any) {
+      console.error(`[Background Worker] Image job ${jobId} failed:`, imgErr.message);
+      if (userId) {
+        try {
+          await releaseCreditsOnFailure(userId, jobId, pageCount, imgErr.message);
+        } catch {}
+      }
+      try {
+        await updatePersistentJob(jobId, {
+          status: "failed",
+          errorMessage: imgErr.message,
+          completedAt: new Date().toISOString(),
+        });
+      } catch {}
+      if (memJob) {
+        memJob.status = "failed";
+        memJob.error = imgErr.message;
+        updateTranslationJob(memJob);
+      }
+      return;
+    }
+  }
+
+  // Handle PDF translation via Orchestrator (8-Agent State Machine)
   try {
     const orchestrator = new Orchestrator();
     const renderedBuffer = await orchestrator.processDocument(

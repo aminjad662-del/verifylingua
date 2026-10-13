@@ -242,6 +242,25 @@ export async function processTranslationJob(
     } else if (job.fileFormat === "png" || job.fileFormat === "jpg") {
       const res = await translateImage(job.originalBuffer, job.fileFormat, options);
       translatedBuffer = res.buffer;
+      if (res.metadata.blocks) {
+        job.blocks = res.metadata.blocks;
+      }
+      try {
+        const { buildImageTranslatedSvg } = await import("./svg-builder");
+        const imgMime = job.fileFormat === "png" ? "image/png" : "image/jpeg";
+        job.svgContent = buildImageTranslatedSvg({
+          imageBuffer: job.originalBuffer,
+          mimeType: imgMime,
+          width: res.metadata.width,
+          height: res.metadata.height,
+          blocks: res.metadata.blocks || [],
+          targetLang: options.targetLang,
+          fileName: job.fileName,
+          serviceTier: options.serviceTier,
+        });
+      } catch (svgErr) {
+        console.warn("[pipeline] Failed to generate translated SVG:", svgErr);
+      }
       notes.push(`Inpainted and rendered ${res.metadata.spatialBlockCount || 0} spatial text blocks`);
       if (options.serviceTier === "automated") {
         notes.push(`Rendered ${res.metadata.width}x${res.metadata.height} image with uncertified automated footer`);

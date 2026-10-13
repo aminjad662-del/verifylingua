@@ -48,6 +48,19 @@ export async function GET(
       return NextResponse.json({ error: "Preview not available." }, { status: 404 });
     }
 
+    // Sniff binary magic bytes to guarantee MIME accuracy
+    if (binary.length >= 4) {
+      if (binary[0] === 0x25 && binary[1] === 0x50 && binary[2] === 0x44 && binary[3] === 0x46) {
+        mime = "application/pdf";
+      } else if (binary[0] === 0x89 && binary[1] === 0x50 && binary[2] === 0x4e && binary[3] === 0x47) {
+        mime = "image/png";
+      } else if (binary[0] === 0xff && binary[1] === 0xd8) {
+        mime = "image/jpeg";
+      } else if (binary.subarray(0, 50).toString("utf8").includes("<svg")) {
+        mime = "image/svg+xml; charset=utf-8";
+      }
+    }
+
     return new NextResponse(new Uint8Array(binary), {
       status: 200,
       headers: {
