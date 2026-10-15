@@ -1609,11 +1609,11 @@ async function handleApiRequest(request, pathname, env, ctx) {
         svgParts.push('  <g clip-path="url(#' + clipId + ')">');
         svgParts.push('    <switch>');
         svgParts.push('      <foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" x="' + b.left.toFixed(1) + '" y="' + b.top.toFixed(1) + '" width="' + b.width.toFixed(1) + '" height="' + effectiveBoxH.toFixed(1) + '">');
-        svgParts.push('        <div xmlns="http://www.w3.org/1999/xhtml" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: \'Noto Sans Arabic\', \'Segoe UI\', Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ' + textAlign + '; direction: ' + (isBlockRtl ? 'rtl' : 'ltr') + ';">');
+        svgParts.push('        <div xmlns="http://www.w3.org/1999/xhtml" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: &quot;Noto Sans Arabic&quot;, &quot;Segoe UI&quot;, Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ' + textAlign + '; direction: ' + (isBlockRtl ? 'rtl' : 'ltr') + ';">');
         svgParts.push('          ' + textEscaped);
         svgParts.push('        </div>');
         svgParts.push('      </foreignObject>');
-        svgParts.push('      <text x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '" font-family="\'Noto Sans Arabic\', \'Segoe UI\', Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="#0f172a" text-anchor="' + textAnchor + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
+        svgParts.push('      <text x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '" font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="#0f172a" text-anchor="' + textAnchor + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
         lines.forEach((line, lineIdx) => {
           const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           if (lineIdx === 0) {
