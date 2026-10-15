@@ -1402,17 +1402,28 @@ async function handleApiRequest(request, pathname, env, ctx) {
         q1: "1. Who went to the beach?",
         q2: "2. What did they build near the shore?",
         q3: "3. Which birds did they observe?",
+      },
+      ar: {
+        title: "يوم على الشاطئ - تدريب على القراءة والفهم",
+        h1: "أنشطة القراءة والاستيعاب اللغوي",
+        p1: "في يوم صيفي مشمس وجميل، ذهب لوكاس وصوفيا إلى شاطئ البحر برفقة عائلتهما، وقاما ببناء قلعة رملية ضخمة بجوار الأمواج.",
+        p2: "وبينما كانا يتجولان على الرمال الذهبية، جمعا أصدافاً لامعة وشاهدا طيور النورس وهي تحلق بحرية فوق مياه المحيط الزرقاء.",
+        q1: "١. من ذهب إلى شاطئ البحر؟",
+        q2: "٢. ماذا بنى الطفلان بجوار الشاطئ؟",
+        q3: "٣. ما هي الطيور التي شاهداها في السماء؟",
       }
     };
     const dict = translations[tLang] || translations.es;
+    const isRtl = tLang === 'ar' || tLang === 'he';
+    const contentAlign = isRtl ? 'right' : 'left';
     return [
       { box_2d: [65, 80, 115, 920], original_text: "Beach Reading Comprehension", translated_text: dict.title, font_size_tier: "title", align: "center" },
-      { box_2d: [130, 80, 175, 920], original_text: "Reading Activity", translated_text: dict.h1, font_size_tier: "heading", align: "left" },
-      { box_2d: [195, 80, 275, 920], original_text: "Story paragraph 1", translated_text: dict.p1, font_size_tier: "body", align: "left" },
-      { box_2d: [290, 80, 370, 920], original_text: "Story paragraph 2", translated_text: dict.p2, font_size_tier: "body", align: "left" },
-      { box_2d: [400, 80, 450, 920], original_text: "Question 1", translated_text: dict.q1, font_size_tier: "body", align: "left" },
-      { box_2d: [470, 80, 520, 920], original_text: "Question 2", translated_text: dict.q2, font_size_tier: "body", align: "left" },
-      { box_2d: [540, 80, 590, 920], original_text: "Question 3", translated_text: dict.q3, font_size_tier: "body", align: "left" }
+      { box_2d: [130, 80, 175, 920], original_text: "Reading Activity", translated_text: dict.h1, font_size_tier: "heading", align: contentAlign },
+      { box_2d: [195, 80, 275, 920], original_text: "Story paragraph 1", translated_text: dict.p1, font_size_tier: "body", align: contentAlign },
+      { box_2d: [290, 80, 370, 920], original_text: "Story paragraph 2", translated_text: dict.p2, font_size_tier: "body", align: contentAlign },
+      { box_2d: [400, 80, 450, 920], original_text: "Question 1", translated_text: dict.q1, font_size_tier: "body", align: contentAlign },
+      { box_2d: [470, 80, 520, 920], original_text: "Question 2", translated_text: dict.q2, font_size_tier: "body", align: contentAlign },
+      { box_2d: [540, 80, 590, 920], original_text: "Question 3", translated_text: dict.q3, font_size_tier: "body", align: contentAlign }
     ];
   }
 
@@ -1577,13 +1588,16 @@ async function handleApiRequest(request, pathname, env, ctx) {
         // Harmonious rounded background inpainting mask with subtle border
         svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" rx="4" ry="4" fill="#ffffff" fill-opacity="0.98" stroke="#e2e8f0" stroke-width="0.75" />');
 
-        const textAlign = b.align === 'center' ? 'center' : b.align === 'right' ? 'right' : 'left';
-        let textAnchor = 'start';
-        let textStartX = b.left + 4;
+        const isBlockRtl = job.targetLang === 'ar' || job.targetLang === 'he' || /[\u0600-\u06FF]/.test(b.rawText);
+        const textAlign = isBlockRtl
+          ? (b.align === 'center' ? 'center' : 'right')
+          : (b.align === 'center' ? 'center' : b.align === 'right' ? 'right' : 'left');
+        let textAnchor = isBlockRtl ? 'end' : 'start';
+        let textStartX = isBlockRtl ? (b.left + b.width - 4) : (b.left + 4);
         if (b.align === 'center') {
           textAnchor = 'middle';
           textStartX = b.left + b.width / 2;
-        } else if (b.align === 'right') {
+        } else if (textAlign === 'right') {
           textAnchor = 'end';
           textStartX = b.left + b.width - 4;
         }
@@ -1595,11 +1609,11 @@ async function handleApiRequest(request, pathname, env, ctx) {
         svgParts.push('  <g clip-path="url(#' + clipId + ')">');
         svgParts.push('    <switch>');
         svgParts.push('      <foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" x="' + b.left.toFixed(1) + '" y="' + b.top.toFixed(1) + '" width="' + b.width.toFixed(1) + '" height="' + effectiveBoxH.toFixed(1) + '">');
-        svgParts.push('        <div xmlns="http://www.w3.org/1999/xhtml" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ' + textAlign + ';">');
+        svgParts.push('        <div xmlns="http://www.w3.org/1999/xhtml" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: \'Noto Sans Arabic\', \'Segoe UI\', Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ' + textAlign + '; direction: ' + (isBlockRtl ? 'rtl' : 'ltr') + ';">');
         svgParts.push('          ' + textEscaped);
         svgParts.push('        </div>');
         svgParts.push('      </foreignObject>');
-        svgParts.push('      <text x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '" font-family="Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="#0f172a" text-anchor="' + textAnchor + '">');
+        svgParts.push('      <text x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '" font-family="\'Noto Sans Arabic\', \'Segoe UI\', Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="#0f172a" text-anchor="' + textAnchor + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
         lines.forEach((line, lineIdx) => {
           const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           if (lineIdx === 0) {

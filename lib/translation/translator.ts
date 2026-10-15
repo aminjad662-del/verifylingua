@@ -377,8 +377,11 @@ async function callGeminiStructuredBatch(
   options: TranslationOptions,
   apiKey: string
 ): Promise<{ id: string; translatedText: string }[] | null> {
+  if (Date.now() < geminiCooldownUntil) {
+    return null;
+  }
   const cleanKey = apiKey.replace(/^["']|["']$/g, "").trim();
-  const modelsToTry = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.8-flash"];
+  const modelsToTry = ["gemini-2.5-flash"];
   const prompt = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the following structured text blocks from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL REQUIREMENTS:
@@ -393,7 +396,7 @@ ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
 
   for (const model of modelsToTry) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -405,12 +408,12 @@ ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
               temperature: 0.1,
             },
           }),
+          signal: AbortSignal.timeout(4500),
         });
 
-        if (res.status === 429) {
-          const delay = Math.pow(2, attempt) * 1000;
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
+        if (res.status === 401 || res.status === 403 || res.status === 429) {
+          geminiCooldownUntil = Date.now() + 60000;
+          return null;
         }
 
         if (!res.ok) {
@@ -460,8 +463,11 @@ async function callGeminiTranslation(
   options: TranslationOptions,
   apiKey: string
 ): Promise<string | null> {
+  if (Date.now() < geminiCooldownUntil) {
+    return null;
+  }
   const cleanKey = apiKey.replace(/^["']|["']$/g, "").trim();
-  const modelsToTry = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.8-flash"];
+  const modelsToTry = ["gemini-2.5-flash"];
   const systemInstruction = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the input text from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL RULES:
@@ -472,7 +478,7 @@ CRITICAL RULES:
 
   for (const model of modelsToTry) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -484,12 +490,12 @@ CRITICAL RULES:
               temperature: 0.1,
             },
           }),
+          signal: AbortSignal.timeout(4500),
         });
 
-        if (res.status === 429) {
-          const delay = Math.pow(2, attempt) * 1000;
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
+        if (res.status === 401 || res.status === 403 || res.status === 429) {
+          geminiCooldownUntil = Date.now() + 60000;
+          return null;
         }
 
         if (!res.ok) {

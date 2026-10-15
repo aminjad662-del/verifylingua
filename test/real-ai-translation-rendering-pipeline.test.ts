@@ -56,7 +56,7 @@ describe("Live AI Translation & PDF Rendering Engine Verification", () => {
     translations.forEach((t) => {
       console.log(`[${t.id}] "${t.original_text}" -> "${t.translated_text}"`);
     });
-  }, 30000);
+  }, 60000);
 
   it("2. runRenderingAgent generates a genuine vector PDF mapping translated text to original coordinates", async () => {
     // Create a base source PDF document
@@ -143,5 +143,5 @@ describe("Live AI Translation & PDF Rendering Engine Verification", () => {
     console.log("=== [INNGEST PIPELINE EXECUTION VERIFIED] ===");
     console.log("Steps executed:", executedSteps);
     console.log("Rendered PDF bytes:", res.rendered.pdfBuffer.length);
-  }, 35000);
+  }, 60000);
 });

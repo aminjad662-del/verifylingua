@@ -94,20 +94,31 @@ export const FALLBACK_TRANSLATIONS: Record<string, { title: string; h1: string; 
     q2: "2. Cosa hanno costruito vicino all'acqua?",
     q3: "3. Quali uccelli hanno osservato?",
   },
+  ar: {
+    title: "يوم على الشاطئ - تدريب على القراءة والفهم",
+    h1: "أنشطة القراءة والاستيعاب اللغوي",
+    p1: "في يوم صيفي مشمس وجميل، ذهب لوكاس وصوفيا إلى شاطئ البحر برفقة عائلتهما، وقاما ببناء قلعة رملية ضخمة بجوار الأمواج.",
+    p2: "وبينما كانا يتجولان على الرمال الذهبية، جمعا أصدافاً لامعة وشاهدا طيور النورس وهي تحلق بحرية فوق مياه المحيط الزرقاء.",
+    q1: "١. من ذهب إلى شاطئ البحر؟",
+    q2: "٢. ماذا بنى الطفلان بجوار الشاطئ؟",
+    q3: "٣. ما هي الطيور التي شاهداها في السماء؟",
+  },
 };
 
 export function getFallbackImageBlocks(targetLang: string): TranslatedBlockData[] {
   const tLang = (targetLang || "es").toLowerCase();
+  const isRtl = tLang === "ar" || tLang === "he";
   const dict = FALLBACK_TRANSLATIONS[tLang] || FALLBACK_TRANSLATIONS.es;
+  const contentAlign: "left" | "right" = isRtl ? "right" : "left";
 
   return [
     { box_2d: [65, 80, 115, 920], original_text: "Beach Reading Comprehension", translated_text: dict.title, font_size_tier: "title", align: "center" },
-    { box_2d: [130, 80, 175, 920], original_text: "Reading Activity", translated_text: dict.h1, font_size_tier: "heading", align: "left" },
-    { box_2d: [195, 80, 275, 920], original_text: "Story paragraph 1", translated_text: dict.p1, font_size_tier: "body", align: "left" },
-    { box_2d: [290, 80, 370, 920], original_text: "Story paragraph 2", translated_text: dict.p2, font_size_tier: "body", align: "left" },
-    { box_2d: [400, 80, 450, 920], original_text: "Question 1", translated_text: dict.q1, font_size_tier: "body", align: "left" },
-    { box_2d: [470, 80, 520, 920], original_text: "Question 2", translated_text: dict.q2, font_size_tier: "body", align: "left" },
-    { box_2d: [540, 80, 590, 920], original_text: "Question 3", translated_text: dict.q3, font_size_tier: "body", align: "left" },
+    { box_2d: [130, 80, 175, 920], original_text: "Reading Activity", translated_text: dict.h1, font_size_tier: "heading", align: contentAlign },
+    { box_2d: [195, 80, 275, 920], original_text: "Story paragraph 1", translated_text: dict.p1, font_size_tier: "body", align: contentAlign },
+    { box_2d: [290, 80, 370, 920], original_text: "Story paragraph 2", translated_text: dict.p2, font_size_tier: "body", align: contentAlign },
+    { box_2d: [400, 80, 450, 920], original_text: "Question 1", translated_text: dict.q1, font_size_tier: "body", align: contentAlign },
+    { box_2d: [470, 80, 520, 920], original_text: "Question 2", translated_text: dict.q2, font_size_tier: "body", align: contentAlign },
+    { box_2d: [540, 80, 590, 920], original_text: "Question 3", translated_text: dict.q3, font_size_tier: "body", align: contentAlign },
   ];
 }
 
@@ -205,17 +216,18 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
     const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
     if (!rawText.trim()) continue;
 
-    const tier = b.font_size_tier || "body";
-    const isTitle = tier === "title";
-    const isHeading = tier === "heading";
-    const isQuestion = /^\d+[\.\)]/.test(rawText.trim());
+    const isDocRtl = targetLang === "ar" || targetLang === "he" || /[\u0600-\u06FF]/.test(rawText);
+    const textDir = isDocRtl ? 'direction="rtl" unicode-bidi="embed"' : '';
+    const fontStack = isDocRtl
+      ? "'Noto Sans Arabic', 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif"
+      : "-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif";
 
     if (isTitle) {
       const fs = 22;
       const lines = wrapTextToLines(rawText, Math.floor(contentW / (fs * 0.52)));
       lines.forEach((line) => {
         contentParts.push(
-          `  <text x="${docWidth / 2}" y="${curY}" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="${fs}" font-weight="bold" fill="#0f172a">${escapeXml(line)}</text>`
+          `  <text x="${docWidth / 2}" y="${curY}" text-anchor="middle" font-family="${fontStack}" font-size="${fs}" font-weight="bold" fill="#0f172a" ${textDir}>${escapeXml(line)}</text>`
         );
         curY += 28;
       });
@@ -224,8 +236,10 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
     } else if (isHeading) {
       curY += 6;
       const fs = 15;
+      const hX = isDocRtl ? (docWidth - padX) : padX;
+      const hAnchor = isDocRtl ? "end" : "start";
       contentParts.push(
-        `  <text x="${padX}" y="${curY}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="${fs}" font-weight="bold" fill="#1e293b">${escapeXml(rawText)}</text>`
+        `  <text x="${hX}" y="${curY}" text-anchor="${hAnchor}" font-family="${fontStack}" font-size="${fs}" font-weight="bold" fill="#1e293b" ${textDir}>${escapeXml(rawText)}</text>`
       );
       curY += 24;
     } else if (isQuestion) {
@@ -236,9 +250,11 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
       contentParts.push(
         `  <rect x="${padX}" y="${curY - 14}" width="${contentW}" height="${boxH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />`
       );
+      const qX = isDocRtl ? (docWidth - padX - 16) : (padX + 16);
+      const qAnchor = isDocRtl ? "end" : "start";
       qLines.forEach((qLine, idx) => {
         contentParts.push(
-          `  <text x="${padX + 16}" y="${curY + idx * 20}" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="${fs}" font-weight="600" fill="#0f172a">${escapeXml(qLine)}</text>`
+          `  <text x="${qX}" y="${curY + idx * 20}" text-anchor="${qAnchor}" font-family="${fontStack}" font-size="${fs}" font-weight="600" fill="#0f172a" ${textDir}>${escapeXml(qLine)}</text>`
         );
       });
       // Response line for worksheet fidelity
@@ -252,9 +268,11 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
       const lh = 20;
       const maxChars = Math.floor(contentW / (fs * 0.52));
       const lines = wrapTextToLines(rawText, maxChars);
+      const bX = isDocRtl ? (docWidth - padX) : padX;
+      const bAnchor = isDocRtl ? "end" : "start";
       lines.forEach((line) => {
         contentParts.push(
-          `  <text x="${padX}" y="${curY}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="${fs}" font-weight="normal" fill="#334155">${escapeXml(line)}</text>`
+          `  <text x="${bX}" y="${curY}" text-anchor="${bAnchor}" font-family="${fontStack}" font-size="${fs}" font-weight="normal" fill="#334155" ${textDir}>${escapeXml(line)}</text>`
         );
         curY += lh;
       });
@@ -436,13 +454,16 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     );
 
     // Text Alignment calculations
-    const textAlign = b.align === "center" ? "center" : b.align === "right" ? "right" : "left";
-    let textAnchor = "start";
-    let textStartX = b.left + 4;
+    const isBlockRtl = targetLang === "ar" || targetLang === "he" || /[\u0600-\u06FF]/.test(b.rawText);
+    const textAlign = isBlockRtl
+      ? (b.align === "center" ? "center" : "right")
+      : (b.align === "center" ? "center" : b.align === "right" ? "right" : "left");
+    let textAnchor = isBlockRtl ? "end" : "start";
+    let textStartX = isBlockRtl ? (b.left + b.boxW - 4) : (b.left + 4);
     if (b.align === "center") {
       textAnchor = "middle";
       textStartX = b.left + b.boxW / 2;
-    } else if (b.align === "right") {
+    } else if (textAlign === "right") {
       textAnchor = "end";
       textStartX = b.left + b.boxW - 4;
     }
@@ -457,13 +478,13 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
       `      <foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" x="${b.left.toFixed(1)}" y="${b.top.toFixed(1)}" width="${b.boxW.toFixed(1)}" height="${effectiveBoxH.toFixed(1)}">`
     );
     svgParts.push(
-      `        <div xmlns="http://www.w3.org/1999/xhtml" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ${fs}px; font-weight: ${fw}; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ${textAlign};">`
+      `        <div xmlns="http://www.w3.org/1999/xhtml" dir="${isBlockRtl ? "rtl" : "ltr"}" style="height: 100%; display: flex; flex-direction: column; justify-content: center; font-family: 'Noto Sans Arabic', 'Segoe UI', Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ${fs}px; font-weight: ${fw}; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ${textAlign}; direction: ${isBlockRtl ? "rtl" : "ltr"};">`
     );
     svgParts.push(`          ${escapeXml(b.rawText)}`);
     svgParts.push(`        </div>`);
     svgParts.push(`      </foreignObject>`);
     svgParts.push(
-      `      <text x="${textStartX.toFixed(1)}" y="${textStartY.toFixed(1)}" font-family="Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="${fs}" font-weight="${fw}" fill="#0f172a" text-anchor="${textAnchor}">`
+      `      <text x="${textStartX.toFixed(1)}" y="${textStartY.toFixed(1)}" font-family="'Noto Sans Arabic', 'Segoe UI', Calibri, Arial, sans-serif" font-size="${fs}" font-weight="${fw}" fill="#0f172a" text-anchor="${textAnchor}" direction="${isBlockRtl ? "rtl" : "ltr"}" unicode-bidi="embed">`
     );
     lines.forEach((line, lineIdx) => {
       const escapedLine = escapeXml(line);
