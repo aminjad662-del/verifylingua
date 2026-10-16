@@ -912,6 +912,7 @@ export default function TranslatePage() {
               const displayBlocks = (job.blocks && job.blocks.length > 0)
                 ? job.blocks
                 : getFallbackImageBlocks(targetLang);
+              const isRtl = targetLang === "ar" || targetLang === "he" || targetLang === "fa" || targetLang === "ur";
 
               const handleCopyAll = () => {
                 const fullText = displayBlocks
@@ -1030,7 +1031,7 @@ export default function TranslatePage() {
                         </div>
 
                         {/* Structured Document Body */}
-                        <div className="space-y-4">
+                        <div className={`space-y-4 ${isRtl ? "font-['Noto_Sans_Arabic',sans-serif]" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
                           {displayBlocks.map((b, idx) => {
                             const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
                             if (!rawText.trim()) return null;
@@ -1053,7 +1054,7 @@ export default function TranslatePage() {
 
                             if (isHeading) {
                               return (
-                                <h2 key={idx} className="text-base font-bold text-slate-900 mt-6 mb-2 pb-1 border-b border-slate-100 flex items-center gap-2">
+                                <h2 key={idx} className={`text-base font-bold text-slate-900 mt-6 mb-2 pb-1 border-b border-slate-100 flex items-center gap-2 ${isRtl ? "text-right" : "text-left"}`}>
                                   <span>{rawText}</span>
                                 </h2>
                               );
@@ -1062,14 +1063,14 @@ export default function TranslatePage() {
                             if (isQuestion) {
                               return (
                                 <div key={idx} className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 my-3">
-                                  <p className="font-semibold text-xs sm:text-sm text-slate-900">{rawText}</p>
+                                  <p className={`font-semibold text-xs sm:text-sm text-slate-900 ${isRtl ? "text-right" : "text-left"}`}>{rawText}</p>
                                   <div className="border-b border-dashed border-slate-300 pt-3" />
                                 </div>
                               );
                             }
 
                             return (
-                              <p key={idx} className="text-xs sm:text-sm text-slate-700 leading-relaxed my-3 font-normal">
+                              <p key={idx} className={`text-xs sm:text-sm text-slate-700 leading-relaxed my-3 font-normal ${isRtl ? "text-right" : "text-left"}`}>
                                 {rawText}
                               </p>
                             );
@@ -1139,7 +1140,7 @@ export default function TranslatePage() {
                               100% PARITY
                             </span>
                           </div>
-                          <div className="flex-1 rounded-lg bg-white border border-slate-200/80 p-5 overflow-y-auto max-h-[560px] space-y-3">
+                          <div className={`flex-1 rounded-lg bg-white border border-slate-200/80 p-5 overflow-y-auto max-h-[560px] space-y-3 ${isRtl ? "font-['Noto_Sans_Arabic',sans-serif]" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
                             {displayBlocks.map((b, idx) => {
                               const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
                               if (!rawText.trim()) return null;
@@ -1147,14 +1148,14 @@ export default function TranslatePage() {
                               const isHeading = b.font_size_tier === "heading";
                               const isQuestion = /^\d+[\.\)]/.test(rawText.trim());
 
-                              if (isTitle) return <h2 key={idx} className="text-base font-bold text-slate-900 border-b pb-2">{rawText}</h2>;
-                              if (isHeading) return <h3 key={idx} className="text-xs font-bold text-slate-800 uppercase tracking-wider">{rawText}</h3>;
+                              if (isTitle) return <h2 key={idx} className="text-base font-bold text-slate-900 border-b pb-2 text-center">{rawText}</h2>;
+                              if (isHeading) return <h3 key={idx} className={`text-xs font-bold text-slate-800 uppercase tracking-wider ${isRtl ? "text-right" : "text-left"}`}>{rawText}</h3>;
                               if (isQuestion) return (
                                 <div key={idx} className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs font-medium text-slate-900">
                                   {rawText}
                                 </div>
                               );
-                              return <p key={idx} className="text-xs text-slate-700 leading-relaxed">{rawText}</p>;
+                              return <p key={idx} className={`text-xs text-slate-700 leading-relaxed ${isRtl ? "text-right" : "text-left"}`}>{rawText}</p>;
                             })}
                           </div>
                         </div>
