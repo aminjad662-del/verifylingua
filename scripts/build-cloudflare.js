@@ -1643,8 +1643,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const renderedTextH = lines.length * lineHeight;
         const effectiveBoxH = Math.min(maxAvailableH, Math.max(b.height, renderedTextH + 4));
 
-        const padX = Math.max(3, Math.min(6, b.width * 0.015));
-        const padY = Math.max(2, Math.min(4, b.height * 0.02));
+        const padX = Math.max(5, Math.min(10, b.width * 0.02));
+        const padY = Math.max(3, Math.min(8, b.height * 0.03));
         const maskX = Math.max(0, b.left - padX);
         const maskY = Math.max(0, b.top - padY);
         const maskW = Math.min(w - maskX, b.width + padX * 2);
@@ -1657,8 +1657,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
         svgParts.push('    </clipPath>');
         svgParts.push('  </defs>');
 
-        // Harmonious rounded background inpainting mask with subtle border
-        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" rx="4" ry="4" fill="#ffffff" fill-opacity="0.98" stroke="#e2e8f0" stroke-width="0.75" />');
+        // 100% opaque solid white inpainting mask to completely block underlying source text
+        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" rx="4" ry="4" fill="#ffffff" stroke="#e2e8f0" stroke-width="0.75" />');
 
         const isBlockRtl = job.targetLang === 'ar' || job.targetLang === 'he' || /[\u0600-\u06FF]/.test(b.rawText);
         const textAlign = isBlockRtl
