@@ -190,7 +190,7 @@ CRITICAL RULES:
 2. If the document has legible text, even lighting, and visible margins, findings MUST be an empty array [] and glareDetected MUST be false. Do NOT invent defects.
 3. Only add a finding if there is a severe real defect that would cause a court or USCIS rejection (such as intense flash glare washing out text or illegible resolution).`;
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
       const res = await fetchWithRetry(apiUrl, {
         method: "POST",

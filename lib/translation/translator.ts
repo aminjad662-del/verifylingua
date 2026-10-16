@@ -381,7 +381,7 @@ async function callGeminiStructuredBatch(
     return null;
   }
   const cleanKey = apiKey.replace(/^["']|["']$/g, "").trim();
-  const modelsToTry = ["gemini-2.5-flash"];
+  const modelsToTry = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-pro"];
   const prompt = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the following structured text blocks from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL REQUIREMENTS:
@@ -467,7 +467,7 @@ async function callGeminiTranslation(
     return null;
   }
   const cleanKey = apiKey.replace(/^["']|["']$/g, "").trim();
-  const modelsToTry = ["gemini-2.5-flash"];
+  const modelsToTry = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-pro"];
   const systemInstruction = `You are a certified legal document translator specializing in certified translations for USCIS, academic evaluators, and courts under 8 CFR 103.2.
 Translate the input text from ${options.sourceLang} to ${options.targetLang}.
 CRITICAL RULES:

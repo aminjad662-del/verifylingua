@@ -1793,7 +1793,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
           mimeToSend = 'application/pdf';
         }
 
-        const candidateModels = ['gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+        const candidateModels = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro', 'gemini-pro-latest'];
         let translationSucceeded = false;
 
         for (const modelName of candidateModels) {

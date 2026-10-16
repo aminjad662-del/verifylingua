@@ -213,7 +213,7 @@ Return ONLY a valid JSON object matching:
             }
         }
 
-        candidate_models = ["gemini-2.5-flash", "gemini-3.5-flash-lite"]
+        candidate_models = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"]
         for model in candidate_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
             try:

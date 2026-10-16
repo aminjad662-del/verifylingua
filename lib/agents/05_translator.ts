@@ -268,7 +268,7 @@ export class TranslationAgent {
     items: SanitizedTextBlock[],
     systemPrompt: string
   ): Promise<TranslationOutput> {
-    const candidateModels = ["gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"];
+    const candidateModels = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
     const modelsToTry = (globalThis as any).__workingGeminiModel
       ? [(globalThis as any).__workingGeminiModel, ...candidateModels.filter((m) => m !== (globalThis as any).__workingGeminiModel)]
       : candidateModels;
