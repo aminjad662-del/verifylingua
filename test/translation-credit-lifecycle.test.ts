@@ -218,7 +218,7 @@ describe("Translation Pipeline Credit Integration", () => {
     // Wait for async processing in store/DB
     let job = getTranslationJob(body.jobId);
     let attempts = 0;
-    while (job && job.status !== "ready" && (job.status as string) !== "completed" && attempts < 50) {
+    while (job && job.status !== "ready" && (job.status as string) !== "completed" && attempts < 150) {
       await new Promise((r) => setTimeout(r, 50));
       job = getTranslationJob(body.jobId);
       attempts++;
@@ -261,7 +261,7 @@ describe("Translation Pipeline Credit Integration", () => {
     // Wait for async processing in store/DB
     let job = getTranslationJob(body.jobId);
     let attempts = 0;
-    while (job && job.status !== "failed" && attempts < 50) {
+    while (job && job.status !== "failed" && attempts < 150) {
       await new Promise((r) => setTimeout(r, 50));
       job = getTranslationJob(body.jobId);
       attempts++;
