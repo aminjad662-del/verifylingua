@@ -69,12 +69,17 @@ describe("Layout Preservation & Character Encoding Engine", () => {
     vm.createContext(sandbox);
 
     const getDimsMatch = workerContent.match(/function getImageDimensions\(fileBase64, fileMime\)[\s\S]*?\n  \}/);
+    const getFallbackMatch = workerContent.match(/function getEdgeFallbackBlocks\(targetLang\)[\s\S]*?\n  \}/);
+    const sanitizeMatch = workerContent.match(/function sanitizeAndTranslateBlocks\(blocks, targetLang\)[\s\S]*?\n  \}/);
     const genSvgMatch = workerContent.match(/function generateTranslatedSvg\(job\)[\s\S]*?\n  \}/);
     expect(getDimsMatch).not.toBeNull();
     expect(genSvgMatch).not.toBeNull();
 
     vm.runInContext(
-      getDimsMatch![0] + "\n" + genSvgMatch![0] + "\nthis.genSvg = generateTranslatedSvg;",
+      getDimsMatch![0] + "\n" +
+      (getFallbackMatch ? getFallbackMatch[0] + "\n" : "") +
+      (sanitizeMatch ? sanitizeMatch[0] + "\n" : "") +
+      genSvgMatch![0] + "\nthis.genSvg = generateTranslatedSvg;",
       sandbox
     );
 
