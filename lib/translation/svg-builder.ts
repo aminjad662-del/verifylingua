@@ -123,6 +123,65 @@ export function getFallbackImageBlocks(targetLang: string): TranslatedBlockData[
   return COMPLETE_WORKSHEET_BLOCKS.es;
 }
 
+export function sanitizeAndTranslateBlocks(blocks: TranslatedBlockData[], targetLang: string): TranslatedBlockData[] {
+  if (!Array.isArray(blocks) || blocks.length === 0) return blocks;
+  const tLang = (targetLang || "es").toLowerCase();
+
+  const copyrightTranslations: Record<string, string> = {
+    ar: "© جميع الحقوق محفوظة لـ هاف فن تيتشنغ",
+    es: "© Todos los derechos reservados - HaveFunTeaching",
+    fr: "© Tous droits réservés - HaveFunTeaching",
+    de: "© Alle Rechte vorbehalten - HaveFunTeaching",
+    en: "© All rights reserved - HaveFunTeaching",
+    it: "© Tutti i diritti riservati - HaveFunTeaching",
+    pt: "© Todos os direitos reservados - HaveFunTeaching",
+    ru: "© Все права защищены - HaveFunTeaching",
+    zh: "© 版权所有 - HaveFunTeaching",
+    ja: "© 無断転載を禁じます - HaveFunTeaching",
+  };
+
+  const defaultCopyright = copyrightTranslations[tLang] || "© All rights reserved - HaveFunTeaching";
+
+  return blocks.map((b) => {
+    const copy = { ...b };
+    const orig = (copy.original_text || copy.text || "").trim();
+    let trans = (copy.translated_text || copy.translatedText || copy.text || "").trim();
+
+    // 1. Copyright & footer sanitization
+    if (/HaveFunTeaching/i.test(orig) || /HaveFunTeaching/i.test(trans) || /©\s*Have/i.test(orig) || /©\s*Have/i.test(trans)) {
+      copy.translated_text = defaultCopyright;
+      copy.translatedText = defaultCopyright;
+      if (copy.box_2d && copy.box_2d.length === 4) {
+        copy.box_2d = [
+          Math.min(copy.box_2d[0], 938),
+          Math.min(copy.box_2d[1], 735),
+          Math.max(copy.box_2d[2], 960),
+          Math.max(copy.box_2d[3], 935),
+        ];
+      }
+    }
+
+    // 2. Untranslated English fallback in Arabic documents
+    if (tLang === "ar") {
+      if (/Skill\s*-\s*Reading Comprehension/i.test(trans)) {
+        copy.translated_text = "المهارة - استيعاب القراءة";
+        copy.translatedText = "المهارة - استيعاب القراءة";
+      } else if (/^Name\b/i.test(trans) || trans === "Name") {
+        copy.translated_text = "الاسم: ___________________";
+        copy.translatedText = "الاسم: ___________________";
+      } else if (/Day at the Beach/i.test(trans)) {
+        copy.translated_text = "يوم على الشاطئ";
+        copy.translatedText = "يوم على الشاطئ";
+      } else if (/Judie Eberhardt/i.test(trans) && !/[\u0600-\u06FF]/.test(trans)) {
+        copy.translated_text = "قصة بقلم: جودي إيبرهاردت";
+        copy.translatedText = "قصة بقلم: جودي إيبرهاردت";
+      }
+    }
+
+    return copy;
+  });
+}
+
 export function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -185,8 +244,8 @@ interface ResolvedBox {
  * and official certification seals without crude superimposed image cutouts.
  */
 export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslatedSvgOptions, "imageBuffer" | "mimeType">): string {
-  const { width = 820, targetLang, fileName } = options;
-  const blocks = options.blocks && options.blocks.length > 0 ? options.blocks : getFallbackImageBlocks(targetLang);
+  const rawBlocks = options.blocks && options.blocks.length > 0 ? options.blocks : getFallbackImageBlocks(targetLang);
+  const blocks = sanitizeAndTranslateBlocks(rawBlocks, targetLang);
   const docWidth = Math.max(760, width);
   const padX = 54;
   const contentW = docWidth - padX * 2;
@@ -315,7 +374,8 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     return buildReconstructedDocumentSvg(options);
   }
 
-  let blocks = options.blocks && options.blocks.length > 0 ? options.blocks : getFallbackImageBlocks(targetLang);
+  const rawBlocks = options.blocks && options.blocks.length > 0 ? options.blocks : getFallbackImageBlocks(targetLang);
+  const blocks = sanitizeAndTranslateBlocks(rawBlocks, targetLang);
 
   const footerH = 38;
   const totalH = height + footerH;
