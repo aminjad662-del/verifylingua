@@ -177,7 +177,7 @@ export async function GET(
       );
     }
 
-    let finalBytes: Uint8Array;
+    let finalBytes: Uint8Array = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
     let finalMime = mime;
     const isInline = url.searchParams.get("inline") === "true";
     let finalDisposition = `${isInline ? "inline" : "attachment"}; filename="${downloadFileName}"`;

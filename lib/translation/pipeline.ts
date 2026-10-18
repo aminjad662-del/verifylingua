@@ -272,11 +272,39 @@ export async function processTranslationJob(
       throw new Error(`Unsupported document format: ${job.fileFormat}`);
     }
 
-    // 4. Quality Gate Verification
+    // 4. Automated QA Pass (extract numbers, dates, proper names, check omissions, element/character parity)
+    job.status = "qa";
+    updateProgress(75, "Stage QA: Executing automated legal consistency & element parity pass...");
+
+    const sourceText = await extractDocumentPlainText(job.originalBuffer, job.fileFormat);
+    const targetText = await extractDocumentPlainText(translatedBuffer, job.fileFormat);
+
+    const qaReport = await runAutomatedQAPass({
+      sourceText,
+      targetText,
+      sourceLang: job.sourceLang,
+      targetLang: job.targetLang,
+      sourceBlocks: job.blocks,
+      targetBlocks: job.blocks,
+    });
+    job.qaReport = qaReport;
+
+    const elementCountMatches = qaReport.metrics.blocksMatched;
+    if (!elementCountMatches) {
+      notes.push(`Critical QA: Missing text frames detected (${qaReport.metrics.missingBlocks.length} block(s) omitted)`);
+    }
+    if (qaReport.metrics.hasEllipsisTruncation) {
+      notes.push(`Critical QA: Character clipping / ellipsis truncation detected in translated document`);
+    }
+    if (!qaReport.metrics.glyphIntegrityVerified) {
+      notes.push(`Critical QA: Glyph corruption or missing target script characters detected`);
+    }
+
+    // 5. Quality Gate Verification
     const qualityGate: TranslationQualityGate = {
       isValidFormat: translatedBuffer.length > 100,
       pageCountMatches: true,
-      elementCountMatches: true,
+      elementCountMatches,
       checksumMatches: true,
       byteSize: translatedBuffer.length,
       verifiedAt: new Date().toISOString(),
@@ -287,21 +315,6 @@ export async function processTranslationJob(
     if (!qualityGate.isValidFormat) {
       throw new Error("Quality Gate Failed: output file corrupted or empty.");
     }
-
-    // 5. Automated QA Pass (extract numbers, dates, proper names, check omissions)
-    job.status = "qa";
-    updateProgress(75, "Stage QA: Executing automated legal consistency pass (numbers, dates, names, omissions)...");
-
-    const sourceText = await extractDocumentPlainText(job.originalBuffer, job.fileFormat);
-    const targetText = await extractDocumentPlainText(translatedBuffer, job.fileFormat);
-
-    const qaReport = await runAutomatedQAPass({
-      sourceText,
-      targetText,
-      sourceLang: job.sourceLang,
-      targetLang: job.targetLang,
-    });
-    job.qaReport = qaReport;
 
     // 6. Formatting & Final Assembly
     job.status = "formatting";

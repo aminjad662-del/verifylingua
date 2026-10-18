@@ -1716,7 +1716,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
         let lines = [];
         let lineHeight = Math.max(11, Math.round(fs * 1.25));
 
-        for (let candidateFs = initialFs; candidateFs >= 7.5; candidateFs -= 0.5) {
+        for (let candidateFs = initialFs; candidateFs >= 6.5; candidateFs -= 0.5) {
           const maxChars = Math.max(8, Math.floor((b.width - 6) / (candidateFs * 0.52)));
           const words = b.rawText.split(/\s+/);
           const candidateLines = [];
@@ -1743,25 +1743,16 @@ async function handleApiRequest(request, pathname, env, ctx) {
           const candidateLh = Math.max(10, Math.round(candidateFs * 1.25));
           const totalTextH = candidateLines.length * candidateLh;
 
-          if (totalTextH <= maxAvailableH || candidateFs === 7.5) {
+          if (totalTextH <= maxAvailableH || candidateFs === 6.5) {
             fs = candidateFs;
             lineHeight = candidateLh;
             lines = candidateLines;
-            if (totalTextH > maxAvailableH) {
-              const maxLines = Math.max(1, Math.floor(maxAvailableH / candidateLh));
-              if (candidateLines.length > maxLines) {
-                lines = candidateLines.slice(0, maxLines);
-                if (lines.length > 0) {
-                  lines[lines.length - 1] = lines[lines.length - 1].replace(/\s+\S*$/, '') + '…';
-                }
-              }
-            }
             break;
           }
         }
 
         const renderedTextH = lines.length * lineHeight;
-        const effectiveBoxH = Math.min(maxAvailableH, Math.max(b.height, renderedTextH + 4));
+        const effectiveBoxH = Math.max(b.height, renderedTextH + 4);
 
         const padX = Math.max(5, Math.min(10, b.width * 0.02));
         const padY = Math.max(3, Math.min(8, b.height * 0.03));

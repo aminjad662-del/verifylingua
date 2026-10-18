@@ -257,6 +257,7 @@ interface ResolvedBox {
  * and official certification seals without crude superimposed image cutouts.
  */
 export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslatedSvgOptions, "imageBuffer" | "mimeType">): string {
+  const { targetLang = "es", fileName = "document.pdf", width = 800 } = options;
   const rawBlocks = options.blocks && options.blocks.length > 0 ? options.blocks : getFallbackImageBlocks(targetLang);
   const blocks = sanitizeAndTranslateBlocks(rawBlocks, targetLang);
   const docWidth = Math.max(760, width);
@@ -288,6 +289,11 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
   for (const b of blocks) {
     const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
     if (!rawText.trim()) continue;
+
+    const tier = b.font_size_tier || "body";
+    const isTitle = tier === "title";
+    const isHeading = tier === "heading" || isTitle;
+    const isQuestion = /^\d+[\.\)]/.test(rawText.trim());
 
     const isDocRtl = targetLang === "ar" || targetLang === "he" || /[\u0600-\u06FF]/.test(rawText);
     const textDir = isDocRtl ? 'direction="rtl" unicode-bidi="embed"' : '';
@@ -588,33 +594,23 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     let lines: string[] = [];
     let lineHeight = Math.max(11, Math.round(fs * 1.25));
 
-    // Iteratively search for the highest font size that fits without colliding into the next block
-    for (let candidateFs = initialFs; candidateFs >= 7.5; candidateFs -= 0.5) {
+    // Iteratively search for the optimal font size that accommodates all text without character clipping
+    for (let candidateFs = initialFs; candidateFs >= 6.5; candidateFs -= 0.5) {
       const charsPerLine = Math.max(8, Math.floor((b.boxW - 6) / (candidateFs * 0.52)));
       const candidateLines = wrapTextToLines(b.rawText, charsPerLine);
       const candidateLh = Math.max(10, Math.round(candidateFs * 1.25));
       const totalTextH = candidateLines.length * candidateLh;
 
-      if (totalTextH <= maxAvailableH || candidateFs === 7.5) {
+      if (totalTextH <= maxAvailableH || candidateFs === 6.5) {
         fs = candidateFs;
         lineHeight = candidateLh;
         lines = candidateLines;
-        // If even at 7.5px it exceeds maxAvailableH, clamp lines to prevent overlapping
-        if (totalTextH > maxAvailableH) {
-          const maxLines = Math.max(1, Math.floor(maxAvailableH / candidateLh));
-          if (candidateLines.length > maxLines) {
-            lines = candidateLines.slice(0, maxLines);
-            if (lines.length > 0) {
-              lines[lines.length - 1] = lines[lines.length - 1].replace(/\s+\S*$/, "") + "…";
-            }
-          }
-        }
         break;
       }
     }
 
     const renderedTextH = lines.length * lineHeight;
-    const effectiveBoxH = Math.min(maxAvailableH, Math.max(b.boxH, renderedTextH + 4));
+    const effectiveBoxH = Math.max(b.boxH, renderedTextH + 4);
 
     // Inpainting mask with 100% opaque solid white to prevent any underlying text bleed
     const padX = Math.max(5, Math.min(10, b.boxW * 0.02));

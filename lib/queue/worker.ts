@@ -186,7 +186,7 @@ export async function executeBackgroundTranslationJob(jobId: string): Promise<vo
           originalBuffer: fileBuffer,
           userId,
           pageCount,
-          options: { serviceTier: (memJob?.serviceTier as any) || "automated", format: sourceFormat },
+          options: { serviceTier: "automated", format: sourceFormat },
         });
 
       const updated = await processTranslationJob(activeJob, {

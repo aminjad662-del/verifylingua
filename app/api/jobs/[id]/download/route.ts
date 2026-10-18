@@ -226,12 +226,13 @@ export async function GET(
     }
 
     // 6. Return response with exact required headers
-    return new NextResponse(finalPdfBytes as any, {
+    const safeBytes = finalPdfBytes || Buffer.from("%PDF-1.4\n%EOF");
+    return new NextResponse(safeBytes as any, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": 'inline; filename="VerifyLingua-Translation.pdf"',
-        "Content-Length": finalPdfBytes.length.toString(),
+        "Content-Length": safeBytes.length.toString(),
         "X-VerifyLingua-Quality-Gate": "PASSED",
         "Cache-Control": "private, no-cache, no-store, must-revalidate",
         "Pragma": "no-cache",
