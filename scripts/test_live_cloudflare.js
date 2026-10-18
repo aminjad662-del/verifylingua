@@ -19,6 +19,23 @@ const { chromium } = require('playwright');
     console.error('[Browser Uncaught Error]:', err);
   });
 
+  page.on('request', req => {
+    if (req.url().includes('/api/')) console.log('[Network Request]:', req.method(), req.url());
+  });
+  page.on('response', async res => {
+    if (res.url().includes('/api/')) {
+      console.log('[Network Response]:', res.status(), res.url());
+      if (res.status() >= 400) {
+        try {
+          console.log('[Network Response Error Body]:', await res.text());
+        } catch {}
+      }
+    }
+  });
+  page.on('requestfailed', req => {
+    console.log('[Network Request Failed]:', req.method(), req.url(), req.failure()?.errorText);
+  });
+
   try {
     console.log('Navigating to https://verifylingua.pages.dev/translate ...');
     await page.goto('https://verifylingua.pages.dev/translate', { waitUntil: 'networkidle', timeout: 30000 });
@@ -54,11 +71,11 @@ const { chromium } = require('playwright');
     await translateBtn.click();
     console.log('Clicked translation button. Waiting for translation pipeline to complete...');
 
-    // Wait up to 30 seconds for completion
+    // Wait up to 90 seconds for completion
     await page.waitForFunction(() => {
       const text = document.body.innerText;
       return text.includes('Translation Complete') || text.includes('100% Fidelity') || text.includes('VERIFYLINGUA CERTIFIED TRANSLATION');
-    }, { timeout: 35000 });
+    }, null, { timeout: 90000 });
 
     console.log('Translation completed successfully!');
     await page.waitForTimeout(2000);
@@ -91,6 +108,15 @@ const { chromium } = require('playwright');
     const overlayShot = path.join(artifactDir, 'verified_live_overlay_view.png');
     await page.screenshot({ path: overlayShot, fullPage: false });
     console.log('Saved Visual Overlay view to:', overlayShot);
+
+    // 4. Capture QA Audit View
+    console.log('Capturing QA Audit view...');
+    const qaTabBtn = await page.$('button:has-text("QA Audit")');
+    if (qaTabBtn) await qaTabBtn.click();
+    await page.waitForTimeout(1000);
+    const qaShot = path.join(artifactDir, 'verified_live_qa_audit_view.png');
+    await page.screenshot({ path: qaShot, fullPage: false });
+    console.log('Saved QA Audit view to:', qaShot);
 
     console.log('🎉 Live verification screenshots captured successfully!');
   } catch (error) {
