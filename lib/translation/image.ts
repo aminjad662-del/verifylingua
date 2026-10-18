@@ -336,14 +336,10 @@ export async function translateImage(
       lineHeight = 8 * scale + 2;
     }
 
-    // Clamp lines so text never exceeds available clearance
-    if (lines.length * lineHeight > availableH) {
-      const maxLines = Math.max(1, Math.floor(availableH / lineHeight));
-      lines = lines.slice(0, maxLines);
-    }
-
+    // Ensure all wrapped lines are preserved without character or sentence dropping
     const renderedHeight = Math.max(block.height, lines.length * lineHeight + 2);
-    const maskHeight = Math.min(maxBottom - Math.max(0, block.y - 2), renderedHeight + 4);
+    const effectiveBottom = Math.max(maxBottom, block.y + renderedHeight);
+    const maskHeight = Math.min(height - Math.max(0, block.y - 2) - 10, renderedHeight + 4);
 
     // Localized inpainting: mask the original text bounding box cleanly
     fillRect(
@@ -360,7 +356,7 @@ export async function translateImage(
       const linePixelWidth = lineText.length * 6 * scale;
       const curY = block.y + lIdx * lineHeight;
 
-      if (curY + lineHeight > maxBottom) break; // Don't overflow into next block or footer
+      if (curY + lineHeight > height - 10) break; // Only stop at physical canvas boundary
 
       // RTL right-alignment vs standard left-alignment
       let curX = block.x;
