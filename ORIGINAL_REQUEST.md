@@ -42,3 +42,60 @@ References:
 - [ ] All 52 Vitest test files and 325 existing automated tests pass with 100% green.
 - [ ] npx tsc --noEmit compiles with 0 errors.
 - [ ] Production build succeeds and deploys cleanly to Cloudflare Pages (verifylingua.pages.dev).
+
+
+## Follow-up — 2026-10-20T08:39:39Z
+
+# Teamwork Project Prompt
+
+> Requested team: Full team [specialized in Computer Vision, Inpainting, PDF Content Streams, and Typography Engine]
+
+Architect and build a dual-pipeline document translation and layout reconstruction system: (1) an OpenCV/LaMa stroke-segmentation and inpainting pipeline with median-ink sampling and paper-texture blend for scanned documents and images; and (2) a PyMuPDF (`fitz`) native vector content-stream manipulation pipeline with text operator removal and non-destructive coordinate re-insertion for vector PDFs.
+
+Working directory: `C:\Users\aminj\Downloads\SAAS 7`
+Integrity mode: development
+
+## Requirements
+
+### R1. Scanned Documents & Images: Stroke Segmentation Mask & Fast Inpainting
+For scanned documents and bitmap images, completely eradicate "white rectangle" bounding box masks. Extract bounding boxes from OCR, crop the localized text region, and apply Adaptive Thresholding (`cv2.adaptiveThreshold`) or Otsu's Binarization (`cv2.threshold`) to isolate only the character stroke pixels. Dilate the stroke mask by 2–3 pixels (`cv2.dilate`) to cover character edges and anti-aliasing. Feed the dilated stroke mask into an inpainting engine:
+- For standard scanned documents and single-color paper backgrounds, run `cv2.inpaint` with `INPAINT_TELEA` (<10ms execution, zero GPU requirement).
+- For complex textures, official certificates, stamps, seals, and decorative lines, provide a pluggable LaMa (Large Mask Inpainting) ONNX pipeline that fills text regions using surrounding texture without destroying underlying graphic elements.
+
+### R2. Scanned Documents & Images: True Ink Extraction & Font Topology Matching
+Extract authentic visual styles from the scanned source text:
+- Determine ink color by calculating the median RGB value of pixels strictly within the character stroke mask (capturing scanned paper nuances, dark gray tones, and pen ink tints rather than hardcoded `#000000`).
+- Extract font attributes (font size from line height / ascender-descender metrics; classify Serif, Sans-Serif, Monospace, Script, Bold, Italic) and map to an authentic target language typography match (e.g., Times New Roman -> Amiri, Arial/Inter -> Cairo/Noto Sans).
+
+### R3. Scanned Documents & Images: Paper Texture Realism & Blend Integration
+Render translated text with realistic document integration using Pillow / Skia / HarfBuzz:
+- Dynamically auto-scale font size and letter spacing to guarantee the translated text remains strictly within original bounding box clearance.
+- Apply a subtle Gaussian blur ($\sigma \in [0.4, 0.6]$) and composite the rendered text onto the reconstructed background using the "Multiply" blend mode, ensuring translated characters inherit the paper grain, texture, and tonal fidelity of the original scanned document.
+
+### R4. Native Vector PDFs: Stream Manipulation & Zero White Patch Redaction
+For native (vector-based) PDF documents generated from digital sources (Word, InDesign), strictly prohibit rasterization or image conversion:
+- Parse the document with PyMuPDF (`fitz`), utilizing `page.get_text("dict")` to extract complete span hierarchies: text, bounding box coordinates (`bbox`), font name, font size, font flags, and RGB color.
+- Remove source text without leaving white patches by stripping text operators (`Tj` / `TJ`) from the page content streams, or by applying `page.apply_redactions(graphics=0, images=0)` with `fill=None`, preserving 100% of underlying vector tables, gridlines, shapes, background tints, and embedded images.
+
+### R5. Native Vector PDFs: Non-Destructive Coordinate Re-insertion
+Re-insert translated text at the exact original spatial coordinates using PyMuPDF `page.insert_htmlbox()` or `page.insert_textbox()`:
+- Use corresponding fonts matching the target language (handling Arabic BiDi shaping with `arabic-reshaper`, `python-bidi`, and `uharfbuzz`).
+- Maintain exact reading order, margin alignment, line wrapping, and vector resolution.
+
+## Acceptance Criteria
+
+### Scanned Documents & Inpainting Pipeline
+- [ ] Stroke segmentation mask isolates character strokes with Adaptive Thresholding/Otsu and 2–3px dilation rather than masking full rectangular bounding boxes.
+- [ ] `cv2.inpaint(..., cv2.INPAINT_TELEA)` reconstructs standard document backgrounds with zero white box artifacts in under 20ms.
+- [ ] Median RGB calculation samples true ink color from stroke pixels and applies it to rendered text.
+- [ ] Rendered text incorporates Gaussian blur ($\sigma = 0.4\text{--}0.6$) and Multiply blend mode to blend seamlessly into paper grain.
+
+### Native Vector PDF Pipeline
+- [ ] Native vector PDFs remain 100% vector without rasterizing pages to bitmap images.
+- [ ] PyMuPDF extracts full span dictionary (`dict`) with exact font metadata, sizes, colors, and coordinates.
+- [ ] Source text is removed via `fill=None` redactions or content stream operator modification without altering underlying vector lines, borders, or graphics.
+- [ ] Translated text is inserted via `insert_htmlbox` / `insert_textbox` at matching coordinates with target-language font support.
+
+### System Verification & Integration
+- [ ] Both pipelines exposed through clean, testable service interfaces in the application.
+- [ ] Full regression test suite passes with automated verification tests for both scanned inpainting and vector PDF stream editing.
