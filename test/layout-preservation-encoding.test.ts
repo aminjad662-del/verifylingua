@@ -113,7 +113,7 @@ describe("Layout Preservation & Character Encoding Engine", () => {
     expect(svg).toContain('viewBox="0 0 1024 1062"');
     expect(svg).toContain('preserveAspectRatio="none"');
     expect(svg).toContain('fill="#ffffff"');
-    expect(svg).toContain("height: 100%");
+    expect(svg).toContain('height="100%"');
     expect(svg).toContain('y="1024"');
   });
 });

@@ -306,6 +306,20 @@ export async function translateImage(
   const colorGrayText = 0x475569ff;
   const colorMaskBg = 0xffffffff;
 
+  const hexToRgbaInt = (hex?: string, defaultColor: number = colorMaskBg): number => {
+    if (!hex || typeof hex !== "string") return defaultColor;
+    const clean = hex.replace("#", "").trim();
+    if (clean.length === 6) {
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+        return ((r << 24) | (g << 16) | (b << 8) | 0xff) >>> 0;
+      }
+    }
+    return defaultColor;
+  };
+
   // Sort blocks by y coordinate for collision prevention
   const sortedBlocks = [...blocks].sort((a, b) => a.y - b.y);
 
@@ -341,14 +355,17 @@ export async function translateImage(
     const effectiveBottom = Math.max(maxBottom, block.y + renderedHeight);
     const maskHeight = Math.min(height - Math.max(0, block.y - 2) - 10, renderedHeight + 4);
 
-    // Localized inpainting: mask the original text bounding box cleanly
+    // Localized inpainting: mask the original text bounding box cleanly with sampled color
+    const blockBg = (block as any).bg_color || (block as any).bgColor || (block as any).background_color;
+    const resolvedMaskColor = hexToRgbaInt(blockBg, colorMaskBg);
+
     fillRect(
       img,
       Math.max(0, block.x - 3),
       Math.max(0, block.y - 2),
       Math.min(block.width + 6, width - block.x),
       maskHeight,
-      colorMaskBg
+      resolvedMaskColor
     );
 
     for (let lIdx = 0; lIdx < lines.length; lIdx++) {

@@ -353,6 +353,8 @@ interface ResolvedBox {
   rawText: string;
   tier: string;
   align: "left" | "center" | "right";
+  bg_color?: string;
+  text_color?: string;
 }
 
 /**
@@ -662,6 +664,8 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
       rawText,
       tier: b.font_size_tier || "body",
       align: b.align || "left",
+      bg_color: (b as any).bg_color || (b as any).bgColor || (b as any).background_color,
+      text_color: (b as any).text_color || (b as any).textColor || (b as any).color,
     });
   }
 
@@ -690,27 +694,38 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     const maxAllowedBottom = nextBlock ? nextBlock.top : height - 8;
     const maxAvailableH = Math.max(16, maxAllowedBottom - b.top);
 
-    // Dynamic typography scaling & fitting loop
+    // Dynamic typography scaling & fitting loop (budgeted per line)
+    const explicitLines = b.rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    const estimatedLineCount = Math.max(1, explicitLines.length);
+    const maxLineH = Math.max(8, Math.floor((b.boxH * 0.88) / estimatedLineCount));
+
     let initialFs = isTitle
-      ? Math.min(24, Math.max(14, Math.floor(b.boxH * 0.70)))
+      ? Math.min(24, Math.max(12, Math.min(Math.floor(b.boxH * 0.70), maxLineH)))
       : b.tier === "heading"
-      ? Math.min(16, Math.max(12, Math.floor(b.boxH * 0.62)))
+      ? Math.min(16, Math.max(10, Math.min(Math.floor(b.boxH * 0.62), maxLineH)))
       : b.tier === "caption"
-      ? Math.min(11, Math.max(8, Math.floor(b.boxH * 0.50)))
-      : Math.min(13.5, Math.max(9.5, Math.floor(b.boxH * 0.56)));
+      ? Math.min(11, Math.max(7, Math.min(Math.floor(b.boxH * 0.50), maxLineH)))
+      : Math.min(13.5, Math.max(8, Math.min(Math.floor(b.boxH * 0.56), maxLineH)));
 
     let fs = initialFs;
     let lines: string[] = [];
-    let lineHeight = Math.max(11, Math.round(fs * 1.25));
+    let lineHeight = Math.max(9, Math.round(fs * 1.25));
 
-    // Iteratively search for the optimal font size that accommodates all text without character clipping
-    for (let candidateFs = initialFs; candidateFs >= 6.5; candidateFs -= 0.5) {
-      const charsPerLine = Math.max(8, Math.floor((b.boxW - 6) / (candidateFs * 0.52)));
-      const candidateLines = wrapTextToLines(b.rawText, charsPerLine);
-      const candidateLh = Math.max(10, Math.round(candidateFs * 1.25));
+    // Iteratively search for optimal font size so all wrapped lines fit strictly within available height
+    for (let candidateFs = initialFs; candidateFs >= 6.0; candidateFs -= 0.5) {
+      const charsPerLine = Math.max(6, Math.floor((b.boxW - 6) / (candidateFs * 0.52)));
+      let candidateLines: string[] = [];
+      if (explicitLines.length > 1) {
+        for (const expL of explicitLines) {
+          candidateLines.push(...wrapTextToLines(expL, charsPerLine));
+        }
+      } else {
+        candidateLines = wrapTextToLines(b.rawText, charsPerLine);
+      }
+      const candidateLh = Math.max(8, Math.round(candidateFs * 1.25));
       const totalTextH = candidateLines.length * candidateLh;
 
-      if (totalTextH <= maxAvailableH || candidateFs === 6.5) {
+      if (totalTextH <= maxAvailableH || candidateFs === 6.0) {
         fs = candidateFs;
         lineHeight = candidateLh;
         lines = candidateLines;
@@ -721,21 +736,18 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     const renderedTextH = lines.length * lineHeight;
     const effectiveBoxH = Math.max(b.boxH, renderedTextH + 4);
 
-    // Inpainting mask with 100% opaque solid white to prevent any underlying text bleed
-    const padX = Math.max(5, Math.min(10, b.boxW * 0.02));
-    const padY = Math.max(3, Math.min(8, b.boxH * 0.03));
+    // Inpainting mask with sampled background color to eliminate stark white block clashes
+    const padX = Math.max(4, Math.min(8, b.boxW * 0.02));
+    const padY = Math.max(2, Math.min(6, b.boxH * 0.03));
     const maskX = Math.max(0, b.left - padX);
     const maskY = Math.max(0, b.top - padY);
     let maskW = Math.min(width - maskX, b.boxW + padX * 2);
     const maskH = Math.min(maxAllowedBottom - maskY, Math.max(b.boxH + padY * 2, effectiveBoxH + padY * 2));
 
-    // Illustration collision guard:
-    // Illustration bounds: top = 205, bottom = 472, left = 438 (normalized x=568)
+    // Illustration collision guard
     const illusTop = (205 * height) / 1000;
     const illusBottom = (472 * height) / 1000;
     const illusLeft = (568 * width) / 1000;
-
-    // Only clamp if block vertically overlaps the illustration band AND starts in the left column
     if (b.top < illusBottom && (b.top + b.boxH) > illusTop && maskX < illusLeft) {
       if ((maskX + maskW) > illusLeft) {
         maskW = Math.max(0, illusLeft - maskX);
@@ -747,14 +759,15 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     svgParts.push(
       `  <defs>`,
       `    <clipPath id="${clipId}">`,
-      `      <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" />`,
+      `      <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" rx="2" ry="2" />`,
       `    </clipPath>`,
       `  </defs>`
     );
 
-    // 100% Opaque Solid Inpainting Mask - seamless background inpainting without visible borders
+    // Seamless background inpainting with sampled background color
+    const fillColor = b.bg_color || "#ffffff";
     svgParts.push(
-      `  <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" fill="#ffffff" stroke="none" />`
+      `  <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" fill="${fillColor}" stroke="none" rx="2" ry="2" />`
     );
 
     // Text Alignment calculations
@@ -763,43 +776,30 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
       ? (b.align === "center" ? "center" : "right")
       : (b.align === "center" ? "center" : b.align === "right" ? "right" : "left");
     let textAnchor = isBlockRtl ? "end" : "start";
-    let textStartX = isBlockRtl ? (maskX + maskW - 8) : (maskX + 8);
+    let textStartX = isBlockRtl ? (maskX + maskW - 6) : (maskX + 6);
     if (b.align === "center") {
       textAnchor = "middle";
       textStartX = maskX + maskW / 2;
     } else if (textAlign === "right") {
       textAnchor = "end";
-      textStartX = maskX + maskW - 8;
+      textStartX = maskX + maskW - 6;
     }
 
     const verticalPadding = Math.max(1, (maskH - renderedTextH) / 2);
-    const textStartY = maskY + verticalPadding + fs * 0.9;
+    const textStartY = maskY + verticalPadding + fs * 0.88;
+    const textColor = b.text_color || (isTitle ? "#0f172a" : "#1e293b");
 
-    // Dual-Rendered Typography wrapped in SVG <switch> and bounded by clipPath
+    // Robust Direct Single-Path Vector SVG Typography (No <switch> or <foreignObject> collisions)
     svgParts.push(`  <g clip-path="url(#${clipId})">`);
-    svgParts.push(`    <switch>`);
     svgParts.push(
-      `      <foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}">`
-    );
-    svgParts.push(
-      `        <div xmlns="http://www.w3.org/1999/xhtml" dir="${isBlockRtl ? "rtl" : "ltr"}" style="box-sizing: border-box; width: 100%; height: 100%; padding: 2px 8px; display: flex; flex-direction: column; justify-content: center; font-family: 'Noto Sans Arabic', 'Segoe UI', Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ${fs}px; font-weight: ${fw}; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ${textAlign}; direction: ${isBlockRtl ? "rtl" : "ltr"};">`
-    );
-    svgParts.push(`          ${escapeXml(b.rawText)}`);
-    svgParts.push(`        </div>`);
-    svgParts.push(`      </foreignObject>`);
-    svgParts.push(
-      `      <text x="${textStartX.toFixed(1)}" y="${textStartY.toFixed(1)}" font-family="'Noto Sans Arabic', 'Segoe UI', Calibri, Arial, sans-serif" font-size="${fs}" font-weight="${fw}" fill="#0f172a" text-anchor="${textAnchor}" direction="${isBlockRtl ? "rtl" : "ltr"}" unicode-bidi="embed">`
+      `    <text font-family="'Noto Sans Arabic', 'Segoe UI', Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="${fs}" font-weight="${fw}" fill="${textColor}" text-anchor="${textAnchor}" direction="${isBlockRtl ? "rtl" : "ltr"}" unicode-bidi="embed">`
     );
     lines.forEach((line, lineIdx) => {
       const escapedLine = escapeXml(line);
-      if (lineIdx === 0) {
-        svgParts.push(`        <tspan x="${textStartX.toFixed(1)}" y="${textStartY.toFixed(1)}">${escapedLine}</tspan>`);
-      } else {
-        svgParts.push(`        <tspan x="${textStartX.toFixed(1)}" dy="${lineHeight.toFixed(1)}">${escapedLine}</tspan>`);
-      }
+      const lineY = textStartY + lineIdx * lineHeight;
+      svgParts.push(`      <tspan x="${textStartX.toFixed(1)}" y="${lineY.toFixed(1)}">${escapedLine}</tspan>`);
     });
-    svgParts.push(`      </text>`);
-    svgParts.push(`    </switch>`);
+    svgParts.push(`    </text>`);
     svgParts.push(`  </g>`);
   }
 

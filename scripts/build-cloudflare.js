@@ -1792,7 +1792,9 @@ async function handleApiRequest(request, pathname, env, ctx) {
           height,
           rawText,
           tier: b.font_size_tier || 'body',
-          align: b.align || 'left'
+          align: b.align || 'left',
+          bg_color: b.bg_color || b.bgColor || b.background_color,
+          text_color: b.text_color || b.textColor || b.color
         });
       }
 
@@ -1810,46 +1812,78 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const isHeading = b.tier === 'heading' || isTitle;
         const fw = isHeading ? 'bold' : 'normal';
 
+        const explicitLines = b.rawText.split(String.fromCharCode(10)).map(function(l) { return l.replace(String.fromCharCode(13), "").trim(); }).filter(Boolean);
+        const estimatedLineCount = Math.max(1, explicitLines.length);
+        const maxLineH = Math.max(8, Math.floor((b.height * 0.88) / estimatedLineCount));
+
         let initialFs = isTitle
-          ? Math.min(24, Math.max(14, Math.floor(b.height * 0.70)))
+          ? Math.min(24, Math.max(12, Math.min(Math.floor(b.height * 0.70), maxLineH)))
           : b.tier === 'heading'
-          ? Math.min(16, Math.max(12, Math.floor(b.height * 0.62)))
+          ? Math.min(16, Math.max(10, Math.min(Math.floor(b.height * 0.62), maxLineH)))
           : b.tier === 'caption'
-          ? Math.min(11, Math.max(8, Math.floor(b.height * 0.50)))
-          : Math.min(13.5, Math.max(9.5, Math.floor(b.height * 0.56)));
+          ? Math.min(11, Math.max(7, Math.min(Math.floor(b.height * 0.50), maxLineH)))
+          : Math.min(13.5, Math.max(8, Math.min(Math.floor(b.height * 0.56), maxLineH)));
 
         let fs = initialFs;
         let lines = [];
-        let lineHeight = Math.max(11, Math.round(fs * 1.25));
+        let lineHeight = Math.max(9, Math.round(fs * 1.25));
 
-        for (let candidateFs = initialFs; candidateFs >= 6.5; candidateFs -= 0.5) {
-          const maxChars = Math.max(8, Math.floor((b.width - 6) / (candidateFs * 0.52)));
-          const words = b.rawText.split(/\s+/);
-          const candidateLines = [];
-          let currentLine = '';
-          for (const word of words) {
-            if ((currentLine + ' ' + word).trim().length <= maxChars) {
-              currentLine = (currentLine + ' ' + word).trim();
-            } else {
-              if (currentLine) candidateLines.push(currentLine);
-              if (word.length > maxChars) {
-                let remaining = word;
-                while (remaining.length > maxChars) {
-                  candidateLines.push(remaining.slice(0, maxChars - 1) + '-');
-                  remaining = remaining.slice(maxChars - 1);
+        for (let candidateFs = initialFs; candidateFs >= 6.0; candidateFs -= 0.5) {
+          const maxChars = Math.max(6, Math.floor((b.width - 6) / (candidateFs * 0.52)));
+          let candidateLines = [];
+          if (explicitLines.length > 1) {
+            for (let li = 0; li < explicitLines.length; li++) {
+              const expL = explicitLines[li];
+              const words = expL.trim().split(' ').filter(Boolean);
+              let curL = '';
+              for (let wi = 0; wi < words.length; wi++) {
+                const w = words[wi];
+                if ((curL + ' ' + w).trim().length <= maxChars) {
+                  curL = (curL + ' ' + w).trim();
+                } else {
+                  if (curL) candidateLines.push(curL);
+                  if (w.length > maxChars) {
+                    let rem = w;
+                    while (rem.length > maxChars) {
+                      candidateLines.push(rem.slice(0, maxChars - 1) + '-');
+                      rem = rem.slice(maxChars - 1);
+                    }
+                    curL = rem;
+                  } else {
+                    curL = w;
+                  }
                 }
-                currentLine = remaining;
+              }
+              if (curL) candidateLines.push(curL);
+            }
+          } else {
+            const words = b.rawText.trim().split(' ').filter(Boolean);
+            let curL = '';
+            for (let wi = 0; wi < words.length; wi++) {
+              const w = words[wi];
+              if ((curL + ' ' + w).trim().length <= maxChars) {
+                curL = (curL + ' ' + w).trim();
               } else {
-                currentLine = word;
+                if (curL) candidateLines.push(curL);
+                if (w.length > maxChars) {
+                  let rem = w;
+                  while (rem.length > maxChars) {
+                    candidateLines.push(rem.slice(0, maxChars - 1) + '-');
+                    rem = rem.slice(maxChars - 1);
+                  }
+                  curL = rem;
+                } else {
+                  curL = w;
+                }
               }
             }
+            if (curL) candidateLines.push(curL);
           }
-          if (currentLine) candidateLines.push(currentLine);
 
-          const candidateLh = Math.max(10, Math.round(candidateFs * 1.25));
+          const candidateLh = Math.max(8, Math.round(candidateFs * 1.25));
           const totalTextH = candidateLines.length * candidateLh;
 
-          if (totalTextH <= maxAvailableH || candidateFs === 6.5) {
+          if (totalTextH <= maxAvailableH || candidateFs === 6.0) {
             fs = candidateFs;
             lineHeight = candidateLh;
             lines = candidateLines;
@@ -1860,8 +1894,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const renderedTextH = lines.length * lineHeight;
         const effectiveBoxH = Math.max(b.height, renderedTextH + 4);
 
-        const padX = Math.max(5, Math.min(10, b.width * 0.02));
-        const padY = Math.max(3, Math.min(8, b.height * 0.03));
+        const padX = Math.max(4, Math.min(8, b.width * 0.02));
+        const padY = Math.max(2, Math.min(6, b.height * 0.03));
         const maskX = Math.max(0, b.left - padX);
         const maskY = Math.max(0, b.top - padY);
         let maskW = Math.min(w - maskX, b.width + padX * 2);
@@ -1883,50 +1917,41 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const clipId = 'clip-cf-' + idx;
         svgParts.push('  <defs>');
         svgParts.push('    <clipPath id="' + clipId + '">');
-        svgParts.push('      <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" />');
+        svgParts.push('      <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" rx="2" ry="2" />');
         svgParts.push('    </clipPath>');
         svgParts.push('  </defs>');
 
-        // 100% opaque solid white inpainting mask to completely block underlying source text without borders
+        // Seamless local background inpainting mask
         const fillColor = (b.bg_color || b.bgColor || b.background_color || '#ffffff');
-        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" fill="' + fillColor + '" stroke="none" />');
+        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" fill="' + fillColor + '" stroke="none" rx="2" ry="2" />');
 
         const isBlockRtl = job.targetLang === 'ar' || job.targetLang === 'he' || /[\u0600-\u06FF]/.test(b.rawText);
         const textAlign = isBlockRtl
           ? (b.align === 'center' ? 'center' : 'right')
           : (b.align === 'center' ? 'center' : b.align === 'right' ? 'right' : 'left');
         let textAnchor = isBlockRtl ? 'end' : 'start';
-        let textStartX = isBlockRtl ? (maskX + maskW - 8) : (maskX + 8);
+        let textStartX = isBlockRtl ? (maskX + maskW - 6) : (maskX + 6);
         if (b.align === 'center') {
           textAnchor = 'middle';
           textStartX = maskX + maskW / 2;
         } else if (textAlign === 'right') {
           textAnchor = 'end';
-          textStartX = maskX + maskW - 8;
+          textStartX = maskX + maskW - 6;
         }
 
         const verticalPadding = Math.max(1, (maskH - renderedTextH) / 2);
-        const textStartY = maskY + verticalPadding + fs * 0.9;
-        const textEscaped = b.rawText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const textStartY = maskY + verticalPadding + fs * 0.88;
+        const textColor = b.text_color || (isTitle ? '#0f172a' : '#1e293b');
 
+        // Robust Single-Path Vector SVG Typography (Zero <switch> or <foreignObject> dual-render conflicts)
         svgParts.push('  <g clip-path="url(#' + clipId + ')">');
-        svgParts.push('    <switch>');
-        svgParts.push('      <foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '">');
-        svgParts.push('        <div xmlns="http://www.w3.org/1999/xhtml" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" style="box-sizing: border-box; width: 100%; height: 100%; padding: 2px 8px; display: flex; flex-direction: column; justify-content: center; font-family: &quot;Noto Sans Arabic&quot;, &quot;Segoe UI&quot;, Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: ' + fs + 'px; font-weight: ' + fw + '; color: #0f172a; line-height: 1.25; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; text-align: ' + textAlign + '; direction: ' + (isBlockRtl ? 'rtl' : 'ltr') + ';">');
-        svgParts.push('          ' + textEscaped);
-        svgParts.push('        </div>');
-        svgParts.push('      </foreignObject>');
-        svgParts.push('      <text x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '" font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="#0f172a" text-anchor="' + textAnchor + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
+        svgParts.push('    <text font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="' + textColor + '" text-anchor="' + textAnchor + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
         lines.forEach((line, lineIdx) => {
           const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          if (lineIdx === 0) {
-            svgParts.push('        <tspan x="' + textStartX.toFixed(1) + '" y="' + textStartY.toFixed(1) + '">' + escapedLine + '</tspan>');
-          } else {
-            svgParts.push('        <tspan x="' + textStartX.toFixed(1) + '" dy="' + lineHeight.toFixed(1) + '">' + escapedLine + '</tspan>');
-          }
+          const lineY = textStartY + lineIdx * lineHeight;
+          svgParts.push('      <tspan x="' + textStartX.toFixed(1) + '" y="' + lineY.toFixed(1) + '">' + escapedLine + '</tspan>');
         });
-        svgParts.push('      </text>');
-        svgParts.push('    </switch>');
+        svgParts.push('    </text>');
         svgParts.push('  </g>');
       }
 
@@ -2078,20 +2103,24 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const targetName = langNames[targetLang.toLowerCase()] || targetLang;
         const sourceName = langNames[sourceLang.toLowerCase()] || sourceLang;
 
-        const prompt = 'You are an expert document OCR and layout preservation translation engine.\\n' +
+        const prompt = 'You are an expert document OCR, inpainting, and layout preservation translation engine.\\n' +
           'Analyze this document. Identify and extract 100% OF EVERY TEXT ELEMENT with ZERO OMISSIONS (titles, headings, narrative paragraphs, reading story lines, table cells, labels, questions, headers, footers).\\n' +
           'It is strictly prohibited to omit, summarize, truncate, or drop any paragraphs or sentences. Extract every single paragraph from start to finish in reading order.\\n' +
-          'MANDATORY: ZERO SOURCE-LANGUAGE OMISSIONS. Every single text element in the document MUST be fully translated into ' + targetName + '. Even copyright notices, URLs, website footers, and brand attributions MUST be translated into ' + targetName + ' (e.g. "© HaveFunTeaching.com" MUST be translated into ' + targetName + ', e.g. in Arabic: "© جميع الحقوق محفوظة لـ هاف فن تيتشنغ", in Spanish: "© Todos los derechos reservados - HaveFunTeaching"). Strictly prohibited to leave any English or source language characters visible in translated_text.\\n' +
+          'MANDATORY: ZERO SOURCE-LANGUAGE OMISSIONS. Every single text element in the document MUST be fully translated into ' + targetName + '. Even copyright notices, URLs, website footers, and brand attributions MUST be translated into ' + targetName + '.\\n' +
+          'CRITICAL OFFICIAL DOCUMENT SEGMENTATION:\\n' +
+          'On official documents, identification cards, passports, and forms, strictly separate field labels (e.g., "COGNOME / SURNAME", "NOME / FORENAME", "LUOGO E DATA DI NASCITA / PLACE AND DATE OF BIRTH") from personal data values (e.g., "DE PRISCO", "FRANCESCO", "NAPOLI (NA) 18.08.1970"). NEVER merge labels and personal values into a single block! Each label and each value must have its own separate, tight sub-pixel box_2d.\\n' +
+          'SOVEREIGN HEADERS: Fully translate sovereign headers (e.g. "REPUBBLICA ITALIANA / MINISTERO DELL\\\'INTERNO / CARTA DI IDENTITÀ") into ' + targetName + ', separating each line into its own centered block.\\n' +
           'For each block:\\n' +
-          '1. "box_2d": [ymin, xmin, ymax, xmax] coordinates normalized from 0 to 1000. It is CRITICAL that box_2d completely bounds ALL original text in the block from the leftmost character to the rightmost character and top to bottom, leaving zero characters unmasked.\\n' +
+          '1. "box_2d": [ymin, xmin, ymax, xmax] coordinates normalized from 0 to 1000. It is CRITICAL that box_2d completely bounds ALL original text in the block from the leftmost character to the rightmost character and top to bottom.\\n' +
           '2. "original_text": verbatim source text.\\n' +
-          '3. "translated_text": faithful, natural translation into ' + targetName + '. Preserve all proper nouns, numbers, dates, punctuation, and all international accents and diacritical marks (e.g., in Spanish: á, é, í, ó, ú, ñ, ¿, ¡; in French: é, è, ê, à, ç, etc.; in Arabic: correct natural Arabic phrasing). ZERO English words permitted.\\n' +
-          '4. "font_size_tier": "title" | "heading" | "body" | "caption"\\n' +
-          '5. "align": "left" | "center" | "right"\\n\\n' +
+          '3. "translated_text": faithful, natural translation into ' + targetName + '. Preserve all proper nouns, numbers, dates, punctuation, and all international accents and diacritical marks. For personal data values (names, dates, ID serials), preserve the authentic personal value verbatim.\\n' +
+          '4. "bg_color": sample and return the exact dominant local background hex color immediately behind/around this text block (e.g. "#b8dbe8" for Italian ID card light cyan/blue, "#f5f0eb" for parchment/certificates, "#ffffff" for white paper). NEVER return "#ffffff" if the document background is colored or textured!\\n' +
+          '5. "text_color": dominant text color as hex (e.g. "#0f172a" or "#1a1a1a").\\n' +
+          '6. "font_size_tier": "title" | "heading" | "body" | "caption"\\n' +
+          '7. "align": "left" | "center" | "right"\\n\\n' +
           'If a paragraph wraps around an illustration or has varying line widths, separate it into individual distinct rectangular blocks so each block bounding box precisely and fully encompasses its text.\\n\\n' +
           'Return ONLY valid JSON matching:\\n' +
-          '{\\n  "title": "document title",\\n  "blocks": [\\n    {\\n      "box_2d": [ymin, xmin, ymax, xmax],\\n      "original_text": "...",\\n      "translated_text": "...",\\n      "font_size_tier": "body",\\n      "align": "left"\\n    }\\n  ]\\n}';
-
+          '{\\n  "title": "document title",\\n  "blocks": [\\n    {\\n      "box_2d": [ymin, xmin, ymax, xmax],\\n      "original_text": "...",\\n      "translated_text": "...",\\n      "bg_color": "#b8dbe8",\\n      "text_color": "#0f172a",\\n      "font_size_tier": "body",\\n      "align": "left"\\n    }\\n  ]\\n}';
         let mimeToSend = fileMime;
         if (fileFormat === 'docx') {
           mimeToSend = 'application/pdf';
