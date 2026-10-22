@@ -154,7 +154,7 @@ export default function TranslatePage() {
 
   // Comparison & detail inspect state for result view (Step 5)
   const [comparisonTab, setComparisonTab] = useState<"side-by-side" | "translated" | "original">("side-by-side");
-  const [activeViewTab, setActiveViewTab] = useState<"document" | "side-by-side" | "overlay" | "qa">("document");
+  const [activeViewTab, setActiveViewTab] = useState<"document" | "side-by-side" | "overlay" | "qa">("overlay");
   const [copiedAll, setCopiedAll] = useState(false);
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
   const [zoomTarget, setZoomTarget] = useState<"translated" | "original">("translated");
@@ -973,7 +973,7 @@ export default function TranslatePage() {
                         }`}
                       >
                         <FileText className="w-3.5 h-3.5" />
-                        <span>Document</span>
+                        <span>Certified Transcript</span>
                       </button>
                       <button
                         type="button"
@@ -997,7 +997,7 @@ export default function TranslatePage() {
                         }`}
                       >
                         <Layers className="w-3.5 h-3.5" />
-                        <span>Visual Overlay</span>
+                        <span>In-Place Document</span>
                       </button>
                       <button
                         type="button"
@@ -1181,23 +1181,23 @@ export default function TranslatePage() {
                               100% PARITY
                             </span>
                           </div>
-                          <div className={`flex-1 rounded-lg bg-white border border-slate-200/80 p-5 overflow-y-auto max-h-[560px] space-y-3 ${isRtl ? "font-['Noto_Sans_Arabic',sans-serif]" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
-                            {displayBlocks.map((b, idx) => {
-                              const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
-                              if (!rawText.trim()) return null;
-                              const isTitle = b.font_size_tier === "title";
-                              const isHeading = b.font_size_tier === "heading";
-                              const isQuestion = /^\d+[\.\)]/.test(rawText.trim());
-
-                              if (isTitle) return <h2 key={idx} className="text-base font-bold text-slate-900 border-b pb-2 text-center">{rawText}</h2>;
-                              if (isHeading) return <h3 key={idx} className={`text-xs font-bold text-slate-800 uppercase tracking-wider ${isRtl ? "text-right" : "text-left"}`}>{rawText}</h3>;
-                              if (isQuestion) return (
-                                <div key={idx} className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs font-medium text-slate-900">
-                                  {rawText}
-                                </div>
-                              );
-                              return <p key={idx} className={`text-xs text-slate-700 leading-relaxed ${isRtl ? "text-right" : "text-left"}`}>{rawText}</p>;
-                            })}
+                          <div className="flex-1 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center p-2">
+                            {translatedPreviewSrc ? (
+                              translatedBlobUrl || (isImageJob && !translatedPreviewSrc.toLowerCase().includes(".pdf")) ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={translatedPreviewSrc} alt="Translated Document" className="max-w-full max-h-[520px] object-contain rounded" />
+                              ) : (
+                                <iframe src={translatedPreviewSrc} title="Translated Document" className="w-full h-full min-h-[460px] border-0 rounded" />
+                              )
+                            ) : (
+                              <div className={`w-full p-5 overflow-y-auto max-h-[560px] space-y-3 ${isRtl ? "font-['Noto_Sans_Arabic',sans-serif]" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
+                                {displayBlocks.map((b, idx) => {
+                                  const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
+                                  if (!rawText.trim()) return null;
+                                  return <p key={idx} className={`text-xs text-slate-700 leading-relaxed ${isRtl ? "text-right" : "text-left"}`}>{rawText}</p>;
+                                })}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -1888,7 +1888,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
         svgParts.push('  </defs>');
 
         // 100% opaque solid white inpainting mask to completely block underlying source text without borders
-        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" fill="#ffffff" stroke="none" />');
+        const fillColor = (b.bg_color || b.bgColor || b.background_color || '#ffffff');
+        svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" fill="' + fillColor + '" stroke="none" />');
 
         const isBlockRtl = job.targetLang === 'ar' || job.targetLang === 'he' || /[\u0600-\u06FF]/.test(b.rawText);
         const textAlign = isBlockRtl
