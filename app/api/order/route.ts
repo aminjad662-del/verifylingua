@@ -200,6 +200,8 @@ export async function POST(req: Request) {
             jobId: String(resolvedJobId),
             orderId: String(resolvedOrderId),
             fileUrl: resolvedFileUrl,
+            targetLang,
+            sourceLang,
           },
         }),
         new Promise((_, reject) => {

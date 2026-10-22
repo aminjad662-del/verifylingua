@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       fileBuffer = Buffer.from(arrayBuffer);
 
-      sourceLang = (formData.get("sourceLang") as string) || "es";
-      targetLang = (formData.get("targetLang") as string) || "en";
+      sourceLang = ((formData.get("sourceLang") || formData.get("sourceLanguage")) as string) || "es";
+      targetLang = ((formData.get("targetLang") || formData.get("targetLanguage")) as string) || "en";
       serviceTier = ((formData.get("serviceTier") as string) as any) || "automated";
       if (isTestEnv) {
         clientProvidedUserId = (formData.get("userId") as string) || null;
@@ -484,6 +484,8 @@ export async function POST(req: NextRequest) {
               jobId: String(extractedJobId),
               orderId: String(extractedOrderId),
               fileUrl: `/api/jobs/${job.id}/download?token=${job.downloadToken}`,
+              targetLang,
+              sourceLang,
             },
           }),
           new Promise((_, reject) => {
@@ -578,6 +580,8 @@ export async function POST(req: NextRequest) {
         fileName: job.fileName,
         fileFormat: job.fileFormat,
         fileSize: job.fileSize,
+        sourceLang: job.sourceLang,
+        targetLang: job.targetLang,
         fileUrl: `/api/jobs/${job.id}/download?token=${job.downloadToken}`,
         downloadUrl: `/api/jobs/${job.id}/download?token=${job.downloadToken}`,
         status: "queued",

@@ -166,6 +166,8 @@ export async function POST(request: Request) {
           jobId: payload.orderId,
           orderId: payload.orderId,
           fileUrl: payload.sourcePath,
+          targetLang: payload.targetLang,
+          sourceLang: payload.sourceLang,
         },
       });
     } catch {}

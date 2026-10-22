@@ -869,81 +869,64 @@ pdf_reconstructor = PDFReconstructor()
 def reconstruct_document(
     original_bytes: bytes,
     file_format: str,
-    analysis: Optional[DocumentAnalysis] = None,
-    translated_segments: Optional[List[Dict[str, Any]]] = None,
-    target_lang: str = "en",
-    prefer_lama: bool = False,
+    analysis: DocumentAnalysis,
+    translated_segments: List[Dict[str, Any]],
+    target_lang: str
 ) -> Tuple[bytes, bytes, List[Dict[str, Any]]]:
     """
     Main entry point for S8 reconstruction:
-    Delegates to the unified dual-pipeline facade (NativeVectorPipeline + ScannedDocumentPipeline).
     Returns (rendered_document_bytes, preview_image_bytes, qa_page_records).
     """
-    try:
-        from api.reconstruction.facade import reconstruct_document as facade_reconstruct
-        return facade_reconstruct(
-            original_bytes=original_bytes,
-            file_format=file_format,
+    fmt = file_format.lower()
+    if fmt in ("jpg", "jpeg", "png"):
+        rendered_bytes = ImageReconstructor.reconstruct_image(
+            original_image_bytes=original_bytes,
             analysis=analysis,
-            translated_segments=translated_segments or [],
+            translated_segments=translated_segments,
             target_lang=target_lang,
-            prefer_lama=prefer_lama,
+            output_format=fmt
         )
-    except Exception as exc:
-        import logging
-        logging.getLogger("api.render").warning(
-            f"Dual-pipeline facade encountered error, falling back to legacy: {exc}"
-        )
-        fmt = (file_format or "pdf").lower()
-        if fmt in ("jpg", "jpeg", "png"):
-            rendered_bytes = ImageReconstructor.reconstruct_image(
-                original_image_bytes=original_bytes,
-                analysis=analysis,
-                translated_segments=translated_segments or [],
-                target_lang=target_lang,
-                output_format=fmt
-            )
-            preview_bytes = PreviewGenerator.generate_watermarked_preview(rendered_bytes, format_hint=fmt)
-            qa_records = [{
-                "page_number": 1,
-                "overflow_mitigated": False,
-                "segments_count": len(translated_segments or []),
-                "width": 800.0,
-                "height": 1000.0
-            }]
-            return rendered_bytes, preview_bytes, qa_records
-        elif fmt == "docx":
-            from api.docx_pipeline import DocxPipeline
-            rendered_bytes = DocxPipeline.reconstruct_docx(
-                original_bytes=original_bytes,
-                translated_segments=translated_segments or [],
-                target_lang=target_lang
-            )
-            preview_bytes = DocxPipeline.generate_docx_preview(
-                docx_bytes=rendered_bytes,
-                target_lang=target_lang
-            )
-            qa_val = DocxPipeline.validate_docx_structure(
-                original_bytes=original_bytes,
-                reconstructed_bytes=rendered_bytes,
-                target_lang=target_lang
-            )
-            qa_records = [{
-                "page_number": 1,
-                "overflow_mitigated": False,
-                "segments_count": len(translated_segments or []),
-                "width": 612.0,
-                "height": 792.0,
-                "validation": qa_val
-            }]
-            return rendered_bytes, preview_bytes, qa_records
-
-        # Default PDF
-        rendered_bytes, qa_records = pdf_reconstructor.reconstruct_pdf(
-            original_pdf_bytes=original_bytes,
-            analysis=analysis,
-            translated_segments=translated_segments or [],
+        preview_bytes = PreviewGenerator.generate_watermarked_preview(rendered_bytes, format_hint=fmt)
+        qa_records = [{
+            "page_number": 1,
+            "overflow_mitigated": False,
+            "segments_count": len(translated_segments),
+            "width": 800.0,
+            "height": 1000.0
+        }]
+        return rendered_bytes, preview_bytes, qa_records
+    elif fmt == "docx":
+        from api.docx_pipeline import DocxPipeline
+        rendered_bytes = DocxPipeline.reconstruct_docx(
+            original_bytes=original_bytes,
+            translated_segments=translated_segments,
             target_lang=target_lang
         )
-        preview_bytes = PreviewGenerator.generate_watermarked_preview(rendered_bytes, format_hint="pdf")
+        preview_bytes = DocxPipeline.generate_docx_preview(
+            docx_bytes=rendered_bytes,
+            target_lang=target_lang
+        )
+        qa_val = DocxPipeline.validate_docx_structure(
+            original_bytes=original_bytes,
+            reconstructed_bytes=rendered_bytes,
+            target_lang=target_lang
+        )
+        qa_records = [{
+            "page_number": 1,
+            "overflow_mitigated": False,
+            "segments_count": len(translated_segments),
+            "width": 612.0,
+            "height": 792.0,
+            "validation": qa_val
+        }]
         return rendered_bytes, preview_bytes, qa_records
+
+    # Default PDF
+    rendered_bytes, qa_records = pdf_reconstructor.reconstruct_pdf(
+        original_pdf_bytes=original_bytes,
+        analysis=analysis,
+        translated_segments=translated_segments,
+        target_lang=target_lang
+    )
+    preview_bytes = PreviewGenerator.generate_watermarked_preview(rendered_bytes, format_hint="pdf")
+    return rendered_bytes, preview_bytes, qa_records

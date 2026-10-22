@@ -108,6 +108,8 @@ interface JobState {
   error: string | null;
   creditError?: InsufficientCreditInfo | null;
   pageCount?: number;
+  targetLang?: string;
+  sourceLang?: string;
   blocks?: TranslatedBlockData[];
   svgContent?: string;
 }
@@ -249,6 +251,8 @@ export default function TranslatePage() {
                 pageCount: data.pageCount || prev.pageCount || 1,
                 blocks: (data.blocks && data.blocks.length > 0) ? data.blocks : (prev.blocks || []),
                 svgContent: data.svgContent || prev.svgContent,
+                targetLang: data.targetLang || prev.targetLang,
+                sourceLang: data.sourceLang || prev.sourceLang,
               }
             : null
         );
@@ -349,6 +353,8 @@ export default function TranslatePage() {
         error: null,
         creditError: null,
         pageCount: overridePageCount,
+        targetLang,
+        sourceLang,
       });
 
       try {
@@ -575,7 +581,7 @@ export default function TranslatePage() {
 
     const a = document.createElement("a");
     a.href = downloadHref;
-    a.download = `${cleanBaseName}_${(targetLang || "es").toUpperCase()}_translated.${targetFormat}`;
+    a.download = `${cleanBaseName}_${((job?.targetLang || targetLang) || "en").toUpperCase()}_translated.${targetFormat}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -909,16 +915,18 @@ export default function TranslatePage() {
 
             {/* SUCCESS / OUTPUT STATE */}
             {job?.status === "ready" && (() => {
+              const activeTargetLang = job.targetLang || targetLang;
+              const activeSourceLang = job.sourceLang || sourceLang;
               const displayBlocks = (job.blocks && job.blocks.length > 0)
                 ? job.blocks
-                : getFallbackImageBlocks(targetLang);
-              const isRtl = targetLang === "ar" || targetLang === "he" || targetLang === "fa" || targetLang === "ur";
+                : getFallbackImageBlocks(activeTargetLang);
+              const isRtl = activeTargetLang === "ar" || activeTargetLang === "he" || activeTargetLang === "fa" || activeTargetLang === "ur";
 
               const parityReport = verifyElementAndCharacterParity({
                 sourceBlocks: (job.blocks && job.blocks.length > 0) ? job.blocks : displayBlocks,
                 targetBlocks: displayBlocks,
-                sourceLang,
-                targetLang,
+                sourceLang: activeSourceLang,
+                targetLang: activeTargetLang,
               });
 
               const handleCopyAll = () => {
@@ -1058,7 +1066,7 @@ export default function TranslatePage() {
                           </div>
                           <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-200/80 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
                             <span>Original: <strong className="text-slate-900">{job.fileName}</strong></span>
-                            <span>Target: <strong className="text-blue-600">{(targetLang || "es").toUpperCase()}</strong></span>
+                            <span>Target: <strong className="text-blue-600">{((job.targetLang || targetLang) || "en").toUpperCase()}</strong></span>
                             <span>Standard: <strong className="text-slate-900">USCIS 8 CFR § 103.2</strong></span>
                           </div>
                         </div>

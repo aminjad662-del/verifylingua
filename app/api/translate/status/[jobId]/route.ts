@@ -56,7 +56,7 @@ export async function GET(
           const { Jimp } = await import("jimp");
           const jImg = await Jimp.read(buf);
           const mime = format === "png" ? "image/png" : "image/jpeg";
-          const target = job?.targetLang || pJob?.targetLanguage || "es";
+          const target = job?.targetLang || pJob?.targetLanguage || (pJob as any)?.targetLang || "en";
           if (!resolvedBlocks || resolvedBlocks.length === 0) {
             resolvedBlocks = getFallbackImageBlocks(target);
           }
@@ -189,8 +189,8 @@ export async function GET(
       fileName: job?.fileName || pJob?.sourceFilename || "document.pdf",
       fileFormat: job?.fileFormat || pJob?.sourceFormat || "pdf",
       fileSize: job?.fileSize || 0,
-      sourceLang: job?.sourceLang || pJob?.sourceLanguage || "es",
-      targetLang: job?.targetLang || pJob?.targetLanguage || "en",
+      sourceLang: job?.sourceLang || pJob?.sourceLanguage || supabaseJob?.source_language || "es",
+      targetLang: job?.targetLang || pJob?.targetLanguage || supabaseJob?.target_language || "en",
       status: status,
       progress: progress,
       currentStep: currentStep,

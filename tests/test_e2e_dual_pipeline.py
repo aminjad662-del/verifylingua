@@ -810,9 +810,7 @@ def test_tier3_vector_table_gridlines_with_arabic_bidi_cells():
     assert len(final_pdf_bytes) > len(cleaned_bytes)
     with pikepdf.open(io.BytesIO(final_pdf_bytes)) as pdf:
         xobjects = pdf.pages[0].Resources.get("/XObject", {})
-        for k, v in xobjects.items():
-            subtype = getattr(v, "Subtype", None) or getattr(v, "/Subtype", None)
-            assert str(subtype) != "/Image", f"Prohibited raster /Image XObject found: {k}"
+        assert len(xobjects) == 0, "No raster image XObjects allowed on vector table PDF"
 
 
 def test_tier3_scanned_certificate_overlapping_stamp_and_signature():

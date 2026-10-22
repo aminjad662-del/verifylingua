@@ -61,8 +61,8 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       fileBuffer = Buffer.from(arrayBuffer);
 
-      sourceLang = (formData.get("sourceLang") as string) || "auto";
-      targetLang = (formData.get("targetLang") as string) || "en";
+      sourceLang = ((formData.get("sourceLang") || formData.get("sourceLanguage")) as string) || "auto";
+      targetLang = ((formData.get("targetLang") || formData.get("targetLanguage")) as string) || "en";
       serviceTier = ((formData.get("serviceTier") as string) as any) || "automated";
 
       if (isTestEnv) {
@@ -270,6 +270,8 @@ export async function POST(req: NextRequest) {
             jobId: String(extractedJobId),
             orderId: String(extractedOrderId),
             fileUrl,
+            targetLang,
+            sourceLang,
           },
         }),
         new Promise((_, reject) => {
@@ -313,6 +315,8 @@ export async function POST(req: NextRequest) {
         translationJobId: extractedJobId,
         fileName: fileName,
         fileFormat: validation.format,
+        sourceLang: sourceLang,
+        targetLang: targetLang,
         fileUrl: fileUrl,
         status: "queued",
         progress: 0,

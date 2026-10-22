@@ -565,11 +565,10 @@ class NativeVectorPipeline:
         color: Tuple[float, float, float] = (0.0, 0.0, 0.0),
         align: int = 0,
         min_font_size: float = 4.0,
-    ) -> Tuple[float, bool]:
+    ) -> float:
         """
         Dynamically fits and inserts text into rect by auto-scaling font size
         so it remains strictly within bounding box clearance.
-        Returns (final_font_size, overflow_mitigated).
         """
         # First try initial font size
         rc = page.insert_textbox(
@@ -582,7 +581,7 @@ class NativeVectorPipeline:
             align=align,
         )
         if rc >= 0:
-            return initial_font_size, False
+            return initial_font_size
 
         # Text overflowed: calculate estimated font size capacity based on area and chars
         area = max(1.0, rect.width * rect.height)
@@ -602,7 +601,7 @@ class NativeVectorPipeline:
                 align=align,
             )
             if rc >= 0:
-                return curr_size, True
+                return curr_size
             curr_size *= 0.85
 
         # If it still overflows at min_font_size, expand rect height slightly downwards
@@ -616,7 +615,7 @@ class NativeVectorPipeline:
             color=color,
             align=align,
         )
-        return min_font_size, True
+        return min_font_size
 
     def insert_translated_text(
         self,
@@ -692,7 +691,7 @@ class NativeVectorPipeline:
                     else:
                         # Single line / table cell: insert_textbox with fontfile and dynamic auto-fit
                         actual_font_file = ar_font_path or font_path
-                        fitted_size, overflow_mitigated = self._fit_and_insert_textbox(
+                        self._fit_and_insert_textbox(
                             page=page,
                             rect=rect,
                             text=shaped_text,
@@ -702,8 +701,6 @@ class NativeVectorPipeline:
                             color=color,
                             align=2,  # Align right for RTL
                         )
-                        if overflow_mitigated:
-                            item["overflow_mitigated"] = True
                 else:
                     # LTR text insertion with font topology and dynamic auto-fit
                     item_font_path, item_alias = resolve_topology_font(
@@ -712,7 +709,7 @@ class NativeVectorPipeline:
                         bold=is_bold,
                         italic=is_italic
                     )
-                    fitted_size, overflow_mitigated = self._fit_and_insert_textbox(
+                    self._fit_and_insert_textbox(
                         page=page,
                         rect=rect,
                         text=text,
@@ -722,8 +719,6 @@ class NativeVectorPipeline:
                         color=color,
                         align=0,  # Align left
                     )
-                    if overflow_mitigated:
-                        item["overflow_mitigated"] = True
 
             out_stream = io.BytesIO()
             doc.save(out_stream, garbage=3, deflate=True)

@@ -102,8 +102,37 @@ export const translateDocumentJob = inngest.createFunction(
 
     const extractedBlocks = event?.data?.extractedBlocks;
     const originalBuffer = event?.data?.fileBuffer ? Buffer.from(event.data.fileBuffer) : Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n200\n%%EOF");
-    const sourceLang = event?.data?.sourceLang || "es";
-    const targetLang = event?.data?.targetLang || "en";
+    let sourceLang = unwrapped?.sourceLang || unwrapped?.source_language || event?.data?.sourceLang || "es";
+    let targetLang = unwrapped?.targetLang || unwrapped?.target_language || event?.data?.targetLang || null;
+
+    if (!targetLang && (jobId || orderId)) {
+      try {
+        const { getTranslationJob } = await import("@/lib/translation/store");
+        const memJob = getTranslationJob(jobId) || getTranslationJob(orderId);
+        if (memJob?.targetLang) {
+          targetLang = memJob.targetLang;
+        }
+      } catch {}
+    }
+
+    if (!targetLang && (jobId || orderId)) {
+      try {
+        const { createAdminClient } = await import("@/supabase/admin");
+        const supabase = createAdminClient();
+        const { data: dbJob } = await (supabase as any)
+          .from("translation_jobs")
+          .select("target_language, source_language")
+          .or(`id.eq.${jobId || orderId},order_id.eq.${orderId || jobId}`)
+          .maybeSingle();
+        if (dbJob?.target_language) {
+          targetLang = dbJob.target_language;
+        }
+        if (!sourceLang && dbJob?.source_language) {
+          sourceLang = dbJob.source_language;
+        }
+      } catch {}
+    }
+    targetLang = targetLang || "en";
 
     // 1. translate-document: Live AI translation via Gemini 3.5 Flash API
     const translateFn = async () => {

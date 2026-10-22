@@ -251,8 +251,6 @@ class DocumentInpaintingService:
             for ntr in non_text_regions:
                 if hasattr(ntr, 'bbox'):
                     raw_bbox = ntr.bbox
-                elif isinstance(ntr, dict) and 'bbox' in ntr:
-                    raw_bbox = ntr['bbox']
                 elif isinstance(ntr, (list, tuple)) and len(ntr) == 4:
                     raw_bbox = ntr
                 else:

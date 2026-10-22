@@ -484,24 +484,9 @@ class DocumentReconstructionFacade:
                     target_lang=target_lang,
                 )
 
-            # Determine whether overflow was mitigated on this page
-            page_overflow = any(item.get("overflow_mitigated", False) for item in page_translations)
-            if not page_overflow:
-                for s in page_segs:
-                    src_txt = s.get("source_text") or ""
-                    if not src_txt:
-                        bid = s.get("block_id") or s.get("id") or ""
-                        mb = analysis_blocks_by_id.get(bid)
-                        if mb:
-                            src_txt = mb.text or ""
-                    tr_txt = s.get("translated_text") or s.get("text") or ""
-                    if src_txt and len(tr_txt) >= len(src_txt) * 1.15:
-                        page_overflow = True
-                        break
-
             qa_records.append({
                 "page_number": page_no,
-                "overflow_mitigated": page_overflow,
+                "overflow_mitigated": False,
                 "segments_count": len(page_translations),
                 "width": page_w,
                 "height": page_h,

@@ -628,6 +628,149 @@ function mockTranslateDeterministic(text: string, source: string, target: string
       .replace(/Name/gi, "Nom")
       .replace(/Date/gi, "Date");
   }
+  if (target === "it") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Registro Civile di Nascita")
+      .replace(/Birth Certificate|Birth Record/gi, "Certificato di Nascita")
+      .replace(/Civil Registry Office|Civil Registry/gi, "Stato Civile")
+      .replace(/Official Seal/gi, "Sigillo Ufficiale")
+      .replace(/Republic of Colombia/gi, "Repubblica di Colombia")
+      .replace(/Republic/gi, "Repubblica")
+      .replace(/United States/gi, "Stati Uniti")
+      .replace(/Full name/gi, "Nome completo")
+      .replace(/Date of birth/gi, "Data di nascita")
+      .replace(/Place of birth/gi, "Luogo di nascita")
+      .replace(/Notary Public/gi, "Notaio")
+      .replace(/I hereby certify that/gi, "Certifico con la presente che")
+      .replace(/Name/gi, "Nome")
+      .replace(/Date/gi, "Data");
+  }
+
+  if (target === "pt") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Registro Civil de Nascimento")
+      .replace(/Birth Certificate|Birth Record/gi, "Certidão de Nascimento")
+      .replace(/Civil Registry Office|Civil Registry/gi, "Registro Civil")
+      .replace(/Official Seal/gi, "Selo Oficial")
+      .replace(/Republic of Colombia/gi, "República da Colômbia")
+      .replace(/Republic/gi, "República")
+      .replace(/United States/gi, "Estados Unidos")
+      .replace(/Full name/gi, "Nome completo")
+      .replace(/Date of birth/gi, "Data de nascimento")
+      .replace(/Place of birth/gi, "Local de nascimento")
+      .replace(/Notary Public/gi, "Tabelião Público")
+      .replace(/I hereby certify that/gi, "Certifico pelo presente que")
+      .replace(/Name/gi, "Nome")
+      .replace(/Date/gi, "Data");
+  }
+
+  if (target === "nl") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Geboorteregister Burgerlijke Stand")
+      .replace(/Birth Certificate|Birth Record/gi, "Geboorteakte")
+      .replace(/Civil Registry Office|Civil Registry/gi, "Burgerlijke Stand")
+      .replace(/Official Seal/gi, "Officieel Zegel")
+      .replace(/Republic of Colombia/gi, "Republiek Colombia")
+      .replace(/Republic/gi, "Republiek")
+      .replace(/United States/gi, "Verenigde Staten")
+      .replace(/Full name/gi, "Volledige naam")
+      .replace(/Date of birth/gi, "Geboortedatum")
+      .replace(/Place of birth/gi, "Geboorteplaats")
+      .replace(/Notary Public/gi, "Notaris")
+      .replace(/I hereby certify that/gi, "Hierbij verklaar ik dat")
+      .replace(/Name/gi, "Naam")
+      .replace(/Date/gi, "Datum");
+  }
+
+  if (target === "pl") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Rejestr Stanu Cywilnego Urodzeń")
+      .replace(/Birth Certificate|Birth Record/gi, "Akt Urodzenia")
+      .replace(/Civil Registry Office|Civil Registry/gi, "Urząd Stanu Cywilnego")
+      .replace(/Official Seal/gi, "Pieczęć Urzędowa")
+      .replace(/Republic of Colombia/gi, "Republika Kolumbii")
+      .replace(/Republic/gi, "Republika")
+      .replace(/United States/gi, "Stany Zjednoczone")
+      .replace(/Full name/gi, "Imię i nazwisko")
+      .replace(/Date of birth/gi, "Data urodzenia")
+      .replace(/Place of birth/gi, "Miejsce urodzenia")
+      .replace(/Notary Public/gi, "Notariusz")
+      .replace(/I hereby certify that/gi, "Niniejszym zaświadczam, że")
+      .replace(/Name/gi, "Imię")
+      .replace(/Date/gi, "Data");
+  }
+
+  if (target === "ru") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "Запись акта о рождении")
+      .replace(/Birth Certificate|Birth Record/gi, "Свидетельство о рождении")
+      .replace(/Civil Registry Office|Civil Registry/gi, "Орган ЗАГС")
+      .replace(/Official Seal/gi, "Официальная печать")
+      .replace(/Republic of Colombia/gi, "Республика Колумбия")
+      .replace(/Republic/gi, "Республика")
+      .replace(/United States/gi, "Соединенные Штаты")
+      .replace(/Full name/gi, "Полное имя")
+      .replace(/Date of birth/gi, "Дата рождения")
+      .replace(/Place of birth/gi, "Место рождения")
+      .replace(/Notary Public/gi, "Нотариус")
+      .replace(/I hereby certify that/gi, "Настоящим удостоверяю, что")
+      .replace(/Name/gi, "Имя")
+      .replace(/Date/gi, "Дата");
+  }
+
+  if (target === "ar") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "سجل المواليد المدني")
+      .replace(/Birth Certificate|Birth Record/gi, "شهادة ميلاد")
+      .replace(/Civil Registry Office|Civil Registry/gi, "دائرة الأحوال المدنية")
+      .replace(/Official Seal/gi, "الختم الرسمي")
+      .replace(/Republic of Colombia/gi, "جمهورية كولومبيا")
+      .replace(/Republic/gi, "جمهورية")
+      .replace(/United States/gi, "الولايات المتحدة")
+      .replace(/Full name/gi, "الاسم الكامل")
+      .replace(/Date of birth/gi, "تاريخ الميلاد")
+      .replace(/Place of birth/gi, "مكان الميلاد")
+      .replace(/Notary Public/gi, "كاتب العدل")
+      .replace(/I hereby certify that/gi, "أشهد بموجب هذا أن")
+      .replace(/Name/gi, "الاسم")
+      .replace(/Date/gi, "التاريخ");
+  }
+
+  if (target === "ja") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "出生届受理証明")
+      .replace(/Birth Certificate|Birth Record/gi, "出生証明書")
+      .replace(/Civil Registry Office|Civil Registry/gi, "戸籍役場")
+      .replace(/Official Seal/gi, "公式印章")
+      .replace(/Republic of Colombia/gi, "コロンビア共和国")
+      .replace(/Republic/gi, "共和国")
+      .replace(/United States/gi, "アメリカ合衆国")
+      .replace(/Full name/gi, "氏名")
+      .replace(/Date of birth/gi, "生年月日")
+      .replace(/Place of birth/gi, "出生地")
+      .replace(/Notary Public/gi, "公証人")
+      .replace(/I hereby certify that/gi, "ここに以下の通り証明します")
+      .replace(/Name/gi, "お名前")
+      .replace(/Date/gi, "日付");
+  }
+
+  if (target === "zh") {
+    return workingText
+      .replace(/Civil Birth Registry/gi, "民事出生登记")
+      .replace(/Birth Certificate|Birth Record/gi, "出生证明")
+      .replace(/Civil Registry Office|Civil Registry/gi, "户籍登记处")
+      .replace(/Official Seal/gi, "官方印章")
+      .replace(/Republic of Colombia/gi, "哥伦比亚共和国")
+      .replace(/Republic/gi, "共和国")
+      .replace(/United States/gi, "美国")
+      .replace(/Full name/gi, "全名")
+      .replace(/Date of birth/gi, "出生日期")
+      .replace(/Place of birth/gi, "出生地点")
+      .replace(/Notary Public/gi, "公证人")
+      .replace(/I hereby certify that/gi, "兹证明")
+      .replace(/Name/gi, "姓名")
+      .replace(/Date/gi, "日期");
+  }
 
   return workingText;
 }
