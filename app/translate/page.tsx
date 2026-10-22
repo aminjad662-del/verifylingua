@@ -1029,22 +1029,26 @@ export default function TranslatePage() {
                         {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copiedAll ? "Copied" : "Copy Text"}</span>
                       </button>
-                      <button
+                      <motion.button
                         type="button"
                         onClick={() => handleDownload("svg")}
-                        className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition-colors cursor-pointer"
-                        title="Download Vector SVG"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-600/20"
+                        title="Download In-Place Reconstructed Document with original text replaced"
                       >
-                        SVG
-                      </button>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>In-Place Document (SVG)</span>
+                      </motion.button>
                       <motion.button 
                         onClick={() => handleDownload("pdf")}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-600/20"
+                        className="px-3.5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+                        title="Download USCIS / ATA Certified Legal Transcript Affidavit"
                       >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Download PDF</span>
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Certified Affidavit (PDF)</span>
                       </motion.button>
                     </div>
                   </div>
