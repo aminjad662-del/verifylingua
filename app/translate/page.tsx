@@ -637,9 +637,9 @@ export default function TranslatePage() {
   const translatedPreviewSrc = translatedBlobUrl
     ? translatedBlobUrl
     : job?.jobId && job.downloadToken
-    ? `/api/translate/download/${job.jobId}?token=${job.downloadToken}&inline=true&lang=${targetLang}`
+    ? `/api/translate/download/${job.jobId}?token=${job.downloadToken}&inline=true&lang=${job?.targetLang || targetLang}`
     : job?.jobId
-    ? `/api/jobs/${job.jobId}/preview?lang=${targetLang}`
+    ? `/api/jobs/${job.jobId}/preview?lang=${job?.targetLang || targetLang}`
     : "";
 
   return (
@@ -1175,7 +1175,7 @@ export default function TranslatePage() {
                         <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col">
                           <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
                             <span className="text-xs font-mono font-bold text-blue-700 uppercase tracking-wider">
-                              Certified Translation ({targetLang.toUpperCase()})
+                              Certified Translation ({activeTargetLang.toUpperCase()})
                             </span>
                             <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
                               100% PARITY
