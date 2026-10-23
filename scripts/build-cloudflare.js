@@ -2277,9 +2277,15 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const estimatedLineCount = Math.max(1, explicitLines.length);
 
         // Single-line field classification (ID card labels, form fields, headers, compact badges)
+        // Single-line field classification (ID card labels, form fields, personal names, dates, serials, compact badges)
         const isSingleLineField =
           explicitLines.length <= 1 &&
-          (b.height <= 28 || (b.width / Math.max(1, b.height) >= 2.0 && b.height <= 38) || b.tier === 'caption');
+          b.height <= 38 &&
+          (b.rawText.length <= 35 ||
+           b.height <= 28 ||
+           (b.width / Math.max(1, b.height) >= 1.8 && b.height <= 38) ||
+           b.tier === 'caption' ||
+           b.tier === 'heading');
 
         // Horizontal clearance before next block on same horizontal band
         const nextHorizontal = resolved.find(function(other) {

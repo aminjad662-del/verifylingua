@@ -1088,10 +1088,15 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     const explicitLines = b.rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
     const estimatedLineCount = Math.max(1, explicitLines.length);
 
-    // Single-line field classification (ID card labels, form fields, headers, compact badges)
+    // Single-line field classification (ID card labels, form fields, personal names, dates, serials, compact badges)
     const isSingleLineField =
       explicitLines.length <= 1 &&
-      (b.boxH <= 28 || (b.boxW / Math.max(1, b.boxH) >= 2.0 && b.boxH <= 38) || b.tier === "caption");
+      b.boxH <= 38 &&
+      (b.rawText.length <= 35 ||
+       b.boxH <= 28 ||
+       (b.boxW / Math.max(1, b.boxH) >= 1.8 && b.boxH <= 38) ||
+       b.tier === "caption" ||
+       b.tier === "heading");
 
     // Horizontal clearance before next block on same horizontal band
     const nextHorizontal = resolved.find(
