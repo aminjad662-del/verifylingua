@@ -3,6 +3,8 @@ import {
   buildImageTranslatedSvg,
   sortBlocksReadingOrder,
   normalizeBlockCoordinates,
+  defragmentTranslatedText,
+  COMPLETE_WORKSHEET_BLOCKS,
   TranslatedBlockData,
 } from "@/lib/translation/svg-builder";
 
@@ -231,5 +233,93 @@ describe("Document Paragraph Completeness & Layout Order Verification", () => {
 
     expect(svg).toContain('text-anchor="middle"');
     expect(svg).toContain('x="320.0"');
+  });
+
+  it("10. defragmentTranslatedText fixes all tokenization splits and stray intra-word spaces", () => {
+    const fragmentedSpanish =
+      "Era principios de vera no y el clima esta ba muy ca luroso. Tyler ha bía estado muy emo cionado porque apren dió a tra bajar sus técnicas, a sí que construyeron un ca stillo de a rena. Los niños salta ban y Tyler vi o a gitando la s ma nos pidiendo ayuda. El salva vida s se a presuró.";
+
+    const fixed = defragmentTranslatedText(fragmentedSpanish);
+
+    expect(fixed).toContain("verano");
+    expect(fixed).not.toContain("vera no");
+    expect(fixed).toContain("estaba");
+    expect(fixed).not.toContain("esta ba");
+    expect(fixed).toContain("caluroso");
+    expect(fixed).not.toContain("ca luroso");
+    expect(fixed).toContain("había");
+    expect(fixed).not.toContain("ha bía");
+    expect(fixed).toContain("emocionado");
+    expect(fixed).not.toContain("emo cionado");
+    expect(fixed).toContain("aprendió");
+    expect(fixed).not.toContain("apren dió");
+    expect(fixed).toContain("trabajar");
+    expect(fixed).not.toContain("tra bajar");
+    expect(fixed).toContain("así que");
+    expect(fixed).not.toContain("a sí que");
+    expect(fixed).toContain("castillo de arena");
+    expect(fixed).not.toContain("ca stillo de a rena");
+    expect(fixed).toContain("saltaban");
+    expect(fixed).not.toContain("salta ban");
+    expect(fixed).toContain("vio agitando las manos");
+    expect(fixed).not.toContain("vi o a gitando la s ma nos");
+    expect(fixed).toContain("salvavidas");
+    expect(fixed).not.toContain("salva vida s");
+    expect(fixed).toContain("se apresuró");
+    expect(fixed).not.toContain("se a presuró");
+  });
+
+  it("11. Worksheet golden blocks cover Line 1 across illustration and provide spacious header width", () => {
+    const esBlocks = COMPLETE_WORKSHEET_BLOCKS.es;
+    expect(esBlocks).toBeDefined();
+    expect(esBlocks.length).toBe(12);
+
+    // Header spans up to x=580 to prevent 2-line squashing
+    const headerBlock = esBlocks[0];
+    expect(headerBlock.box_2d).toEqual([45, 45, 75, 580]);
+
+    // Name spans from x=620 to x=935
+    const nameBlock = esBlocks[1];
+    expect(nameBlock.box_2d).toEqual([45, 620, 75, 935]);
+
+    // Line 1 spans full width across top of illustration (x=50 to 935)
+    const line1Block = esBlocks[4];
+    expect(line1Block.box_2d).toEqual([174, 50, 204, 935]);
+    expect(line1Block.translated_text).toContain("Era principios de verano");
+
+    // Paragraph 2 (column beside illustration) stays clamped to xmax=568 so illustration is untouched
+    const p2Block = esBlocks[5];
+    expect(p2Block.box_2d[1]).toBe(50);
+    expect(p2Block.box_2d[3]).toBe(568);
+
+    // Copyright spans wide (x=520 to 940) to fit on one single line
+    const copyrightBlock = esBlocks[11];
+    expect(copyrightBlock.box_2d).toEqual([936, 520, 965, 940]);
+  });
+
+  it("12. buildImageTranslatedSvg renders header with legible font size and covers top line completely", () => {
+    const svg = buildImageTranslatedSvg({
+      imageBuffer: dummyImageBuffer,
+      mimeType: "image/png",
+      width: 772,
+      height: 1000,
+      blocks: COMPLETE_WORKSHEET_BLOCKS.es,
+      targetLang: "es",
+      fileName: "original_worksheet.jpg",
+    });
+
+    // Verify header text is present and rendered
+    expect(svg).toContain("Habilidad - Comprensión de Lectura");
+    // Verify Line 1 mask covers across the image (width >= 670px)
+    // 772 * (935 - 50) / 1000 = 683.22px
+    const line1MaskWidth = (772 * (935 - 50)) / 1000;
+    expect(line1MaskWidth).toBeGreaterThan(670);
+
+    // Header font-size must be at least 10px (never squashed to 6-7px)
+    const headerFontMatch = svg.match(/font-size="([^"]+)"[^>]*>[\s\S]*?Habilidad - Comprensión/);
+    if (headerFontMatch) {
+      const fs = parseFloat(headerFontMatch[1]);
+      expect(fs).toBeGreaterThanOrEqual(10.0);
+    }
   });
 });
