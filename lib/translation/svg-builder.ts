@@ -104,6 +104,211 @@ export function defragmentTranslatedText(text: string): string {
   return cleaned;
 }
 
+/**
+ * Streamlines redundant bilingual/slash labels common in official ID cards, passports, and forms
+ * (e.g. "LUOGO E DATA DI NASCITA / PLACE AND DATE OF BIRTH" -> "LUGAR Y FECHA DE NACIMIENTO",
+ * "COGNOME / SURNAME" -> "APELLIDOS", "NOME / FORENAME" -> "NOMBRE", etc.).
+ */
+export function streamlineBilingualLabel(text: string, targetLang: string = "es"): string {
+  if (!text || typeof text !== "string") return text || "";
+  const cleaned = text.trim();
+  if (!cleaned.includes("/")) return cleaned;
+
+  const tLang = (targetLang || "es").toLowerCase();
+
+  const CANONICAL_LABELS: Record<string, Record<string, string>> = {
+    es: {
+      "luogo e data di nascita": "LUGAR Y FECHA DE NACIMIENTO",
+      "place and date of birth": "LUGAR Y FECHA DE NACIMIENTO",
+      "date and place of birth": "LUGAR Y FECHA DE NACIMIENTO",
+      "lugar y fecha de nacimiento": "LUGAR Y FECHA DE NACIMIENTO",
+      "cognome": "APELLIDOS",
+      "surname": "APELLIDOS",
+      "apellidos": "APELLIDOS",
+      "apellido": "APELLIDOS",
+      "nome": "NOMBRE",
+      "forename": "NOMBRE",
+      "first name": "NOMBRE",
+      "given names": "NOMBRE",
+      "nombre": "NOMBRE",
+      "sesso": "SEXO",
+      "sex": "SEXO",
+      "gender": "SEXO",
+      "sexo": "SEXO",
+      "statura": "ESTATURA",
+      "height": "ESTATURA",
+      "estatura": "ESTATURA",
+      "cittadinanza": "NACIONALIDAD",
+      "nationality": "NACIONALIDAD",
+      "nacionalidad": "NACIONALIDAD",
+      "emissione": "EMISIÓN",
+      "issuing": "EMISIÓN",
+      "date of issue": "FECHA DE EMISIÓN",
+      "emisión": "EMISIÓN",
+      "scadenza": "CADUCIDAD",
+      "expiry": "CADUCIDAD",
+      "date of expiry": "FECHA DE CADUCIDAD",
+      "caducidad": "CADUCIDAD",
+      "firma del titolare": "FIRMA DEL TITULAR",
+      "holder's signature": "FIRMA DEL TITULAR",
+      "signature": "FIRMA DEL TITULAR",
+      "firma del titular": "FIRMA DEL TITULAR",
+      "comune di": "MUNICIPIO DE",
+      "municipality": "MUNICIPIO DE",
+      "municipio de": "MUNICIPIO DE",
+      "carta di identità": "DOCUMENTO DE IDENTIDAD",
+      "carta d'identità": "DOCUMENTO DE IDENTIDAD",
+      "identity card": "DOCUMENTO DE IDENTIDAD",
+      "documento de identidad": "DOCUMENTO DE IDENTIDAD",
+      "repubblica italiana": "REPÚBLICA ITALIANA",
+      "italian republic": "REPÚBLICA ITALIANA",
+      "república italiana": "REPÚBLICA ITALIANA",
+      "ministero dell'interno": "MINISTERIO DEL INTERIOR",
+      "ministry of the interior": "MINISTERIO DEL INTERIOR",
+      "ministerio del interior": "MINISTERIO DEL INTERIOR",
+      "codice fiscale": "CÓDIGO FISCAL",
+      "tax code": "CÓDIGO FISCAL",
+      "código fiscal": "CÓDIGO FISCAL",
+      "residenza": "RESIDENCIA",
+      "residence": "RESIDENCIA",
+      "residencia": "RESIDENCIA",
+      "indirizzo": "DIRECCIÓN",
+      "address": "DIRECCIÓN",
+      "dirección": "DIRECCIÓN",
+      "professione": "PROFESIÓN",
+      "profession": "PROFESIÓN",
+      "profesión": "PROFESIÓN",
+      "stato civile": "ESTADO CIVIL",
+      "marital status": "ESTADO CIVIL",
+      "estado civil": "ESTADO CIVIL",
+    },
+    en: {
+      "luogo e data di nascita": "PLACE AND DATE OF BIRTH",
+      "place and date of birth": "PLACE AND DATE OF BIRTH",
+      "cognome": "SURNAME",
+      "surname": "SURNAME",
+      "nome": "FORENAME",
+      "forename": "FORENAME",
+      "sesso": "SEX",
+      "sex": "SEX",
+      "statura": "HEIGHT",
+      "height": "HEIGHT",
+      "cittadinanza": "NATIONALITY",
+      "nationality": "NATIONALITY",
+      "emissione": "DATE OF ISSUE",
+      "issuing": "DATE OF ISSUE",
+      "scadenza": "DATE OF EXPIRY",
+      "expiry": "DATE OF EXPIRY",
+      "firma del titolare": "HOLDER'S SIGNATURE",
+      "holder's signature": "HOLDER'S SIGNATURE",
+      "comune di": "MUNICIPALITY OF",
+      "municipality": "MUNICIPALITY OF",
+      "carta di identità": "IDENTITY CARD",
+      "carta d'identità": "IDENTITY CARD",
+      "identity card": "IDENTITY CARD",
+      "repubblica italiana": "ITALIAN REPUBLIC",
+      "ministero dell'interno": "MINISTRY OF THE INTERIOR",
+    },
+    fr: {
+      "luogo e data di nascita": "LIEU ET DATE DE NAISSANCE",
+      "place and date of birth": "LIEU ET DATE DE NAISSANCE",
+      "cognome": "NOM",
+      "surname": "NOM",
+      "nome": "PRÉNOM",
+      "forename": "PRÉNOM",
+      "sesso": "SEXE",
+      "sex": "SEXE",
+      "statura": "TAILLE",
+      "height": "TAILLE",
+      "cittadinanza": "NATIONALITÉ",
+      "nationality": "NATIONALITÉ",
+      "emissione": "DÉLIVRANCE",
+      "issuing": "DÉLIVRANCE",
+      "scadenza": "EXPIRATION",
+      "expiry": "EXPIRATION",
+      "firma del titolare": "SIGNATURE DU TITULAIRE",
+      "comune di": "COMMUNE DE",
+      "carta di identità": "CARTE D'IDENTITÉ",
+      "repubblica italiana": "RÉPUBLIQUE ITALIENNE",
+      "ministero dell'interno": "MINISTÈRE DE L'INTÉRIEUR",
+    },
+    de: {
+      "luogo e data di nascita": "GEBURTSDATUM UND -ORT",
+      "place and date of birth": "GEBURTSDATUM UND -ORT",
+      "cognome": "NACHNAME",
+      "surname": "NACHNAME",
+      "nome": "VORNAME",
+      "forename": "VORNAME",
+      "sesso": "GESCHLECHT",
+      "sex": "GESCHLECHT",
+      "statura": "GRÖSSE",
+      "height": "GRÖSSE",
+      "cittadinanza": "STAATSANGEHÖRIGKEIT",
+      "nationality": "STAATSANGEHÖRIGKEIT",
+      "emissione": "AUSSTELLUNGSDATUM",
+      "issuing": "AUSSTELLUNGSDATUM",
+      "scadenza": "GÜLTIG BIS",
+      "expiry": "GÜLTIG BIS",
+      "firma del titolare": "UNTERSCHRIFT DES INHABERS",
+      "comune di": "GEMEINDE",
+      "carta di identità": "PERSONALAUSWEIS",
+      "repubblica italiana": "ITALIENISCHE REPUBLIK",
+      "ministero dell'interno": "INNENMINISTERIUM",
+    },
+    it: {
+      "luogo e data di nascita": "LUOGO E DATA DI NASCITA",
+      "place and date of birth": "LUOGO E DATA DI NASCITA",
+      "cognome": "COGNOME",
+      "surname": "COGNOME",
+      "nome": "NOME",
+      "forename": "NOME",
+      "sesso": "SESSO",
+      "sex": "SESSO",
+      "statura": "STATURA",
+      "height": "STATURA",
+      "cittadinanza": "CITTADINANZA",
+      "nationality": "CITTADINANZA",
+      "emissione": "EMISSIONE",
+      "issuing": "EMISSIONE",
+      "scadenza": "SCADENZA",
+      "expiry": "SCADENZA",
+      "firma del titolare": "FIRMA DEL TITOLARE",
+      "comune di": "COMUNE DI",
+      "carta di identità": "CARTA DI IDENTITÀ",
+      "repubblica italiana": "REPUBBLICA ITALIANA",
+      "ministero dell'interno": "MINISTERO DELL'INTERNO",
+    }
+  };
+
+  const parts = cleaned.split("/").map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return cleaned;
+
+  const langDict = CANONICAL_LABELS[tLang] || CANONICAL_LABELS.es;
+  for (const part of parts) {
+    const norm = part.toLowerCase().replace(/['’]/g, "'");
+    if (langDict[norm]) {
+      return langDict[norm];
+    }
+  }
+
+  if (parts[0].toLowerCase() === parts[1].toLowerCase()) {
+    return parts[0];
+  }
+
+  if (parts.length === 2) {
+    const isFirstEnglish = /^(surname|forename|name|place and date of birth|sex|height|nationality|issuing|expiry|municipality|identity card|holder's signature)$/i.test(parts[0]);
+    const isSecondEnglish = /^(surname|forename|name|place and date of birth|sex|height|nationality|issuing|expiry|municipality|identity card|holder's signature)$/i.test(parts[1]);
+    if (isSecondEnglish && !isFirstEnglish) {
+      return parts[0];
+    }
+    if (isFirstEnglish && !isSecondEnglish) {
+      return parts[1];
+    }
+  }
+
+  return parts[0];
+}
+
 export const COMPLETE_WORKSHEET_BLOCKS: Record<string, TranslatedBlockData[]> = {
   ar: [
     { box_2d: [45, 45, 75, 580], original_text: "Skill - Reading Comprehension", translated_text: "المهارة - استيعاب القراءة", font_size_tier: "caption", align: "right" },
@@ -853,6 +1058,12 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     });
   }
 
+  // 1b. Detect dominant non-white document theme background (e.g. Italian ID card light cyan #dbe9f3)
+  const nonWhiteBgs = resolved
+    .map((r) => r.bg_color)
+    .filter((bg): bg is string => Boolean(bg && !/^#(ffffff|fff)$/i.test(bg) && /^#[0-9a-f]{3,8}$/i.test(bg)));
+  const documentThemeBg = nonWhiteBgs.length > 0 ? nonWhiteBgs[0] : undefined;
+
   const svgParts: string[] = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalH}" width="${width}" height="${totalH}"${isDocRtl ? ' dir="rtl"' : ''}>`,
@@ -866,94 +1077,128 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     const isHeading = b.tier === "heading" || isTitle;
     const fw = isHeading ? "bold" : "normal";
 
-    // Find the next block that vertically follows and overlaps horizontally
-    // Only consider nextBlock a ceiling if it starts at or below the bottom of b
-    const nextBlock = resolved.slice(idx + 1).find(
-      (next) => next.top >= (b.top + b.boxH - 6) && !(next.left >= b.left + b.boxW - 4 || next.left + next.boxW <= b.left + 4)
-    );
+    // Streamline bilingual label slashes if present (e.g. "COGNOME / SURNAME" -> "APELLIDOS")
+    if (b.rawText.includes("/")) {
+      const streamlined = streamlineBilingualLabel(b.rawText, targetLang);
+      if (streamlined) {
+        b.rawText = streamlined;
+      }
+    }
 
-    // Hard ceiling for vertical expansion: preserve clearance before next block
-    const maxAllowedBottom = nextBlock ? nextBlock.top : (height - 8);
-    // maxAvailableH is AT LEAST b.boxH so source height is 100% guaranteed
-    const maxAvailableH = Math.max(b.boxH, maxAllowedBottom - b.top);
-
-    // Dynamic typography scaling & fitting loop (budgeted per line)
     const explicitLines = b.rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
     const estimatedLineCount = Math.max(1, explicitLines.length);
-    const maxLineH = Math.max(8, Math.floor((b.boxH * 0.88) / estimatedLineCount));
 
-    const minFloor = b.tier === "caption" ? 9.5 : (b.tier === "heading" || isTitle ? 10.5 : 8.0);
-    let initialFs = isTitle
-      ? Math.min(24, Math.max(13, Math.min(Math.floor(b.boxH * 0.70), maxLineH)))
-      : b.tier === "heading"
-      ? Math.min(16, Math.max(11, Math.min(Math.floor(b.boxH * 0.62), maxLineH)))
-      : b.tier === "caption"
-      ? Math.min(12, Math.max(9.5, Math.min(Math.floor(b.boxH * 0.55), maxLineH)))
-      : Math.min(13.5, Math.max(8.5, Math.min(Math.floor(b.boxH * 0.56), maxLineH)));
+    // Single-line field classification (ID card labels, form fields, headers, compact badges)
+    const isSingleLineField =
+      explicitLines.length <= 1 &&
+      (b.boxH <= 28 || (b.boxW / Math.max(1, b.boxH) >= 2.0 && b.boxH <= 38) || b.tier === "caption");
 
-    // If source is a single line, prioritize fitting on a single line within slight font adjustment
-    if (explicitLines.length === 1 && (isHeading || b.tier === "caption")) {
-      for (let testFs = initialFs; testFs >= Math.max(7.5, initialFs * 0.85); testFs -= 0.5) {
-        const testChars = Math.max(6, Math.floor((b.boxW - 6) / (testFs * 0.52)));
-        if (b.rawText.length <= testChars) {
-          initialFs = testFs;
-          break;
-        }
-      }
-    }
+    // Horizontal clearance before next block on same horizontal band
+    const nextHorizontal = resolved.find(
+      (other) =>
+        other !== b &&
+        other.left > (b.left + 5) &&
+        Math.abs(other.top - b.top) < Math.max(b.boxH, other.boxH, 16)
+    );
+    const maxAllowedRight = nextHorizontal ? (nextHorizontal.left - 6) : (width - 12);
+    const availW = Math.max(b.boxW, maxAllowedRight - b.left);
 
-    let fs = initialFs;
-    let lines: string[] = [];
-    let lineHeight = Math.max(9, Math.round(fs * 1.25));
+    // Vertical ceiling before next row begins
+    const nextRow = resolved.find(
+      (next) =>
+        next !== b &&
+        next.top >= (b.top + b.boxH - 4) &&
+        !(next.left >= b.left + availW || next.left + next.boxW <= b.left)
+    );
+    const maxAllowedBottom = nextRow ? (nextRow.top - 2) : (height - 8);
+    const maxAvailableH = Math.max(b.boxH, maxAllowedBottom - b.top);
 
-    // Iteratively search for optimal font size so all wrapped lines fit strictly within available height
-    for (let candidateFs = initialFs; candidateFs >= minFloor; candidateFs -= 0.5) {
-      const charsPerLine = Math.max(6, Math.floor((b.boxW - 6) / (candidateFs * 0.52)));
-      let candidateLines: string[] = [];
-      if (explicitLines.length > 1) {
-        for (const expL of explicitLines) {
-          candidateLines.push(...wrapTextToLines(expL, charsPerLine));
-        }
-      } else {
-        candidateLines = wrapTextToLines(b.rawText, charsPerLine);
-      }
-      const candidateLh = Math.max(7, Math.round(candidateFs * 1.25));
-      const totalTextH = candidateLines.length * candidateLh;
-
-      if (totalTextH <= maxAvailableH || candidateFs <= minFloor) {
-        fs = candidateFs;
-        lineHeight = candidateLh;
-        lines = candidateLines;
-        break;
-      }
-    }
-
-    const renderedTextH = lines.length * lineHeight;
-    const effectiveBoxH = Math.max(b.boxH, renderedTextH + 4);
-
-    // Inpainting mask with sampled background color to eliminate stark white block clashes
+    let fs: number;
+    let lines: string[];
+    let lineHeight: number;
+    let maskW: number;
+    let maskH: number;
     const padX = Math.max(4, Math.min(8, b.boxW * 0.02));
     const padY = Math.max(2, Math.min(6, b.boxH * 0.03));
     const maskX = Math.max(0, b.left - padX);
     const maskY = Math.max(0, b.top - padY);
-    const maskW = Math.min(width - maskX, b.boxW + padX * 2);
-    // Mask and clipPath strictly encompass full rendered text height without truncation
-    const maskH = Math.min(height - maskY - 4, Math.max(b.boxH + padY * 2, renderedTextH + padY * 2 + 4));
+
+    if (isSingleLineField) {
+      // STRICT SINGLE-LINE PRESERVATION: No multi-line word wrapping on form/ID labels
+      lines = [b.rawText];
+      const charWidthRatio = 0.50;
+      const singleLineFloor = b.tier === "caption" ? 7.8 : 8.5;
+      const maxFs = isTitle ? 22 : isHeading ? 15 : b.tier === "caption" ? 11 : 13;
+      let testFs = Math.min(maxFs, Math.max(singleLineFloor, Math.floor(b.boxH * 0.72)));
+      while (testFs > singleLineFloor && (b.rawText.length * testFs * charWidthRatio) > (availW - 6)) {
+        testFs -= 0.5;
+      }
+      fs = Math.max(singleLineFloor, testFs);
+      lineHeight = Math.max(9, Math.round(fs * 1.2));
+
+      maskW = Math.min(width - maskX, Math.max(b.boxW, b.rawText.length * fs * charWidthRatio + 8) + padX * 2);
+      // Strictly clamp maskH so it NEVER spills into the subsequent row below!
+      const targetMaskH = Math.max(b.boxH + padY * 2, lineHeight + padY * 2 + 2);
+      maskH = Math.min(Math.max(b.boxH, targetMaskH), maxAllowedBottom - maskY);
+    } else {
+      // Multi-line narrative paragraphs (e.g. reading worksheets, letters, certificates)
+      const maxLineH = Math.max(8, Math.floor((b.boxH * 0.88) / estimatedLineCount));
+      const minFloor = b.tier === "heading" || isTitle ? 10.5 : 8.0;
+      const initialFs = isTitle
+        ? Math.min(24, Math.max(13, Math.min(Math.floor(b.boxH * 0.70), maxLineH)))
+        : isHeading
+        ? Math.min(16, Math.max(11, Math.min(Math.floor(b.boxH * 0.62), maxLineH)))
+        : Math.min(13.5, Math.max(8.5, Math.min(Math.floor(b.boxH * 0.56), maxLineH)));
+
+      fs = initialFs;
+      lines = [];
+      lineHeight = Math.max(9, Math.round(fs * 1.25));
+
+      for (let candidateFs = initialFs; candidateFs >= minFloor; candidateFs -= 0.5) {
+        const charsPerLine = Math.max(6, Math.floor((b.boxW - 6) / (candidateFs * 0.52)));
+        let candidateLines: string[] = [];
+        if (explicitLines.length > 1) {
+          for (const expL of explicitLines) {
+            candidateLines.push(...wrapTextToLines(expL, charsPerLine));
+          }
+        } else {
+          candidateLines = wrapTextToLines(b.rawText, charsPerLine);
+        }
+        const candidateLh = Math.max(7, Math.round(candidateFs * 1.25));
+        const totalTextH = candidateLines.length * candidateLh;
+
+        if (totalTextH <= maxAvailableH || candidateFs <= minFloor) {
+          fs = candidateFs;
+          lineHeight = candidateLh;
+          lines = candidateLines;
+          break;
+        }
+      }
+
+      maskW = Math.min(width - maskX, b.boxW + padX * 2);
+      maskH = Math.min(height - maskY - 4, Math.max(b.boxH + padY * 2, lines.length * lineHeight + padY * 2 + 4));
+    }
+
+    const renderedTextH = lines.length * lineHeight;
+
+    // Inpainting mask with sampled background color to eliminate stark white block clashes
+    const rawBg = b.bg_color || (b as any).bgColor || (b as any).background_color;
+    const isGenericWhite = !rawBg || /^#(ffffff|fff)$/i.test(rawBg);
+    const fillColor = (isGenericWhite && documentThemeBg) ? documentThemeBg : (rawBg || "#ffffff");
 
     // Defs & ClipPath to strictly prevent any glyph leakage beyond block boundaries
     const clipId = `clip-blk-${idx}`;
     svgParts.push(
       `  <defs>`,
       `    <clipPath id="${clipId}">`,
-      `      <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" rx="2" ry="2" />`,
+      `      <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" rx="3" ry="3" />`,
       `    </clipPath>`,
       `  </defs>`
     );
 
     // Seamless background inpainting with sampled background color
-    const fillColor = b.bg_color || "#ffffff";
     svgParts.push(
-      `  <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" fill="${fillColor}" stroke="none" rx="2" ry="2" />`
+      `  <rect x="${maskX.toFixed(1)}" y="${maskY.toFixed(1)}" width="${maskW.toFixed(1)}" height="${maskH.toFixed(1)}" fill="${fillColor}" stroke="none" rx="3" ry="3" />`
     );
 
     // Text Alignment calculations
