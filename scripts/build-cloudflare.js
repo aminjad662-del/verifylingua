@@ -2280,12 +2280,13 @@ async function handleApiRequest(request, pathname, env, ctx) {
         // Single-line field classification (ID card labels, form fields, personal names, dates, serials, compact badges)
         const isSingleLineField =
           explicitLines.length <= 1 &&
-          b.height <= 38 &&
-          (b.rawText.length <= 35 ||
-           b.height <= 28 ||
-           (b.width / Math.max(1, b.height) >= 1.8 && b.height <= 38) ||
-           b.tier === 'caption' ||
-           b.tier === 'heading');
+          (
+            (!b.rawText.includes(' ') && b.rawText.length <= 35 && b.height <= 50) ||
+            (b.height <= 42 && b.rawText.length <= 40) ||
+            b.height <= 28 ||
+            (b.width / Math.max(1, b.height) >= 1.6 && b.height <= 42) ||
+            ((b.tier === 'caption' || b.tier === 'heading') && b.height <= 45)
+          );
 
         // Horizontal clearance before next block on same horizontal band
         const nextHorizontal = resolved.find(function(other) {
@@ -2353,6 +2354,10 @@ async function handleApiRequest(request, pathname, env, ctx) {
               for (let li = 0; li < explicitLines.length; li++) {
                 const expL = explicitLines[li];
                 const words = expL.trim().split(' ').filter(Boolean);
+                if (words.length === 1 && words[0].length <= Math.max(maxChars, 25)) {
+                  candidateLines.push(words[0]);
+                  continue;
+                }
                 let curL = '';
                 for (let wi = 0; wi < words.length; wi++) {
                   const wrd = words[wi];
@@ -2361,12 +2366,17 @@ async function handleApiRequest(request, pathname, env, ctx) {
                   } else {
                     if (curL) candidateLines.push(curL);
                     if (wrd.length > maxChars) {
-                      let rem = wrd;
-                      while (rem.length > maxChars) {
-                        candidateLines.push(rem.slice(0, maxChars - 1) + '-');
-                        rem = rem.slice(maxChars - 1);
+                      if (wrd.length <= 18 || wrd.length <= maxChars + 4) {
+                        candidateLines.push(wrd);
+                        curL = '';
+                      } else {
+                        let rem = wrd;
+                        while (rem.length > maxChars) {
+                          candidateLines.push(rem.slice(0, maxChars - 1) + '-');
+                          rem = rem.slice(maxChars - 1);
+                        }
+                        curL = rem;
                       }
-                      curL = rem;
                     } else {
                       curL = wrd;
                     }
@@ -2376,26 +2386,35 @@ async function handleApiRequest(request, pathname, env, ctx) {
               }
             } else {
               const words = b.rawText.trim().split(' ').filter(Boolean);
-              let curL = '';
-              for (let wi = 0; wi < words.length; wi++) {
-                const wrd = words[wi];
-                if ((curL + ' ' + wrd).trim().length <= maxChars) {
-                  curL = (curL + ' ' + wrd).trim();
-                } else {
-                  if (curL) candidateLines.push(curL);
-                  if (wrd.length > maxChars) {
-                    let rem = wrd;
-                    while (rem.length > maxChars) {
-                      candidateLines.push(rem.slice(0, maxChars - 1) + '-');
-                      rem = rem.slice(maxChars - 1);
-                    }
-                    curL = rem;
+              if (words.length === 1 && words[0].length <= Math.max(maxChars, 25)) {
+                candidateLines.push(words[0]);
+              } else {
+                let curL = '';
+                for (let wi = 0; wi < words.length; wi++) {
+                  const wrd = words[wi];
+                  if ((curL + ' ' + wrd).trim().length <= maxChars) {
+                    curL = (curL + ' ' + wrd).trim();
                   } else {
-                    curL = wrd;
+                    if (curL) candidateLines.push(curL);
+                    if (wrd.length > maxChars) {
+                      if (wrd.length <= 18 || wrd.length <= maxChars + 4) {
+                        candidateLines.push(wrd);
+                        curL = '';
+                      } else {
+                        let rem = wrd;
+                        while (rem.length > maxChars) {
+                          candidateLines.push(rem.slice(0, maxChars - 1) + '-');
+                          rem = rem.slice(maxChars - 1);
+                        }
+                        curL = rem;
+                      }
+                    } else {
+                      curL = wrd;
+                    }
                   }
                 }
+                if (curL) candidateLines.push(curL);
               }
-              if (curL) candidateLines.push(curL);
             }
 
             const candidateLh = Math.max(8, Math.round(candidateFs * 1.25));

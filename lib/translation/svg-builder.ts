@@ -816,6 +816,13 @@ export function wrapTextToLines(text: string, maxChars: number): string[] {
   if (text.length <= safeMax) return [text.trim()];
 
   const words = text.trim().split(/\s+/);
+  // Never break or hyphenate a single word (e.g. personal name, city, nationality, ID number)
+  if (words.length === 1) {
+    if (words[0].length <= Math.max(safeMax, 25)) {
+      return [words[0]];
+    }
+  }
+
   const lines: string[] = [];
   let currentLine = "";
 
@@ -827,17 +834,21 @@ export function wrapTextToLines(text: string, maxChars: number): string[] {
         lines.push(currentLine);
         currentLine = "";
       }
-      // If single word exceeds safeMax, break it cleanly (no hyphen for Arabic/Hebrew script)
+      // If single word exceeds safeMax, avoid hyphenating normal words
       if (w.length > safeMax) {
-        const isRtlWord = /[\u0600-\u06FF\u0590-\u05FF]/.test(w);
-        const hyphen = isRtlWord ? "" : "-";
-        const step = isRtlWord ? safeMax : safeMax - 1;
-        let remaining = w;
-        while (remaining.length > safeMax) {
-          lines.push(remaining.slice(0, step) + hyphen);
-          remaining = remaining.slice(step);
+        if (w.length <= 18 || w.length <= safeMax + 4) {
+          lines.push(w);
+        } else {
+          const isRtlWord = /[\u0600-\u06FF\u0590-\u05FF]/.test(w);
+          const hyphen = isRtlWord ? "" : "-";
+          const step = isRtlWord ? safeMax : safeMax - 1;
+          let remaining = w;
+          while (remaining.length > safeMax) {
+            lines.push(remaining.slice(0, step) + hyphen);
+            remaining = remaining.slice(step);
+          }
+          currentLine = remaining;
         }
-        currentLine = remaining;
       } else {
         currentLine = w;
       }
@@ -1091,12 +1102,13 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     // Single-line field classification (ID card labels, form fields, personal names, dates, serials, compact badges)
     const isSingleLineField =
       explicitLines.length <= 1 &&
-      b.boxH <= 38 &&
-      (b.rawText.length <= 35 ||
-       b.boxH <= 28 ||
-       (b.boxW / Math.max(1, b.boxH) >= 1.8 && b.boxH <= 38) ||
-       b.tier === "caption" ||
-       b.tier === "heading");
+      (
+        (!b.rawText.includes(" ") && b.rawText.length <= 35 && b.boxH <= 50) ||
+        (b.boxH <= 42 && b.rawText.length <= 40) ||
+        b.boxH <= 28 ||
+        (b.boxW / Math.max(1, b.boxH) >= 1.6 && b.boxH <= 42) ||
+        ((b.tier === "caption" || b.tier === "heading") && b.boxH <= 45)
+      );
 
     // Horizontal clearance before next block on same horizontal band
     const nextHorizontal = resolved.find(
