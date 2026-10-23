@@ -657,7 +657,7 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
       curY += 6;
       const fs = 15;
       const hX = isDocRtl ? (docWidth - padX) : padX;
-      const hAnchor = isDocRtl ? "end" : "start";
+      const hAnchor = "start";
       contentParts.push(
         `  <text x="${hX}" y="${curY}" text-anchor="${hAnchor}" font-family="${fontStack}" font-size="${fs}" font-weight="bold" fill="#1e293b" ${textDir}>${escapeXml(rawText)}</text>`
       );
@@ -671,7 +671,7 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
         `  <rect x="${padX}" y="${curY - 14}" width="${contentW}" height="${boxH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />`
       );
       const qX = isDocRtl ? (docWidth - padX - 16) : (padX + 16);
-      const qAnchor = isDocRtl ? "end" : "start";
+      const qAnchor = "start";
       qLines.forEach((qLine, idx) => {
         contentParts.push(
           `  <text x="${qX}" y="${curY + idx * 20}" text-anchor="${qAnchor}" font-family="${fontStack}" font-size="${fs}" font-weight="600" fill="#0f172a" ${textDir}>${escapeXml(qLine)}</text>`
@@ -689,7 +689,7 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
       const maxChars = Math.floor(contentW / (fs * 0.52));
       const lines = wrapTextToLines(rawText, maxChars);
       const bX = isDocRtl ? (docWidth - padX) : padX;
-      const bAnchor = isDocRtl ? "end" : "start";
+      const bAnchor = "start";
       lines.forEach((line) => {
         contentParts.push(
           `  <text x="${bX}" y="${curY}" text-anchor="${bAnchor}" font-family="${fontStack}" font-size="${fs}" font-weight="normal" fill="#334155" ${textDir}>${escapeXml(line)}</text>`
@@ -713,7 +713,7 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${docWidth} ${totalDocH}" width="100%" height="100%">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${docWidth} ${totalDocH}" width="${docWidth}" height="${totalDocH}">`,
     `  <rect width="${docWidth}" height="${totalDocH}" fill="#ffffff" />`,
     ...contentParts,
     `</svg>`,
@@ -790,7 +790,7 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
 
   const svgParts: string[] = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalH}" width="100%" height="100%"${isDocRtl ? ' dir="rtl"' : ''}>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalH}" width="${width}" height="${totalH}"${isDocRtl ? ' dir="rtl"' : ''}>`,
     `  <image href="data:${mimeType};base64,${base64Image}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" />`,
   ];
 
@@ -895,14 +895,27 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     const textAlign = isBlockRtl
       ? (b.align === "center" ? "center" : "right")
       : (b.align === "center" ? "center" : b.align === "right" ? "right" : "left");
-    let textAnchor = isBlockRtl ? "end" : "start";
+        let textAnchor = "start";
     let textStartX = isBlockRtl ? (maskX + maskW - 6) : (maskX + 6);
-    if (b.align === "center") {
+    if (b.align === "center" || textAlign === "center") {
       textAnchor = "middle";
       textStartX = maskX + maskW / 2;
-    } else if (textAlign === "right") {
-      textAnchor = "end";
-      textStartX = maskX + maskW - 6;
+    } else if (isBlockRtl) {
+      if (textAlign === "left") {
+        textAnchor = "end";
+        textStartX = maskX + 6;
+      } else {
+        textAnchor = "start";
+        textStartX = maskX + maskW - 6;
+      }
+    } else {
+      if (textAlign === "right") {
+        textAnchor = "end";
+        textStartX = maskX + maskW - 6;
+      } else {
+        textAnchor = "start";
+        textStartX = maskX + 6;
+      }
     }
 
     const verticalPadding = Math.max(1, (maskH - renderedTextH) / 2);

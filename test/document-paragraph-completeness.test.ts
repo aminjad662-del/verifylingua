@@ -184,4 +184,52 @@ describe("Document Paragraph Completeness & Layout Order Verification", () => {
     expect(texts[1]).toBe("Line 2: The water was warm and the sun was shining.");
     expect(texts[2]).toBe("Line 3: They began to unpack their belongings.");
   });
+  it("8. buildImageTranslatedSvg uses text-anchor='start' and right-edge textStartX for RTL text so it flows inward into the bounding box", () => {
+    const arabicBlock: TranslatedBlockData = {
+      box_2d: [200, 50, 260, 650],
+      original_text: "It was early summer, and the weather was really hot.",
+      translated_text: "كان الوقت في أوائل الصيف، وكان الطقس حاراً حقاً.",
+      font_size_tier: "body",
+    };
+
+    const svg = buildImageTranslatedSvg({
+      imageBuffer: dummyImageBuffer,
+      mimeType: "image/png",
+      width: 772,
+      height: 1000,
+      blocks: [arabicBlock],
+      targetLang: "ar",
+      fileName: "worksheet.png",
+    });
+
+    expect(svg).toContain('viewBox="0 0 772 1038" width="772" height="1038"');
+    expect(svg).toContain('dir="rtl"');
+    expect(svg).toContain('text-anchor="start"');
+    expect(svg).toContain('direction="rtl"');
+    expect(svg).toContain('x="503.8"');
+    expect(svg).toContain('width="479.2"');
+  });
+
+  it("9. buildImageTranslatedSvg correctly uses text-anchor='middle' for centered text in RTL and LTR", () => {
+    const centeredBlock: TranslatedBlockData = {
+      box_2d: [100, 200, 140, 600],
+      original_text: "Title Heading",
+      translated_text: "عنوان المستند",
+      align: "center",
+      font_size_tier: "title",
+    };
+
+    const svg = buildImageTranslatedSvg({
+      imageBuffer: dummyImageBuffer,
+      mimeType: "image/png",
+      width: 800,
+      height: 1000,
+      blocks: [centeredBlock],
+      targetLang: "ar",
+      fileName: "doc.png",
+    });
+
+    expect(svg).toContain('text-anchor="middle"');
+    expect(svg).toContain('x="320.0"');
+  });
 });

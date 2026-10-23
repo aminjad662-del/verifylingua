@@ -1955,7 +1955,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
     const svgParts = [
       '<?xml version="1.0" encoding="UTF-8"?>',
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + totalH + '" width="100%" height="100%"' + (isDocRtl ? ' dir="rtl"' : '') + '>'
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + totalH + '" width="' + w + '" height="' + totalH + '"' + (isDocRtl ? ' dir="rtl"' : '') + '>'
     ];
 
     if (isImage) {
@@ -2128,14 +2128,27 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const textAlign = isBlockRtl
           ? (b.align === 'center' ? 'center' : 'right')
           : (b.align === 'center' ? 'center' : b.align === 'right' ? 'right' : 'left');
-        let textAnchor = isBlockRtl ? 'end' : 'start';
+                let textAnchor = 'start';
         let textStartX = isBlockRtl ? (maskX + maskW - 6) : (maskX + 6);
-        if (b.align === 'center') {
+        if (b.align === 'center' || textAlign === 'center') {
           textAnchor = 'middle';
           textStartX = maskX + maskW / 2;
-        } else if (textAlign === 'right') {
-          textAnchor = 'end';
-          textStartX = maskX + maskW - 6;
+        } else if (isBlockRtl) {
+          if (textAlign === 'left') {
+            textAnchor = 'end';
+            textStartX = maskX + 6;
+          } else {
+            textAnchor = 'start';
+            textStartX = maskX + maskW - 6;
+          }
+        } else {
+          if (textAlign === 'right') {
+            textAnchor = 'end';
+            textStartX = maskX + maskW - 6;
+          } else {
+            textAnchor = 'start';
+            textStartX = maskX + 6;
+          }
         }
 
         const verticalPadding = Math.max(1, (maskH - renderedTextH) / 2);
