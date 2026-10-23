@@ -104,7 +104,7 @@ export async function extractPdfSpatialBlocks(
       const tjStrMatch = line.match(/^\(([^)]+)\)\s*Tj$/);
       if (tjStrMatch) {
         const raw = decodePdfString(tjStrMatch[1]).trim();
-        if (raw.length > 0 && !/^[0-9\s.]+$/.test(raw)) {
+        if (raw.length > 0) {
           const estimatedWidth = Math.max(raw.length * currentFontSize * 0.52, 20);
           const estimatedHeight = currentFontSize * 1.25;
 
@@ -125,7 +125,7 @@ export async function extractPdfSpatialBlocks(
       }
 
       // TJ array operator: [ (str) -120 (str) ] TJ
-      if (line.endsWith("TJ")) {
+      if (line.includes("TJ") && (line.includes("[") || line.includes("(") || line.includes("<"))) {
         const textParts: string[] = [];
         const partRegex = /\(([^)]+)\)|<([0-9a-fA-F]+)>/g;
         let pMatch;

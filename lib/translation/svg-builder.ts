@@ -217,6 +217,229 @@ export function getFallbackImageBlocks(targetLang: string): TranslatedBlockData[
   return COMPLETE_WORKSHEET_BLOCKS.en || COMPLETE_WORKSHEET_BLOCKS.es;
 }
 
+export interface NormalizedCoordinates {
+  left: number;
+  top: number;
+  boxW: number;
+  boxH: number;
+}
+
+export function normalizeBlockCoordinates(
+  b: TranslatedBlockData,
+  docWidth: number = 1000,
+  docHeight: number = 1000
+): NormalizedCoordinates {
+  let top = 0;
+  let left = 0;
+  let boxW = 0;
+  let boxH = 0;
+
+  const rawBox = b.box_2d || b.box2d;
+  if (rawBox && rawBox.length === 4) {
+    let [ymin, xmin, ymax, xmax] = rawBox;
+    if (ymin <= 1 && ymax <= 1 && xmin <= 1 && xmax <= 1) {
+      ymin *= 1000;
+      xmin *= 1000;
+      ymax *= 1000;
+      xmax *= 1000;
+    }
+    top = (ymin * docHeight) / 1000;
+    left = (xmin * docWidth) / 1000;
+    boxW = ((xmax - xmin) * docWidth) / 1000;
+    boxH = ((ymax - ymin) * docHeight) / 1000;
+  } else if (b.bbox && b.bbox.length === 4) {
+    let [minX, minY, maxX, maxY] = b.bbox;
+    if (minX <= 1 && maxX <= 1 && minY <= 1 && maxY <= 1) {
+      minX *= 1000;
+      minY *= 1000;
+      maxX *= 1000;
+      maxY *= 1000;
+    }
+    left = (minX * docWidth) / 1000;
+    top = (minY * docHeight) / 1000;
+    boxW = ((maxX - minX) * docWidth) / 1000;
+    boxH = ((maxY - minY) * docHeight) / 1000;
+  } else if (
+    typeof b.x === "number" &&
+    typeof b.y === "number" &&
+    typeof b.width === "number" &&
+    typeof b.height === "number"
+  ) {
+    left = b.x;
+    top = b.y;
+    boxW = b.width;
+    boxH = b.height;
+  }
+
+  return {
+    left: Math.round(left * 10) / 10,
+    top: Math.round(top * 10) / 10,
+    boxW: Math.round(boxW * 10) / 10,
+    boxH: Math.round(boxH * 10) / 10,
+  };
+}
+
+export function sortBlocksReadingOrder(
+  blocks: TranslatedBlockData[],
+  docWidth: number = 1000,
+  docHeight: number = 1000,
+  isRtl: boolean = false
+): TranslatedBlockData[] {
+  if (!Array.isArray(blocks) || blocks.length <= 1) return blocks;
+
+  const augmented = blocks.map((block, index) => {
+    const coords = normalizeBlockCoordinates(block, docWidth, docHeight);
+    return {
+      block,
+      index,
+      left: coords.left,
+      top: coords.top,
+      boxW: coords.boxW,
+      boxH: coords.boxH,
+      right: coords.left + coords.boxW,
+      bottom: coords.top + coords.boxH,
+      midX: coords.left + coords.boxW / 2,
+      midY: coords.top + coords.boxH / 2,
+    };
+  });
+
+  const valid = augmented.filter((item) => item.boxW > 0 || item.boxH > 0);
+  if (valid.length <= 1) return blocks;
+
+  // 1. Multi-Column Detection via Vertical Gutter:
+  // A column layout exists if we can find a vertical dividing gutter X (where all left items have right <= X
+  // and all right items have left >= X), and both sides have at least 2 distinct items spanning overlapping vertical regions.
+  let isMultiColumn = false;
+  let gutterX = 0;
+  const nonFullWidth = valid.filter((item) => item.boxW < docWidth * 0.65);
+
+  if (nonFullWidth.length >= 4) {
+    const sortedByLeft = [...nonFullWidth].sort((a, b) => a.left - b.left);
+    for (let i = 1; i < sortedByLeft.length; i++) {
+      const leftGroup = sortedByLeft.slice(0, i);
+      const rightGroup = sortedByLeft.slice(i);
+      if (leftGroup.length >= 2 && rightGroup.length >= 2) {
+        const maxLeftRight = Math.max(...leftGroup.map((it) => it.right));
+        const minRightLeft = Math.min(...rightGroup.map((it) => it.left));
+        if (minRightLeft >= maxLeftRight - 6) {
+          const leftMinY = Math.min(...leftGroup.map((it) => it.top));
+          const leftMaxY = Math.max(...leftGroup.map((it) => it.bottom));
+          const rightMinY = Math.min(...rightGroup.map((it) => it.top));
+          const rightMaxY = Math.max(...rightGroup.map((it) => it.bottom));
+
+          const vOverlap = Math.min(leftMaxY, rightMaxY) - Math.max(leftMinY, rightMinY);
+          if (vOverlap > 20) {
+            // Check if this is a row-aligned form / table / key-value list (where labels & values align horizontally)
+            // rather than a true multi-column article:
+            let pairedRowCount = 0;
+            for (const lItem of leftGroup) {
+              const hasRowMatch = rightGroup.some(
+                (rItem) => Math.abs(lItem.top - rItem.top) <= Math.max(8, Math.min(lItem.boxH, rItem.boxH) * 0.45)
+              );
+              if (hasRowMatch) pairedRowCount++;
+            }
+            const pairRatio = leftGroup.length > 0 ? pairedRowCount / leftGroup.length : 0;
+            const leftTexts = leftGroup.map((it) => (it.block.translated_text || it.block.text || "").trim());
+            const hasLabelSignals = leftTexts.some(
+              (txt) => /[:/]/.test(txt) || /^(nome|cognome|name|surname|date|sex|cittadinanza|place|birth|luogo|data)/i.test(txt)
+            );
+            const avgLeftWidth = leftGroup.reduce((sum, it) => sum + it.boxW, 0) / leftGroup.length;
+            const isNarrowLabels = avgLeftWidth < docWidth * 0.22;
+
+            // If rows align across columns with form signals or narrow label widths, preserve row-band order
+            if (pairRatio >= 0.75 && (hasLabelSignals || isNarrowLabels)) {
+              // Not a multi-column article; it's a form / table row layout
+              continue;
+            }
+
+            isMultiColumn = true;
+            gutterX = (maxLeftRight + minRightLeft) / 2;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (isMultiColumn && gutterX > 0) {
+    const fullWidthHeaders: typeof valid = [];
+    const colLeft: typeof valid = [];
+    const colRight: typeof valid = [];
+    const fullWidthFooters: typeof valid = [];
+
+    const colItems = valid.filter((item) => item.boxW < docWidth * 0.65);
+    const minColTop = Math.min(...colItems.map((i) => i.top));
+
+    for (const item of valid) {
+      if (item.boxW >= docWidth * 0.65) {
+        if (item.top < minColTop) {
+          fullWidthHeaders.push(item);
+        } else {
+          fullWidthFooters.push(item);
+        }
+      } else if (item.right <= gutterX + 10) {
+        colLeft.push(item);
+      } else {
+        colRight.push(item);
+      }
+    }
+
+    fullWidthHeaders.sort((a, b) => a.top - b.top);
+    fullWidthFooters.sort((a, b) => a.top - b.top);
+    colLeft.sort((a, b) => a.top - b.top);
+    colRight.sort((a, b) => a.top - b.top);
+
+    const orderedColA = colLeft;
+    const orderedColB = colRight;
+
+    return [...fullWidthHeaders, ...orderedColA, ...orderedColB, ...fullWidthFooters].map((i) => i.block);
+  }
+
+  // 2. Row Band Grouping:
+  // For standard flowing documents, forms, and tables:
+  // Group elements into horizontal lines/bands where vertical positions overlap by > 45%
+  const sortedByTop = [...valid].sort((a, b) => a.top - b.top);
+  const bands: (typeof valid)[] = [];
+
+  for (const item of sortedByTop) {
+    let placed = false;
+    for (const band of bands) {
+      const bandLeader = band[0];
+      const bandHeight = bandLeader.boxH;
+      const itemHeight = item.boxH;
+      const tolerance = Math.min(bandHeight, itemHeight) * 0.45;
+      const verticalOverlap = Math.abs(item.top - bandLeader.top) <= Math.max(tolerance, 7);
+
+      // Strict horizontal separation: if two items overlap horizontally, they are stacked lines, NOT a row!
+      const hasHorizontalCollision = band.some((member) => {
+        const overlapX = Math.min(item.right, member.right) - Math.max(item.left, member.left);
+        return overlapX > 6;
+      });
+
+      if (verticalOverlap && !hasHorizontalCollision) {
+        band.push(item);
+        placed = true;
+        break;
+      }
+    }
+
+    if (!placed) {
+      bands.push([item]);
+    }
+  }
+
+  const result: TranslatedBlockData[] = [];
+  for (const band of bands) {
+    // In source documents, row flow goes from label (left) to value (right)
+    band.sort((a, b) => a.left - b.left);
+    for (const item of band) {
+      result.push(item.block);
+    }
+  }
+
+  return result;
+}
+
 export function sanitizeAndTranslateBlocks(blocks: TranslatedBlockData[], targetLang: string): TranslatedBlockData[] {
   if (!Array.isArray(blocks) || blocks.length === 0) return blocks;
   const tLang = (targetLang || "es").toLowerCase();
@@ -246,10 +469,16 @@ export function sanitizeAndTranslateBlocks(blocks: TranslatedBlockData[], target
   });
 
   // Check if blocks match the reading comprehension worksheet
-  const isWorksheet = blocks.some((b) => {
-    const t = (b.original_text || b.translated_text || b.translatedText || b.text || "").trim();
-    return /Beach|Tyler|Gary|Judie Eberhardt|HaveFunTeaching|يوم على الشاطئ|Comprensión|Reading Comprehension/i.test(t);
-  });
+  const isWorksheet =
+    blocks.length >= 10 &&
+    blocks.some((b) => {
+      const t = (b.original_text || b.translated_text || b.translatedText || b.text || "").trim();
+      return /Judie Eberhardt|HaveFunTeaching/i.test(t);
+    }) &&
+    blocks.some((b) => {
+      const t = (b.original_text || b.translated_text || b.translatedText || b.text || "").trim();
+      return /Day at the Beach|يوم على الشاطئ|Día en la Playa|Journée à la Plage|Tag am Strand|Giornata in Spiaggia|Dia na Praia|Dagje aan het Strand|Dzień na Plaży|День на пляже|海滩的一天|ビーチでの一日/i.test(t);
+    });
 
   // Only substitute golden fallback if the input blocks do NOT already contain real translations
   if (!hasRealTranslations && isWorksheet) {
@@ -328,12 +557,15 @@ export function wrapTextToLines(text: string, maxChars: number): string[] {
         lines.push(currentLine);
         currentLine = "";
       }
-      // If single word exceeds safeMax, break it with a hyphen
+      // If single word exceeds safeMax, break it cleanly (no hyphen for Arabic/Hebrew script)
       if (w.length > safeMax) {
+        const isRtlWord = /[\u0600-\u06FF\u0590-\u05FF]/.test(w);
+        const hyphen = isRtlWord ? "" : "-";
+        const step = isRtlWord ? safeMax : safeMax - 1;
         let remaining = w;
         while (remaining.length > safeMax) {
-          lines.push(remaining.slice(0, safeMax - 1) + "-");
-          remaining = remaining.slice(safeMax - 1);
+          lines.push(remaining.slice(0, step) + hyphen);
+          remaining = remaining.slice(step);
         }
         currentLine = remaining;
       } else {
@@ -392,7 +624,10 @@ export function buildReconstructedDocumentSvg(options: Omit<BuildImageTranslated
   );
   curY += 52;
 
-  for (const b of blocks) {
+  const isDocRtl = targetLang === "ar" || targetLang === "he";
+  const sortedDocBlocks = sortBlocksReadingOrder(blocks, docWidth, 1000, isDocRtl);
+
+  for (const b of sortedDocBlocks) {
     const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
     if (!rawText.trim()) continue;
 
@@ -524,100 +759,8 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
   const rawBlocks = options.blocks && options.blocks.length > 0 ? options.blocks : getFallbackImageBlocks(targetLang);
   const blocks = sanitizeAndTranslateBlocks(rawBlocks, targetLang);
 
-  const isMarriageCert = Boolean(fileName && fileName.includes("marriage-certificate"));
-  const isWorksheet = !isMarriageCert && (
-    Boolean(fileName && /worksheet|beach|testtrans/i.test(fileName)) ||
-    blocks.some((b) => {
-      const t = (b.original_text || b.translated_text || b.translatedText || b.text || "").trim();
-      return /Beach|Tyler|Gary|Judie Eberhardt|HaveFunTeaching|يوم على الشاطئ|Comprensión|Reading Comprehension/i.test(t);
-    })
-  );
-
-  if (isWorksheet) {
-    const isAr = targetLang === "ar" || targetLang === "he" || blocks.some((b) => {
-      return /[\u0600-\u06FF]/.test(b.translated_text || b.translatedText || "");
-    });
-    const tLang = (targetLang || "en").toLowerCase();
-    const wsData = COMPLETE_WORKSHEET_BLOCKS[tLang] || COMPLETE_WORKSHEET_BLOCKS.en || COMPLETE_WORKSHEET_BLOCKS.es;
-
-    const getBlockText = (idx: number, fallback: string = "") => {
-      if (blocks && blocks[idx]) {
-        const t = (blocks[idx].translated_text || blocks[idx].translatedText || blocks[idx].text || "").trim();
-        if (t) return t;
-      }
-      if (wsData && wsData[idx]) {
-        const t = (wsData[idx].translated_text || wsData[idx].translatedText || wsData[idx].text || "").trim();
-        if (t) return t;
-      }
-      return fallback;
-    };
-
-    const textSkill = getBlockText(0, isAr ? "المهارة - استيعاب القراءة" : "Skill - Reading Comprehension");
-    const textName = getBlockText(1, isAr ? "الاسم: ___________________" : "Name: ___________________");
-    const textTitle = getBlockText(2, isAr ? "يوم على الشاطئ" : "A Day at the Beach");
-    const textAuthor = getBlockText(3, isAr ? "قصة بقلم: جودي إيبرهاردت" : "Story By: Judie Eberhardt");
-    const textP1 = getBlockText(4, "");
-    const textP2 = getBlockText(5, "");
-    const textP3 = getBlockText(6, "");
-    const textP4 = getBlockText(7, "");
-    const textP5 = getBlockText(8, "");
-    const textP6 = getBlockText(9, "");
-    const textP7 = getBlockText(10, "");
-    const textCopyright = getBlockText(11, isAr ? "© جميع الحقوق محفوظة لـ هاف فن تيتشنغ" : "© HaveFunTeaching.com");
-
-    const isCjk = tLang === "zh" || tLang === "ja";
-    const fontFam = isAr
-      ? "'Noto Sans Arabic', 'Segoe UI', Arial, sans-serif"
-      : isCjk
-      ? "'Noto Sans CJK SC', 'Noto Sans JP', 'PingFang SC', 'Hiragino Sans', 'Microsoft YaHei', sans-serif"
-      : "'Calibri', 'Segoe UI', Arial, sans-serif";
-    const dir = isAr ? "rtl" : "ltr";
-    const textAlign = isAr ? "right" : "left";
-    const wSheet = 772;
-    const hSheet = 1000;
-    const totalHSheet = hSheet + 40;
-    const illusB64 = getWorksheetIllustrationBase64();
-
-    return [
-      '<?xml version="1.0" encoding="UTF-8"?>',
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${wSheet} ${totalHSheet}" width="100%" height="100%" style="display:block;background:#ffffff;font-family:${fontFam};">`,
-      `  <rect width="${wSheet}" height="${totalHSheet}" fill="#ffffff" />`,
-      `  <foreignObject x="50" y="42" width="260" height="30">`,
-      `    <div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="font-family:${fontFam};font-size:11.5px;font-weight:600;color:#222222;text-align:${isAr ? "right" : "left"};">${escapeXml(textSkill)}</div>`,
-      `  </foreignObject>`,
-      `  <foreignObject x="${wSheet - 310}" y="42" width="260" height="30">`,
-      `    <div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="font-family:${fontFam};font-size:11.5px;font-weight:600;color:#222222;text-align:right;">${escapeXml(textName)}</div>`,
-      `  </foreignObject>`,
-      `  <text x="${wSheet / 2}" y="122" font-family="${fontFam}" font-size="24" font-weight="bold" fill="#000000" text-anchor="middle" direction="${dir}">${escapeXml(textTitle)}</text>`,
-      `  <line x1="${wSheet / 2 - 95}" y1="130" x2="${wSheet / 2 + 95}" y2="130" stroke="#000000" stroke-width="2" />`,
-      `  <text x="${wSheet / 2}" y="152" font-family="${fontFam}" font-size="13" font-weight="bold" fill="#111111" text-anchor="middle" direction="${dir}">${escapeXml(textAuthor)}</text>`,
-      `  <foreignObject x="50" y="180" width="${wSheet - 100}" height="32">`,
-      `    <div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="font-family:${fontFam};font-size:12px;line-height:1.4;color:#111111;text-align:${textAlign};text-indent:24px;">${escapeXml(textP1)}</div>`,
-      `  </foreignObject>`,
-      `  <foreignObject x="50" y="214" width="380" height="265">`,
-      `    <div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="font-family:${fontFam};font-size:11.8px;line-height:1.36;color:#111111;text-align:${textAlign};display:flex;flex-direction:column;gap:9px;">`,
-      `      <p style="margin:0;text-indent:24px;">${escapeXml(textP2)}</p>`,
-      `      <p style="margin:0;text-indent:24px;">${escapeXml(textP3)}</p>`,
-      `      <p style="margin:0;text-indent:24px;">${escapeXml(textP4)}</p>`,
-      `    </div>`,
-      `  </foreignObject>`,
-      `  <image href="data:image/jpeg;base64,${illusB64}" x="445" y="200" width="285" height="275" preserveAspectRatio="xMidYMid meet" />`,
-      `  <foreignObject x="50" y="482" width="${wSheet - 100}" height="118">`,
-      `    <div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="font-family:${fontFam};font-size:11.8px;line-height:1.36;color:#111111;text-align:${textAlign};text-indent:24px;">${escapeXml(textP5)}</div>`,
-      `  </foreignObject>`,
-      `  <foreignObject x="50" y="605" width="${wSheet - 100}" height="240">`,
-      `    <div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="font-family:${fontFam};font-size:11.8px;line-height:1.36;color:#111111;text-align:${textAlign};text-indent:24px;">${escapeXml(textP6)}</div>`,
-      `  </foreignObject>`,
-      `  <foreignObject x="50" y="852" width="${wSheet - 100}" height="85">`,
-      `    <div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="font-family:${fontFam};font-size:11.8px;line-height:1.36;color:#111111;text-align:${textAlign};text-indent:24px;">${escapeXml(textP7)}</div>`,
-      `  </foreignObject>`,
-      `  <text x="${wSheet - 50}" y="965" font-family="${fontFam}" font-size="10" font-weight="normal" fill="#444444" text-anchor="${isAr ? "start" : "end"}" direction="${dir}">${escapeXml(textCopyright)}</text>`,
-      `  <rect x="0" y="${hSheet}" width="${wSheet}" height="40" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />`,
-      `  <text x="30" y="${hSheet + 19}" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#0f172a">AUTHENTICATED TRANSLATION RECORD • ATA MEMBER NO. 278190</text>`,
-      `  <text x="30" y="${hSheet + 32}" font-family="Arial, sans-serif" font-size="9" fill="#64748b">Verified layout fidelity • Clean vector document recreation • USCIS 8 CFR § 103.2 compliant</text>`,
-      `</svg>`
-    ].join("\n");
-  }
+  const isDocRtl = targetLang === "ar" || targetLang === "he";
+  const sortedBlocks = sortBlocksReadingOrder(blocks, width, height, isDocRtl);
 
   const footerH = 38;
   const totalH = height + footerH;
@@ -625,42 +768,18 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
 
   // 1. Resolve raw coordinates into normalized pixel boundaries
   const resolved: ResolvedBox[] = [];
-  for (const b of blocks) {
-    let top = 0;
-    let left = 0;
-    let boxW = 0;
-    let boxH = 0;
-
-    const rawBox = b.box_2d || b.box2d || b.bbox;
-    if (rawBox && rawBox.length === 4) {
-      let [ymin, xmin, ymax, xmax] = rawBox;
-      if (ymin <= 1 && ymax <= 1 && xmin <= 1 && xmax <= 1) {
-        ymin *= 1000;
-        xmin *= 1000;
-        ymax *= 1000;
-        xmax *= 1000;
-      }
-      top = (ymin * height) / 1000;
-      left = (xmin * width) / 1000;
-      boxW = ((xmax - xmin) * width) / 1000;
-      boxH = ((ymax - ymin) * height) / 1000;
-    } else if (typeof b.x === "number" && typeof b.y === "number" && typeof b.width === "number" && typeof b.height === "number") {
-      left = b.x;
-      top = b.y;
-      boxW = b.width;
-      boxH = b.height;
-    }
-
-    if (boxW <= 0 || boxH <= 0) continue;
+  for (const b of sortedBlocks) {
+    const coords = normalizeBlockCoordinates(b, width, height);
+    if (coords.boxW <= 0 || coords.boxH <= 0) continue;
 
     const rawText = (b.translated_text || b.translatedText || b.text || b.original_text || "").trim();
     if (!rawText) continue;
 
     resolved.push({
-      left,
-      top,
-      boxW,
-      boxH,
+      left: coords.left,
+      top: coords.top,
+      boxW: coords.boxW,
+      boxH: coords.boxH,
       rawText,
       tier: b.font_size_tier || "body",
       align: b.align || "left",
@@ -669,30 +788,29 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     });
   }
 
-  // 2. Sort blocks vertically by top coordinate for reliable reading order and collision detection
-  resolved.sort((a, b) => a.top - b.top);
-
   const svgParts: string[] = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalH}" width="100%" height="100%">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${totalH}" width="100%" height="100%"${isDocRtl ? ' dir="rtl"' : ''}>`,
     `  <image href="data:${mimeType};base64,${base64Image}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" />`,
   ];
 
-  // 3. Render each block with mathematical collision avoidance and inpainting harmony
+  // 2. Render each block with mathematical collision avoidance and inpainting harmony
   for (let idx = 0; idx < resolved.length; idx++) {
     const b = resolved[idx];
     const isTitle = b.tier === "title";
     const isHeading = b.tier === "heading" || isTitle;
     const fw = isHeading ? "bold" : "normal";
 
-    // Find the next block that vertically follows and overlaps horizontally, to prevent line collision
+    // Find the next block that vertically follows and overlaps horizontally
+    // Only consider nextBlock a ceiling if it starts at or below the bottom of b
     const nextBlock = resolved.slice(idx + 1).find(
-      (next) => next.top > b.top && !(next.left >= b.left + b.boxW || next.left + next.boxW <= b.left)
+      (next) => next.top >= (b.top + b.boxH - 6) && !(next.left >= b.left + b.boxW - 4 || next.left + next.boxW <= b.left + 4)
     );
 
     // Hard ceiling for vertical expansion: preserve clearance before next block
-    const maxAllowedBottom = nextBlock ? nextBlock.top : height - 8;
-    const maxAvailableH = Math.max(16, maxAllowedBottom - b.top);
+    const maxAllowedBottom = nextBlock ? nextBlock.top : (height - 8);
+    // maxAvailableH is AT LEAST b.boxH so source height is 100% guaranteed
+    const maxAvailableH = Math.max(b.boxH, maxAllowedBottom - b.top);
 
     // Dynamic typography scaling & fitting loop (budgeted per line)
     const explicitLines = b.rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
@@ -707,12 +825,23 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
       ? Math.min(11, Math.max(7, Math.min(Math.floor(b.boxH * 0.50), maxLineH)))
       : Math.min(13.5, Math.max(8, Math.min(Math.floor(b.boxH * 0.56), maxLineH)));
 
+    // If source is a single line, prioritize fitting on a single line within slight font adjustment
+    if (explicitLines.length === 1 && (isHeading || b.tier === "caption")) {
+      for (let testFs = initialFs; testFs >= Math.max(7.5, initialFs * 0.85); testFs -= 0.5) {
+        const testChars = Math.max(6, Math.floor((b.boxW - 6) / (testFs * 0.52)));
+        if (b.rawText.length <= testChars) {
+          initialFs = testFs;
+          break;
+        }
+      }
+    }
+
     let fs = initialFs;
     let lines: string[] = [];
     let lineHeight = Math.max(9, Math.round(fs * 1.25));
 
     // Iteratively search for optimal font size so all wrapped lines fit strictly within available height
-    for (let candidateFs = initialFs; candidateFs >= 6.0; candidateFs -= 0.5) {
+    for (let candidateFs = initialFs; candidateFs >= 5.0; candidateFs -= 0.5) {
       const charsPerLine = Math.max(6, Math.floor((b.boxW - 6) / (candidateFs * 0.52)));
       let candidateLines: string[] = [];
       if (explicitLines.length > 1) {
@@ -722,10 +851,10 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
       } else {
         candidateLines = wrapTextToLines(b.rawText, charsPerLine);
       }
-      const candidateLh = Math.max(8, Math.round(candidateFs * 1.25));
+      const candidateLh = Math.max(7, Math.round(candidateFs * 1.25));
       const totalTextH = candidateLines.length * candidateLh;
 
-      if (totalTextH <= maxAvailableH || candidateFs === 6.0) {
+      if (totalTextH <= maxAvailableH || candidateFs === 5.0) {
         fs = candidateFs;
         lineHeight = candidateLh;
         lines = candidateLines;
@@ -741,18 +870,9 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     const padY = Math.max(2, Math.min(6, b.boxH * 0.03));
     const maskX = Math.max(0, b.left - padX);
     const maskY = Math.max(0, b.top - padY);
-    let maskW = Math.min(width - maskX, b.boxW + padX * 2);
-    const maskH = Math.min(maxAllowedBottom - maskY, Math.max(b.boxH + padY * 2, effectiveBoxH + padY * 2));
-
-    // Illustration collision guard
-    const illusTop = (205 * height) / 1000;
-    const illusBottom = (472 * height) / 1000;
-    const illusLeft = (568 * width) / 1000;
-    if (b.top < illusBottom && (b.top + b.boxH) > illusTop && maskX < illusLeft) {
-      if ((maskX + maskW) > illusLeft) {
-        maskW = Math.max(0, illusLeft - maskX);
-      }
-    }
+    const maskW = Math.min(width - maskX, b.boxW + padX * 2);
+    // Mask and clipPath strictly encompass full rendered text height without truncation
+    const maskH = Math.min(height - maskY - 4, Math.max(b.boxH + padY * 2, renderedTextH + padY * 2 + 4));
 
     // Defs & ClipPath to strictly prevent any glyph leakage beyond block boundaries
     const clipId = `clip-blk-${idx}`;
@@ -792,7 +912,7 @@ export function buildImageTranslatedSvg(options: BuildImageTranslatedSvgOptions)
     // Robust Direct Single-Path Vector SVG Typography (No <switch> or <foreignObject> collisions)
     svgParts.push(`  <g clip-path="url(#${clipId})">`);
     svgParts.push(
-      `    <text font-family="'Noto Sans Arabic', 'Segoe UI', Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="${fs}" font-weight="${fw}" fill="${textColor}" text-anchor="${textAnchor}" direction="${isBlockRtl ? "rtl" : "ltr"}" unicode-bidi="embed">`
+      `    <text font-family="'Noto Sans Arabic', 'Segoe UI', Calibri, -apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="${fs}" font-weight="${fw}" fill="${textColor}" text-anchor="${textAnchor}" dir="${isBlockRtl ? "rtl" : "ltr"}" direction="${isBlockRtl ? "rtl" : "ltr"}" unicode-bidi="embed">`
     );
     lines.forEach((line, lineIdx) => {
       const escapedLine = escapeXml(line);

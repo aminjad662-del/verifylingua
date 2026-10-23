@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { SPRING_MICRO } from "@/lib/motion";
 import { ResultViewer } from "@/components/translation/ResultViewer";
-import { getFallbackImageBlocks, TranslatedBlockData } from "@/lib/translation/svg-builder";
+import { getFallbackImageBlocks, sortBlocksReadingOrder, TranslatedBlockData } from "@/lib/translation/svg-builder";
 import { verifyElementAndCharacterParity } from "@/lib/translation/qa-engine";
 
 interface Language {
@@ -917,10 +917,11 @@ export default function TranslatePage() {
             {job?.status === "ready" && (() => {
               const activeTargetLang = job.targetLang || targetLang;
               const activeSourceLang = job.sourceLang || sourceLang;
-              const displayBlocks = (job.blocks && job.blocks.length > 0)
+              const isRtl = activeTargetLang === "ar" || activeTargetLang === "he" || activeTargetLang === "fa" || activeTargetLang === "ur";
+              const rawBlocks = (job.blocks && job.blocks.length > 0)
                 ? job.blocks
                 : getFallbackImageBlocks(activeTargetLang);
-              const isRtl = activeTargetLang === "ar" || activeTargetLang === "he" || activeTargetLang === "fa" || activeTargetLang === "ur";
+              const displayBlocks = sortBlocksReadingOrder(rawBlocks, 1000, 1000, isRtl);
 
               const parityReport = verifyElementAndCharacterParity({
                 sourceBlocks: (job.blocks && job.blocks.length > 0) ? job.blocks : displayBlocks,

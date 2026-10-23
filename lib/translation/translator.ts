@@ -270,6 +270,18 @@ export async function translateStructuredBlocks(
       for (const item of chunkTranslations) {
         resultMap.set(item.id, item.translatedText);
       }
+      // Zero dropped blocks: for any block omitted by upstream batch response, resolve immediately
+      for (const b of chunk) {
+        if (!resultMap.has(b.id) || !resultMap.get(b.id)) {
+          let translated = "";
+          if (options.targetLang === "ar") {
+            translated = translateToArabicDeterministic(b.text);
+          } else {
+            translated = await translateText(b.text, options);
+          }
+          resultMap.set(b.id, translated || b.text);
+        }
+      }
     } else {
       // 3. Offline / deterministic fallback (strictly preserves uptime when upstream providers are 429 rate limited or offline)
       for (const b of chunk) {
@@ -337,7 +349,7 @@ export async function callDeepLBatchTranslation(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(15000),
       });
 
       if (res.status === 401 || res.status === 403 || res.status === 429) {
@@ -408,7 +420,7 @@ ${JSON.stringify(blocks.map((b) => ({ id: b.id, text: b.text })))}`;
               temperature: 0.1,
             },
           }),
-          signal: AbortSignal.timeout(4500),
+          signal: AbortSignal.timeout(30000),
         });
 
         if (res.status === 401 || res.status === 403 || res.status === 429) {
@@ -490,7 +502,7 @@ CRITICAL RULES:
               temperature: 0.1,
             },
           }),
-          signal: AbortSignal.timeout(4500),
+          signal: AbortSignal.timeout(30000),
         });
 
         if (res.status === 401 || res.status === 403 || res.status === 429) {

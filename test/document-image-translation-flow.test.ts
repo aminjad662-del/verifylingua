@@ -105,7 +105,7 @@ describe("Document Image Translation Multi-Step Flow", () => {
     expect(finalPollBody.svgContent).toBeTruthy();
     expect(finalPollBody.svgContent).toContain("<rect");
     expect(finalPollBody.svgContent).toContain("<text");
-    expect(finalPollBody.svgContent).toContain("<foreignObject");
+    expect(finalPollBody.svgContent).toContain("<tspan");
     expect(Array.isArray(finalPollBody.blocks)).toBe(true);
     expect(finalPollBody.blocks.length).toBeGreaterThan(0);
 

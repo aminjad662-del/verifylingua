@@ -1,3 +1,4 @@
+import { sortBlocksReadingOrder } from "./svg-builder";
 import { Jimp } from "jimp";
 import { translateText } from "./translator";
 import { TranslationOptions } from "./types";
@@ -320,8 +321,24 @@ export async function translateImage(
     return defaultColor;
   };
 
-  // Sort blocks by y coordinate for collision prevention
-  const sortedBlocks = [...blocks].sort((a, b) => a.y - b.y);
+  // Sort blocks in natural reading order
+  const sortedBlocks = sortBlocksReadingOrder(
+    blocks.map((b) => ({
+      id: b.id,
+      x: b.x,
+      y: b.y,
+      width: b.width,
+      height: b.height,
+      text: b.text,
+      original_text: b.text,
+    })),
+    width,
+    height,
+    isRtl
+  ).map((b) => {
+    const orig = blocks.find((ob) => ob.id === b.id) || b;
+    return { ...orig, x: b.x ?? orig.x, y: b.y ?? orig.y, width: b.width ?? orig.width, height: b.height ?? orig.height };
+  });
 
   // Inpaint original text regions and render translated text with collision prevention
   for (let bIdx = 0; bIdx < sortedBlocks.length; bIdx++) {
@@ -330,10 +347,10 @@ export async function translateImage(
     const translated = sanitizeForImageBitmap(rawTranslated, isRtl);
 
     const nextBlock = sortedBlocks.slice(bIdx + 1).find(
-      (nb) => nb.y > block.y && !(nb.x >= block.x + block.width || nb.x + nb.width <= block.x)
+      (nb) => nb.y >= (block.y + block.height - 4) && !(nb.x >= block.x + block.width - 4 || nb.x + nb.width <= block.x + 4)
     );
     const maxBottom = nextBlock ? nextBlock.y - 4 : height - 44;
-    const availableH = Math.max(12, maxBottom - block.y);
+    const availableH = Math.max(block.height, maxBottom - block.y);
 
     // Dynamic scale selection: calculate font scale so text fits in bounding box
     let scale = block.fontSize > 16 && block.width > 300 ? 2 : 1;

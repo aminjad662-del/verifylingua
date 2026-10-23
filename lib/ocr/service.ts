@@ -101,17 +101,25 @@ export async function analyzeDocumentOCR(
         const words = fullText.split(/\s+/).filter(Boolean);
         const langDetection = detectLanguageFromText(fullText);
 
-        const blocks: OCRBlock[] = spatial.blocks.map((b, i) => ({
-          id: b.id || `pdf_b_${i}`,
-          text: b.text,
-          box2d: [
-            Math.round(Math.max(0, Math.min(1000, (b.y / 792) * 1000))),
-            Math.round(Math.max(0, Math.min(1000, (b.x / 612) * 1000))),
-            Math.round(Math.max(0, Math.min(1000, ((b.y + b.height) / 792) * 1000))),
-            Math.round(Math.max(0, Math.min(1000, ((b.x + b.width) / 612) * 1000))),
-          ],
-          confidence: 99.5,
-        }));
+        const firstPageSize = pdfDoc.getPages()[0]?.getSize() || { width: 612, height: 792 };
+        const pdfW = firstPageSize.width || 612;
+        const pdfH = firstPageSize.height || 792;
+
+        const blocks: OCRBlock[] = spatial.blocks.map((b, i) => {
+          const pageW = pdfDoc.getPages()[b.page || 0]?.getSize().width || pdfW;
+          const pageH = pdfDoc.getPages()[b.page || 0]?.getSize().height || pdfH;
+          return {
+            id: b.id || `pdf_b_${i}`,
+            text: b.text,
+            box2d: [
+              Math.round(Math.max(0, Math.min(1000, (b.y / pageH) * 1000))),
+              Math.round(Math.max(0, Math.min(1000, (b.x / pageW) * 1000))),
+              Math.round(Math.max(0, Math.min(1000, ((b.y + b.height) / pageH) * 1000))),
+              Math.round(Math.max(0, Math.min(1000, ((b.x + b.width) / pageW) * 1000))),
+            ],
+            confidence: 99.5,
+          };
+        });
 
         const findings: OCRFinding[] = [];
 

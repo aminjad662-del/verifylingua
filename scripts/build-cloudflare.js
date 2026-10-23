@@ -1629,7 +1629,213 @@ async function handleApiRequest(request, pathname, env, ctx) {
     });
   }
 
+  
+
+
+  function normalizeBlockCoordinates(b, docWidth, docHeight) {
+    let top = 0, left = 0, boxW = 0, boxH = 0;
+    docWidth = docWidth || 1000;
+    docHeight = docHeight || 1000;
+    const rawBox = b.box_2d || b.box2d;
+    if (rawBox && rawBox.length === 4) {
+      let [ymin, xmin, ymax, xmax] = rawBox;
+      if (ymin <= 1 && ymax <= 1 && xmin <= 1 && xmax <= 1) {
+        ymin *= 1000;
+        xmin *= 1000;
+        ymax *= 1000;
+        xmax *= 1000;
+      }
+      top = (ymin * docHeight) / 1000;
+      left = (xmin * docWidth) / 1000;
+      boxW = ((xmax - xmin) * docWidth) / 1000;
+      boxH = ((ymax - ymin) * docHeight) / 1000;
+    } else if (b.bbox && b.bbox.length === 4) {
+      let [minX, minY, maxX, maxY] = b.bbox;
+      if (minX <= 1 && maxX <= 1 && minY <= 1 && maxY <= 1) {
+        minX *= 1000;
+        minY *= 1000;
+        maxX *= 1000;
+        maxY *= 1000;
+      }
+      left = (minX * docWidth) / 1000;
+      top = (minY * docHeight) / 1000;
+      boxW = ((maxX - minX) * docWidth) / 1000;
+      boxH = ((maxY - minY) * docHeight) / 1000;
+    } else if (
+      typeof b.x === 'number' &&
+      typeof b.y === 'number' &&
+      typeof b.width === 'number' &&
+      typeof b.height === 'number'
+    ) {
+      left = b.x;
+      top = b.y;
+      boxW = b.width;
+      boxH = b.height;
+    }
+    return {
+      left: Math.round(left * 10) / 10,
+      top: Math.round(top * 10) / 10,
+      boxW: Math.round(boxW * 10) / 10,
+      boxH: Math.round(boxH * 10) / 10
+    };
+  }
+
+  function sortBlocksReadingOrder(blocks, docWidth, docHeight, isRtl) {
+    if (!Array.isArray(blocks) || blocks.length <= 1) return blocks;
+    docWidth = docWidth || 1000;
+    docHeight = docHeight || 1000;
+    const augmented = blocks.map(function(block, index) {
+      const coords = normalizeBlockCoordinates(block, docWidth, docHeight);
+      return {
+        block: block,
+        index: index,
+        left: coords.left,
+        top: coords.top,
+        boxW: coords.boxW,
+        boxH: coords.boxH,
+        right: coords.left + coords.boxW,
+        bottom: coords.top + coords.boxH,
+        midX: coords.left + coords.boxW / 2,
+        midY: coords.top + coords.boxH / 2
+      };
+    });
+
+    const valid = augmented.filter(function(item) { return item.boxW > 0 || item.boxH > 0; });
+    if (valid.length <= 1) return blocks;
+
+    let isMultiColumn = false;
+    let gutterX = 0;
+    const nonFullWidth = valid.filter(function(item) { return item.boxW < docWidth * 0.65; });
+
+    if (nonFullWidth.length >= 4) {
+      const sortedByLeft = nonFullWidth.slice().sort(function(a, b) { return a.left - b.left; });
+      for (let i = 1; i < sortedByLeft.length; i++) {
+        const leftGroup = sortedByLeft.slice(0, i);
+        const rightGroup = sortedByLeft.slice(i);
+        if (leftGroup.length >= 2 && rightGroup.length >= 2) {
+          const maxLeftRight = Math.max.apply(null, leftGroup.map(function(it) { return it.right; }));
+          const minRightLeft = Math.min.apply(null, rightGroup.map(function(it) { return it.left; }));
+          if (minRightLeft >= maxLeftRight - 6) {
+            const leftMinY = Math.min.apply(null, leftGroup.map(function(it) { return it.top; }));
+            const leftMaxY = Math.max.apply(null, leftGroup.map(function(it) { return it.bottom; }));
+            const rightMinY = Math.min.apply(null, rightGroup.map(function(it) { return it.top; }));
+            const rightMaxY = Math.max.apply(null, rightGroup.map(function(it) { return it.bottom; }));
+
+            const vOverlap = Math.min(leftMaxY, rightMaxY) - Math.max(leftMinY, rightMinY);
+            if (vOverlap > 20) {
+              let pairedRowCount = 0;
+              for (let li = 0; li < leftGroup.length; li++) {
+                const lItem = leftGroup[li];
+                const hasRowMatch = rightGroup.some(function(rItem) {
+                  return Math.abs(lItem.top - rItem.top) <= Math.max(8, Math.min(lItem.boxH, rItem.boxH) * 0.45);
+                });
+                if (hasRowMatch) pairedRowCount++;
+              }
+              const pairRatio = leftGroup.length > 0 ? pairedRowCount / leftGroup.length : 0;
+              const leftTexts = leftGroup.map(function(it) {
+                return (it.block.translated_text || it.block.translatedText || it.block.text || it.block.original_text || '').trim();
+              });
+              const hasLabelSignals = leftTexts.some(function(txt) {
+                return /[:/]/.test(txt) || /^(nome|cognome|name|surname|date|sex|cittadinanza|place|birth|luogo|data)/i.test(txt);
+              });
+              const avgLeftWidth = leftGroup.reduce(function(sum, it) { return sum + it.boxW; }, 0) / leftGroup.length;
+              const isNarrowLabels = avgLeftWidth < docWidth * 0.22;
+
+              if (pairRatio >= 0.75 && (hasLabelSignals || isNarrowLabels)) {
+                continue;
+              }
+
+              isMultiColumn = true;
+              gutterX = (maxLeftRight + minRightLeft) / 2;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (isMultiColumn && gutterX > 0) {
+      const fullWidthHeaders = [];
+      const colLeft = [];
+      const colRight = [];
+      const fullWidthFooters = [];
+      const colItems = valid.filter(function(item) { return item.boxW < docWidth * 0.65; });
+      const minColTop = Math.min.apply(null, colItems.map(function(i) { return i.top; }));
+
+      for (let vi = 0; vi < valid.length; vi++) {
+        const item = valid[vi];
+        if (item.boxW >= docWidth * 0.65) {
+          if (item.top < minColTop) {
+            fullWidthHeaders.push(item);
+          } else {
+            fullWidthFooters.push(item);
+          }
+        } else if (item.right <= gutterX + 10) {
+          colLeft.push(item);
+        } else {
+          colRight.push(item);
+        }
+      }
+
+      fullWidthHeaders.sort(function(a, b) { return a.top - b.top; });
+      fullWidthFooters.sort(function(a, b) { return a.top - b.top; });
+      colLeft.sort(function(a, b) { return a.top - b.top; });
+      colRight.sort(function(a, b) { return a.top - b.top; });
+
+      const orderedColA = colLeft;
+      const orderedColB = colRight;
+
+      return fullWidthHeaders.concat(orderedColA, orderedColB, fullWidthFooters).map(function(i) { return i.block; });
+    }
+
+    const sortedByTop = valid.slice().sort(function(a, b) { return a.top - b.top; });
+    const bands = [];
+
+    for (let si = 0; si < sortedByTop.length; si++) {
+      const item = sortedByTop[si];
+      let placed = false;
+      for (let bi = 0; bi < bands.length; bi++) {
+        const band = bands[bi];
+        const bandLeader = band[0];
+        const bandHeight = bandLeader.boxH;
+        const itemHeight = item.boxH;
+        const tolerance = Math.min(bandHeight, itemHeight) * 0.45;
+        const verticalOverlap = Math.abs(item.top - bandLeader.top) <= Math.max(tolerance, 7);
+
+        // Strict horizontal separation: if two items overlap horizontally, they are stacked lines, NOT a row!
+        const hasHorizontalCollision = band.some(function(member) {
+          const overlapX = Math.min(item.right, member.right) - Math.max(item.left, member.left);
+          return overlapX > 6;
+        });
+
+        if (verticalOverlap && !hasHorizontalCollision) {
+          band.push(item);
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) {
+        bands.push([item]);
+      }
+    }
+
+    const result = [];
+    for (let bi = 0; bi < bands.length; bi++) {
+      const band = bands[bi];
+      // In source documents, row flow goes from label (left) to value (right)
+      band.sort(function(a, b) { return a.left - b.left; });
+      for (let ii = 0; ii < band.length; ii++) {
+        result.push(band[ii].block);
+      }
+    }
+
+    return result;
+  }
+
   function generateTranslatedSvg(job) {
+
+
     let docData = null;
     try {
       docData = typeof job.translationData === 'string' ? JSON.parse(job.translationData) : job.translationData;
@@ -1654,12 +1860,9 @@ async function handleApiRequest(request, pathname, env, ctx) {
     const totalH = isImage ? (h + footerH) : h;
 
     const isMarriageCert = Boolean(job.fileName && job.fileName.includes('marriage-certificate'));
-    const isWorksheet = !isMarriageCert && (
-      (job.fileName && /worksheet|beach|testtrans/i.test(job.fileName)) ||
-      blocks.some(function(b) {
-        const t = (b.original_text || b.translated_text || b.translatedText || b.text || '').trim();
-        return /Beach|Tyler|Gary|Judie Eberhardt|HaveFunTeaching|يوم على الشاطئ|Comprensión|Reading Comprehension/i.test(t);
-      })
+    const isWorksheet = !isImage && !isMarriageCert && (
+      job.renderMode === 'reconstructed_document' ||
+      (job.fileName && /worksheet|beach/i.test(job.fileName) && !job.fileBase64)
     );
 
     if (isWorksheet) {
@@ -1748,49 +1951,50 @@ async function handleApiRequest(request, pathname, env, ctx) {
       return wsSvg.join('\\n');
     }
 
+    const isDocRtl = job.targetLang === 'ar' || job.targetLang === 'he' || job.targetLang === 'fa' || job.targetLang === 'ur' || (Array.isArray(blocks) && blocks.some(function(b) { return /[\u0600-\u06FF]/.test(b.translated_text || b.translatedText || ''); }));
+
     const svgParts = [
       '<?xml version="1.0" encoding="UTF-8"?>',
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + totalH + '" width="100%" height="100%">'
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + totalH + '" width="100%" height="100%"' + (isDocRtl ? ' dir="rtl"' : '') + '>'
     ];
 
     if (isImage) {
       svgParts.push('  <image href="data:' + job.fileMime + ';base64,' + job.fileBase64 + '" x="0" y="0" width="' + w + '" height="' + h + '" preserveAspectRatio="none" />');
 
-      // Resolve coordinates and sort vertically for collision prevention
+      // Sort blocks into natural reading order before spatial placement
+      const sortedBlocks = (typeof sortBlocksReadingOrder === 'function')
+        ? sortBlocksReadingOrder(blocks, w, h, isDocRtl)
+        : blocks;
+
+      // Resolve coordinates with exact normalization
       const resolved = [];
-      for (let bi = 0; bi < blocks.length; bi++) {
-        const b = blocks[bi];
-        let top = 0, left = 0, width = 0, height = 0;
-        const rawBox = b.box_2d || b.box2d || b.bbox;
-        if (rawBox && rawBox.length === 4) {
-          let [ymin, xmin, ymax, xmax] = rawBox;
-          if (ymin <= 1 && ymax <= 1 && xmin <= 1 && xmax <= 1) {
-            ymin *= 1000;
-            xmin *= 1000;
-            ymax *= 1000;
-            xmax *= 1000;
-          }
-          top = (ymin * h) / 1000;
-          left = (xmin * w) / 1000;
-          height = ((ymax - ymin) * h) / 1000;
-          width = ((xmax - xmin) * w) / 1000;
-        } else if (typeof b.x === 'number' && typeof b.y === 'number' && typeof b.width === 'number' && typeof b.height === 'number') {
-          left = b.x;
-          top = b.y;
-          width = b.width;
-          height = b.height;
-        }
-        if (width <= 0 || height <= 0) continue;
+      for (let bi = 0; bi < sortedBlocks.length; bi++) {
+        const b = sortedBlocks[bi];
+        const coords = (typeof normalizeBlockCoordinates === 'function')
+          ? normalizeBlockCoordinates(b, w, h)
+          : (function() {
+              const rawBox = b.box_2d || b.box2d;
+              if (rawBox && rawBox.length === 4) {
+                return {
+                  left: (rawBox[1] * w) / 1000,
+                  top: (rawBox[0] * h) / 1000,
+                  boxW: ((rawBox[3] - rawBox[1]) * w) / 1000,
+                  boxH: ((rawBox[2] - rawBox[0]) * h) / 1000
+                };
+              }
+              return { left: b.x || 0, top: b.y || 0, boxW: b.width || 100, boxH: b.height || 20 };
+            })();
+        if (coords.boxW <= 0 || coords.boxH <= 0) continue;
 
         const rawText = (b.translated_text || b.translatedText || b.text || b.original_text || '').trim();
         if (!rawText) continue;
 
         resolved.push({
-          left,
-          top,
-          width,
-          height,
-          rawText,
+          left: coords.left,
+          top: coords.top,
+          width: coords.boxW,
+          height: coords.boxH,
+          rawText: rawText,
           tier: b.font_size_tier || 'body',
           align: b.align || 'left',
           bg_color: b.bg_color || b.bgColor || b.background_color,
@@ -1798,15 +2002,13 @@ async function handleApiRequest(request, pathname, env, ctx) {
         });
       }
 
-      resolved.sort((a, b) => a.top - b.top);
-
       for (let idx = 0; idx < resolved.length; idx++) {
         const b = resolved[idx];
-        const nextBlock = resolved.slice(idx + 1).find(
-          (next) => next.top > b.top && !(next.left >= b.left + b.width || next.left + next.width <= b.left)
-        );
-        const maxAllowedBottom = nextBlock ? nextBlock.top : h - 8;
-        const maxAvailableH = Math.max(16, maxAllowedBottom - b.top);
+        const nextBlock = resolved.slice(idx + 1).find(function(next) {
+          return next.top >= (b.top + b.height - 6) && !(next.left >= b.left + b.width - 4 || next.left + next.width <= b.left + 4);
+        });
+        const maxAllowedBottom = nextBlock ? nextBlock.top : (h - 8);
+        const maxAvailableH = Math.max(b.height, maxAllowedBottom - b.top);
 
         const isTitle = b.tier === 'title';
         const isHeading = b.tier === 'heading' || isTitle;
@@ -1823,6 +2025,16 @@ async function handleApiRequest(request, pathname, env, ctx) {
           : b.tier === 'caption'
           ? Math.min(11, Math.max(7, Math.min(Math.floor(b.height * 0.50), maxLineH)))
           : Math.min(13.5, Math.max(8, Math.min(Math.floor(b.height * 0.56), maxLineH)));
+
+        if (explicitLines.length === 1 && (isHeading || b.tier === 'caption')) {
+          for (let testFs = initialFs; testFs >= Math.max(7.5, initialFs * 0.85); testFs -= 0.5) {
+            const testChars = Math.max(6, Math.floor((b.width - 6) / (testFs * 0.52)));
+            if (b.rawText.length <= testChars) {
+              initialFs = testFs;
+              break;
+            }
+          }
+        }
 
         let fs = initialFs;
         let lines = [];
@@ -1898,21 +2110,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const padY = Math.max(2, Math.min(6, b.height * 0.03));
         const maskX = Math.max(0, b.left - padX);
         const maskY = Math.max(0, b.top - padY);
-        let maskW = Math.min(w - maskX, b.width + padX * 2);
-        const maskH = Math.min(maxAllowedBottom - maskY, Math.max(b.height + padY * 2, effectiveBoxH + padY * 2));
-
-        // Illustration collision guard:
-        // Illustration bounds: top = 205, bottom = 472, left = 438 (normalized x=568)
-        const illusTop = (205 * h) / 1000;
-        const illusBottom = (472 * h) / 1000;
-        const illusLeft = (568 * w) / 1000;
-
-        // Only clamp if block vertically overlaps the illustration band AND starts in the left column
-        if (b.top < illusBottom && (b.top + b.height) > illusTop && maskX < illusLeft) {
-          if ((maskX + maskW) > illusLeft) {
-            maskW = Math.max(0, illusLeft - maskX);
-          }
-        }
+        const maskW = Math.min(w - maskX, b.width + padX * 2);
+        const maskH = Math.min(h - maskY - 4, Math.max(b.height + padY * 2, renderedTextH + padY * 2 + 4));
 
         const clipId = 'clip-cf-' + idx;
         svgParts.push('  <defs>');
@@ -1945,7 +2144,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
         // Robust Single-Path Vector SVG Typography (Zero <switch> or <foreignObject> dual-render conflicts)
         svgParts.push('  <g clip-path="url(#' + clipId + ')">');
-        svgParts.push('    <text font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="' + textColor + '" text-anchor="' + textAnchor + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
+        svgParts.push('    <text font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="' + textColor + '" text-anchor="' + textAnchor + '" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
         lines.forEach((line, lineIdx) => {
           const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           const lineY = textStartY + lineIdx * lineHeight;
@@ -2156,9 +2355,23 @@ async function handleApiRequest(request, pathname, env, ctx) {
                   const cleanJson = (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart)
                     ? text.substring(jsonStart, jsonEnd + 1)
                     : text.trim();
-                  const parsed = JSON.parse(cleanJson);
-                  job.blocks = parsed.blocks || [];
-                  job.translationData = text;
+                  let parsed = null;
+                  try {
+                    parsed = JSON.parse(cleanJson);
+                  } catch (parseErr) {
+                    // Truncation repair: recover all complete blocks if Gemini output was cut off
+                    const lastBlockClose = cleanJson.lastIndexOf('}');
+                    if (lastBlockClose !== -1 && cleanJson.includes('"blocks"')) {
+                      const repaired = cleanJson.substring(0, lastBlockClose + 1) + ']}';
+                      try {
+                        parsed = JSON.parse(repaired);
+                      } catch (_) {}
+                    }
+                  }
+                  if (parsed && Array.isArray(parsed.blocks)) {
+                    job.blocks = parsed.blocks;
+                    job.translationData = text;
+                  }
                 } catch (e) {
                   job.translationData = text;
                 }
