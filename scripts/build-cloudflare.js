@@ -2311,8 +2311,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
         let lineHeight;
         let maskW;
         let maskH;
-        const padX = Math.max(4, Math.min(8, b.width * 0.02));
-        const padY = Math.max(2, Math.min(6, b.height * 0.03));
+        const padX = Math.max(2, Math.min(6, b.width * 0.02));
+        const padY = b.height <= 10 ? 0.8 : Math.max(1.2, Math.min(3, b.height * 0.03));
         const maskX = Math.max(0, b.left - padX);
         const maskY = Math.max(0, b.top - padY);
 
@@ -2320,19 +2320,20 @@ async function handleApiRequest(request, pathname, env, ctx) {
           // STRICT SINGLE-LINE PRESERVATION: No multi-line word wrapping on form/ID labels
           lines = [b.rawText];
           const charWidthRatio = 0.50;
-          const singleLineFloor = b.tier === 'caption' ? 7.8 : 8.5;
-          const maxFs = isTitle ? 22 : isHeading ? 15 : b.tier === 'caption' ? 11 : 13;
-          let testFs = Math.min(maxFs, Math.max(singleLineFloor, Math.floor(b.height * 0.72)));
-          while (testFs > singleLineFloor && (b.rawText.length * testFs * charWidthRatio) > (availW - 6)) {
-            testFs -= 0.5;
+          const singleLineFloor = b.height <= 8 ? Math.max(6.2, Math.min(7.5, b.height * 0.95)) : (b.tier === 'caption' ? 7.8 : 8.5);
+          const maxFs = isTitle ? 20 : isHeading ? 14 : b.tier === 'caption' ? 9.5 : 12;
+          let testFs = Math.min(maxFs, Math.max(singleLineFloor, Math.floor(b.height * 0.85)));
+          while (testFs > singleLineFloor && (b.rawText.length * testFs * charWidthRatio) > (availW - 4)) {
+            testFs -= 0.3;
           }
           fs = Math.max(singleLineFloor, testFs);
-          lineHeight = Math.max(9, Math.round(fs * 1.2));
+          lineHeight = Math.max(8, Math.round(fs * 1.18));
 
-          maskW = Math.min(w - maskX, Math.max(b.width, b.rawText.length * fs * charWidthRatio + 8) + padX * 2);
-          // Strictly clamp maskH so it NEVER spills into the subsequent row below!
-          const targetMaskH = Math.max(b.height + padY * 2, lineHeight + padY * 2 + 2);
-          maskH = Math.min(Math.max(b.height, targetMaskH), maxAllowedBottom - maskY);
+          maskW = Math.min(w - maskX, Math.max(b.width, b.rawText.length * fs * charWidthRatio + 4) + padX * 2);
+          const targetMaskH = Math.max(b.height + padY * 2, lineHeight + padY * 2);
+          const safeAvailableH = Math.max(b.height + padY, maxAllowedBottom - maskY);
+          maskH = Math.min(targetMaskH, safeAvailableH);
+          maskH = Math.max(b.height, maskH);
         } else {
           // Multi-line narrative paragraphs (e.g. reading worksheets, letters, certificates)
           const maxLineH = Math.max(8, Math.floor((b.height * 0.88) / estimatedLineCount));
@@ -2438,9 +2439,11 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const fillColor = (isGenericWhite && documentThemeBg) ? documentThemeBg : (rawBg || '#ffffff');
 
         const clipId = 'clip-cf-' + idx;
+        const clipH = isSingleLineField ? Math.max(maskH, lineHeight + 3) : maskH;
+        const clipY = isSingleLineField ? Math.min(maskY, maskY + (maskH - clipH) / 2) : maskY;
         svgParts.push('  <defs>');
         svgParts.push('    <clipPath id="' + clipId + '">');
-        svgParts.push('      <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" rx="3" ry="3" />');
+        svgParts.push('      <rect x="' + maskX.toFixed(1) + '" y="' + clipY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + clipH.toFixed(1) + '" rx="3" ry="3" />');
         svgParts.push('    </clipPath>');
         svgParts.push('  </defs>');
 
@@ -2451,7 +2454,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const textAlign = isBlockRtl
           ? (b.align === 'center' ? 'center' : 'right')
           : (b.align === 'center' ? 'center' : b.align === 'right' ? 'right' : 'left');
-                let textAnchor = 'start';
+        let textAnchor = 'start';
         let textStartX = isBlockRtl ? (maskX + maskW - 6) : (maskX + 6);
         if (b.align === 'center' || textAlign === 'center') {
           textAnchor = 'middle';
@@ -2474,13 +2477,24 @@ async function handleApiRequest(request, pathname, env, ctx) {
           }
         }
 
-        const verticalPadding = Math.max(1, (maskH - renderedTextH) / 2);
-        const textStartY = maskY + verticalPadding + fs * 0.88;
-        const textColor = b.text_color || (isTitle ? '#0f172a' : '#1e293b');
+        // Optical baseline calculation: Optical vertical centering for single-line fields
+        let textStartY;
+        if (isSingleLineField || lines.length <= 1) {
+          const centerY = maskY + maskH / 2;
+          textStartY = centerY + (fs * 0.35);
+        } else {
+          const verticalPadding = Math.max(1, (maskH - renderedTextH) / 2);
+          textStartY = maskY + verticalPadding + fs * 0.88;
+        }
+
+        const isCaption = b.tier === 'caption';
+        const defaultTextColor = isCaption ? '#334155' : (isHeading ? '#0f172a' : '#020617');
+        const textColor = b.text_color || defaultTextColor;
+        const finalFw = isCaption ? '500' : (b.tier === 'body' ? '600' : fw);
 
         // Robust Single-Path Vector SVG Typography (Zero <switch> or <foreignObject> dual-render conflicts)
         svgParts.push('  <g clip-path="url(#' + clipId + ')">');
-        svgParts.push('    <text font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + fw + '" fill="' + textColor + '" text-anchor="' + textAnchor + '" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
+        svgParts.push('    <text font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fs + '" font-weight="' + finalFw + '" fill="' + textColor + '" text-anchor="' + textAnchor + '" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
         lines.forEach((line, lineIdx) => {
           const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           const lineY = textStartY + lineIdx * lineHeight;
