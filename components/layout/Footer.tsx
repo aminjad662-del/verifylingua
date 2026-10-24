@@ -10,11 +10,11 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-12 border-b border-white/[0.08]">
           <div className="space-y-3 max-w-xl text-left">
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white border border-white/10">
-                <ShieldCheck className="w-5 h-5 text-amber-statutory" />
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.25)]">
+                <ShieldCheck className="w-5 h-5 text-white" />
               </div>
-              <span className="text-2xl font-black tracking-tight text-white font-sans">
-                Verify<span className="text-amber-statutory">Lingua</span>
+              <span className="text-2xl font-bold tracking-tight text-white font-sans">
+                Verify<span className="text-brand-400">Lingua</span>
               </span>
             </div>
             <p className="text-sm text-neutral-400 leading-relaxed">
@@ -24,20 +24,20 @@ export function Footer() {
 
           <div className="flex flex-wrap items-center gap-3.5">
             <Link
-              href="/order/triage"
-              className="inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-full bg-white hover:bg-neutral-100 text-obsidian-950 text-sm font-bold shadow-sm transition-all cursor-pointer group"
+              href="/translate"
+              className="inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-full bg-white hover:bg-neutral-100 text-obsidian-950 text-sm font-bold shadow-sm transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
-              <span>Start translation</span>
+              <span>Start Translation</span>
               <div className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
                 <ArrowRight className="w-3.5 h-3.5 text-obsidian-950" />
               </div>
             </Link>
             <Link
-              href="/verify/demo"
-              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition-colors"
+              href="/verify"
+              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
-              <Globe2 className="w-4 h-4 text-amber-400" />
-              Public Verification Portal
+              <Globe2 className="w-4 h-4 text-brand-400" />
+              <span>Public Verification Portal</span>
             </Link>
           </div>
         </div>
@@ -46,7 +46,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 text-sm">
           {/* Column 1: Services */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Services & Enterprise</h3>
+            <h3 className="text-xs font-sans uppercase tracking-wider text-slate-300 font-bold">Services &amp; Enterprise</h3>
             <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
@@ -54,23 +54,23 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/counsel" className="hover:text-white transition-colors font-medium text-amber-400">
+                <Link href="/counsel" className="hover:text-white transition-colors font-medium text-brand-300">
                   CounselDesk™ Law Firm Portal
                 </Link>
               </li>
               <li>
-                <Link href="/defense/rfe" className="hover:text-white transition-colors font-medium text-amber-300">
+                <Link href="/defense/rfe" className="hover:text-white transition-colors font-medium text-brand-300">
                   USCIS RFE Defense Shield
                 </Link>
               </li>
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  Notarized & Court Translation
+                  Notarized &amp; Court Translation
                 </Link>
               </li>
               <li>
                 <Link href="/admin/shipping" className="hover:text-white transition-colors">
-                  Physical Mail & FedEx Overnight
+                  Physical Mail &amp; FedEx Overnight
                 </Link>
               </li>
               <li>
@@ -83,7 +83,7 @@ export function Footer() {
 
           {/* Column 2: Popular Documents */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Popular Documents</h3>
+            <h3 className="text-xs font-sans uppercase tracking-wider text-slate-300 font-bold">Popular Documents</h3>
             <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/documents/birth-certificate" className="hover:text-white transition-colors">
@@ -97,7 +97,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/documents/diploma-and-degree" className="hover:text-white transition-colors">
-                  Diploma & Degree Translation
+                  Diploma &amp; Degree Translation
                 </Link>
               </li>
               <li>
@@ -106,7 +106,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/documents" className="text-amber-400 hover:text-white transition-colors font-medium">
+                <Link href="/documents" className="text-brand-300 hover:text-white transition-colors font-medium">
                   View all 25+ documents →
                 </Link>
               </li>
@@ -115,7 +115,7 @@ export function Footer() {
 
           {/* Column 3: Languages */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Languages</h3>
+            <h3 className="text-xs font-sans uppercase tracking-wider text-slate-300 font-bold">Languages</h3>
             <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/languages/spanish" className="hover:text-white transition-colors">
@@ -138,7 +138,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/languages" className="text-amber-400 hover:text-white transition-colors font-medium">
+                <Link href="/languages" className="text-brand-300 hover:text-white transition-colors font-medium">
                   View all 70+ languages →
                 </Link>
               </li>
@@ -147,7 +147,7 @@ export function Footer() {
 
           {/* Column 4: Trust & Verification */}
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">Trust & Institutional</h3>
+            <h3 className="text-xs font-sans uppercase tracking-wider text-slate-300 font-bold">Trust &amp; Institutional</h3>
             <ul className="space-y-2.5 text-neutral-400">
               <li>
                 <Link href="/how-it-works" className="hover:text-white transition-colors">
@@ -161,7 +161,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/how-it-works" className="hover:text-white transition-colors">
-                  Name & Date Consistency Lock
+                  Name &amp; Date Consistency Lock
                 </Link>
               </li>
               <li>
@@ -171,7 +171,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/use-cases" className="hover:text-white transition-colors">
-                  Filing Use Cases & Guidelines
+                  Filing Use Cases &amp; Guidelines
                 </Link>
               </li>
               <li>
@@ -190,11 +190,11 @@ export function Footer() {
             <span>100% USCIS Guaranteed</span>
           </div>
           <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300">
-            <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-brand-400 shrink-0" />
             <span>ATA Corporate Standards</span>
           </div>
           <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300">
-            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+            <Lock className="w-4 h-4 text-brand-400 shrink-0" />
             <span>256-Bit SSE-KMS Vault</span>
           </div>
           <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300">
@@ -204,17 +204,17 @@ export function Footer() {
         </div>
 
         {/* Bottom copyright & legal */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-neutral-800 text-xs text-neutral-500">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-neutral-800 text-xs text-neutral-400">
           <p>© {new Date().getFullYear()} {PRODUCT_NAME}, Inc. All rights reserved. Not affiliated with USCIS or the U.S. Federal Government.</p>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-1.5 text-emerald-400 font-sans text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse motion-reduce:animate-none" />
               <span>All Systems Operational</span>
             </div>
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors min-h-[44px] inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors min-h-[44px] inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
               Terms
             </Link>
           </div>

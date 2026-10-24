@@ -10,7 +10,7 @@ const STAT_CARDS = [
     label: "Average Annual Law Firm Savings",
     description:
       "Immigration practices save over $10,000 annually by switching from hourly retainer translation agencies to our $24.95 transparent flat-rate model.",
-    linkText: "View legal firm case study",
+    linkText: "View Legal Firm Case Study",
     href: "/register",
     icon: TrendingUp,
   },
@@ -19,7 +19,7 @@ const STAT_CARDS = [
     label: "Reduction in Delivery Turnaround",
     description:
       "Standard delivery in under 24 hours guaranteed, compared to 5 to 7 business days from legacy translation bureaus.",
-    linkText: "Explore turnaround SLAs",
+    linkText: "Explore Turnaround SLAs",
     href: "/translate",
     icon: Clock,
   },
@@ -28,7 +28,7 @@ const STAT_CARDS = [
     label: "First-Pass USCIS Acceptance",
     description:
       "Zero fatal formatting rejections across 4,800+ filings. Backed by our sworn RFE Defense Shield and 100% refund guarantee.",
-    linkText: "Read acceptance warranty",
+    linkText: "Read Acceptance Warranty",
     href: "#guarantee",
     icon: ShieldCheck,
   },
@@ -65,7 +65,7 @@ export function SynthesiaStatsCards() {
                   {card.label}
                 </h3>
 
-                <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+                <p className="text-sm text-slate-600 leading-relaxed">
                   {card.description}
                 </p>
               </div>
@@ -73,10 +73,10 @@ export function SynthesiaStatsCards() {
               <div className="pt-4 border-t border-border/60">
                 <Link
                   href={card.href}
-                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 min-h-[44px] py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md"
                 >
                   <span>{card.linkText}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </div>

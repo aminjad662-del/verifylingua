@@ -22,17 +22,17 @@ export function BottomCTA() {
     <section className="py-20 md:py-32 bg-surface relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         {/* Outer Split Card with Soft Radiant Ambient Light */}
-        <div className="rounded-[var(--r-2xl)] bg-gradient-panel border-2 border-brand-100/90 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-2xl">
+        <div className="rounded-[var(--r-2xl)] bg-surface-raised border-2 border-brand-100/90 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-2xl">
           {/* Ambient Radiant Glow */}
           <div
-            className="pointer-events-none absolute -bottom-32 -right-32 w-[600px] h-[600px] rounded-full bg-brand-500/10 blur-[120px] -z-10"
+            className="pointer-events-none absolute -bottom-32 -right-32 w-[600px] h-[600px] rounded-full bg-brand-500/5 -z-10"
             aria-hidden="true"
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Content Column (7/5 Asymmetrical Grid) */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-200/80 bg-surface-raised text-brand-500 text-xs font-mono font-bold uppercase tracking-wider shadow-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-200/80 bg-surface-raised text-brand-700 text-xs font-sans font-bold uppercase tracking-wider shadow-sm">
                 <ShieldCheck className="w-4 h-4 text-brand-500" />
                 <span>Zero-Risk Certified Translation</span>
               </div>
@@ -52,10 +52,10 @@ export function BottomCTA() {
                   <Button
                     size="lg"
                     asChild
-                    className="h-14 px-8 rounded-full text-base font-bold gap-3 shadow-lg active:scale-[0.97] transition-all duration-200 bg-brand-500 hover:bg-brand-600 text-white"
+                    className="h-14 px-8 rounded-full text-base font-bold gap-3 shadow-lg active:scale-[0.97] transition-all duration-200 bg-brand-500 hover:bg-brand-600 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                   >
                     <Link href="/order/triage">
-                      <span>Start translation</span>
+                      <span>Start Translation</span>
                       <ArrowRight className="w-5 h-5" />
                     </Link>
                   </Button>
@@ -65,9 +65,9 @@ export function BottomCTA() {
                   variant="outline"
                   size="lg"
                   asChild
-                  className="h-14 px-8 rounded-full text-base font-bold border-border hover:bg-surface"
+                  className="h-14 px-8 rounded-full text-base font-bold border-border hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                 >
-                  <Link href="/pricing">View transparent pricing</Link>
+                  <Link href="/pricing">View Transparent Pricing</Link>
                 </Button>
               </div>
 
@@ -108,7 +108,7 @@ export function BottomCTA() {
                     <div className="flex justify-end">
                       <Badge
                         variant="default"
-                        className="text-xs py-1 px-3 shadow-lg font-mono flex items-center gap-1.5 bg-brand-500 text-white"
+                        className="text-xs py-1 px-3 shadow-lg font-sans font-semibold flex items-center gap-1.5 bg-brand-500 text-white"
                       >
                         <QrCode className="w-3.5 h-3.5" />
                         Live QR Verified
@@ -116,11 +116,11 @@ export function BottomCTA() {
                     </div>
 
                     <div className="space-y-1 text-white">
-                      <div className="flex items-center gap-2 text-xs font-bold font-mono">
+                      <div className="flex items-center gap-2 text-xs font-bold font-sans">
                         <Award className="w-4 h-4 text-brand-300" />
                         <span>Signed Certificate of Accuracy Attached</span>
                       </div>
-                      <p className="text-[11px] text-white/80">
+                      <p className="text-xs text-white/80">
                         Packet #VL-USCIS-9842 • Full Legal Liability Protection
                       </p>
                     </div>

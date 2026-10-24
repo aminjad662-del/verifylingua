@@ -107,19 +107,10 @@ export function SynthesiaDarkHowItWorks() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Dark Container Box (Matches Screenshot Dark How It Works) */}
         <div className="rounded-3xl bg-obsidian-950 border border-obsidian-border p-6 sm:p-12 shadow-2xl relative overflow-hidden">
-          {/* Subtle Ambient Radial Lighting */}
-          <div
-            className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 opacity-20 rounded-full"
-            style={{
-              background: "radial-gradient(circle, rgba(59, 130, 246, 0.8) 0%, transparent 70%)",
-            }}
-            aria-hidden="true"
-          />
-
           <div className="relative z-10 space-y-10 sm:space-y-12">
             {/* Header */}
             <div className="text-center max-w-3xl mx-auto space-y-3">
-              <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-400">
+              <span className="text-xs font-sans font-bold uppercase tracking-wider text-brand-400">
                 End-to-End Certified Pipeline
               </span>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-display">
@@ -136,7 +127,7 @@ export function SynthesiaDarkHowItWorks() {
                 <button
                   key={step.id}
                   onClick={() => setActiveStepIndex(idx)}
-                  className={`p-3 sm:p-4 rounded-xl text-left transition-all cursor-pointer relative ${
+                  className={`p-3 sm:p-4 min-h-[48px] rounded-xl text-left transition-all cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                     activeStepIndex === idx
                       ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
                       : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -144,11 +135,11 @@ export function SynthesiaDarkHowItWorks() {
                 >
                   <div className="space-y-1">
                     <span
-                      className={`text-[10px] font-mono font-bold block ${
+                      className={`text-xs font-sans uppercase font-bold tracking-wider block ${
                         activeStepIndex === idx ? "text-brand-100" : "text-slate-500"
                       }`}
                     >
-                      STEP {step.stepNumber}
+                      Step {step.stepNumber}
                     </span>
                     <span className="text-xs sm:text-sm font-bold block leading-tight">
                       {step.tabLabel}
@@ -170,8 +161,8 @@ export function SynthesiaDarkHowItWorks() {
                     VerifyLingua Studio — {activeStep.previewTitle}
                   </span>
                 </div>
-                <Badge variant="outline" className="border-brand-500/40 text-brand-300 text-[10px] font-mono">
-                  ACTIVE STAGE {activeStep.stepNumber} / 04
+                <Badge variant="outline" className="border-brand-500/40 text-brand-300 text-xs font-sans font-semibold">
+                  Active Stage {activeStep.stepNumber} / 04
                 </Badge>
               </div>
 
@@ -195,16 +186,16 @@ export function SynthesiaDarkHowItWorks() {
                         key={i}
                         className="flex items-center justify-between p-2.5 rounded-lg bg-obsidian-elevated border border-obsidian-border text-xs"
                       >
-                        <span className="text-slate-400 font-mono">{m.label}</span>
-                        <span className="font-bold text-white font-mono">{m.value}</span>
+                        <span className="text-slate-400 font-sans">{m.label}</span>
+                        <span className="font-bold text-white font-sans">{m.value}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="pt-2">
                     <Link href="/translate">
-                      <Button className="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs sm:text-sm px-5 py-4 rounded-xl cursor-pointer">
-                        <span>Try live with your document</span>
+                      <Button className="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs sm:text-sm px-6 py-4 rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
+                        <span>Try Live With Your Document</span>
                         <ArrowRight className="w-4 h-4 ml-1.5" />
                       </Button>
                     </Link>
@@ -217,26 +208,26 @@ export function SynthesiaDarkHowItWorks() {
                     <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                       <div className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-brand-600" />
-                        <span className="text-xs font-bold text-text uppercase tracking-wider font-mono">
+                        <span className="text-xs font-bold text-text uppercase tracking-wider font-sans">
                           CERTIFIED TRANSLATION PACKET
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono text-status-success bg-status-success-bg px-2 py-0.5 rounded-full font-bold">
+                      <span className="text-xs font-sans text-status-success bg-status-success-bg px-2.5 py-0.5 rounded-full font-bold">
                         SEAL APPLIED
                       </span>
                     </div>
 
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2 text-xs font-mono">
-                      <span className="text-text-subtle text-[10px] block">
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2 text-xs">
+                      <span className="text-slate-500 text-xs font-sans font-semibold block">
                         VERIFIED DOCUMENT RECORD:
                       </span>
-                      <p className="text-slate-800 leading-relaxed font-sans text-xs">
+                      <p className="text-slate-800 leading-relaxed font-sans text-xs sm:text-sm">
                         {activeStep.previewSnippet}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                      <span className="font-mono text-slate-500 text-[11px]">
+                      <span className="font-sans text-slate-600 text-xs">
                         ATA Corporate Member No. 278190
                       </span>
                       <span className="font-bold text-brand-600 text-xs flex items-center gap-1">

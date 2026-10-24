@@ -56,7 +56,7 @@ export function SynthesiaTrustPills() {
                   <span className="text-xs sm:text-sm font-bold text-text block">
                     {item.title}
                   </span>
-                  <span className="text-[11px] text-text-muted leading-relaxed block">
+                  <span className="text-xs text-slate-500 leading-relaxed block">
                     {item.subtitle}
                   </span>
                 </div>

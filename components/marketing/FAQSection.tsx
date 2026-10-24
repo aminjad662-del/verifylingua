@@ -57,7 +57,7 @@ export function FAQSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column (Sticky 4-col Sidebar) */}
           <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Compliance &amp; Legal FAQ</span>
             </div>
@@ -85,8 +85,8 @@ export function FAQSection() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
-                    <span className="text-xs font-mono font-bold text-brand-ink">Linguists Online</span>
+                    <span className="w-2 h-2 rounded-full bg-status-success animate-pulse motion-reduce:animate-none" />
+                    <span className="text-xs font-sans font-bold text-brand-ink">Linguists Online</span>
                   </div>
                   <p className="text-xs text-ink-softer">Average response &lt;2 mins</p>
                 </div>
@@ -101,7 +101,7 @@ export function FAQSection() {
 
               <Link
                 href="/help"
-                className="inline-flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100/80 text-brand-500 text-xs font-bold transition-colors"
+                className="inline-flex items-center justify-between w-full px-4 py-2.5 min-h-[44px] rounded-xl bg-brand-50 hover:bg-brand-100/80 text-brand-600 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 <span>Ask Compliance Specialist</span>
                 <ArrowRight className="w-3.5 h-3.5" />

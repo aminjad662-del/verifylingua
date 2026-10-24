@@ -84,7 +84,7 @@ export function SynthesiaCompetitorGrid() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-14">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-mono font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 text-brand-600" />
             <span>Honest Market Comparisons</span>
           </div>
@@ -110,7 +110,7 @@ export function SynthesiaCompetitorGrid() {
                   <span className="text-base sm:text-lg font-bold text-text font-display">
                     vs. {card.name}
                   </span>
-                  <span className="text-[10px] font-mono text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-xs font-sans text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200/60 font-bold">
                     {card.tagline}
                   </span>
                 </div>
@@ -128,9 +128,9 @@ export function SynthesiaCompetitorGrid() {
               <div className="pt-3 border-t border-border/60">
                 <Link
                   href="/translate"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 min-h-[44px] py-2 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md"
                 >
-                  <span>Compare with {card.name}</span>
+                  <span>Compare With {card.name}</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>

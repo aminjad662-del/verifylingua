@@ -30,7 +30,7 @@ export default function AcceptanceGuaranteePage() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface border border-border text-brand-ink hover:bg-brand-50 hover:border-brand-300 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] text-xs font-semibold rounded-xl bg-surface border border-border text-brand-ink hover:bg-brand-50 hover:border-brand-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Home</span>
@@ -41,11 +41,11 @@ export default function AcceptanceGuaranteePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-xs font-mono bg-trust/10 text-trust border-trust/30 gap-1">
+            <Badge variant="outline" className="text-xs font-sans font-medium bg-trust/10 text-trust border-trust/30 gap-1">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>8 CFR § 103.2(b)(3) Certified</span>
             </Badge>
-            <Button asChild size="sm" className="font-bold">
+            <Button asChild size="sm" className="font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
               <Link href="/order/triage">Get Certified Translation</Link>
             </Button>
           </div>
@@ -55,7 +55,7 @@ export default function AcceptanceGuaranteePage() {
       {/* Hero Header */}
       <header className="border-b border-border/80 bg-surface-raised py-12 md:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-4">
-          <Badge variant="secondary" className="text-xs font-mono uppercase tracking-wider text-brand-500 bg-brand-50 border-brand-200">
+          <Badge variant="secondary" className="text-xs font-sans uppercase tracking-wider text-brand-500 bg-brand-50 border-brand-200">
             Federal Compliance Policy &amp; Warranty
           </Badge>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brand-ink tracking-tight font-display leading-[1.15]">
@@ -131,7 +131,7 @@ export default function AcceptanceGuaranteePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl bg-surface-raised border border-border space-y-1.5">
-              <span className="text-xs font-mono font-bold text-brand-500 uppercase">Requirement 1</span>
+              <span className="text-xs font-sans font-bold text-brand-500 uppercase">Requirement 1</span>
               <h3 className="text-sm font-bold text-brand-ink">Completeness</h3>
               <p className="text-xs text-ink-soft leading-relaxed">
                 Every seal, stamp, marginalia annotation, and watermarked seal is translated or noted with standard brackets (e.g. [Official Seal: Republic of Colombia]).
@@ -139,7 +139,7 @@ export default function AcceptanceGuaranteePage() {
             </div>
 
             <div className="p-4 rounded-xl bg-surface-raised border border-border space-y-1.5">
-              <span className="text-xs font-mono font-bold text-brand-500 uppercase">Requirement 2</span>
+              <span className="text-xs font-sans font-bold text-brand-500 uppercase">Requirement 2</span>
               <h3 className="text-sm font-bold text-brand-ink">Competence Affidavit</h3>
               <p className="text-xs text-ink-soft leading-relaxed">
                 Each certified translation includes an explicit sworn affidavit specifying the translator&apos;s credentials, fluency, address, and ATA corporate membership.
@@ -147,7 +147,7 @@ export default function AcceptanceGuaranteePage() {
             </div>
 
             <div className="p-4 rounded-xl bg-surface-raised border border-border space-y-1.5">
-              <span className="text-xs font-mono font-bold text-brand-500 uppercase">Requirement 3</span>
+              <span className="text-xs font-sans font-bold text-brand-500 uppercase">Requirement 3</span>
               <h3 className="text-sm font-bold text-brand-ink">Layout Mirroring</h3>
               <p className="text-xs text-ink-soft leading-relaxed">
                 Our engine preserves the exact spatial geometry, column structure, and tabular alignment of the original document so adjudicators can cross-reference with zero friction.
@@ -172,10 +172,10 @@ export default function AcceptanceGuaranteePage() {
             {/* Certified Tier */}
             <div className="p-6 rounded-2xl bg-surface-raised border-2 border-brand-500/40 space-y-4 shadow-sm relative">
               <div className="flex items-center justify-between">
-                <Badge className="bg-brand-500 text-white font-mono text-xs font-bold">
+                <Badge className="bg-brand-500 text-white font-sans text-xs font-bold">
                   Certified Translation
                 </Badge>
-                <span className="text-xs font-mono text-trust font-bold">Official USCIS Ready</span>
+                <span className="text-xs font-sans text-trust font-bold">Official USCIS Ready</span>
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
                 Fully human-reviewed and certified by qualified translators. Carries our official ATA Member No. 278190 seal, sworn 8 CFR § 103.2 affidavit of accuracy, and cryptographic tamper-evident verification QR code.
@@ -199,10 +199,10 @@ export default function AcceptanceGuaranteePage() {
             {/* Automated Tier */}
             <div className="p-6 rounded-2xl bg-surface-raised border border-border space-y-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <Badge variant="outline" className="text-xs font-mono border-border text-ink-muted">
+                <Badge variant="outline" className="text-xs font-sans border-border text-ink-muted">
                   Automated Preview Tier
                 </Badge>
-                <span className="text-xs font-mono text-ink-muted">Working Draft</span>
+                <span className="text-xs font-sans text-ink-muted">Working Draft</span>
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
                 Instant machine translation designed for document review, internal comprehension, and reference. <strong>Not certified for government, court, or USCIS submission.</strong>
@@ -242,10 +242,10 @@ export default function AcceptanceGuaranteePage() {
         <div className="p-6 rounded-2xl bg-gradient-to-br from-surface-raised to-brand-50/50 border border-brand-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[11px] font-mono uppercase bg-status-danger-bg text-status-danger border-status-danger/30">
+              <Badge variant="outline" className="text-xs font-sans font-medium uppercase bg-status-danger-bg text-status-danger border-status-danger/30">
                 Received an RFE?
               </Badge>
-              <span className="text-xs font-semibold text-brand-500 font-mono">Guaranteed &lt; 4h Turnaround</span>
+              <span className="text-xs font-semibold text-brand-500 font-sans">Guaranteed &lt; 4h Turnaround</span>
             </div>
             <h3 className="text-lg font-bold font-display text-brand-ink">
               USCIS RFE Defense Shield
@@ -255,7 +255,7 @@ export default function AcceptanceGuaranteePage() {
             </p>
           </div>
 
-          <Button asChild className="shrink-0 font-bold gap-2">
+          <Button asChild className="shrink-0 font-bold gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
             <Link href="/defense/rfe">
               <span>Submit RFE Notice</span>
               <ArrowRight className="w-4 h-4" />
