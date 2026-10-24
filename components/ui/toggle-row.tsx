@@ -51,12 +51,12 @@ export function ToggleRow({
             {title}
           </label>
           {recommended && (
-            <Badge variant="default" className="text-xs py-0.5 px-2.5 font-medium">
+            <Badge variant="default" className="text-[10px] py-0 px-2">
               Recommended
             </Badge>
           )}
           {badge && (
-            <Badge variant="secondary" className="text-xs py-0.5 px-2.5 font-medium">
+            <Badge variant="secondary" className="text-[10px] py-0 px-2">
               {badge}
             </Badge>
           )}

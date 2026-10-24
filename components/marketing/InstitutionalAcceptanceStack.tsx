@@ -69,7 +69,7 @@ export function InstitutionalAcceptanceStack() {
       <div className="max-w-7xl mx-auto px-6 space-y-12">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/50 bg-brand-50/80 text-brand-500 text-xs font-sans font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/50 bg-brand-50/80 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
             <ShieldCheck className="w-4 h-4 text-brand-500" />
             <span>Universal Institutional Acceptance</span>
           </div>
@@ -119,10 +119,10 @@ export function InstitutionalAcceptanceStack() {
                       key={i}
                       className="px-3.5 py-2 rounded-xl bg-surface border border-border/80 flex items-center gap-2 shadow-2xs hover:border-brand-500/30 transition-colors"
                     >
-                      <span className="text-xs font-bold text-brand-ink font-sans">
+                      <span className="text-xs font-bold text-brand-ink font-mono">
                         {agency.name}
                       </span>
-                      <span className="text-[11px] text-text-muted uppercase font-medium">
+                      <span className="text-[10px] text-text-muted uppercase font-medium">
                         {agency.type}
                       </span>
                     </div>
@@ -131,11 +131,11 @@ export function InstitutionalAcceptanceStack() {
 
                 {/* Acceptance Guarantee Status */}
                 <div className="flex items-center gap-3 shrink-0 lg:flex-col lg:items-end">
-                  <Badge variant="success" className="gap-1.5 py-1 px-3 text-xs font-sans font-semibold">
+                  <Badge variant="success" className="gap-1.5 py-1 px-3 text-xs font-mono">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>{row.acceptanceRate}</span>
                   </Badge>
-                  <span className="text-xs text-text-muted font-sans">
+                  <span className="text-[11px] text-text-muted font-mono">
                     Free Redo + Refund
                   </span>
                 </div>
@@ -146,9 +146,9 @@ export function InstitutionalAcceptanceStack() {
 
         {/* Action Link */}
         <div className="text-center pt-2">
-          <Button asChild size="lg" className="gap-2 px-8 h-13 rounded-2xl font-bold shadow-md active:scale-[0.975] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
+          <Button asChild size="lg" className="gap-2 px-8 h-13 rounded-2xl font-bold shadow-md active:scale-[0.975]">
             <Link href="/order/precheck">
-              Check Acceptance for Your Institution
+              Check acceptance for your institution
               <ArrowRight className="w-4 h-4" />
             </Link>
           </Button>

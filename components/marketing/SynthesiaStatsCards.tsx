@@ -10,7 +10,7 @@ const STAT_CARDS = [
     label: "Average Annual Law Firm Savings",
     description:
       "Immigration practices save over $10,000 annually by switching from hourly retainer translation agencies to our $24.95 transparent flat-rate model.",
-    linkText: "View Legal Firm Case Study",
+    linkText: "View legal firm case study",
     href: "/register",
     icon: TrendingUp,
   },
@@ -19,7 +19,7 @@ const STAT_CARDS = [
     label: "Reduction in Delivery Turnaround",
     description:
       "Standard delivery in under 24 hours guaranteed, compared to 5 to 7 business days from legacy translation bureaus.",
-    linkText: "Explore Turnaround SLAs",
+    linkText: "Explore turnaround SLAs",
     href: "/translate",
     icon: Clock,
   },
@@ -28,7 +28,7 @@ const STAT_CARDS = [
     label: "First-Pass USCIS Acceptance",
     description:
       "Zero fatal formatting rejections across 4,800+ filings. Backed by our sworn RFE Defense Shield and 100% refund guarantee.",
-    linkText: "Read Acceptance Warranty",
+    linkText: "Read acceptance warranty",
     href: "#guarantee",
     icon: ShieldCheck,
   },
@@ -40,6 +40,10 @@ export function SynthesiaStatsCards() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-14">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/80 bg-brand-50/80 text-brand-700 text-xs font-sans font-semibold uppercase tracking-wider">
+            <TrendingUp className="w-3.5 h-3.5 text-brand-500" />
+            <span>Proven Impact</span>
+          </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-text font-display">
             You don&apos;t have to choose between cost, time, and quality
           </h2>
@@ -50,37 +54,44 @@ export function SynthesiaStatsCards() {
 
         {/* 3 Large Stat Cards (Matches Screenshot Stats Cards) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
-          {STAT_CARDS.map((card, idx) => (
-            <div
-              key={idx}
-              className="p-8 sm:p-10 rounded-2xl sm:rounded-3xl bg-surface-raised border border-border hover:border-brand-300 hover:shadow-md transition-all flex flex-col justify-between space-y-8 group"
-            >
-              <div className="space-y-4">
-                {/* Metric with Blue Accent (Matches screenshot blue bold font) */}
-                <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-brand-600 font-display tracking-tight block">
-                  {card.metric}
-                </span>
+          {STAT_CARDS.map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={idx}
+                className="p-8 sm:p-10 rounded-2xl sm:rounded-3xl bg-surface-raised border border-border hover:border-brand-300 hover:shadow-[0_12px_28px_-6px_rgba(37,99,235,0.08)] hover:-translate-y-1 transition-[transform,border-color,box-shadow] duration-200 ease-out flex flex-col justify-between space-y-8 group"
+              >
+                <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 group-hover:scale-105 transition-transform duration-200 shadow-2xs">
+                    <Icon className="w-5 h-5" />
+                  </div>
 
-                <h3 className="text-base sm:text-lg font-bold text-text font-display">
-                  {card.label}
-                </h3>
+                  {/* Metric with Blue Accent (Matches screenshot blue bold font) */}
+                  <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-brand-600 font-display tracking-tight block tabular-nums">
+                    {card.metric}
+                  </span>
 
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {card.description}
-                </p>
+                  <h3 className="text-base sm:text-lg font-bold text-text font-display">
+                    {card.label}
+                  </h3>
+
+                  <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-sans">
+                    {card.description}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-border/60">
+                  <Link
+                    href={card.href}
+                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 transition-transform duration-150 ease-out active:scale-[0.97]"
+                  >
+                    <span>{card.linkText}</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
               </div>
-
-              <div className="pt-4 border-t border-border/60">
-                <Link
-                  href={card.href}
-                  className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 min-h-[44px] py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md"
-                >
-                  <span>{card.linkText}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

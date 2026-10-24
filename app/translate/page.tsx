@@ -1067,7 +1067,7 @@ export default function TranslatePage() {
                               <ShieldCheck className="w-4 h-4 text-emerald-600 inline" />
                               VERIFYLINGUA CERTIFIED TRANSLATION
                             </span>
-                            <span>ATA MEMBER #278190</span>
+                            <span>ATA MEMBER No. 278190</span>
                           </div>
                           <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-200/80 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
                             <span>Original: <strong className="text-slate-900">{job.fileName}</strong></span>
@@ -1261,7 +1261,7 @@ export default function TranslatePage() {
                                   </span>
                                 </h4>
                                 <p className="text-xs text-slate-500 font-mono mt-0.5">
-                                  USCIS 8 CFR § 103.2 • ATA Member #278190 • Certified Audit Record
+                                  USCIS 8 CFR § 103.2 • ATA Member No. 278190 • Certified Audit Record
                                 </p>
                               </div>
                             </div>

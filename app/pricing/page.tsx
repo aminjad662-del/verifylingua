@@ -67,7 +67,7 @@ export default function PricingPage() {
         <section className="py-16 md:py-24 bg-surface border-b border-border/60 px-4 sm:px-6 overflow-hidden">
           <div className="max-w-5xl mx-auto space-y-12">
             <div className="text-center space-y-2">
-              <span className="text-xs font-sans font-bold uppercase tracking-wider text-brand-600">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
                 Interactive Cost & Delivery Estimator
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-brand-ink">
@@ -86,7 +86,7 @@ export default function PricingPage() {
                       <button
                         type="button"
                         onClick={() => setServiceType("CERTIFIED")}
-                        className={`p-4 rounded-2xl border text-left transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                        className={`p-4 rounded-2xl border text-left transition-all ${
                           serviceType === "CERTIFIED"
                             ? "border-brand-500 bg-brand-50/70 text-brand-ink shadow-sm"
                             : "border-border bg-surface text-text-muted hover:border-brand-300"
@@ -94,13 +94,13 @@ export default function PricingPage() {
                       >
                         <p className="font-bold text-sm text-brand-ink">Certified Translation</p>
                         <p className="text-xs text-text-muted pt-0.5">$24.95 / page (250 words)</p>
-                        <Badge variant="default" className="mt-2 text-xs py-0.5">USCIS &amp; Legal Standard</Badge>
+                        <Badge variant="default" className="mt-2 text-[10px] py-0">USCIS & Legal Standard</Badge>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setServiceType("STANDARD")}
-                        className={`p-4 rounded-2xl border text-left transition-all min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                        className={`p-4 rounded-2xl border text-left transition-all ${
                           serviceType === "STANDARD"
                             ? "border-brand-500 bg-brand-50/70 text-brand-ink shadow-sm"
                             : "border-border bg-surface text-text-muted hover:border-brand-300"
@@ -108,7 +108,7 @@ export default function PricingPage() {
                       >
                         <p className="font-bold text-sm text-brand-ink">Standard Translation</p>
                         <p className="text-xs text-text-muted pt-0.5">$0.10 / word (250 min)</p>
-                        <Badge variant="secondary" className="mt-2 text-xs py-0.5">Business / Informal</Badge>
+                        <Badge variant="secondary" className="mt-2 text-[10px] py-0">Business / Informal</Badge>
                       </button>
                     </div>
                   </div>
@@ -133,7 +133,7 @@ export default function PricingPage() {
                         onChange={(e) => setPageCount(parseInt(e.target.value))}
                         className="w-full h-2 bg-lavender-100 rounded-lg appearance-none cursor-pointer accent-brand-500"
                       />
-                      <div className="flex justify-between text-xs text-text-muted font-sans font-medium">
+                      <div className="flex justify-between text-xs text-text-muted font-mono">
                         <span>1 page</span>
                         <span>5 pages</span>
                         <span>10 pages</span>
@@ -211,7 +211,7 @@ export default function PricingPage() {
               <div className="lg:col-span-5 sticky top-28">
                 <Card className="p-6 md:p-8 rounded-[28px] border-2 border-brand-500 bg-surface-raised shadow-xl space-y-6">
                   <div className="space-y-1">
-                    <span className="text-xs font-sans font-bold uppercase tracking-wider text-brand-500">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-500">
                       Live Guaranteed Quote
                     </span>
                     <h3 className="text-2xl font-black text-brand-ink tracking-tight">
@@ -263,7 +263,7 @@ export default function PricingPage() {
                     <p suppressHydrationWarning className="text-lg font-black text-brand-ink font-mono">
                       {pricing.promisedAtFormatted}
                     </p>
-                    <p className="text-xs text-text-muted">
+                    <p className="text-[11px] text-text-muted">
                       Factor in our 2x/day notary batch schedule & timezone calibration.
                     </p>
                   </div>
@@ -279,7 +279,7 @@ export default function PricingPage() {
 
                     <Button size="lg" asChild className="w-full h-14 rounded-2xl text-base font-bold gap-2 shadow-md">
                       <Link href={`/order/triage?pages=${pricing.pageCount}&expedited=${isExpedited}&notarization=${needsNotarization}`}>
-                        Start Translation
+                        Start translation
                         <ArrowRight className="w-5 h-5" />
                       </Link>
                     </Button>
@@ -289,7 +289,7 @@ export default function PricingPage() {
                         <ShieldCheck className="w-4 h-4" />
                         100% USCIS Acceptance Guarantee
                       </p>
-                      <p className="text-xs text-text-muted">
+                      <p className="text-[11px] text-text-muted">
                         Rejected by USCIS? Free redo + full 100% refund.
                       </p>
                     </div>

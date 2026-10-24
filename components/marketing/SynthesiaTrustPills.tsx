@@ -32,6 +32,10 @@ export function SynthesiaTrustPills() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/80 bg-brand-50/80 text-brand-700 text-xs font-sans font-semibold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+            <span>Institutional Standards</span>
+          </div>
           <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-display">
             Built on the foundations of legal precision and security
           </h3>
@@ -47,16 +51,16 @@ export function SynthesiaTrustPills() {
             return (
               <div
                 key={idx}
-                className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-surface border border-border/80 shadow-xs hover:border-brand-300 hover:shadow-sm transition-all flex items-start gap-3.5 group cursor-default"
+                className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-surface border border-border/80 shadow-xs hover:border-brand-300 hover:shadow-[0_8px_20px_-4px_rgba(37,99,235,0.08)] hover:-translate-y-0.5 transition-[transform,border-color,box-shadow] duration-200 ease-out flex items-start gap-3.5 group cursor-default"
               >
-                <div className="w-10 h-10 rounded-lg bg-brand-50 border border-brand-200/80 flex items-center justify-center text-brand-600 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-200/80 flex items-center justify-center text-brand-600 shrink-0 group-hover:scale-105 transition-transform duration-200">
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="space-y-0.5">
-                  <span className="text-xs sm:text-sm font-bold text-text block">
+                  <span className="text-xs sm:text-sm font-bold text-text block font-sans">
                     {item.title}
                   </span>
-                  <span className="text-xs text-slate-500 leading-relaxed block">
+                  <span className="text-[11px] text-text-muted leading-relaxed block font-sans">
                     {item.subtitle}
                   </span>
                 </div>

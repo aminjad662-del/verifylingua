@@ -23,7 +23,7 @@ export function SynthesiaCategoryLeader() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Leadership Copy & Reviews Button */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-sans font-semibold uppercase tracking-wider">
               <Award className="w-3.5 h-3.5 text-brand-600" />
               <span>Independent Industry Benchmark</span>
             </div>
@@ -32,7 +32,7 @@ export function SynthesiaCategoryLeader() {
               <span className="text-brand-600 font-extrabold">Leader</span> in the Certified Legal Translation category
             </h2>
 
-            <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+            <p className="text-base sm:text-lg text-text-muted leading-relaxed font-sans">
               Based on over 4,800+ verified USCIS green card, naturalization, and academic submissions. VerifyLingua ranks highest in turnaround speed, legal acceptance reliability, and transparent flat pricing.
             </p>
 
@@ -43,7 +43,7 @@ export function SynthesiaCategoryLeader() {
                 "Sworn 8 CFR § 103.2 translation certificates recognized by all federal courts",
                 "Official American Translators Association (ATA) Corporate Member No. 278190",
               ].map((bullet, i) => (
-                <div key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-text font-medium">
+                <div key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-text font-medium font-sans">
                   <CheckCircle2 className="w-4 h-4 text-status-success shrink-0 mt-0.5" />
                   <span>{bullet}</span>
                 </div>
@@ -52,19 +52,19 @@ export function SynthesiaCategoryLeader() {
 
             <div className="pt-4 flex flex-wrap items-center gap-4">
               <Link href="/reviews">
-                <Button className="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs sm:text-sm px-6 py-5 min-h-[44px] rounded-full shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
+                <Button className="bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm px-6 py-5 rounded-full shadow-sm cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97]">
                   <span>Read 4,800+ Verified Reviews</span>
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <div className="flex items-center gap-1.5 text-xs font-sans text-slate-600">
+              <div className="flex items-center gap-1.5 text-xs font-sans text-slate-600 font-medium">
                 <div className="flex text-amber-500">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-3.5 h-3.5 fill-current" />
                   ))}
                 </div>
-                <span className="font-bold text-text">4.98 / 5.0</span>
-                <span className="text-slate-500">(USCIS Filings)</span>
+                <span className="font-bold text-text font-mono">4.98 / 5.0</span>
+                <span>(USCIS Filings)</span>
               </div>
             </div>
           </div>
@@ -75,7 +75,7 @@ export function SynthesiaCategoryLeader() {
               {/* Quadrant Title Bar */}
               <div className="flex items-center justify-between pb-4 border-b border-border/60 text-xs font-sans">
                 <span className="text-text font-bold">2026 CERTIFIED BENCHMARK GRID</span>
-                <span className="text-slate-500 font-medium">Category: Legal Translation</span>
+                <span className="text-text-subtle font-medium">Category: Legal Translation</span>
               </div>
 
               {/* The 2x2 Coordinate Graph */}
@@ -85,56 +85,56 @@ export function SynthesiaCategoryLeader() {
                 <div className="absolute inset-y-4 left-1/2 w-px bg-border/60 border-l border-dashed border-border" />
 
                 {/* Axis Labels */}
-                <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[11px] font-sans font-semibold uppercase tracking-wider text-slate-500">
+                <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[9px] font-sans font-semibold uppercase tracking-wider text-slate-400">
                   High Legal &amp; USCIS Quality ▲
                 </span>
-                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[11px] font-sans font-semibold uppercase tracking-wider text-slate-500">
+                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-sans font-semibold uppercase tracking-wider text-slate-400">
                   Low Quality ▼
                 </span>
-                <span className="absolute top-1/2 right-2 -translate-y-1/2 text-[11px] font-sans font-semibold uppercase tracking-wider text-slate-500 rotate-90 sm:rotate-0">
+                <span className="absolute top-1/2 right-2 -translate-y-1/2 text-[9px] font-sans font-semibold uppercase tracking-wider text-slate-400 rotate-90 sm:rotate-0">
                   Fast SLA ►
                 </span>
-                <span className="absolute top-1/2 left-2 -translate-y-1/2 text-[11px] font-sans font-semibold uppercase tracking-wider text-slate-500 -rotate-90 sm:rotate-0">
+                <span className="absolute top-1/2 left-2 -translate-y-1/2 text-[9px] font-sans font-semibold uppercase tracking-wider text-slate-400 -rotate-90 sm:rotate-0">
                   ◄ Slow
                 </span>
 
                 {/* Top-Right Quadrant Marker: Leader */}
-                <span className="absolute top-4 right-4 text-xs font-sans font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-200">
+                <span className="absolute top-4 right-4 text-[10px] font-sans font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-200/80">
                   MARKET LEADER
                 </span>
 
                 {/* Plot Point: VerifyLingua (Leader Position) */}
                 <div className="absolute top-[22%] right-[20%] flex flex-col items-center group cursor-pointer">
                   <div className="relative">
-                    <span className="animate-ping motion-reduce:hidden absolute inline-flex h-4 w-4 rounded-full bg-brand-400 opacity-75" />
+                    <span className="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-brand-400 opacity-75" />
                     <div className="relative w-4 h-4 rounded-full bg-brand-600 border-2 border-white shadow-md flex items-center justify-center" />
                   </div>
-                  <div className="mt-1 px-2.5 py-1 rounded-md bg-brand-600 text-white text-xs font-bold shadow-md whitespace-nowrap">
+                  <div className="mt-1 px-2.5 py-1 rounded-md bg-brand-600 text-white text-[11px] font-bold shadow-md whitespace-nowrap font-sans">
                     VerifyLingua (#1)
                   </div>
                 </div>
 
                 {/* Plot Point: Traditional Agency */}
-                <div className="absolute top-[35%] left-[28%] flex flex-col items-center opacity-75">
+                <div className="absolute top-[35%] left-[28%] flex flex-col items-center opacity-65">
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                  <span className="text-xs font-sans text-slate-600 mt-0.5">RushTranslate</span>
+                  <span className="text-[10px] font-sans font-medium text-text-muted mt-0.5">RushTranslate</span>
                 </div>
 
                 {/* Plot Point: Generic Tool */}
-                <div className="absolute bottom-[28%] right-[35%] flex flex-col items-center opacity-70">
+                <div className="absolute bottom-[28%] right-[35%] flex flex-col items-center opacity-55">
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                  <span className="text-xs font-sans text-slate-600 mt-0.5">Rev.com</span>
+                  <span className="text-[10px] font-sans font-medium text-text-muted mt-0.5">Rev.com</span>
                 </div>
 
                 {/* Plot Point: Freelancer */}
-                <div className="absolute bottom-[35%] left-[22%] flex flex-col items-center opacity-60">
+                <div className="absolute bottom-[35%] left-[22%] flex flex-col items-center opacity-40">
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                  <span className="text-xs font-sans text-slate-600 mt-0.5">Freelancers</span>
+                  <span className="text-[10px] font-sans font-medium text-text-muted mt-0.5">Freelancers</span>
                 </div>
               </div>
 
               {/* Caption */}
-              <div className="pt-3 text-xs font-sans text-slate-500 text-center">
+              <div className="pt-3 text-[11px] font-sans text-slate-500 text-center font-normal">
                 Grid positions verified by independent submission audit across 2025–2026 immigration filings.
               </div>
             </div>
@@ -156,12 +156,12 @@ export function SynthesiaCategoryLeader() {
             ].map((badge, idx) => (
               <div
                 key={idx}
-                className="px-3.5 py-2 rounded-xl bg-surface border border-border/80 shadow-2xs hover:border-brand-300 transition-colors flex items-center gap-2"
+                className="px-3.5 py-2 rounded-xl bg-surface border border-border/80 shadow-2xs hover:border-brand-300 hover:shadow-xs transition-[border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-0.5 flex items-center gap-2"
               >
                 <Award className={`w-4 h-4 ${badge.color}`} />
-                <div className="text-left text-xs leading-tight">
+                <div className="text-left text-[11px] leading-tight font-sans">
                   <span className="font-bold text-text block">{badge.title}</span>
-                  <span className="text-slate-500 font-sans text-[11px] block">{badge.year}</span>
+                  <span className="text-slate-500 font-sans text-[10px] block font-medium">{badge.year}</span>
                 </div>
               </div>
             ))}

@@ -68,7 +68,7 @@ export function ComparisonTable() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16 w-full overflow-hidden">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <span className="text-xs font-sans font-bold uppercase tracking-wider text-brand-600">
+          <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
             System Architecture Comparison
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
@@ -84,11 +84,11 @@ export function ComparisonTable() {
           {/* Left Panel: Traditional Agency Reality */}
           <div className="rounded-[var(--r-2xl)] border border-status-danger/25 bg-surface p-7 sm:p-9 space-y-6 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-danger/10 border border-status-danger/20 text-status-danger text-xs font-sans font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-danger/10 border border-status-danger/20 text-status-danger text-xs font-mono font-bold uppercase tracking-wider">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>Traditional Agency Reality</span>
               </div>
-              <span className="text-xs font-sans text-status-danger font-bold">
+              <span className="text-xs font-mono text-status-danger font-bold">
                 High Risk of RFE
               </span>
             </div>
@@ -145,7 +145,7 @@ export function ComparisonTable() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-border flex items-center justify-between text-xs font-sans text-slate-500">
+            <div className="pt-2 border-t border-border flex items-center justify-between text-xs font-mono text-text-muted">
               <span>Failure Mode: Bureaucratic RFE</span>
               <span className="text-status-danger font-bold">Avg. Delay: 6–12 Weeks</span>
             </div>
@@ -155,11 +155,11 @@ export function ComparisonTable() {
           <div className="rounded-[var(--r-2xl)] border-2 border-brand-500/40 bg-surface-raised p-7 sm:p-9 space-y-6 shadow-xl relative overflow-hidden">
             {/* Subtle glow badge */}
             <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-success/10 border border-status-success/30 text-status-success text-xs font-sans font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-success/10 border border-status-success/30 text-status-success text-xs font-mono font-bold uppercase tracking-wider">
                 <ShieldCheck className="w-3.5 h-3.5 text-status-success" />
                 <span>VerifyLingua Precision Architecture</span>
               </div>
-              <span className="text-xs font-sans text-status-success font-bold flex items-center gap-1">
+              <span className="text-xs font-mono text-status-success font-bold flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 100% Acceptance
               </span>
@@ -217,7 +217,7 @@ export function ComparisonTable() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-border flex items-center justify-between text-xs font-sans text-slate-500">
+            <div className="pt-2 border-t border-border flex items-center justify-between text-xs font-mono text-text-muted">
               <span>Standard: 8 CFR 103.2(a)(3)</span>
               <span className="text-brand-500 font-bold">100% Money-Back Guarantee</span>
             </div>
@@ -235,7 +235,7 @@ export function ComparisonTable() {
                 Side-by-side technical evaluation against industry incumbents.
               </p>
             </div>
-            <span className="text-xs font-sans text-brand-600 font-bold">
+            <span className="text-xs font-mono text-brand-500 font-bold">
               Flat $24.95 / Page Rate
             </span>
           </div>
@@ -249,7 +249,7 @@ export function ComparisonTable() {
                   </th>
                   <th className="p-5 md:p-6 text-center bg-brand-50/80 border-x-2 border-brand-500 min-w-[200px]">
                     <div className="space-y-1">
-                      <span className="text-xs font-sans font-bold uppercase tracking-wider text-brand-600">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-500">
                         Our Service
                       </span>
                       <p className="text-lg md:text-xl font-black text-brand-ink">VerifyLingua</p>
@@ -337,7 +337,7 @@ export function ComparisonTable() {
         <div className="text-center pt-2">
           <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md active:scale-[0.97] transition-all duration-200">
             <Link href="/order/triage">
-              Start Translation with 100% Guarantee
+              Start translation with 100% guarantee
               <ArrowRight className="w-5 h-5" />
             </Link>
           </Button>

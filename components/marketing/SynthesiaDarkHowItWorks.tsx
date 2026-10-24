@@ -110,7 +110,7 @@ export function SynthesiaDarkHowItWorks() {
           <div className="relative z-10 space-y-10 sm:space-y-12">
             {/* Header */}
             <div className="text-center max-w-3xl mx-auto space-y-3">
-              <span className="text-xs font-sans font-bold uppercase tracking-wider text-brand-400">
+              <span className="text-xs font-sans font-semibold uppercase tracking-wider text-brand-400">
                 End-to-End Certified Pipeline
               </span>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-display">
@@ -127,21 +127,21 @@ export function SynthesiaDarkHowItWorks() {
                 <button
                   key={step.id}
                   onClick={() => setActiveStepIndex(idx)}
-                  className={`p-3 sm:p-4 min-h-[48px] rounded-xl text-left transition-all cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                  className={`p-3 sm:p-4 rounded-xl text-left transition-[background-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] cursor-pointer relative ${
                     activeStepIndex === idx
-                      ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
+                      ? "bg-brand-600 text-white shadow-md shadow-brand-600/30"
                       : "text-slate-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   <div className="space-y-1">
                     <span
-                      className={`text-xs font-sans uppercase font-bold tracking-wider block ${
+                      className={`text-[10px] font-sans font-bold block uppercase tracking-wider ${
                         activeStepIndex === idx ? "text-brand-100" : "text-slate-500"
                       }`}
                     >
-                      Step {step.stepNumber}
+                      STEP {step.stepNumber}
                     </span>
-                    <span className="text-xs sm:text-sm font-bold block leading-tight">
+                    <span className="text-xs sm:text-sm font-bold block leading-tight font-sans">
                       {step.tabLabel}
                     </span>
                   </div>
@@ -151,18 +151,18 @@ export function SynthesiaDarkHowItWorks() {
 
             {/* Application Studio Preview Window (Matches Screenshot editor mockup) */}
             <div className="rounded-2xl bg-obsidian-card border border-obsidian-border p-4 sm:p-8 space-y-6 shadow-xl">
-              {/* Studio Window Bar */}
+              {/* Studio Window Bar (Apple macOS Window Spec) */}
               <div className="flex items-center justify-between pb-4 border-b border-obsidian-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-rose-500 border border-rose-600/60 shadow-xs" />
+                  <div className="w-3 h-3 rounded-full bg-amber-400 border border-amber-500/60 shadow-xs" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-600/60 shadow-xs" />
                   <span className="text-xs font-mono text-slate-400 ml-2">
                     VerifyLingua Studio — {activeStep.previewTitle}
                   </span>
                 </div>
-                <Badge variant="outline" className="border-brand-500/40 text-brand-300 text-xs font-sans font-semibold">
-                  Active Stage {activeStep.stepNumber} / 04
+                <Badge variant="outline" className="border-brand-500/40 text-brand-300 text-[10px] font-sans font-semibold">
+                  ACTIVE STAGE {activeStep.stepNumber} / 04
                 </Badge>
               </div>
 
@@ -174,7 +174,7 @@ export function SynthesiaDarkHowItWorks() {
                     <h3 className="text-xl sm:text-2xl font-bold text-white font-display">
                       {activeStep.headline}
                     </h3>
-                    <p className="text-sm text-slate-400 leading-relaxed">
+                    <p className="text-sm text-slate-400 leading-relaxed font-sans">
                       {activeStep.description}
                     </p>
                   </div>
@@ -186,16 +186,16 @@ export function SynthesiaDarkHowItWorks() {
                         key={i}
                         className="flex items-center justify-between p-2.5 rounded-lg bg-obsidian-elevated border border-obsidian-border text-xs"
                       >
-                        <span className="text-slate-400 font-sans">{m.label}</span>
-                        <span className="font-bold text-white font-sans">{m.value}</span>
+                        <span className="text-slate-400 font-sans text-xs">{m.label}</span>
+                        <span className="font-bold text-white font-mono text-xs">{m.value}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="pt-2">
                     <Link href="/translate">
-                      <Button className="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs sm:text-sm px-6 py-4 rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
-                        <span>Try Live With Your Document</span>
+                      <Button className="bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm px-6 py-4 rounded-xl cursor-pointer transition-transform duration-150 ease-out active:scale-[0.97] shadow-sm">
+                        <span>Try live with your document</span>
                         <ArrowRight className="w-4 h-4 ml-1.5" />
                       </Button>
                     </Link>
@@ -208,26 +208,26 @@ export function SynthesiaDarkHowItWorks() {
                     <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                       <div className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-brand-600" />
-                        <span className="text-xs font-bold text-text uppercase tracking-wider font-sans">
+                        <span className="text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
                           CERTIFIED TRANSLATION PACKET
                         </span>
                       </div>
-                      <span className="text-xs font-sans text-status-success bg-status-success-bg px-2.5 py-0.5 rounded-full font-bold">
+                      <span className="text-[10px] font-sans text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full font-semibold">
                         SEAL APPLIED
                       </span>
                     </div>
 
                     <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2 text-xs">
-                      <span className="text-slate-500 text-xs font-sans font-semibold block">
+                      <span className="text-slate-500 font-sans text-[10px] font-semibold uppercase tracking-wider block">
                         VERIFIED DOCUMENT RECORD:
                       </span>
-                      <p className="text-slate-800 leading-relaxed font-sans text-xs sm:text-sm">
+                      <p className="text-slate-800 leading-relaxed font-sans text-xs">
                         {activeStep.previewSnippet}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
-                      <span className="font-sans text-slate-600 text-xs">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs font-sans">
+                      <span className="font-mono text-slate-500 text-[11px]">
                         ATA Corporate Member No. 278190
                       </span>
                       <span className="font-bold text-brand-600 text-xs flex items-center gap-1">

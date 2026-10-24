@@ -154,10 +154,10 @@ export function Header() {
   return (
     <header 
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
+        "sticky top-0 z-50 w-full transition-[background-color,border-color,box-shadow,padding] duration-200 ease-out",
         scrolled 
-          ? "bg-white/90 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] py-2 sm:py-2.5" 
-          : "bg-white/60 backdrop-blur-md border-b border-slate-200/40 py-3 sm:py-4"
+          ? "bg-white/85 backdrop-blur-xl border-b border-slate-900/[0.08] shadow-[0_2px_12px_rgba(0,0,0,0.04)] py-2 sm:py-2.5" 
+          : "bg-white/60 backdrop-blur-md border-b border-slate-900/[0.04] py-3 sm:py-4"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,8 +165,8 @@ export function Header() {
           
           {/* Left: Brand Identity */}
           <div className="flex items-center gap-4 xl:gap-8">
-            <Link href="/" className="flex items-center gap-2.5 group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-xl">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.25)] transition-transform duration-200 group-hover:scale-105">
+            <Link href="/" className="flex items-center gap-2.5 group shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg">
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.25)] transition-transform duration-200 group-hover:scale-105 active:scale-95">
                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
               <div className="flex flex-col text-left">
@@ -175,8 +175,8 @@ export function Header() {
                     Verify<span className="text-brand-600">Lingua</span>
                   </span>
                 </div>
-                <span className="text-[11px] font-sans uppercase tracking-wider text-slate-600 font-semibold mt-0.5">
-                  USCIS Certified
+                <span className="text-[10px] font-sans uppercase tracking-wider text-slate-500 font-medium mt-0.5">
+                  USCIS CERTIFIED
                 </span>
               </div>
             </Link>
@@ -192,7 +192,7 @@ export function Header() {
               >
                 <button
                   className={cn(
-                    "flex items-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-lg text-xs sm:text-sm font-semibold tracking-tight transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
+                    "flex items-center gap-1 px-3.5 py-2 rounded-lg text-xs font-semibold tracking-tight transition-colors cursor-pointer min-h-[38px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500",
                     activeDropdown === "solutions"
                       ? "text-brand-600 bg-brand-50"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
@@ -200,7 +200,7 @@ export function Header() {
                   aria-expanded={activeDropdown === "solutions"}
                 >
                   <span>Features</span>
-                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200 text-slate-500", activeDropdown === "solutions" && "rotate-180 text-brand-600")} />
+                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200 text-slate-600", activeDropdown === "solutions" && "rotate-180 text-brand-600")} />
                 </button>
 
                 <AnimatePresence>
@@ -212,12 +212,12 @@ export function Header() {
                       transition={{ duration: 0.15, ease: "easeOut" }}
                       className="absolute left-0 top-full pt-2 w-[440px] pointer-events-auto"
                     >
-                      <div className="p-3 bg-white rounded-2xl border border-slate-200/90 shadow-[0_12px_32px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 overflow-hidden">
+                      <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-xl ring-1 ring-black/5 overflow-hidden">
                         <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-sans uppercase tracking-wider text-slate-600 font-semibold">
+                          <span className="text-[11px] font-sans uppercase tracking-wider text-slate-500 font-semibold">
                             Core Translation Technology
                           </span>
-                          <span className="text-xs font-sans text-emerald-700 font-medium bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
+                          <span className="text-[10px] font-sans font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/50 px-2 py-0.5 rounded-md">
                             USCIS 8 CFR § 103.2
                           </span>
                         </div>
@@ -230,21 +230,21 @@ export function Header() {
                                 key={item.title}
                                 href={item.href}
                                 onClick={() => setActiveDropdown(null)}
-                                className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                                className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group text-left focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                               >
                                 <div className="w-8 h-8 rounded-lg bg-brand-50 border border-brand-100 flex items-center justify-center shrink-0 mt-0.5 text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
                                   <Icon className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between">
-                                    <h4 className="text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-brand-600 transition-colors">
+                                    <h4 className="text-xs font-semibold text-slate-900 group-hover:text-brand-600 transition-colors">
                                       {item.title}
                                     </h4>
-                                    <span className="text-xs font-medium text-slate-500">
+                                    <span className="text-[10px] font-sans font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                                       {item.badge}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-slate-500 leading-snug mt-0.5 line-clamp-1">
+                                  <p className="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-1">
                                     {item.description}
                                   </p>
                                 </div>
@@ -266,7 +266,7 @@ export function Header() {
               >
                 <button
                   className={cn(
-                    "flex items-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-lg text-xs sm:text-sm font-semibold tracking-tight transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
+                    "flex items-center gap-1 px-3.5 py-2 rounded-lg text-xs font-semibold tracking-tight transition-colors cursor-pointer min-h-[38px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500",
                     activeDropdown === "documents"
                       ? "text-brand-600 bg-brand-50"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
@@ -274,7 +274,7 @@ export function Header() {
                   aria-expanded={activeDropdown === "documents"}
                 >
                   <span>Documents</span>
-                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200 text-slate-500", activeDropdown === "documents" && "rotate-180 text-brand-600")} />
+                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200 text-slate-600", activeDropdown === "documents" && "rotate-180 text-brand-600")} />
                 </button>
 
                 <AnimatePresence>
@@ -286,15 +286,15 @@ export function Header() {
                       transition={{ duration: 0.15, ease: "easeOut" }}
                       className="absolute left-0 top-full pt-2 w-[380px] pointer-events-auto"
                     >
-                      <div className="p-3 bg-white rounded-2xl border border-slate-200/90 shadow-[0_12px_32px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 overflow-hidden">
+                      <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-xl ring-1 ring-black/5 overflow-hidden">
                         <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-sans uppercase tracking-wider text-slate-600 font-semibold">
+                          <span className="text-[11px] font-sans uppercase tracking-wider text-slate-500 font-semibold">
                             Supported Civil Formats
                           </span>
                           <Link 
                             href="/documents" 
                             onClick={() => setActiveDropdown(null)}
-                            className="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline"
+                            className="text-[10px] font-medium text-brand-600 hover:underline"
                           >
                             View all 25+ →
                           </Link>
@@ -308,16 +308,16 @@ export function Header() {
                                 key={item.title}
                                 href={item.href}
                                 onClick={() => setActiveDropdown(null)}
-                                className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                                className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group text-left focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500"
                               >
                                 <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 text-slate-700 group-hover:bg-brand-600 group-hover:text-white transition-colors">
                                   <Icon className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-brand-600 transition-colors">
+                                  <h4 className="text-xs font-semibold text-slate-900 group-hover:text-brand-600 transition-colors">
                                     {item.title}
                                   </h4>
-                                  <p className="text-xs text-slate-500 leading-snug mt-0.5 line-clamp-1">
+                                  <p className="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-1">
                                     {item.description}
                                   </p>
                                 </div>
@@ -335,7 +335,7 @@ export function Header() {
               <Link
                 href="/how-it-works"
                 className={cn(
-                  "inline-flex items-center px-3.5 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-semibold tracking-tight transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
+                  "px-3 py-2 rounded-lg text-xs font-semibold tracking-tight transition-colors whitespace-nowrap min-h-[38px] flex items-center focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500",
                   pathname === "/how-it-works"
                     ? "text-brand-600 bg-brand-50"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
@@ -347,7 +347,7 @@ export function Header() {
               <Link
                 href="/pricing"
                 className={cn(
-                  "inline-flex items-center px-3.5 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-semibold tracking-tight transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
+                  "px-3 py-2 rounded-lg text-xs font-semibold tracking-tight transition-colors whitespace-nowrap min-h-[38px] flex items-center focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500",
                   pathname === "/pricing"
                     ? "text-brand-600 bg-brand-50"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
@@ -359,14 +359,14 @@ export function Header() {
               <Link
                 href="/counsel"
                 className={cn(
-                  "hidden xl:inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-semibold tracking-tight transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
+                  "hidden xl:flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold tracking-tight transition-colors whitespace-nowrap min-h-[38px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500",
                   pathname === "/counsel"
                     ? "text-brand-600 bg-brand-50"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
                 )}
               >
                 <span>CounselDesk™</span>
-                <span className="text-[11px] font-sans px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 font-bold uppercase tracking-wider">
+                <span className="text-[9px] font-sans px-1.5 py-0.5 rounded-md bg-brand-100 text-brand-700 font-bold uppercase tracking-wider">
                   Firms
                 </span>
               </Link>
@@ -381,29 +381,29 @@ export function Header() {
             {credits !== null && (
               <Link
                 href="/translate"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-full border border-amber-500/30 bg-amber-50 text-amber-900 text-xs font-sans font-medium hover:bg-amber-100 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-50 text-amber-900 text-xs font-medium hover:bg-amber-100 transition-colors shrink-0"
                 title="Available translation credits"
               >
                 <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-                <span><strong>{credits}</strong> Pages</span>
+                <span><strong className="font-mono">{credits}</strong> Pages</span>
               </Link>
             )}
 
             {/* Quick Public Verification Shortcut */}
             <Link
               href="/verify"
-              className="hidden 2xl:inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-2 min-h-[44px] rounded-lg transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="hidden 2xl:inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 px-2.5 py-1.5 transition-colors shrink-0 rounded-lg hover:bg-slate-100/70"
             >
-              <QrCode className="w-4 h-4 text-slate-500" />
+              <QrCode className="w-3.5 h-3.5 text-slate-600" />
               <span>Verify Seal</span>
             </Link>
 
             {/* Dashboard Link */}
             <Link
               href="/dashboard"
-              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100/70 transition-colors shrink-0"
             >
-              <LayoutDashboard className="w-4 h-4 text-slate-500" />
+              <LayoutDashboard className="w-3.5 h-3.5 text-slate-600" />
               <span>Dashboard</span>
             </Link>
 
@@ -411,36 +411,35 @@ export function Header() {
             {currentUser ? (
               <button
                 onClick={handleLogout}
-                className="hidden sm:inline-flex items-center px-3 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="hidden sm:inline-block px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors shrink-0 cursor-pointer"
               >
-                Sign Out
+                Sign out
               </button>
             ) : (
               <Link
                 href="/login"
-                className="hidden sm:inline-flex items-center px-3 py-2 min-h-[44px] rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="hidden sm:inline-block px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors shrink-0"
               >
-                Sign In
+                Sign in
               </Link>
             )}
 
             {/* Primary Royal Blue CTA Button (Matching Screenshot) */}
             <Link
               href="/translate"
-              className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-semibold shadow-[0_4px_16px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all duration-150 active:scale-[0.98] group cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-semibold shadow-[0_2px_12px_rgba(37,99,235,0.3)] transition-transform duration-150 ease-out active:scale-[0.97] group cursor-pointer whitespace-nowrap shrink-0 min-h-[40px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
-              <span>Start Translation</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 shrink-0" />
+              <span>Start translation</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5 shrink-0" />
             </Link>
 
             {/* Mobile Menu Toggle Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center p-2.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer shrink-0"
+              className="lg:hidden p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-hidden cursor-pointer shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-[0.97] transition-transform"
               aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
 
@@ -459,48 +458,48 @@ export function Header() {
           >
             <div className="space-y-4 text-left">
               <div className="space-y-1">
-                <div className="px-3 py-1.5 text-xs font-sans uppercase text-slate-500 font-bold tracking-wider">
+                <div className="px-3 py-1 text-[11px] font-sans uppercase tracking-wider text-slate-500 font-semibold">
                   Navigation
                 </div>
                 <Link
                   href="/translate"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 min-h-[44px] rounded-xl hover:bg-slate-50 text-sm font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-sm font-semibold text-slate-900 active:scale-[0.98] transition-transform"
                 >
-                  <span>Studio &amp; Translation Intake</span>
-                  <ArrowRight className="w-4 h-4 text-slate-500" />
+                  <span>Studio & Translation Intake</span>
+                  <ArrowRight className="w-4 h-4 text-slate-600" />
                 </Link>
                 <Link
                   href="/how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 min-h-[44px] rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 active:scale-[0.98] transition-transform"
                 >
                   <span>How It Works</span>
-                  <ArrowRight className="w-4 h-4 text-slate-500" />
+                  <ArrowRight className="w-4 h-4 text-slate-600" />
                 </Link>
                 <Link
                   href="/pricing"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 min-h-[44px] rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 active:scale-[0.98] transition-transform"
                 >
                   <span>Transparent Pricing</span>
-                  <ArrowRight className="w-4 h-4 text-slate-500" />
+                  <ArrowRight className="w-4 h-4 text-slate-600" />
                 </Link>
                 <Link
                   href="/counsel"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 min-h-[44px] rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 active:scale-[0.98] transition-transform"
                 >
                   <span>CounselDesk™ (Law Firms)</span>
-                  <span className="text-[11px] font-sans px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 font-bold">FIRMS</span>
+                  <span className="text-[10px] font-sans px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-bold">FIRMS</span>
                 </Link>
                 <Link
                   href="/verify"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 min-h-[44px] rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 active:scale-[0.98] transition-transform"
                 >
                   <span>Public QR Verification Portal</span>
-                  <QrCode className="w-4 h-4 text-slate-500" />
+                  <QrCode className="w-4 h-4 text-slate-600" />
                 </Link>
               </div>
 
@@ -508,7 +507,7 @@ export function Header() {
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full min-h-[44px] rounded-xl bg-slate-100 text-slate-900 font-semibold flex items-center justify-center gap-2 text-sm hover:bg-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="w-full h-11 rounded-xl bg-slate-100 text-slate-900 font-semibold flex items-center justify-center gap-2 text-sm hover:bg-slate-200 active:scale-[0.98] transition-all"
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   <span>Go to Client Dashboard</span>
@@ -520,23 +519,23 @@ export function Header() {
                       setMobileMenuOpen(false);
                       handleLogout();
                     }}
-                    className="w-full min-h-[44px] rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                    className="w-full h-10 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    Sign Out ({currentUser.name || currentUser.email})
+                    Sign out ({currentUser.name || currentUser.email})
                   </button>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <Link
                       href="/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="w-full min-h-[44px] rounded-xl border border-slate-200 text-slate-700 font-medium text-xs sm:text-sm flex items-center justify-center hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      className="w-full h-10 rounded-xl border border-slate-200 text-slate-700 font-medium text-xs flex items-center justify-center hover:bg-slate-50 active:scale-[0.98] transition-all"
                     >
-                      Sign In
+                      Sign in
                     </Link>
                     <Link
                       href="/register"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="w-full min-h-[44px] rounded-xl bg-brand-600 text-white font-semibold text-xs sm:text-sm flex items-center justify-center hover:bg-brand-500 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      className="w-full h-10 rounded-xl bg-brand-600 text-white font-semibold text-xs flex items-center justify-center hover:bg-brand-500 shadow-sm active:scale-[0.98] transition-all"
                     >
                       Register
                     </Link>

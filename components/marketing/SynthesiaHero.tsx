@@ -157,7 +157,6 @@ export function SynthesiaHero() {
     if (typeof val === "boolean") {
       return val ? (
         <span
-          aria-label="Supported"
           className={`inline-flex items-center justify-center w-7 h-7 rounded-full ${
             isHighlighted
               ? "bg-brand-50 text-brand-600 border border-brand-200"
@@ -167,10 +166,7 @@ export function SynthesiaHero() {
           <CheckCircle2 className="w-4 h-4 text-inherit" />
         </span>
       ) : (
-        <span 
-          aria-label="Not supported"
-          className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-surface-sunken text-text-subtle/50"
-        >
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-surface-sunken text-text-subtle/50">
           <XCircle className="w-4 h-4 text-inherit" />
         </span>
       );
@@ -204,10 +200,10 @@ export function SynthesiaHero() {
           {/* Eyebrow Pill */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/80 bg-brand-50/70 shadow-xs backdrop-blur-xs">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping motion-reduce:hidden absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500" />
             </span>
-            <span className="text-xs font-sans font-bold uppercase tracking-wider text-brand-700">
+            <span className="text-xs font-sans font-semibold uppercase tracking-wider text-brand-700">
               Certified Legal Translation Alternative
             </span>
           </div>
@@ -215,7 +211,7 @@ export function SynthesiaHero() {
           {/* Main Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-text leading-[1.08] font-display">
             Looking for a certified legal translation{" "}
-            <span className="text-brand-600">
+            <span className="text-brand-600 relative inline-block">
               alternative?
             </span>
           </h1>
@@ -232,7 +228,7 @@ export function SynthesiaHero() {
             <Link href="/translate">
               <Button
                 size="lg"
-                className="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm sm:text-base px-7 py-6 rounded-full shadow-md shadow-brand-500/20 transition-all hover:shadow-lg hover:shadow-brand-500/30 active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm sm:text-base px-8 py-6 rounded-full shadow-[0_4px_16px_rgba(37,99,235,0.25)] transition-transform duration-150 ease-out active:scale-[0.97] cursor-pointer"
               >
                 <span>Start Certified Translation</span>
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -243,7 +239,7 @@ export function SynthesiaHero() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-border bg-surface-raised hover:bg-surface text-text font-semibold text-sm sm:text-base px-6 py-6 rounded-full transition-all active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="border-slate-300/80 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm sm:text-base px-7 py-6 rounded-full transition-transform duration-150 ease-out active:scale-[0.97] cursor-pointer shadow-xs"
               >
                 <span>View Acceptance Guarantee</span>
               </Button>
@@ -251,18 +247,18 @@ export function SynthesiaHero() {
           </div>
 
           {/* Micro Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-6 pt-2 text-xs sm:text-sm font-sans text-slate-600 font-medium">
+          <div className="flex flex-wrap items-center justify-center gap-6 pt-2 text-xs font-sans text-slate-600 font-medium">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
-              <span>USCIS 8 CFR § 103.2 Compliant</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
+              USCIS 8 CFR § 103.2 Compliant
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
-              <span>ATA Member No. 278190</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
+              ATA Member No. 278190
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
-              <span>100% Acceptance Guarantee</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
+              100% Acceptance Guarantee
             </span>
           </div>
         </div>
@@ -284,7 +280,7 @@ export function SynthesiaHero() {
                 </div>
 
                 {/* Filter Pills */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                   {[
                     { id: "all", label: "All Features" },
                     { id: "legal", label: "Legal Acceptance" },
@@ -295,9 +291,9 @@ export function SynthesiaHero() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveFilter(tab.id as FilterCategory)}
-                      className={`px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-transform duration-150 ease-out active:scale-[0.97] cursor-pointer ${
                         activeFilter === tab.id
-                          ? "bg-brand-500 text-white shadow-xs"
+                          ? "bg-brand-600 text-white shadow-xs"
                           : "bg-surface text-text-muted hover:text-text hover:bg-surface-sunken"
                       }`}
                     >
@@ -312,25 +308,25 @@ export function SynthesiaHero() {
                 <table className="w-full text-left border-collapse min-w-[680px]">
                   <thead>
                     <tr className="border-b border-border/80 bg-surface/20">
-                      <th scope="col" className="py-4 px-5 text-xs font-sans font-semibold uppercase tracking-wider text-slate-700 w-[36%]">
+                      <th className="py-4 px-5 text-xs font-sans font-semibold uppercase tracking-wider text-slate-500 w-[36%]">
                         Specification &amp; Feature
                       </th>
                       {/* Active Column: VerifyLingua */}
-                      <th scope="col" className="py-4 px-4 text-xs font-sans uppercase w-[22%] bg-brand-50/50 border-x border-brand-200/80">
+                      <th className="py-4 px-4 text-xs font-sans uppercase w-[22%] bg-brand-50/50 border-x border-brand-200/80">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-brand-700">VerifyLingua</span>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500 text-white tracking-wider">
+                          <span className="font-bold text-brand-700 font-sans">VerifyLingua</span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-brand-600 text-white tracking-wide shadow-xs">
                             RECOMMENDED
                           </span>
                         </div>
                       </th>
-                      <th scope="col" className="py-4 px-4 text-xs font-sans font-semibold uppercase tracking-wider text-slate-700 w-[14%]">
+                      <th className="py-4 px-4 text-xs font-sans font-semibold uppercase tracking-wider text-slate-500 w-[14%]">
                         RushTranslate
                       </th>
-                      <th scope="col" className="py-4 px-4 text-xs font-sans font-semibold uppercase tracking-wider text-slate-700 w-[14%]">
+                      <th className="py-4 px-4 text-xs font-sans font-semibold uppercase tracking-wider text-slate-500 w-[14%]">
                         Rev.com
                       </th>
-                      <th scope="col" className="py-4 px-4 text-xs font-sans font-semibold uppercase tracking-wider text-slate-700 w-[14%]">
+                      <th className="py-4 px-4 text-xs font-sans font-semibold uppercase tracking-wider text-slate-500 w-[14%]">
                         Generic AI
                       </th>
                     </tr>
@@ -352,7 +348,7 @@ export function SynthesiaHero() {
                               <span className="text-xs sm:text-sm font-semibold text-text block">
                                 {row.feature}
                               </span>
-                              <span className="text-xs text-slate-500 leading-relaxed block">
+                              <span className="text-[11px] text-text-muted leading-relaxed block">
                                 {row.subtext}
                               </span>
                             </div>
@@ -385,17 +381,17 @@ export function SynthesiaHero() {
               </div>
 
               {/* Table Footer Banner */}
-              <div className="p-4 sm:p-5 bg-surface/60 border-t border-border/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+              <div className="p-4 sm:p-5 bg-surface/60 border-t border-border/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                 <span className="text-text-muted flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-status-success" />
                   All certified translations include sworn ATA certification and tamper-evident QR at no added charge.
                 </span>
 
                 <Link
                   href="/translate"
-                  className="font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md px-2 py-1"
+                  className="font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-transform duration-150 ease-out active:scale-[0.97]"
                 >
-                  <span>Start Certified Order — $24.95 / Page</span>
+                  <span>Start certified order for $24.95/page</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

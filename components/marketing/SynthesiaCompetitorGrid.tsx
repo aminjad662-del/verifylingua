@@ -84,7 +84,7 @@ export function SynthesiaCompetitorGrid() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-14">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-sans font-semibold uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 text-brand-600" />
             <span>Honest Market Comparisons</span>
           </div>
@@ -93,7 +93,7 @@ export function SynthesiaCompetitorGrid() {
             See how VerifyLingua compares to other translation services
           </h2>
 
-          <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+          <p className="text-base sm:text-lg text-text-muted leading-relaxed font-sans">
             Direct, factual comparisons to help immigration attorneys and applicants make the right certified choice.
           </p>
         </div>
@@ -103,24 +103,24 @@ export function SynthesiaCompetitorGrid() {
           {COMPETITOR_CARDS.map((card, idx) => (
             <div
               key={idx}
-              className="p-6 sm:p-7 rounded-2xl bg-surface-raised border border-border hover:border-brand-300 hover:shadow-md transition-all flex flex-col justify-between space-y-6 group"
+              className="p-6 sm:p-7 rounded-2xl bg-surface-raised border border-border hover:border-brand-300 hover:shadow-[0_8px_24px_-4px_rgba(37,99,235,0.08)] hover:-translate-y-1 transition-[transform,border-color,box-shadow] duration-200 ease-out flex flex-col justify-between space-y-6 group"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-base sm:text-lg font-bold text-text font-display">
                     vs. {card.name}
                   </span>
-                  <span className="text-xs font-sans text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200/60 font-bold">
+                  <span className="text-[10px] font-sans text-brand-700 bg-brand-50 border border-brand-200/70 px-2.5 py-0.5 rounded-full font-semibold">
                     {card.tagline}
                   </span>
                 </div>
 
-                <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+                <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-sans">
                   {card.description}
                 </p>
 
-                <div className="pt-1 flex items-center gap-1.5 text-xs text-status-success font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <div className="pt-1 flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50/80 border border-emerald-200/60 px-2.5 py-1.5 rounded-lg font-medium font-sans">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-status-success shrink-0" />
                   <span>{card.keyWin}</span>
                 </div>
               </div>
@@ -128,9 +128,9 @@ export function SynthesiaCompetitorGrid() {
               <div className="pt-3 border-t border-border/60">
                 <Link
                   href="/translate"
-                  className="inline-flex items-center gap-1.5 min-h-[44px] py-2 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-transform duration-150 ease-out active:scale-[0.97]"
                 >
-                  <span>Compare With {card.name}</span>
+                  <span>Compare with {card.name}</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>

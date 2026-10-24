@@ -30,7 +30,7 @@ export function SynthesiaWhyLoveBento() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16">
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/80 bg-brand-50/80 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/80 bg-brand-50/80 text-brand-700 text-xs font-sans font-semibold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5 text-brand-500" />
             <span>Proven Legal Results</span>
           </div>
@@ -48,7 +48,7 @@ export function SynthesiaWhyLoveBento() {
         {/* 3-Card Bento Stack (Matches Screenshot Bento Layout) */}
         <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
           {/* ─── Card 1 (Top Wide): Tamper-Evident QR Verification ─── */}
-          <div className="rounded-2xl sm:rounded-3xl bg-surface-raised border border-border p-6 sm:p-10 shadow-sm hover:shadow-md transition-shadow grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="rounded-2xl sm:rounded-3xl bg-surface-raised border border-border p-6 sm:p-10 shadow-sm hover:shadow-md transition-[box-shadow,border-color] duration-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Content */}
             <div className="lg:col-span-5 space-y-4">
               <div className="w-12 h-12 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center text-brand-600 shadow-xs">
@@ -68,9 +68,9 @@ export function SynthesiaWhyLoveBento() {
               <div className="pt-2">
                 <Link
                   href="/verify"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md py-1"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-transform duration-150 ease-out active:scale-[0.97]"
                 >
-                  <span>Test Public Verification Portal</span>
+                  <span>Test public verification portal</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -82,47 +82,47 @@ export function SynthesiaWhyLoveBento() {
                 {/* Header bar */}
                 <div className="flex items-center justify-between pb-3 border-b border-border/60">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse motion-reduce:animate-none" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-status-success animate-pulse" />
                     <span className="text-xs font-mono font-bold text-text">
                       CERTIFICATE_ACCURACY_SEAL.PDF
                     </span>
                   </div>
-                  <Badge variant="outline" className="border-status-success/30 text-status-success bg-status-success-bg text-xs font-sans font-bold">
+                  <Badge variant="outline" className="border-status-success/30 text-status-success bg-status-success-bg text-[10px] font-sans font-semibold">
                     OFFICIALLY VERIFIED
                   </Badge>
                 </div>
 
                 {/* Document Body preview */}
-                <div className="bg-canvas rounded-lg border border-border p-4 sm:p-6 space-y-4 text-xs text-text-muted">
+                <div className="bg-canvas rounded-lg border border-border p-4 sm:p-6 space-y-4 text-xs font-sans text-slate-700">
                   <div className="flex items-center justify-between text-text">
-                    <span className="font-bold uppercase tracking-wider text-xs font-sans">
+                    <span className="font-bold uppercase tracking-wider text-[11px] font-sans">
                       Sworn Affidavit of Translator Competence
                     </span>
-                    <span className="text-xs font-sans text-slate-500">
+                    <span className="text-[10px] text-text-subtle font-sans">
                       USCIS 8 CFR § 103.2(b)(3)
                     </span>
                   </div>
 
-                  <p className="text-xs sm:text-sm leading-relaxed text-text/80 font-sans border-l-2 border-brand-500 pl-3 py-0.5">
+                  <p className="text-[11px] leading-relaxed text-slate-800 font-serif italic border-l-2 border-brand-500 pl-3 py-0.5">
                     &quot;I, certified linguist under ATA Corporate Member No. 278190, declare that I am fluent in Spanish and English and that the attached translation is complete and accurate to the best of my knowledge and ability.&quot;
                   </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-border/60 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/60 text-[10px]">
                     <div>
-                      <span className="text-slate-500 font-sans text-[11px] block">ISSUED BY:</span>
-                      <span className="font-bold text-text">VerifyLingua LLC</span>
+                      <span className="text-text-subtle block font-sans">ISSUED BY:</span>
+                      <span className="font-bold text-text font-sans">VerifyLingua LLC</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 font-sans text-[11px] block">ATA ID:</span>
-                      <span className="font-bold text-text">No. 278190</span>
+                      <span className="text-text-subtle block font-sans">ATA ID:</span>
+                      <span className="font-bold text-text font-mono">No. 278190</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 font-sans text-[11px] block">HASH (SHA-256):</span>
-                      <span className="font-mono font-bold text-brand-600 truncate block">9f8e...4a12</span>
+                      <span className="text-text-subtle block font-sans">HASH (SHA-256):</span>
+                      <span className="font-bold text-brand-600 truncate block font-mono">9f8e...4a12</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 font-sans text-[11px] block">STATUS:</span>
-                      <span className="font-bold text-status-success">100% Guaranteed</span>
+                      <span className="text-text-subtle block font-sans">STATUS:</span>
+                      <span className="font-bold text-status-success font-sans">100% Guaranteed</span>
                     </div>
                   </div>
                 </div>
@@ -131,24 +131,24 @@ export function SynthesiaWhyLoveBento() {
           </div>
 
           {/* ─── Card 2 (Middle Split): Team Work & Legal Firm Management ─── */}
-          <div className="rounded-2xl sm:rounded-3xl bg-surface-raised border border-border p-6 sm:p-10 shadow-sm hover:shadow-md transition-shadow grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="rounded-2xl sm:rounded-3xl bg-surface-raised border border-border p-6 sm:p-10 shadow-sm hover:shadow-md transition-[box-shadow,border-color] duration-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Visual: Team collaboration badges & stickers */}
             <div className="lg:col-span-6 order-2 lg:order-1">
               <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-brand-50/60 via-lavender-50 to-surface border border-brand-100 relative overflow-hidden space-y-4">
                 {/* Floating sticker effect */}
                 <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-brand-500 text-white shadow-xs">
+                  <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-brand-500 text-white shadow-xs">
                     Firm Portal Active
                   </span>
-                  <span className="text-xs font-sans text-slate-500">
+                  <span className="text-[10px] font-sans font-semibold text-slate-500">
                     Multi-Matter Assignment
                   </span>
                 </div>
 
                 <div className="bg-canvas rounded-xl p-4 border border-border shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm font-bold text-text">Matter #IMMI-2026-8910</span>
-                    <Badge variant="outline" className="text-xs text-brand-600 border-brand-200">
+                    <span className="text-xs font-bold text-text font-sans">Matter #IMMI-2026-8910</span>
+                    <Badge variant="outline" className="text-[10px] text-brand-600 border-brand-200 font-sans">
                       I-485 Packet
                     </Badge>
                   </div>
@@ -156,12 +156,12 @@ export function SynthesiaWhyLoveBento() {
                     <div className="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs">
                       MV
                     </div>
-                    <div className="text-xs">
+                    <div className="text-xs font-sans">
                       <span className="font-bold text-text block">Marcus Vance, Esq.</span>
-                      <span className="text-xs text-slate-500">Paralegal: Assigned to Elena R.</span>
+                      <span className="text-[11px] text-text-muted">Paralegal: Assigned to Elena R.</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-border/60 text-xs text-slate-600 font-sans">
+                  <div className="flex items-center justify-between pt-2 border-t border-border/60 text-[11px] text-text-muted font-sans">
                     <span>3 Documents Sealed</span>
                     <span className="text-status-success font-bold">Ready for e-filing</span>
                   </div>
@@ -193,9 +193,9 @@ export function SynthesiaWhyLoveBento() {
               <div className="pt-2">
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md py-1"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-transform duration-150 ease-out active:scale-[0.97]"
                 >
-                  <span>Open Immigration Firm Account</span>
+                  <span>Open immigration firm account</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -203,7 +203,7 @@ export function SynthesiaWhyLoveBento() {
           </div>
 
           {/* ─── Card 3 (Bottom Wide): Guaranteed USCIS Acceptance & RFE Defense ─── */}
-          <div className="rounded-2xl sm:rounded-3xl bg-surface-raised border border-border p-6 sm:p-10 shadow-sm hover:shadow-md transition-shadow grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="rounded-2xl sm:rounded-3xl bg-surface-raised border border-border p-6 sm:p-10 shadow-sm hover:shadow-md transition-[box-shadow,border-color] duration-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Content */}
             <div className="lg:col-span-5 space-y-4">
               <div className="w-12 h-12 rounded-xl bg-status-success-bg border border-status-success/30 flex items-center justify-center text-status-success shadow-xs">
@@ -223,9 +223,9 @@ export function SynthesiaWhyLoveBento() {
               <div className="pt-2">
                 <Link
                   href="/translate"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-md py-1"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-transform duration-150 ease-out active:scale-[0.97]"
                 >
-                  <span>Start Certified Order</span>
+                  <span>Start certified order</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -237,32 +237,32 @@ export function SynthesiaWhyLoveBento() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Scale className="w-4 h-4 text-brand-500" />
-                    <span className="text-xs font-bold text-text">USCIS RFE DEFENSE SHIELD</span>
+                    <span className="text-xs font-bold text-text font-sans">USCIS RFE DEFENSE SHIELD</span>
                   </div>
-                  <span className="text-xs font-sans text-status-success bg-status-success-bg px-2.5 py-0.5 rounded-full font-bold">
+                  <span className="text-[10px] font-sans text-status-success bg-status-success-bg border border-status-success/20 px-2.5 py-0.5 rounded-full font-semibold">
                     WARRANTY INCLUDED
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-3 rounded-lg bg-canvas border border-border space-y-1">
-                    <span className="text-xs text-slate-500 font-sans block">FIRST-PASS ACCEPT:</span>
-                    <span className="text-lg font-bold text-text">100%</span>
-                    <span className="text-xs text-text-muted block">Zero fatal rejections</span>
+                    <span className="text-[10px] text-text-subtle font-sans font-semibold uppercase tracking-wider block">FIRST-PASS ACCEPT:</span>
+                    <span className="text-lg font-bold text-text font-sans">100%</span>
+                    <span className="text-[10px] text-text-muted block font-sans">Zero fatal rejections</span>
                   </div>
                   <div className="p-3 rounded-lg bg-canvas border border-border space-y-1">
-                    <span className="text-xs text-slate-500 font-sans block">REMEDY SPEED:</span>
-                    <span className="text-lg font-bold text-brand-600">&lt; 4 Hours</span>
-                    <span className="text-xs text-text-muted block">Instant re-affidavit</span>
+                    <span className="text-[10px] text-text-subtle font-sans font-semibold uppercase tracking-wider block">REMEDY SPEED:</span>
+                    <span className="text-lg font-bold text-brand-600 font-sans">&lt; 4 Hours</span>
+                    <span className="text-[10px] text-text-muted block font-sans">Instant re-affidavit</span>
                   </div>
                   <div className="p-3 rounded-lg bg-canvas border border-border space-y-1">
-                    <span className="text-xs text-slate-500 font-sans block">REFUND POLICY:</span>
-                    <span className="text-lg font-bold text-status-success">100% Full</span>
-                    <span className="text-xs text-text-muted block">No questions asked</span>
+                    <span className="text-[10px] text-text-subtle font-sans font-semibold uppercase tracking-wider block">REFUND POLICY:</span>
+                    <span className="text-lg font-bold text-status-success font-sans">100% Full</span>
+                    <span className="text-[10px] text-text-muted block font-sans">No questions asked</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-brand-50/50 border border-brand-200/60 text-xs text-brand-800 flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-brand-50/50 border border-brand-200/60 text-xs text-brand-800 flex items-center justify-between font-sans">
                   <span>Cites 8 CFR § 204.2(a)(1)(iii)(B) Sworn Authenticity Regulations</span>
                   <ExternalLink className="w-3.5 h-3.5 text-brand-600 shrink-0" />
                 </div>
