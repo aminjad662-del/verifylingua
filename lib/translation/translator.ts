@@ -349,7 +349,7 @@ export async function callDeepLBatchTranslation(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (res.status === 401 || res.status === 403 || res.status === 429) {
