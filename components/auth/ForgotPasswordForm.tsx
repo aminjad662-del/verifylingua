@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
 
 // Email typo map
 const EMAIL_TYPO_MAP: Record<string, string> = {
@@ -86,21 +86,21 @@ export function ForgotPasswordForm() {
           <h2 className="text-xl font-bold font-display text-brand-ink tracking-tight">
             Reset Link Dispatched
           </h2>
-          <p className="text-xs text-text-muted mt-2 max-w-sm mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-text-muted mt-2 max-w-sm mx-auto leading-relaxed">
             If an account exists for <span className="font-semibold text-brand-ink">{email}</span>, we have sent a
             cryptographic password reset link valid for 1 hour.
           </p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-surface-raised border border-border text-[11px] text-text-muted leading-normal">
+        <div className="p-4 rounded-2xl bg-surface-raised border border-border/80 text-xs text-text-muted leading-relaxed">
           <p>
             Please check your inbox and spam folder. If you don&apos;t receive it within a few minutes, verify your email
             spelling and try again.
           </p>
         </div>
 
-        <Link href="/login" className="block">
-          <Button variant="outline" className="w-full h-11 rounded-xl font-bold gap-2 text-xs cursor-pointer">
+        <Link href="/login" className="block pt-2">
+          <Button variant="outline" className="w-full h-12 rounded-2xl font-semibold gap-2 text-xs sm:text-sm cursor-pointer active:scale-[0.985] transition-all">
             <ArrowLeft className="w-4 h-4" />
             <span>Return to Vault Sign In</span>
           </Button>
@@ -114,20 +114,20 @@ export function ForgotPasswordForm() {
       <AnimatePresence>
         {errorMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
             role="alert"
-            className="p-3.5 rounded-xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-2.5 text-xs font-medium"
+            className="p-4 rounded-2xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-2.5 text-xs sm:text-sm font-medium"
           >
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="flex-1">{errorMessage}</div>
+            <div className="flex-1 leading-relaxed">{errorMessage}</div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <div>
-        <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="forgot-email">
+        <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="forgot-email">
           Registered Email Address <span className="text-status-danger">*</span>
         </label>
         <div className="relative">
@@ -139,7 +139,7 @@ export function ForgotPasswordForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@organization.com"
-            className="pl-10 h-11"
+            className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
             autoComplete="email"
           />
         </div>
@@ -148,7 +148,7 @@ export function ForgotPasswordForm() {
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted"
+            className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted px-1"
           >
             <span>Did you mean:</span>
             <button
@@ -161,33 +161,35 @@ export function ForgotPasswordForm() {
           </motion.div>
         )}
 
-        <p className="text-[11px] text-text-muted mt-1.5">
+        <p className="text-[11px] text-text-muted mt-1.5 px-1">
           Enter the email associated with your certified translation vault.
         </p>
       </div>
 
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full h-11 rounded-xl text-sm font-bold gap-2 bg-brand-500 hover:bg-brand-600 text-white cursor-pointer active:scale-[0.985] transition-all"
-      >
-        {isSubmitting ? (
-          <>
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span>Dispatching Security Link...</span>
-          </>
-        ) : (
-          <>
-            <span>Send Password Reset Link</span>
-            <ArrowRight className="w-4 h-4" />
-          </>
-        )}
-      </Button>
+      <div className="pt-2">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full h-12 rounded-2xl text-sm font-semibold gap-2 bg-brand-500 hover:bg-brand-600 text-white cursor-pointer active:scale-[0.985] transition-all shadow-xs"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Dispatching Security Link...</span>
+            </>
+          ) : (
+            <>
+              <span>Send Password Reset Link</span>
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
+        </Button>
+      </div>
 
       <div className="text-center pt-2">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-text-muted hover:text-brand-ink transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-brand-ink transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Sign In</span>

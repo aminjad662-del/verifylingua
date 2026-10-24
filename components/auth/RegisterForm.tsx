@@ -21,12 +21,12 @@ import {
   ArrowRight,
   Briefcase,
   Languages,
-  Sparkles,
   Phone,
   HelpCircle,
   ChevronDown,
   ChevronUp,
   Award,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -111,7 +111,7 @@ export function RegisterForm() {
     }
 
     if (accountType === "TRANSLATOR" && !ataNumber.trim()) {
-      setErrorMessage("Please provide your ATA or state credential number.");
+      setErrorMessage("Please provide your ATA or credential number.");
       return;
     }
 
@@ -175,115 +175,117 @@ export function RegisterForm() {
 
   return (
     <div className="w-full">
-      {/* Scope Selector: Individual vs Law Firm vs Certified Translator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2.5">
-          <label className="text-xs font-mono uppercase tracking-wider text-text-muted">
-            1. Institutional Scope
+      {/* Apple-Style Segmented Scope Selector */}
+      <div className="mb-7">
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+            Select Account Role
           </label>
-          <span className="text-[11px] text-text-muted">Secure Role Authorization</span>
+          <span className="text-[11px] text-text-muted flex items-center gap-1">
+            <Lock className="w-3 h-3 text-status-success" />
+            <span>Role-Based Access Control</span>
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-1 rounded-2xl bg-surface-raised/70 border border-border">
-          {/* Individual */}
+        {/* Apple Segmented Control */}
+        <div className="relative p-1 rounded-2xl bg-surface-raised/80 border border-border/80 grid grid-cols-3 gap-1">
+          {/* Individual Option */}
           <button
             type="button"
             onClick={() => setAccountType("INDIVIDUAL")}
             className={cn(
-              "relative flex flex-col items-start p-3 rounded-xl text-left transition-all",
+              "relative z-10 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-200 select-none",
               accountType === "INDIVIDUAL"
-                ? "bg-surface shadow-sm border border-border-strong text-brand-ink"
-                : "text-text-muted hover:text-brand-ink hover:bg-surface/50 border border-transparent"
+                ? "text-brand-ink"
+                : "text-text-muted hover:text-brand-ink"
             )}
           >
-            <div className="flex items-center gap-2 mb-1.5">
-              <div
-                className={cn(
-                  "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
-                  accountType === "INDIVIDUAL" ? "bg-brand-500 text-white" : "bg-surface-raised text-text-muted"
-                )}
-              >
-                <User className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-sm font-bold font-display">Individual</span>
-            </div>
-            <span className="text-[11px] text-text-muted leading-tight">USCIS, Visa & Academic Vault</span>
+            {accountType === "INDIVIDUAL" && (
+              <motion.div
+                layoutId="activeAccountPill"
+                className="absolute inset-0 bg-surface rounded-xl shadow-xs border border-border/70"
+                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+              />
+            )}
+            <User className="w-3.5 h-3.5 relative z-10 shrink-0" />
+            <span className="relative z-10 truncate">Individual</span>
           </button>
 
-          {/* Law Firm */}
+          {/* Law Firm Option */}
           <button
             type="button"
             onClick={() => setAccountType("LAW_FIRM")}
             className={cn(
-              "relative flex flex-col items-start p-3 rounded-xl text-left transition-all",
+              "relative z-10 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-200 select-none",
               accountType === "LAW_FIRM"
-                ? "bg-surface shadow-sm border border-border-strong text-brand-ink"
-                : "text-text-muted hover:text-brand-ink hover:bg-surface/50 border border-transparent"
+                ? "text-brand-ink"
+                : "text-text-muted hover:text-brand-ink"
             )}
           >
-            <div className="flex items-center gap-2 mb-1.5">
-              <div
-                className={cn(
-                  "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
-                  accountType === "LAW_FIRM" ? "bg-accent-seal text-white" : "bg-surface-raised text-text-muted"
-                )}
-              >
-                <Briefcase className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-sm font-bold font-display">Law Firm</span>
-            </div>
-            <span className="text-[11px] text-text-muted leading-tight">Attorneys & Multi-Matter SLA</span>
+            {accountType === "LAW_FIRM" && (
+              <motion.div
+                layoutId="activeAccountPill"
+                className="absolute inset-0 bg-surface rounded-xl shadow-xs border border-border/70"
+                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+              />
+            )}
+            <Briefcase className="w-3.5 h-3.5 relative z-10 shrink-0" />
+            <span className="relative z-10 truncate">Law Firm</span>
           </button>
 
-          {/* Translator */}
+          {/* Linguist Option */}
           <button
             type="button"
             onClick={() => setAccountType("TRANSLATOR")}
             className={cn(
-              "relative flex flex-col items-start p-3 rounded-xl text-left transition-all",
+              "relative z-10 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-200 select-none",
               accountType === "TRANSLATOR"
-                ? "bg-surface shadow-sm border border-border-strong text-brand-ink"
-                : "text-text-muted hover:text-brand-ink hover:bg-surface/50 border border-transparent"
+                ? "text-brand-ink"
+                : "text-text-muted hover:text-brand-ink"
             )}
           >
-            <div className="flex items-center gap-2 mb-1.5">
-              <div
-                className={cn(
-                  "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
-                  accountType === "TRANSLATOR" ? "bg-status-success text-white" : "bg-surface-raised text-text-muted"
-                )}
-              >
-                <Languages className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-sm font-bold font-display">Linguist</span>
-            </div>
-            <span className="text-[11px] text-text-muted leading-tight">ATA Members & Court Notaries</span>
+            {accountType === "TRANSLATOR" && (
+              <motion.div
+                layoutId="activeAccountPill"
+                className="absolute inset-0 bg-surface rounded-xl shadow-xs border border-border/70"
+                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+              />
+            )}
+            <Languages className="w-3.5 h-3.5 relative z-10 shrink-0" />
+            <span className="relative z-10 truncate">Linguist</span>
           </button>
         </div>
+
+        {/* Micro Descriptor */}
+        <p className="text-[11px] text-text-muted mt-2 text-center">
+          {accountType === "INDIVIDUAL" && "Standard vault for USCIS immigration, academic admissions, and personal filings."}
+          {accountType === "LAW_FIRM" && "Multi-matter billing, expedited attorney SLA, and priority filing queue."}
+          {accountType === "TRANSLATOR" && "Credentialed linguist portal for ATA members and certified court translators."}
+        </p>
       </div>
 
-      {/* Error Banner */}
+      {/* Error Alert Banner */}
       <AnimatePresence>
         {errorMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.2 }}
             role="alert"
-            className="mb-6 p-4 rounded-xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-3 text-sm"
+            className="mb-6 p-4 rounded-2xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-3 text-xs sm:text-sm font-medium"
           >
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <div className="flex-1 font-medium">{errorMessage}</div>
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-0.5" />
+            <div className="flex-1 leading-relaxed">{errorMessage}</div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Anti-Bot Honeypot Field (Hidden from normal users & assistive tech) */}
+        {/* Anti-Bot Honeypot Field */}
         <div className="sr-only opacity-0 absolute -z-10 pointer-events-none" aria-hidden="true">
-          <label htmlFor="reg-honeypot-website">Corporate URL</label>
+          <label htmlFor="reg-honeypot-website">Institutional ID</label>
           <input
             id="reg-honeypot-website"
             type="text"
@@ -294,9 +296,9 @@ export function RegisterForm() {
           />
         </div>
 
-        {/* Legal Name */}
+        {/* Full Legal Name */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-name">
+          <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="register-name">
             Full Legal Name <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
@@ -307,8 +309,8 @@ export function RegisterForm() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Elena Rostova"
-              className="pl-10 h-11"
+              placeholder="e.g. Maria Elena Rostova"
+              className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
               autoComplete="name"
             />
           </div>
@@ -324,7 +326,7 @@ export function RegisterForm() {
             className="space-y-4 overflow-hidden"
           >
             <div>
-              <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-org">
+              <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="register-org">
                 Law Firm / Practice Name <span className="text-status-danger">*</span>
               </label>
               <div className="relative">
@@ -336,7 +338,7 @@ export function RegisterForm() {
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Rostova & Partners Immigration LLP"
-                  className="pl-10 h-11"
+                  className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
                 />
               </div>
             </div>
@@ -353,8 +355,8 @@ export function RegisterForm() {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-ata">
-                  ATA / Court Credential # <span className="text-status-danger">*</span>
+                <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="register-ata">
+                  ATA or Court Credential # <span className="text-status-danger">*</span>
                 </label>
                 <div className="relative">
                   <Award className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
@@ -365,13 +367,13 @@ export function RegisterForm() {
                     value={ataNumber}
                     onChange={(e) => setAtaNumber(e.target.value)}
                     placeholder="e.g. 278190"
-                    className="pl-10 h-11"
+                    className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-pairs">
+                <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="register-pairs">
                   Language Pairs
                 </label>
                 <div className="relative">
@@ -382,7 +384,7 @@ export function RegisterForm() {
                     value={languagePairs}
                     onChange={(e) => setLanguagePairs(e.target.value)}
                     placeholder="e.g. Spanish -> English"
-                    className="pl-10 h-11"
+                    className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
                   />
                 </div>
               </div>
@@ -392,7 +394,7 @@ export function RegisterForm() {
 
         {/* Email Address & Live Typo Suggestion */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-email">
+          <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="register-email">
             Official Email Address <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
@@ -404,17 +406,17 @@ export function RegisterForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@organization.com"
-              className="pl-10 h-11"
+              className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
               autoComplete="email"
             />
           </div>
 
-          {/* Typo Correction Prompt */}
+          {/* Live Typo Suggestion Prompt */}
           {suggestedEmail && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted"
+              className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted px-1"
             >
               <span>Did you mean:</span>
               <button
@@ -427,19 +429,20 @@ export function RegisterForm() {
             </motion.div>
           )}
 
-          <p className="text-[11px] text-text-muted mt-1.5">
-            USCIS Certificates of Accuracy and SHA-256 digital seals will be cryptographically bound to this address.
+          <p className="text-[11px] text-text-muted mt-1.5 px-1 leading-normal">
+            Certified USCIS affidavits and digital SHA-256 seals will be cryptographically bound to this address.
           </p>
         </div>
 
         {/* Phone Number (Optional for 2FA readiness) */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-semibold text-brand-ink" htmlFor="register-phone">
-              Mobile Phone <span className="text-text-muted font-normal">(Optional for 2FA & Filing Alerts)</span>
+          <div className="flex items-center justify-between mb-1.5 px-1">
+            <label className="text-[13px] font-semibold text-brand-ink" htmlFor="register-phone">
+              Mobile Phone <span className="text-text-muted font-normal">(Optional)</span>
             </label>
             <span className="text-[10px] text-status-success font-medium flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" /> Encrypted E.164
+              <ShieldCheck className="w-3 h-3" />
+              <span>SMS 2FA & Filing Alerts</span>
             </span>
           </div>
           <div className="relative">
@@ -450,15 +453,15 @@ export function RegisterForm() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+1 (555) 019-2834"
-              className="pl-10 h-11"
+              className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
               autoComplete="tel"
             />
           </div>
         </div>
 
-        {/* Password */}
+        {/* Vault Master Password */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-password">
+          <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="register-password">
             Vault Master Password <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
@@ -470,31 +473,31 @@ export function RegisterForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 8 characters"
-              className="pl-10 pr-10 h-11"
+              className="pl-10 pr-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
               autoComplete="new-password"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-ink transition-colors p-1"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-ink transition-colors p-1"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
 
-          {/* Password Strength Indicator */}
+          {/* Password Strength Evaluation Bar */}
           {password.length > 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="mt-2.5 p-3 rounded-xl border border-border bg-surface-raised space-y-2"
+              className="mt-2.5 p-3.5 rounded-2xl border border-border/80 bg-surface-raised/70 space-y-2.5"
             >
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium text-text-muted">Password Security Grade:</span>
                 <span
                   className={cn(
-                    "font-bold font-mono tracking-tight",
+                    "font-bold text-xs",
                     strength.score <= 1 && "text-status-danger",
                     strength.score === 2 && "text-accent-seal",
                     strength.score === 3 && "text-brand-500",
@@ -505,7 +508,7 @@ export function RegisterForm() {
                 </span>
               </div>
 
-              {/* Progress bar */}
+              {/* Continuous curved segmented bar */}
               <div className="h-1.5 w-full bg-border/60 rounded-full overflow-hidden flex gap-1">
                 {[1, 2, 3, 4].map((step) => (
                   <div
@@ -526,16 +529,16 @@ export function RegisterForm() {
                 ))}
               </div>
 
-              {/* Pattern Warning if guessable */}
+              {/* Pattern warning if guessable */}
               {strength.patternWarning && (
                 <p className="text-[11px] text-status-danger font-medium flex items-center gap-1">
                   <AlertCircle className="w-3 h-3 shrink-0" />
-                  {strength.patternWarning}
+                  <span>{strength.patternWarning}</span>
                 </p>
               )}
 
-              {/* Criteria Checklist with Spring Feedback */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
+              {/* Live Criteria Checklist */}
+              <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
                 <div
                   className={cn(
                     "flex items-center gap-1.5 transition-colors",
@@ -547,8 +550,9 @@ export function RegisterForm() {
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />
                   )}
-                  8+ characters
+                  <span>8+ characters</span>
                 </div>
+
                 <div
                   className={cn(
                     "flex items-center gap-1.5 transition-colors",
@@ -562,8 +566,9 @@ export function RegisterForm() {
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />
                   )}
-                  Upper & lowercase
+                  <span>Upper & lowercase</span>
                 </div>
+
                 <div
                   className={cn(
                     "flex items-center gap-1.5 transition-colors",
@@ -575,8 +580,9 @@ export function RegisterForm() {
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />
                   )}
-                  Number (0-9)
+                  <span>Number (0-9)</span>
                 </div>
+
                 <div
                   className={cn(
                     "flex items-center gap-1.5 transition-colors",
@@ -588,7 +594,7 @@ export function RegisterForm() {
                   ) : (
                     <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />
                   )}
-                  Special symbol
+                  <span>Special symbol</span>
                 </div>
               </div>
             </motion.div>
@@ -597,7 +603,7 @@ export function RegisterForm() {
 
         {/* Confirm Password */}
         <div>
-          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="register-confirm-password">
+          <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="register-confirm-password">
             Confirm Password <span className="text-status-danger">*</span>
           </label>
           <div className="relative">
@@ -610,8 +616,8 @@ export function RegisterForm() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter your password"
               className={cn(
-                "pl-10 pr-10 h-11",
-                passwordsMismatch && "border-status-danger focus-visible:ring-status-danger",
+                "pl-10 pr-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20",
+                passwordsMismatch && "border-status-danger focus-visible:ring-status-danger/20",
                 passwordsMatch && "border-status-success/70"
               )}
               autoComplete="new-password"
@@ -624,7 +630,7 @@ export function RegisterForm() {
             )}
           </div>
           {passwordsMismatch && (
-            <p className="text-[11px] text-status-danger mt-1">Passwords do not match.</p>
+            <p className="text-[11px] text-status-danger mt-1.5 px-1 font-medium">Passwords do not match.</p>
           )}
         </div>
 
@@ -636,7 +642,7 @@ export function RegisterForm() {
               required
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-1 w-4 h-4 rounded border-border text-brand-500 focus:ring-brand-500 focus:ring-offset-0 cursor-pointer"
+              className="mt-1 w-4 h-4 rounded-md border-border text-brand-500 focus:ring-brand-500 focus:ring-offset-0 cursor-pointer shrink-0"
             />
             <span className="text-xs text-text-muted leading-relaxed">
               I certify legal accuracy and accept the{" "}
@@ -647,7 +653,7 @@ export function RegisterForm() {
               <Link href="/help" className="text-brand-ink underline font-medium hover:text-brand-500">
                 Privacy Policy
               </Link>
-              , and USCIS 8 CFR 103.2 translation authenticity guidelines.
+              , and USCIS 8 CFR § 103.2 translation authenticity guidelines.
             </span>
           </label>
 
@@ -656,11 +662,11 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowComplianceDetails(!showComplianceDetails)}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-500 hover:text-brand-600 transition-colors"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-brand-500 hover:text-brand-600 transition-colors cursor-pointer"
             >
-              <HelpCircle className="w-3 h-3" />
-              <span>What is USCIS 8 CFR 103.2 compliance?</span>
-              {showComplianceDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>What is USCIS 8 CFR § 103.2 compliance?</span>
+              {showComplianceDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
 
             <AnimatePresence>
@@ -669,17 +675,18 @@ export function RegisterForm() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-2 p-3 rounded-xl bg-surface-raised border border-border text-xs text-text-muted space-y-1.5 leading-relaxed"
+                  className="mt-2 p-3.5 rounded-2xl bg-surface-raised/80 border border-border/80 text-xs text-text-muted space-y-2 leading-relaxed overflow-hidden"
                 >
                   <p className="font-semibold text-brand-ink">
-                    Federal Immigration Standard (8 CFR 103.2(b)(3)):
+                    Federal Immigration Standard (8 CFR § 103.2(b)(3)):
                   </p>
                   <p>
                     Any foreign language document submitted to USCIS must be accompanied by a complete English
                     translation verified by a competent translator as accurate, with a signed Certificate of Accuracy.
                   </p>
-                  <p className="text-[11px] text-accent-seal font-medium">
-                    ✓ VerifyLingua guarantees 100% acceptance with free instant RFE revisions.
+                  <p className="text-[11px] text-accent-seal font-medium flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span>VerifyLingua guarantees 100% acceptance with free instant RFE revisions.</span>
                   </p>
                 </motion.div>
               )}
@@ -687,21 +694,21 @@ export function RegisterForm() {
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Tactile Apple-Grade Submit Button */}
         <div className="pt-2">
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-12 rounded-xl text-sm font-bold gap-2 shadow-sm active:scale-[0.985] transition-all bg-brand-500 hover:bg-brand-600 text-white cursor-pointer"
+            className="w-full h-12 rounded-2xl text-sm font-semibold gap-2 shadow-xs active:scale-[0.985] transition-all duration-200 bg-brand-500 hover:bg-brand-600 text-white cursor-pointer"
           >
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Establishing Encrypted Vault...</span>
+                <span>Creating Certified Account...</span>
               </>
             ) : (
               <>
-                <span>Create Certified Translation Account</span>
+                <span>Create Certified Account</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -709,13 +716,13 @@ export function RegisterForm() {
         </div>
 
         {/* Bottom Trust Indicators */}
-        <div className="pt-3 border-t border-border/80 flex items-center justify-between text-[11px] text-text-muted">
+        <div className="pt-4 border-t border-border/70 flex flex-wrap items-center justify-between gap-2 text-[11px] text-text-muted">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-status-success" />
             <span>256-Bit TLS Vault</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-accent-seal" />
+            <Award className="w-3.5 h-3.5 text-accent-seal" />
             <span>ATA Corporate Member</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -727,10 +734,10 @@ export function RegisterForm() {
         {/* Switch to Sign In */}
         <div className="text-center pt-2">
           <p className="text-xs text-text-muted">
-            Already registered?{" "}
+            Already have an account?{" "}
             <Link
               href={`/login${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
-              className="font-bold text-brand-ink hover:text-brand-500 hover:underline"
+              className="font-semibold text-brand-ink hover:text-brand-500 hover:underline transition-colors"
             >
               Sign in to your vault
             </Link>

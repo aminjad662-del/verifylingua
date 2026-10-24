@@ -67,7 +67,7 @@ export function SpyglassStudioPreview() {
                 href="/order/VL-DEMO1/proof"
                 className="text-xs sm:text-sm text-white/60 hover:text-white font-mono transition-colors underline"
               >
-                Live Interactive Demo →
+                Explore Proofing Studio →
               </Link>
             </div>
           </div>
