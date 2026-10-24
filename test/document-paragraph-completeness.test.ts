@@ -208,8 +208,8 @@ describe("Document Paragraph Completeness & Layout Order Verification", () => {
     expect(svg).toContain('dir="rtl"');
     expect(svg).toContain('text-anchor="start"');
     expect(svg).toContain('direction="rtl"');
-    expect(svg).toContain('x="503.8"');
-    expect(svg).toContain('width="479.2"');
+    expect(svg).toContain('x="501.8"');
+    expect(svg).toContain('width="475.2"');
   });
 
   it("9. buildImageTranslatedSvg correctly uses text-anchor='middle' for centered text in RTL and LTR", () => {

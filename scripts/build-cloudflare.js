@@ -1803,6 +1803,59 @@ async function handleApiRequest(request, pathname, env, ctx) {
     return parts[0];
   }
 
+  function splitMergedLabelValue(text) {
+    if (!text || typeof text !== "string") return { isMerged: false, label: text || "", value: "" };
+    var trimmed = text.trim();
+    var patterns = [
+      // Spanish
+      { regex: /^(LUGAR Y FECHA DE NACIMIENTO)\s+(.+)$/i, label: "LUGAR Y FECHA DE NACIMIENTO" },
+      { regex: /^(FECHA DE EMISI[OÓ]N|EMISI[OÓ]N)\s+([0-9\.\/\-]+)$/i, label: "EMISIÓN" },
+      { regex: /^(FECHA DE CADUCIDAD|CADUCIDAD)\s+([0-9\.\/\-]+)$/i, label: "CADUCIDAD" },
+      { regex: /^(SEXO)\s+([MF])$/i, label: "SEXO" },
+      { regex: /^(ESTATURA)\s+([0-9]+)$/i, label: "ESTATURA" },
+      { regex: /^(NACIONALIDAD)\s+([A-Z]{2,3})$/i, label: "NACIONALIDAD" },
+      { regex: /^(MUNICIPIO DE)\s+(.+)$/i, label: "MUNICIPIO DE" },
+      { regex: /^(APELLIDOS?)\s+([A-Z\s'\-]+)$/i, label: "APELLIDOS" },
+      { regex: /^(NOMBRE)\s+([A-Z\s'\-]+)$/i, label: "NOMBRE" },
+      // Italian
+      { regex: /^(LUOGO E DATA DI NASCITA)\s+(.+)$/i, label: "LUOGO E DATA DI NASCITA" },
+      { regex: /^(EMISSIONE)\s+([0-9\.\/\-]+)$/i, label: "EMISSIONE" },
+      { regex: /^(SCADENZA)\s+([0-9\.\/\-]+)$/i, label: "SCADENZA" },
+      { regex: /^(SESSO)\s+([MF])$/i, label: "SESSO" },
+      { regex: /^(STATURA)\s+([0-9]+)$/i, label: "STATURA" },
+      { regex: /^(CITTADINANZA)\s+([A-Z]{2,3})$/i, label: "CITTADINANZA" },
+      { regex: /^(COMUNE DI)\s+(.+)$/i, label: "COMUNE DI" },
+      { regex: /^(COGNOME)\s+([A-Z\s'\-]+)$/i, label: "COGNOME" },
+      { regex: /^(NOME)\s+([A-Z\s'\-]+)$/i, label: "NOME" },
+      // English
+      { regex: /^(PLACE AND DATE OF BIRTH)\s+(.+)$/i, label: "PLACE AND DATE OF BIRTH" },
+      { regex: /^(DATE OF ISSUE|ISSUING)\s+([0-9\.\/\-]+)$/i, label: "DATE OF ISSUE" },
+      { regex: /^(DATE OF EXPIRY|EXPIRY)\s+([0-9\.\/\-]+)$/i, label: "DATE OF EXPIRY" },
+      { regex: /^(SEX)\s+([MF])$/i, label: "SEX" },
+      { regex: /^(HEIGHT)\s+([0-9]+)$/i, label: "HEIGHT" },
+      { regex: /^(NATIONALITY)\s+([A-Z]{2,3})$/i, label: "NATIONALITY" },
+      { regex: /^(MUNICIPALITY OF)\s+(.+)$/i, label: "MUNICIPALITY OF" },
+      { regex: /^(SURNAME)\s+([A-Z\s'\-]+)$/i, label: "SURNAME" },
+      { regex: /^(FORENAME|GIVEN NAMES?)\s+([A-Z\s'\-]+)$/i, label: "FORENAME" },
+      // French
+      { regex: /^(LIEU ET DATE DE NAISSANCE)\s+(.+)$/i, label: "LIEU ET DATE DE NAISSANCE" },
+      { regex: /^(DÉLIVRANCE)\s+([0-9\.\/\-]+)$/i, label: "DÉLIVRANCE" },
+      { regex: /^(EXPIRATION)\s+([0-9\.\/\-]+)$/i, label: "EXPIRATION" },
+      { regex: /^(SEXE)\s+([MF])$/i, label: "SEXE" },
+      { regex: /^(TAILLE)\s+([0-9]+)$/i, label: "TAILLE" },
+      { regex: /^(NATIONALITÉ)\s+([A-Z]{2,3})$/i, label: "NATIONALITÉ" },
+      { regex: /^(COMMUNE DE)\s+(.+)$/i, label: "COMMUNE DE" }
+    ];
+
+    for (var j = 0; j < patterns.length; j++) {
+      var m = trimmed.match(patterns[j].regex);
+      if (m) {
+        return { isMerged: true, label: m[1].trim(), value: m[2].trim() };
+      }
+    }
+    return { isMerged: false, label: trimmed, value: "" };
+  }
+
   function sanitizeAndTranslateBlocks(blocks, targetLang) {
     if (!Array.isArray(blocks) || blocks.length === 0) return blocks;
     const tLang = (targetLang || 'es').toLowerCase();
@@ -2265,18 +2318,21 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const isHeading = b.tier === 'heading' || isTitle;
         const fw = isHeading ? 'bold' : 'normal';
 
+        const hadBilingualSlash = b.rawText.includes('/');
         // Streamline bilingual label slashes if present (e.g. "COGNOME / SURNAME" -> "APELLIDOS")
-        if (b.rawText.includes('/') && typeof streamlineBilingualLabel === 'function') {
+        if (hadBilingualSlash && typeof streamlineBilingualLabel === 'function') {
           const streamlined = streamlineBilingualLabel(b.rawText, job.targetLang);
           if (streamlined) {
             b.rawText = streamlined;
           }
         }
 
+        const merged = typeof splitMergedLabelValue === 'function' ? splitMergedLabelValue(b.rawText) : { isMerged: false, label: b.rawText, value: '' };
+        const isMergedTwoRow = merged.isMerged && b.height >= 11;
+
         const explicitLines = b.rawText.split(String.fromCharCode(10)).map(function(l) { return l.replace(String.fromCharCode(13), "").trim(); }).filter(Boolean);
         const estimatedLineCount = Math.max(1, explicitLines.length);
 
-        // Single-line field classification (ID card labels, form fields, headers, compact badges)
         // Single-line field classification (ID card labels, form fields, personal names, dates, serials, compact badges)
         const isSingleLineField =
           explicitLines.length <= 1 &&
@@ -2306,22 +2362,64 @@ async function handleApiRequest(request, pathname, env, ctx) {
         const maxAllowedBottom = nextRow ? (nextRow.top - 2) : (h - 8);
         const maxAvailableH = Math.max(b.height, maxAllowedBottom - b.top);
 
-        let fs;
-        let lines;
-        let lineHeight;
-        let maskW;
-        let maskH;
         const padX = Math.max(2, Math.min(6, b.width * 0.02));
         const padY = b.height <= 10 ? 0.8 : Math.max(1.2, Math.min(3, b.height * 0.03));
         const maskX = Math.max(0, b.left - padX);
         const maskY = Math.max(0, b.top - padY);
 
+        if (isMergedTwoRow) {
+          // TWO-ROW ID CARD FIELD DECOMPOSITION (e.g. Birth place/date, Issue date, Expiry date, Sex, Height, Nationality)
+          const fsLabel = Math.max(5.5, Math.min(6.2, b.height * 0.38));
+          const fsValue = Math.max(6.8, Math.min(8.0, b.height * 0.48));
+          const maxChars = Math.max(merged.label.length, merged.value.length);
+          const maskW = Math.min(availW, Math.max(b.width, maxChars * fsValue * 0.55 + 10) + padX * 2);
+          const maskH = Math.min(maxAvailableH, Math.max(b.height + padY * 2, 16));
+
+          const rawBg = b.bg_color || b.bgColor || b.background_color;
+          const isGenericWhite = !rawBg || /^#(ffffff|fff)$/i.test(rawBg);
+          const fillColor = (isGenericWhite && documentThemeBg) ? documentThemeBg : (rawBg || '#ffffff');
+
+          const clipId = 'clip-cf-' + idx;
+          svgParts.push('  <defs>');
+          svgParts.push('    <clipPath id="' + clipId + '">');
+          svgParts.push('      <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + (maskH + 2).toFixed(1) + '" rx="2" ry="2" />');
+          svgParts.push('    </clipPath>');
+          svgParts.push('  </defs>');
+          svgParts.push('  <rect x="' + maskX.toFixed(1) + '" y="' + maskY.toFixed(1) + '" width="' + maskW.toFixed(1) + '" height="' + maskH.toFixed(1) + '" fill="' + fillColor + '" stroke="none" rx="2" ry="2" />');
+
+          const isBlockRtl = job.targetLang === 'ar' || job.targetLang === 'he' || /[\u0600-\u06FF]/.test(b.rawText);
+          const textAnchor = isBlockRtl ? 'end' : 'start';
+          const textStartX = isBlockRtl ? (maskX + maskW - 4) : (maskX + 4);
+          const yLabel = maskY + (maskH * 0.35) + (fsLabel * 0.25);
+          const yValue = maskY + (maskH * 0.82) + (fsValue * 0.35);
+
+          const escLabel = merged.label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const escVal = merged.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+          svgParts.push('  <g clip-path="url(#' + clipId + ')">');
+          svgParts.push('    <text font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fsLabel.toFixed(1) + '" font-weight="500" fill="#475568" text-anchor="' + textAnchor + '" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
+          svgParts.push('      <tspan x="' + textStartX.toFixed(1) + '" y="' + yLabel.toFixed(1) + '">' + escLabel + '</tspan>');
+          svgParts.push('    </text>');
+          svgParts.push('    <text font-family="Noto Sans Arabic, Segoe UI, Calibri, -apple-system, Arial, sans-serif" font-size="' + fsValue.toFixed(1) + '" font-weight="600" fill="#0f172a" text-anchor="' + textAnchor + '" dir="' + (isBlockRtl ? 'rtl' : 'ltr') + '" direction="' + (isBlockRtl ? 'rtl' : 'ltr') + '" unicode-bidi="embed">');
+          svgParts.push('      <tspan x="' + textStartX.toFixed(1) + '" y="' + yValue.toFixed(1) + '">' + escVal + '</tspan>');
+          svgParts.push('    </text>');
+          svgParts.push('  </g>');
+          continue;
+        }
+
+        let fs;
+        let lines;
+        let lineHeight;
+        let maskW;
+        let maskH;
+
         if (isSingleLineField) {
           // STRICT SINGLE-LINE PRESERVATION: No multi-line word wrapping on form/ID labels
           lines = [b.rawText];
           const charWidthRatio = 0.50;
-          const singleLineFloor = b.height <= 8 ? Math.max(6.2, Math.min(7.5, b.height * 0.95)) : (b.tier === 'caption' ? 7.8 : 8.5);
-          const maxFs = isTitle ? 20 : isHeading ? 14 : b.tier === 'caption' ? 9.5 : 12;
+          const isCompactLabel = b.height <= 8;
+          const singleLineFloor = isCompactLabel ? Math.max(5.8, Math.min(6.6, b.height * 0.95)) : (b.tier === 'caption' ? 7.8 : 8.5);
+          const maxFs = isCompactLabel ? 6.8 : (isTitle ? 20 : isHeading ? 14 : (b.height <= 12 ? 9.5 : 12));
           let testFs = Math.min(maxFs, Math.max(singleLineFloor, Math.floor(b.height * 0.85)));
           while (testFs > singleLineFloor && (b.rawText.length * testFs * charWidthRatio) > (availW - 4)) {
             testFs -= 0.3;
@@ -2329,7 +2427,9 @@ async function handleApiRequest(request, pathname, env, ctx) {
           fs = Math.max(singleLineFloor, testFs);
           lineHeight = Math.max(8, Math.round(fs * 1.18));
 
-          maskW = Math.min(w - maskX, Math.max(b.width, b.rawText.length * fs * charWidthRatio + 4) + padX * 2);
+          // Bilingual inpainting width expansion
+          const minBilingualW = /DOCUMENTO/i.test(b.rawText) ? 140 : ((hadBilingualSlash || /APELLIDO|NOMBRE|SURNAME|FORENAME/i.test(b.rawText)) ? 80 : 0);
+          maskW = Math.min(w - maskX, Math.min(availW, Math.max(b.width, b.rawText.length * fs * charWidthRatio + 4, minBilingualW) + padX * 2));
           const targetMaskH = Math.max(b.height + padY * 2, lineHeight + padY * 2);
           const safeAvailableH = Math.max(b.height + padY, maxAllowedBottom - maskY);
           maskH = Math.min(targetMaskH, safeAvailableH);
@@ -2481,14 +2581,14 @@ async function handleApiRequest(request, pathname, env, ctx) {
         let textStartY;
         if (isSingleLineField || lines.length <= 1) {
           const centerY = maskY + maskH / 2;
-          textStartY = centerY + (fs * 0.35);
+          textStartY = b.height <= 8 ? (centerY + fs * 0.28) : (centerY + fs * 0.35);
         } else {
           const verticalPadding = Math.max(1, (maskH - renderedTextH) / 2);
           textStartY = maskY + verticalPadding + fs * 0.88;
         }
 
-        const isCaption = b.tier === 'caption';
-        const defaultTextColor = isCaption ? '#334155' : (isHeading ? '#0f172a' : '#020617');
+        const isCaption = b.height <= 8 || b.tier === 'caption';
+        const defaultTextColor = isCaption ? '#475568' : (isHeading ? '#0f172a' : '#020617');
         const textColor = b.text_color || defaultTextColor;
         const finalFw = isCaption ? '500' : (b.tier === 'body' ? '600' : fw);
 

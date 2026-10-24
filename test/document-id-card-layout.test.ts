@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildImageTranslatedSvg, streamlineBilingualLabel } from "../lib/translation/svg-builder";
+import { buildImageTranslatedSvg, streamlineBilingualLabel, splitMergedLabelValue } from "../lib/translation/svg-builder";
 
 describe("Official ID Card & Certificate Layout Preservation", () => {
   const dummyImageBuffer = Buffer.from(
@@ -291,5 +291,106 @@ describe("Official ID Card & Certificate Layout Preservation", () => {
     const outPath = "C:/Users/aminj/.gemini/antigravity/brain/e2d13ccf-58f2-4a76-a43d-5023005e6f7e/id_card_fixed.svg";
     fs.writeFileSync(outPath, svg, "utf8");
     expect(fs.existsSync(outPath)).toBe(true);
+  });
+
+  it("decomposes merged label-value strings accurately across languages", () => {
+    // Spanish
+    const esBirth = splitMergedLabelValue("LUGAR Y FECHA DE NACIMIENTO NAPOLI (NA) 18.08.1970");
+    expect(esBirth.isMerged).toBe(true);
+    expect(esBirth.label).toBe("LUGAR Y FECHA DE NACIMIENTO");
+    expect(esBirth.value).toBe("NAPOLI (NA) 18.08.1970");
+
+    const esIssue = splitMergedLabelValue("EMISIÓN 20.04.2021");
+    expect(esIssue.isMerged).toBe(true);
+    expect(esIssue.label).toBe("EMISIÓN");
+    expect(esIssue.value).toBe("20.04.2021");
+
+    const esExpiry = splitMergedLabelValue("CADUCIDAD 18.08.2031");
+    expect(esExpiry.isMerged).toBe(true);
+    expect(esExpiry.label).toBe("CADUCIDAD");
+    expect(esExpiry.value).toBe("18.08.2031");
+
+    const esSex = splitMergedLabelValue("SEXO M");
+    expect(esSex.isMerged).toBe(true);
+    expect(esSex.label).toBe("SEXO");
+    expect(esSex.value).toBe("M");
+
+    const esHeight = splitMergedLabelValue("ESTATURA 166");
+    expect(esHeight.isMerged).toBe(true);
+    expect(esHeight.label).toBe("ESTATURA");
+    expect(esHeight.value).toBe("166");
+
+    const esNat = splitMergedLabelValue("NACIONALIDAD ITA");
+    expect(esNat.isMerged).toBe(true);
+    expect(esNat.label).toBe("NACIONALIDAD");
+    expect(esNat.value).toBe("ITA");
+
+    // Italian
+    const itBirth = splitMergedLabelValue("LUOGO E DATA DI NASCITA ROMA (RM) 01.01.1985");
+    expect(itBirth.isMerged).toBe(true);
+    expect(itBirth.label).toBe("LUOGO E DATA DI NASCITA");
+    expect(itBirth.value).toBe("ROMA (RM) 01.01.1985");
+
+    // English
+    const enBirth = splitMergedLabelValue("PLACE AND DATE OF BIRTH LONDON 12.05.1992");
+    expect(enBirth.isMerged).toBe(true);
+    expect(enBirth.label).toBe("PLACE AND DATE OF BIRTH");
+    expect(enBirth.value).toBe("LONDON 12.05.1992");
+
+    // Non-merged single field
+    const nonMerged = splitMergedLabelValue("FRANCESCO");
+    expect(nonMerged.isMerged).toBe(false);
+    expect(nonMerged.label).toBe("FRANCESCO");
+  });
+
+  it("renders merged label-value blocks as clean two-row sub-elements with zero cutoff", () => {
+    const mergedBlocks = [
+      {
+        box_2d: [100, 200, 140, 600],
+        original_text: "LUOGO E DATA DI NASCITA NAPOLI (NA) 18.08.1970",
+        translated_text: "LUGAR Y FECHA DE NACIMIENTO NAPOLI (NA) 18.08.1970",
+        bg_color: "#edf5f9",
+      },
+      {
+        box_2d: [150, 200, 185, 380],
+        original_text: "EMISSIONE 20.04.2021",
+        translated_text: "EMISIÓN 20.04.2021",
+        bg_color: "#edf5f9",
+      },
+      {
+        box_2d: [150, 400, 185, 580],
+        original_text: "SCADENZA 18.08.2031",
+        translated_text: "CADUCIDAD 18.08.2031",
+        bg_color: "#edf5f9",
+      },
+    ];
+
+    const svg = buildImageTranslatedSvg({
+      imageBuffer: dummyImageBuffer,
+      mimeType: "image/png",
+      width: 512,
+      height: 492,
+      targetLang: "es",
+      fileName: "test-merged.png",
+      blocks: mergedBlocks as any,
+    });
+
+    // Verify both row 1 (label) and row 2 (value) exist in the output SVG
+    expect(svg).toContain("LUGAR Y FECHA DE NACIMIENTO");
+    expect(svg).toContain("NAPOLI (NA) 18.08.1970");
+    expect(svg).toContain("EMISIÓN");
+    expect(svg).toContain("20.04.2021");
+    expect(svg).toContain("CADUCIDAD");
+    expect(svg).toContain("18.08.2031");
+
+    // Verify label styling (slate, medium) vs value styling (dark ink, semibold)
+    expect(svg).toContain('fill="#475568"');
+    expect(svg).toContain('fill="#0f172a"');
+    expect(svg).toContain('font-weight="500"');
+    expect(svg).toContain('font-weight="600"');
+
+    // Verify inpainting rects are present
+    const rects = Array.from(svg.matchAll(/<rect\s+x="([\d\.]+)"\s+y="([\d\.]+)"\s+width="([\d\.]+)"\s+height="([\d\.]+)"\s+fill="#edf5f9"/g));
+    expect(rects.length).toBe(3);
   });
 });
