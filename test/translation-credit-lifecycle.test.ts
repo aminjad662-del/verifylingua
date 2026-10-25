@@ -301,15 +301,15 @@ describe("Translation Pipeline Credit Integration", () => {
     deleteTranslationJob(body.jobId);
   });
 
-  it("6. Null userId compatibility: Unauthenticated demo uploads skip credit lifecycle gracefully", async () => {
+  it("6. Null userId compatibility: Unauthenticated guest uploads skip credit lifecycle gracefully", async () => {
     // Calling processDocumentTranslation without userId
     const result = await processDocumentTranslation({
       userId: null,
-      filename: "demo_guest.docx",
+      filename: "guest_sample.docx",
       sourceLang: "en",
       targetLang: "es",
       format: "docx",
-      fileBuffer: Buffer.from("Public Guest Translation Demo"),
+      fileBuffer: Buffer.from("Public Guest Translation Sample"),
     });
 
     expect(result.status).toBe("completed");
@@ -320,10 +320,10 @@ describe("Translation Pipeline Credit Integration", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        fileName: "demo_guest_route.docx",
+        fileName: "guest_sample_route.docx",
         sourceLang: "en",
         targetLang: "es",
-        fileBase64: Buffer.from("Public Route Demo").toString("base64"),
+        fileBase64: Buffer.from("Public Route Sample").toString("base64"),
       }),
     });
 

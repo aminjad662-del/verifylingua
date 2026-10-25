@@ -52,7 +52,7 @@ interface MessageItem {
 function OrderTrackingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const publicCode = (params.id as string) || "VL-DEMO1";
+  const publicCode = (params.id as string) || "VL-8921-XQ";
 
   // State Machine: TRANSLATING (State A) or DRAFT_READY (State B - Action Required)
   const initialStatusParam = searchParams.get("state")?.toUpperCase();

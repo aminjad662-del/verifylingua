@@ -52,12 +52,12 @@ async function main() {
   }
   console.log(`✅ Seeded ${translators.length} certified ATA translators.`);
 
-  // 2. Seed Demo User
-  const demoUser = await prisma.user.upsert({
-    where: { email: "demo@verifylingua.com" },
+  // 2. Seed Verified Applicant User
+  const applicantUser = await prisma.user.upsert({
+    where: { email: "applicant@verifylingua.com" },
     update: {},
     create: {
-      email: "demo@verifylingua.com",
+      email: "applicant@verifylingua.com",
       name: "Mohammed Abdullah Al-Rashid",
       phone: "+1 (555) 234-5678",
       locale: "en",
@@ -66,7 +66,7 @@ async function main() {
     },
   });
 
-  // 3. Seed In-Progress Demo Order (VL-7X9K2)
+  // 3. Seed In-Progress Order (VL-7X9K2)
   const existingOrder1 = await prisma.order.findUnique({
     where: { publicCode: "VL-7X9K2" },
   });
@@ -78,8 +78,8 @@ async function main() {
     await prisma.order.create({
       data: {
         publicCode: "VL-7X9K2",
-        userId: demoUser.id,
-        guestEmail: demoUser.email,
+        userId: applicantUser.id,
+        guestEmail: applicantUser.email,
         status: "TRANSLATING",
         sourceLang: "es",
         targetLang: "en",
@@ -151,10 +151,10 @@ async function main() {
         },
       },
     });
-    console.log("✅ Seeded in-progress demo order VL-7X9K2.");
+    console.log("✅ Seeded in-progress order VL-7X9K2.");
   }
 
-  // 4. Seed Completed Demo Order (VL-3M8Q1) with Certificate
+  // 4. Seed Completed Order (VL-3M8Q1) with Certificate
   const existingOrder2 = await prisma.order.findUnique({
     where: { publicCode: "VL-3M8Q1" },
   });
@@ -166,8 +166,8 @@ async function main() {
     const order2 = await prisma.order.create({
       data: {
         publicCode: "VL-3M8Q1",
-        userId: demoUser.id,
-        guestEmail: demoUser.email,
+        userId: applicantUser.id,
+        guestEmail: applicantUser.email,
         status: "DELIVERED",
         sourceLang: "es",
         targetLang: "en",
@@ -221,7 +221,7 @@ async function main() {
         },
       },
     });
-    console.log("✅ Seeded completed demo order VL-3M8Q1 with verification certificate.");
+    console.log("✅ Seeded completed order VL-3M8Q1 with verification certificate.");
   }
 
   console.log("🎉 Database seeding finished successfully!");

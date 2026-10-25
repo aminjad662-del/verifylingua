@@ -14,10 +14,10 @@ const VIEWPORTS = [
 const ROUTES = [
   { path: '/', slug: 'home' },
   { path: '/order/triage', slug: 'order_triage' },
-  { path: '/order/VL-DEMO1', slug: 'order_detail' },
-  { path: '/order/VL-DEMO1/proof', slug: 'order_proof' },
+  { path: '/order/VL-8921-XQ', slug: 'order_detail' },
+  { path: '/order/VL-8921-XQ/proof', slug: 'order_proof' },
   { path: '/translate', slug: 'translate_studio' },
-  { path: '/tracker/VL-DEMO1', slug: 'tracker' },
+  { path: '/tracker/view', slug: 'tracker' },
   { path: '/dashboard', slug: 'dashboard' },
   { path: '/counsel', slug: 'counsel' },
   { path: '/pricing', slug: 'pricing' },

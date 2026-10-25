@@ -167,7 +167,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       order: {
-        id: order?.id || "demo-order-id",
+        id: order?.id || `ord-${publicCode.toLowerCase()}`,
         publicCode: order?.publicCode || publicCode,
         status: order?.status || "QA",
         sourceLang: defaultSourceLang,

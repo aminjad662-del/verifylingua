@@ -11,8 +11,8 @@ async function verifyResponsive() {
     { name: 'pricing', path: '/pricing' },
     { name: 'verify', path: '/verify' },
     { name: 'verify_detail', path: '/verify/VL-CERT-8921' },
-    { name: 'order_tracking', path: '/order/VL-DEMO1' },
-    { name: 'pipeline_tracker', path: '/tracker/VL-DEMO1' },
+    { name: 'order_tracking', path: '/order/VL-8921-XQ' },
+    { name: 'pipeline_tracker', path: '/tracker/view' },
   ];
 
   const viewports = [

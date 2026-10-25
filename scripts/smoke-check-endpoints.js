@@ -1,11 +1,10 @@
 const urls = [
-  'https://verifylingua.pages.dev/tracker/VL-DEMO1',
-  'https://verifylingua.pages.dev/order/VL-DEMO1/tracker',
-  'https://verifylingua.pages.dev/order/VL-DEMO1/proof',
-  'https://verifylingua.pages.dev/translator/workbench/VL-DEMO1',
-  'https://verifylingua.pages.dev/api/jobs/VL-DEMO1/status',
-  'https://verifylingua.pages.dev/api/jobs/VL-DEMO1/download',
-  'https://verifylingua.pages.dev/api/order/VL-DEMO1/proof',
+  'https://verifylingua.pages.dev/order/VL-8921-XQ/tracker',
+  'https://verifylingua.pages.dev/order/VL-8921-XQ/proof',
+  'https://verifylingua.pages.dev/translator/workbench/VL-7X9K2',
+  'https://verifylingua.pages.dev/verify/VL-CERT-8921',
+  'https://verifylingua.pages.dev/api/order/VL-8921-XQ/proof',
+  'https://verifylingua.pages.dev/api/verify/VL-CERT-8921',
   'https://verifylingua.pages.dev/api/counsel/matters'
 ];
 

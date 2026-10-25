@@ -24,13 +24,13 @@ async function main() {
   await context.addCookies([
     {
       name: "vl_session",
-      value: "demo-session-token-2026",
+      value: "vl_session_auth_token",
       domain: "127.0.0.1",
       path: "/",
     },
     {
       name: "__session",
-      value: "demo-session-token-2026",
+      value: "vl_session_auth_token",
       domain: "127.0.0.1",
       path: "/",
     }
@@ -82,8 +82,8 @@ async function main() {
     console.log("✔ Captured view_06_order_checkout.png");
 
     // 7. Customer Proofing Studio
-    console.log("7. Capturing Customer Proofing Studio (/order/VL-DEMO1/proof)...");
-    await page.goto(`${BASE_URL}/order/VL-DEMO1/proof`, { waitUntil: "networkidle" });
+    console.log("7. Capturing Customer Proofing Studio (/order/VL-8921-XQ/proof)...");
+    await page.goto(`${BASE_URL}/order/VL-8921-XQ/proof`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1500);
     await page.screenshot({ path: path.join(ARTIFACT_DIR, "view_07_customer_proofing.png") });
     console.log("✔ Captured view_07_customer_proofing.png");
@@ -110,8 +110,8 @@ async function main() {
     console.log("✔ Captured view_10_counseldesk.png");
 
     // 11. Linguist CAT Workbench
-    console.log("11. Capturing Linguist Workbench (/translator/workbench/VL-DEMO1)...");
-    await page.goto(`${BASE_URL}/translator/workbench/VL-DEMO1`, { waitUntil: "networkidle" });
+    console.log("11. Capturing Linguist Workbench (/translator/workbench/VL-7X9K2)...");
+    await page.goto(`${BASE_URL}/translator/workbench/VL-7X9K2`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1000);
     await page.screenshot({ path: path.join(ARTIFACT_DIR, "view_11_linguist_workbench.png") });
     console.log("✔ Captured view_11_linguist_workbench.png");

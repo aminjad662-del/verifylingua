@@ -2,10 +2,9 @@ import LinguistWorkbenchClient from "./LinguistWorkbenchClient";
 
 export function generateStaticParams() {
   return [
-    { id: "VL-DEMO1" },
-    { id: "VL-8921-XQ" },
-    { id: "VL-9104-MN" },
-    { id: "demo" },
+    { id: "VL-7X9K2" },
+    { id: "VL-9P4W8" },
+    { id: "VL-2K6M1" },
   ];
 }
 

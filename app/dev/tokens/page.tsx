@@ -54,7 +54,7 @@ export default function DesignTokensPage() {
     }
   };
 
-  const triggerTransitionDemo = () => {
+  const triggerTransitionPreview = () => {
     setSimulatingTransition(true);
     setTimeout(() => {
       setTransitionKey((prev) => prev + 1);
@@ -439,7 +439,7 @@ export default function DesignTokensPage() {
             <Badge variant="default" className="rounded-[var(--r-xs)]">Interactive Lab</Badge>
             <h2 className="text-3xl font-bold text-brand-ink tracking-tight">8. Live Motion Playground (§3.5, §3.9)</h2>
             <p className="text-sm text-text-muted max-w-3xl">
-              Demonstrating the required motion behaviors: magnetic CTAs, stagger grids, scroll reveals, page transitions, and the signature celebration moment.
+              Showcasing the required motion behaviors: magnetic CTAs, stagger grids, scroll reveals, page transitions, and the signature celebration moment.
             </p>
           </div>
 
@@ -526,7 +526,7 @@ export default function DesignTokensPage() {
                 <h3 className="text-xl font-semibold text-brand-ink">Playground D: Page Transition Simulator (§3.5.5)</h3>
                 <p className="text-xs text-text-muted">Simulates App Router template.tsx transition: 420ms enter (y: 10px &rarr; 0) and 150ms exit (y: 0 &rarr; -8px).</p>
               </div>
-              <Button size="sm" onClick={triggerTransitionDemo} className="gap-1.5" disabled={simulatingTransition}>
+              <Button size="sm" onClick={triggerTransitionPreview} className="gap-1.5" disabled={simulatingTransition}>
                 <Play className="w-3.5 h-3.5" /> Simulate Route Push
               </Button>
             </div>

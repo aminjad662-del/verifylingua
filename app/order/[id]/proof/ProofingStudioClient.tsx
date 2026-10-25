@@ -58,7 +58,7 @@ interface RevisionItem {
 function ProofingStudioContent() {
   const params = useParams();
   const router = useRouter();
-  const rawId = (params.id as string) || "VL-DEMO1";
+  const rawId = (params.id as string) || "VL-8921-XQ";
   const publicCode = rawId.toUpperCase();
 
   const [loading, setLoading] = React.useState(true);

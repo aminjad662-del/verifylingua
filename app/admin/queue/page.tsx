@@ -106,7 +106,7 @@ export default function AdminQueuePage() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm" className="h-8 text-xs rounded-xl gap-1.5 border-border">
-              <Link href="/translator/workbench/VL-DEMO1">
+              <Link href="/translator/workbench/VL-7X9K2">
                 Linguist Studio™
               </Link>
             </Button>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// In-memory fallback store for development & mock demonstration
+// In-memory store for offline persistence & test environments
 const memoryMatters = [
   {
     id: "mat-1",

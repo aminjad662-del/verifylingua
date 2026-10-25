@@ -7,8 +7,8 @@ const routes = [
   '/order/triage',
   '/order/configure',
   '/order/checkout',
-  '/order/VL-DEMO1',
-  '/order/VL-DEMO1/proof',
+  '/order/VL-8921-XQ',
+  '/order/VL-8921-XQ/proof',
   '/verify/VL-CERT-8921',
   '/dashboard'
 ];

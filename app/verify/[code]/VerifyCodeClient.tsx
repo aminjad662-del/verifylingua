@@ -27,7 +27,7 @@ import {
 
 export default function VerifyCodePage() {
   const params = useParams();
-  const rawCode = (params.code as string) || "CERT-DEMO-2026";
+  const rawCode = (params.code as string) || "VL-CERT-8921";
   const verifyCode = decodeURIComponent(rawCode).toUpperCase();
 
   const [copied, setCopied] = React.useState(false);

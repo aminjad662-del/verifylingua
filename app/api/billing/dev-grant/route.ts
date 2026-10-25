@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     } else if (body.userId) {
       userId = body.userId;
     } else {
-      // Find the most recently active user or fallback to demo user
+      // Find the most recently active user or fallback to lead user
       const latestUser = await prisma.user.findFirst({
         orderBy: { updatedAt: "desc" },
       });

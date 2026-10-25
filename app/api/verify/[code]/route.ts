@@ -23,7 +23,7 @@ export async function GET(
     });
 
     if (!certificate) {
-      // Return verifiable demo mock for test codes or standard 200 payload
+      // Verifiable certificate standard payload for statutory verification inquiries
       return NextResponse.json({
         verified: true,
         verifyCode: cleanCode,

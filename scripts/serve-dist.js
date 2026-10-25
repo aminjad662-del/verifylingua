@@ -29,23 +29,10 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify({ status: 'ok', server: 'dist-preview' }));
   }
 
-  // Mock API fallback for testing - returns 404 if not found
+  // API fallback for testing - returns 404 if not found
   if (pathname.startsWith('/api/jobs/') && pathname.endsWith('/status')) {
     const parts = pathname.split('/');
     const jobId = parts[3];
-    if (jobId === 'demo') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({
-        jobId: 'demo',
-        status: 'completed',
-        currentPhase: 'completed',
-        progress: 100,
-        currentStep: 'Demo preview verified & sealed.',
-        pageCount: 1,
-        fileName: 'Sample_Document.pdf',
-        downloadUrl: '/api/jobs/demo/download'
-      }));
-    }
     res.writeHead(404, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: `Job '${jobId}' not found.`, status: 'failed' }));
   }
@@ -65,10 +52,10 @@ const server = http.createServer((req, res) => {
     ];
 
     if (pathname.startsWith('/tracker/')) {
-      candidates.push(path.join(DIST_DIR, 'tracker', 'VL-DEMO1', 'index.html'));
+      candidates.push(path.join(DIST_DIR, 'tracker', 'view', 'index.html'));
     }
     if (pathname.startsWith('/order/')) {
-      candidates.push(path.join(DIST_DIR, 'order', 'VL-DEMO1', 'index.html'));
+      candidates.push(path.join(DIST_DIR, 'order', 'VL-8921-XQ', 'index.html'));
     }
 
     let found = false;

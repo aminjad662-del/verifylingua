@@ -13,8 +13,8 @@ describe("Cloudflare Pages Edge & Static Prerender Distribution Gate", () => {
     { path: path.join("order", "triage", "index.html"), label: "Order Triage (/order/triage)" },
     { path: path.join("order", "configure", "index.html"), label: "Order Configure (/order/configure)" },
     { path: path.join("order", "checkout", "index.html"), label: "Order Checkout (/order/checkout)" },
-    { path: path.join("order", "VL-DEMO1", "index.html"), label: "Order Tracking (/order/VL-DEMO1)" },
-    { path: path.join("order", "VL-DEMO1", "proof", "index.html"), label: "Proofing Studio (/order/VL-DEMO1/proof)" },
+    { path: path.join("order", "VL-8921-XQ", "index.html"), label: "Order Tracking (/order/VL-8921-XQ)" },
+    { path: path.join("order", "VL-8921-XQ", "proof", "index.html"), label: "Proofing Studio (/order/VL-8921-XQ/proof)" },
     { path: path.join("verify", "VL-CERT-8921", "index.html"), label: "Public Certificate (/verify/VL-CERT-8921)" },
     { path: path.join("dashboard", "index.html"), label: "Client Dashboard (/dashboard)" },
   ];
@@ -45,7 +45,7 @@ describe("Cloudflare Pages Edge & Static Prerender Distribution Gate", () => {
     expect(workerContent).toContain("export default");
     expect(workerContent).toContain("handleApiRequest");
     expect(workerContent).toContain("/cdn-cgi/healthz");
-    expect(workerContent).toContain("/order/VL-DEMO1/proof");
+    expect(workerContent).toContain("/order/VL-8921-XQ/proof");
 
     const routesParsed = JSON.parse(fs.readFileSync(routesJson, "utf8"));
     expect(routesParsed.version).toBe(1);

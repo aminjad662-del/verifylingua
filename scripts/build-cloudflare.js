@@ -488,7 +488,7 @@ export default {
         rscCandidates.push('/tracker/view.rsc', '/tracker/view/index.rsc');
       }
       if (cleanPath.startsWith('/order/')) {
-        rscCandidates.push('/order/VL-DEMO1.rsc', '/order/VL-DEMO1/index.rsc');
+        rscCandidates.push('/order/VL-8921-XQ.rsc', '/order/VL-8921-XQ/index.rsc');
       }
       for (const candidate of rscCandidates) {
         try {
@@ -551,31 +551,31 @@ export default {
 
       // Fallback for dynamic client-side order proofing studio: /order/:id/proof
       if (pathname.includes('/proof')) {
-        const proofFallback = await serveFallback('/order/VL-DEMO1/proof/') || await serveFallback('/order/VL-DEMO1/proof/index.html');
+        const proofFallback = await serveFallback('/order/VL-8921-XQ/proof/') || await serveFallback('/order/VL-8921-XQ/proof/index.html');
         if (proofFallback) return proofFallback;
       }
 
       // Fallback for dynamic client-side order tracking: /order/:id
       if (pathname.startsWith('/order/')) {
-        const orderFallback = await serveFallback('/order/VL-DEMO1/') || await serveFallback('/order/VL-DEMO1/index.html');
+        const orderFallback = await serveFallback('/order/VL-8921-XQ/') || await serveFallback('/order/VL-8921-XQ/index.html');
         if (orderFallback) return orderFallback;
       }
 
       // Fallback for dynamic linguist CAT workbench: /translator/workbench/:id
       if (pathname.startsWith('/translator/workbench/')) {
-        const workbenchFallback = await serveFallback('/translator/workbench/VL-DEMO1/') || await serveFallback('/translator/workbench/VL-DEMO1/index.html');
+        const workbenchFallback = await serveFallback('/translator/workbench/VL-7X9K2/') || await serveFallback('/translator/workbench/VL-7X9K2/index.html');
         if (workbenchFallback) return workbenchFallback;
       }
 
       // Fallback for dynamic admin order workspace: /admin/orders/:id
       if (pathname.startsWith('/admin/orders/')) {
-        const adminFallback = await serveFallback('/admin/orders/VL-DEMO1/') || await serveFallback('/admin/orders/VL-DEMO1/index.html');
+        const adminFallback = await serveFallback('/admin/orders/VL-7X9K2/') || await serveFallback('/admin/orders/VL-7X9K2/index.html');
         if (adminFallback) return adminFallback;
       }
 
       // Fallback for dynamic certificate verification: /verify/:code
       if (pathname.startsWith('/verify/')) {
-        const verifyFallback = await serveFallback('/verify/demo/') || await serveFallback('/verify/demo/index.html');
+        const verifyFallback = await serveFallback('/verify/VL-CERT-8921/') || await serveFallback('/verify/VL-CERT-8921/index.html');
         if (verifyFallback) return verifyFallback;
       }
     }
@@ -751,7 +751,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
     return new Response(JSON.stringify({
       authenticated: hasSession,
       user: {
-        id: isGoogle ? 'usr-google-applicant' : (isApple ? 'usr-apple-applicant' : 'usr-client-demo'),
+        id: isGoogle ? 'usr-google-applicant' : (isApple ? 'usr-apple-applicant' : 'usr-client-verified'),
         name: isGoogle ? 'Google Verified Applicant' : (isApple ? 'Apple Verified Applicant' : 'Alejandro Hernandez'),
         email: isGoogle ? 'google.applicant@gmail.com' : (isApple ? 'applicant.privaterelay@appleid.com' : 'alejandro.hernandez@lawdesk.org'),
         role: 'CUSTOMER',
@@ -980,7 +980,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
     return new Response(JSON.stringify({
       success: true,
       data: {
-        verifyCode: code || 'CERT-DEMO-2026',
+        verifyCode: code || 'VL-CERT-8921',
         status: 'VALID',
         issuedAt: new Date().toISOString(),
         documentType: 'Certified Translation',
@@ -998,7 +998,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
     return new Response(JSON.stringify({
       success: true,
       order: {
-        publicCode: 'VL-DEMO1',
+        publicCode: 'VL-8921-XQ',
         status: 'PROOFING',
         sourceLang: 'Spanish',
         targetLang: 'English',
@@ -1065,7 +1065,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
     const verifyCode = 'VL-' + Math.random().toString(36).substring(2, 7).toUpperCase();
     return new Response(JSON.stringify({
       success: true,
-      publicCode: 'VL-DEMO1',
+      publicCode: 'VL-8921-XQ',
       verifyCode: verifyCode,
       status: 'CERTIFIED',
       downloadUrl: \`/api/certificate/\${verifyCode}/download\`,
@@ -1443,7 +1443,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
     return new Response(JSON.stringify({
       success: true,
       job: {
-        publicCode: 'VL-DEMO1',
+        publicCode: 'VL-8921-XQ',
         documentType: 'Birth Certificate / Acta de Nacimiento',
         sourceLang: 'Spanish',
         targetLang: 'English',
@@ -3364,7 +3364,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
   // Translation Jobs QA and Segments API
   if (pathname.includes('/api/jobs/') && pathname.includes('/qa')) {
-    const jId = pathname.split('/')[3] || 'job_demo';
+    const jId = pathname.split('/')[3] || 'job_active';
     return new Response(JSON.stringify({
       job_id: jId,
       overall_status: 'ready',
