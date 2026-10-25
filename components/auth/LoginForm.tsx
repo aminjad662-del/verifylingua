@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
@@ -61,42 +60,36 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       {wasRegistered && (
-        <div className="mb-6 p-4 rounded-2xl border border-status-success/30 bg-status-success/10 text-status-success flex items-start gap-3 text-xs sm:text-sm font-medium animate-in fade-in">
+        <div className="mb-6 p-4 rounded-xl border border-status-success/30 bg-status-success/10 text-status-success flex items-start gap-3 text-sm animate-in fade-in">
           <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" />
-          <div className="flex-1 leading-relaxed">
-            Account created successfully! Sign in to access your certified translation vault.
+          <div className="flex-1 font-medium">
+            Account created successfully! Please sign in with your credentials to access your translation vault.
           </div>
         </div>
       )}
 
       {resetSuccess && (
-        <div className="mb-6 p-4 rounded-2xl border border-status-success/30 bg-status-success/10 text-status-success flex items-start gap-3 text-xs sm:text-sm font-medium animate-in fade-in">
+        <div className="mb-6 p-4 rounded-xl border border-status-success/30 bg-status-success/10 text-status-success flex items-start gap-3 text-sm animate-in fade-in">
           <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-          <div className="flex-1 leading-relaxed">
+          <div className="flex-1 font-medium">
             Master password updated successfully! Please sign in with your new credentials.
           </div>
         </div>
       )}
 
-      <AnimatePresence>
-        {errorMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ duration: 0.2 }}
-            role="alert"
-            className="mb-6 p-4 rounded-2xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-3 text-xs sm:text-sm font-medium"
-          >
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <div className="flex-1 leading-relaxed">{errorMessage}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {errorMessage && (
+        <div
+          role="alert"
+          className="mb-6 p-4 rounded-xl border border-status-danger/30 bg-status-danger/10 text-status-danger flex items-start gap-3 text-sm animate-in fade-in"
+        >
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="flex-1 font-medium">{errorMessage}</div>
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-[13px] font-semibold text-brand-ink mb-1.5" htmlFor="login-email">
+          <label className="block text-xs font-semibold text-brand-ink mb-1.5" htmlFor="login-email">
             Official Email Address
           </label>
           <div className="relative">
@@ -108,20 +101,20 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@organization.com"
-              className="pl-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
+              className="pl-10"
               autoComplete="email"
             />
           </div>
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1.5 px-1">
-            <label className="block text-[13px] font-semibold text-brand-ink" htmlFor="login-password">
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-semibold text-brand-ink" htmlFor="login-password">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs font-semibold text-brand-500 hover:text-brand-600 hover:underline cursor-pointer transition-colors"
+              className="text-xs font-semibold text-brand-500 hover:text-brand-600 hover:underline cursor-pointer"
             >
               Forgot password?
             </Link>
@@ -135,13 +128,13 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="pl-10 pr-10 h-12 rounded-2xl text-[14px] bg-canvas border-border/80 focus-visible:ring-brand-500/20 focus-visible:border-brand-500"
+              className="pl-10 pr-10"
               autoComplete="current-password"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-ink transition-colors p-1"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-ink transition-colors p-1"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -149,34 +142,32 @@ export function LoginForm() {
           </div>
         </div>
 
-        <div className="pt-2">
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full h-12 rounded-2xl text-sm font-semibold gap-2 shadow-xs active:scale-[0.985] transition-all duration-200 bg-brand-500 hover:bg-brand-600 text-white cursor-pointer"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Verifying Credentials...</span>
-              </>
-            ) : (
-              <>
-                <span>Sign In to Vault</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full h-12 rounded-xl text-base font-bold gap-2 shadow-sm active:scale-[0.98] transition-all"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Verifying Credentials...
+            </>
+          ) : (
+            <>
+              Sign In to Vault
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
+        </Button>
 
         <div className="text-center pt-2">
-          <p className="text-xs text-text-muted">
+          <p className="text-sm text-text-muted">
             Don&apos;t have an account yet?{" "}
             <Link
               href={`/register${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
-              className="font-semibold text-brand-500 hover:text-brand-600 hover:underline transition-colors"
+              className="font-bold text-brand-500 hover:text-brand-600 hover:underline"
             >
-              Create certified account
+              Create verified account
             </Link>
           </p>
         </div>

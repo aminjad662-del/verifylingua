@@ -165,7 +165,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/order/VL-DEMO1/proof" className="hover:text-white transition-colors">
+                <Link href="/how-it-works" className="hover:text-white transition-colors">
                   Interactive Proofing Studio™
                 </Link>
               </li>

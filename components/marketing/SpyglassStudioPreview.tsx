@@ -64,10 +64,10 @@ export function SpyglassStudioPreview() {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
-                href="/order/VL-DEMO1/proof"
+                href="/translate"
                 className="text-xs sm:text-sm text-white/60 hover:text-white font-mono transition-colors underline"
               >
-                Explore Proofing Studio →
+                Start Instant Translation →
               </Link>
             </div>
           </div>
