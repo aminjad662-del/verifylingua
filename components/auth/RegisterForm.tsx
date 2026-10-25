@@ -155,10 +155,16 @@ export function RegisterForm() {
 
   const handleSsoClick = (provider: "google" | "apple") => {
     setSsoLoading(provider);
-    // Smooth redirect or alert for SSO provider endpoint
+    let url = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+    if (email.trim() && email.includes("@")) {
+      url += `&email=${encodeURIComponent(email.trim().toLowerCase())}`;
+    }
+    if (name.trim()) {
+      url += `&name=${encodeURIComponent(name.trim())}`;
+    }
     setTimeout(() => {
-      window.location.href = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-    }, 300);
+      window.location.href = url;
+    }, 150);
   };
 
   return (
