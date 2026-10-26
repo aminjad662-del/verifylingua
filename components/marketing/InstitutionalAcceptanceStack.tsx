@@ -79,7 +79,7 @@ export function InstitutionalAcceptanceStack() {
           </h2>
 
           <p className="text-base sm:text-lg text-ink-soft leading-relaxed">
-            Every document is certified to the precise legal standard of your receiving agency — with sworn affidavits, ATA translator credentials, and live digital verification.
+            Every document is certified to the precise legal standard of your receiving agency , with sworn affidavits, ATA translator credentials, and live digital verification.
           </p>
         </div>
 

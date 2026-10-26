@@ -87,7 +87,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${basierSquare.variable} ${sanFrancisco.variable}`} suppressHydrationWarning>
       <head>
-        {/* Non-blocking Google Fonts — preconnect first, then stylesheet link.
+        {/* Non-blocking Google Fonts: preconnect first, then stylesheet link.
             Using <link> instead of CSS @import avoids render-blocking on Cloudflare edge. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

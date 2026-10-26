@@ -3,13 +3,15 @@
 import React, { useState } from "react";
 import { 
   UploadCloud, 
-  FileCheck2, 
   Award, 
   Download, 
   ShieldCheck, 
-  Clock, 
+  ArrowRight,
+  CheckCircle2,
   Lock,
-  ArrowRight
+  Layers,
+  FileCheck2,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
@@ -18,74 +20,109 @@ interface WorkflowStep {
   id: string;
   number: string;
   title: string;
+  shortDesc: string;
   description: string;
   icon: React.ElementType;
   tag: string;
-  previewTitle: string;
-  previewDetail: string;
-  previewMetrics: { label: string; value: string }[];
+  previewHeading: string;
+  previewSubheading: string;
+  details: { label: string; value: string }[];
+  artifactSnippet: {
+    badge: string;
+    line1: string;
+    line2: string;
+    status: string;
+  };
 }
 
 const STEPS: WorkflowStep[] = [
   {
     id: "upload",
     number: "01",
-    title: "Secure Upload & Coordinate Parsing",
-    description: "Upload scans or photos of your civil records. Our system preserves exact table structures, stamps, and layout coordinates.",
+    title: "Document Triage & Structure Extraction",
+    shortDesc: "Coordinate parsing that maps stamps, signatures, and marginalia.",
+    description: "Upload high-resolution scans or photos of civil records. Our OCR engine parses document layout geometry down to exact pixel coordinates before linguist assignment.",
     icon: UploadCloud,
-    tag: "AES-256 Encrypted",
-    previewTitle: "Document Triage & Structure Extraction",
-    previewDetail: "Automatic layout parsing matches original physical document geometry.",
-    previewMetrics: [
+    tag: "AES-256 Vault",
+    previewHeading: "Physical Geometry & Structure Extraction",
+    previewSubheading: "Automated pre-flight detects seals, multi-column tables, and handwritten marginal notes.",
+    details: [
       { label: "Security", value: "TLS 1.3 / AES-256" },
-      { label: "Retention", value: "Zero Data Training" },
-      { label: "Formats", value: "PDF, JPG, PNG" },
+      { label: "AI Retention", value: "Zero Training Policy" },
+      { label: "Accepted Formats", value: "PDF, JPG, TIFF, PNG" },
     ],
+    artifactSnippet: {
+      badge: "PRE-FLIGHT TRIAGE",
+      line1: "Civil Registry Certificate: 300 DPI Validated",
+      line2: "Bounding boxes calibrated: 14 structural zones detected",
+      status: "CALIBRATION READY",
+    },
   },
   {
     id: "linguist",
     number: "02",
-    title: "Sworn ATA Linguist Translation",
-    description: "Certified professional translators translate every line, stamp, handwritten notation, and marginal note to legal court standards.",
+    title: "Sworn ATA Linguist Human Translation",
+    shortDesc: "Court-admissible translation certified by verified linguists.",
+    description: "A certified professional translator translates every sentence, official seal, registration folio, and endorsement in full accordance with statutory guidelines.",
     icon: Award,
     tag: "ATA No. 278190",
-    previewTitle: "Human Linguist Verification",
-    previewDetail: "Every foreign vital record is certified by verified language specialists.",
-    previewMetrics: [
-      { label: "Standards", value: "8 CFR § 103.2(b)(3)" },
-      { label: "Linguists", value: "ATA Certified" },
-      { label: "Accuracy", value: "Court Admissible" },
+    previewHeading: "Human Translation & Peer Review",
+    previewSubheading: "Every foreign vital record is translated and verified by credentialed language experts.",
+    details: [
+      { label: "Governing Rule", value: "8 CFR § 103.2(b)(3)" },
+      { label: "Credential", value: "ATA Corporate Member" },
+      { label: "Acceptance", value: "USCIS & EOIR Courts" },
     ],
+    artifactSnippet: {
+      badge: "SWORN ATTESTATION",
+      line1: "Linguist ID: ATA Professional Certified (ES to EN)",
+      line2: "Competence Declaration: Full fluency sworn under penalty of perjury",
+      status: "TRANSLATION CERTIFIED",
+    },
   },
   {
     id: "seal",
     number: "03",
     title: "Cryptographic SHA-256 Sealing",
-    description: "Each completed translation receives a formal translator competence certificate, tamper-evident SHA-256 hash, and adjudicator QR seal.",
+    shortDesc: "Public audit ledger stamp with embedded QR code.",
+    description: "Each completed translation is digitally bound with a formal translator competence affidavit, tamper-evident SHA-256 hash, and adjudicator verification QR code.",
     icon: ShieldCheck,
-    tag: "Tamper Proof",
-    previewTitle: "Digital Cryptographic Digest",
-    previewDetail: "Immigration officers scan the embedded QR code to confirm document integrity.",
-    previewMetrics: [
-      { label: "Verification", value: "Live Public Ledger" },
-      { label: "Signature", value: "Sworn Translator" },
-      { label: "Hash", value: "SHA-256 Sealed" },
+    tag: "Tamper Evident",
+    previewHeading: "Cryptographic Integrity Ledger",
+    previewSubheading: "Immigration officers scan the embedded QR code to verify the original file checksum.",
+    details: [
+      { label: "Ledger", value: "Live Public Route" },
+      { label: "Signature", value: "Cryptographic Seal" },
+      { label: "Verification", value: "Zero-Knowledge Hash" },
     ],
+    artifactSnippet: {
+      badge: "CRYPTOGRAPHIC SEAL",
+      line1: "Digest: SHA-256: 7d4a98f1c830b201...e89b21d01",
+      line2: "Public Verification URL: verifylingua.com/verify?docket=VL-8492",
+      status: "IMMUTABLE LEDGER",
+    },
   },
   {
     id: "delivery",
     number: "04",
     title: "Instant Download & Physical Dispatch",
-    description: "Receive your certified, court-ready PDF in under 24 hours, with optional expedited physical copies shipped to your law firm or home.",
+    shortDesc: "Court-ready PDF under 24 hours with optional overnight mail.",
+    description: "Receive your certified, adjudication-ready PDF in under 24 hours. Need physical embossed copies? We ship via FedEx Overnight directly to your law firm or home address.",
     icon: Download,
     tag: "Under 24 Hours",
-    previewTitle: "Adjudicator Ready Packet",
-    previewDetail: "Ready for direct submission with Form I-130, I-485, N-400, or consular packets.",
-    previewMetrics: [
-      { label: "Turnaround", value: "< 24 Hours Guaranteed" },
-      { label: "Acceptance", value: "100% Guaranteed" },
-      { label: "Format", value: "Certified Vector PDF" },
+    previewHeading: "Adjudication-Ready Filing Packet",
+    previewSubheading: "Ready for immediate upload to USCIS online portals or court submission binders.",
+    details: [
+      { label: "Standard SLA", value: "Under 24 Hours Guaranteed" },
+      { label: "Acceptance", value: "100% Guaranteed or Refund" },
+      { label: "Physical Courier", value: "FedEx Priority Available" },
     ],
+    artifactSnippet: {
+      badge: "SUBMISSION READY",
+      line1: "Format: PDF/A-1b Archival Standard with Vector Typography",
+      line2: "Packet Contents: Certified Translation + Original Record + Sworn Affidavit",
+      status: "DELIVERY COMPLETE",
+    },
   },
 ];
 
@@ -98,14 +135,14 @@ export function WorkflowInteractive() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Section Header */}
         <div className="max-w-3xl text-left space-y-3">
-          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200">
+          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1 rounded-full border border-brand-200 dark:border-brand-800">
             Certified Workflow
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-brand-ink leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-[2.65rem] font-bold tracking-tight text-brand-ink leading-tight">
             How VerifyLingua Delivers Court-Ready Translations
           </h2>
           <p className="text-base text-text-muted leading-relaxed">
-            From raw foreign scans to sealed legal submissions in four verifiable stages.
+            From raw foreign civil scans to sealed legal submissions in four verifiable, audit-trailed stages.
           </p>
         </div>
 
@@ -121,19 +158,19 @@ export function WorkflowInteractive() {
                 <button
                   key={step.id}
                   onClick={() => setActiveStepId(step.id)}
-                  className={`w-full p-4 sm:p-5 rounded-2xl text-left transition-all border ${
+                  className={`w-full p-4 sm:p-5 rounded-2xl text-left transition-all cursor-pointer border ${
                     isActive
                       ? "bg-surface-raised border-brand-500 shadow-xs ring-1 ring-brand-500/20"
                       : "bg-surface border-border hover:bg-surface-raised hover:border-slate-300"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
                       <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-colors ${
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-colors shrink-0 ${
                           isActive
-                            ? "bg-brand-600 text-white"
-                            : "bg-surface border border-border text-text-muted"
+                            ? "bg-brand-600 text-white shadow-xs"
+                            : "bg-surface-raised border border-border text-text-muted"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -151,6 +188,9 @@ export function WorkflowInteractive() {
                       {step.tag}
                     </span>
                   </div>
+                  <p className="text-xs text-text-muted leading-relaxed mt-2 pl-[46px]">
+                    {step.shortDesc}
+                  </p>
                 </button>
               );
             })}
@@ -163,7 +203,7 @@ export function WorkflowInteractive() {
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-brand-600" />
                   <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted">
-                    {activeStep.previewTitle}
+                    {activeStep.previewHeading}
                   </span>
                 </div>
                 <span className="text-xs font-mono text-brand-600 font-semibold">
@@ -179,13 +219,29 @@ export function WorkflowInteractive() {
                   {activeStep.description}
                 </p>
                 <p className="text-xs text-text-subtle leading-relaxed bg-surface p-3.5 rounded-xl border border-border">
-                  {activeStep.previewDetail}
+                  {activeStep.previewSubheading}
                 </p>
               </div>
 
+              {/* Stage Artifact Snippet */}
+              <div className="p-4 rounded-xl bg-surface border border-border font-mono text-xs space-y-2">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-text-subtle uppercase">{activeStep.artifactSnippet.badge}</span>
+                  <span className="font-bold text-status-success bg-status-success/10 px-2 py-0.5 rounded border border-status-success/30">
+                    {activeStep.artifactSnippet.status}
+                  </span>
+                </div>
+                <div className="text-[11px] text-brand-ink font-semibold">
+                  {activeStep.artifactSnippet.line1}
+                </div>
+                <div className="text-[10px] text-text-muted">
+                  {activeStep.artifactSnippet.line2}
+                </div>
+              </div>
+
               {/* Metrics Grid */}
-              <div className="grid grid-cols-3 gap-3 pt-2">
-                {activeStep.previewMetrics.map((metric) => (
+              <div className="grid grid-cols-3 gap-3 pt-1">
+                {activeStep.details.map((metric) => (
                   <div
                     key={metric.label}
                     className="p-3.5 rounded-xl bg-surface border border-border text-center space-y-1"
@@ -193,7 +249,7 @@ export function WorkflowInteractive() {
                     <span className="text-[10px] font-mono uppercase text-text-subtle block">
                       {metric.label}
                     </span>
-                    <span className="text-xs sm:text-sm font-bold text-brand-ink block">
+                    <span className="text-xs sm:text-sm font-bold text-brand-ink block truncate">
                       {metric.value}
                     </span>
                   </div>
@@ -204,9 +260,9 @@ export function WorkflowInteractive() {
               <div className="pt-2 flex justify-end">
                 <Link
                   href="/order/triage"
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1.5"
+                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 transition-colors"
                 >
-                  <span>Start with this stage</span>
+                  <span>Start certified order with this stage</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

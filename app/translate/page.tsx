@@ -213,7 +213,7 @@ export default function TranslatePage() {
           }
         }
         if (!res.ok) {
-          // 404 means job expired or doesn't exist — stop polling
+          // 404 means job expired or doesn't exist - stop polling
           if (res.status === 404) {
             stopPolling();
             setJob((prev) =>
@@ -292,10 +292,10 @@ export default function TranslatePage() {
     // Contextual auto-detection heuristics (advisory; never overwrites user's targetLang)
     const lowerName = file.name.toLowerCase();
     if (lowerName.includes("beach") || lowerName.includes("reading") || lowerName.includes("worksheet") || lowerName.includes("english")) {
-      setDetectedLangInfo({ lang: "en", confidence: 99.8, label: "English (US) — Reading Worksheet" });
+      setDetectedLangInfo({ lang: "en", confidence: 99.8, label: "English (US) - Reading Worksheet" });
       if (sourceLang === "auto") setSourceLang("en");
     } else if (lowerName.includes("spanish") || lowerName.includes("espanol") || lowerName.includes("acta")) {
-      setDetectedLangInfo({ lang: "es", confidence: 99.5, label: "Spanish (ES) — Legal / General" });
+      setDetectedLangInfo({ lang: "es", confidence: 99.5, label: "Spanish (ES) - Legal / General" });
       if (sourceLang === "auto") setSourceLang("es");
     } else {
       setDetectedLangInfo({ lang: "en", confidence: 98.9, label: "Auto-detected English (US)" });

@@ -174,7 +174,7 @@ export default async function AdminJobsQueuePage({
                     {job.fidelityScore ? (
                       <span className="font-bold text-emerald-600">{job.fidelityScore}%</span>
                     ) : (
-                      <span className="text-text-muted">—</span>
+                      <span className="text-text-muted">-</span>
                     )}
                   </td>
                   <td className="py-3.5 px-4 text-right">

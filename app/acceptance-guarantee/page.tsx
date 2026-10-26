@@ -125,7 +125,7 @@ export default function AcceptanceGuaranteePage() {
               &ldquo;Any document containing foreign language submitted to USCIS shall be accompanied by a full English language translation which the translator has certified as complete and accurate, and by the translator&apos;s certification that he or she is competent to translate from the foreign language into English.&rdquo;
             </p>
             <p className="text-right text-[11px] font-bold text-brand-500">
-              — Title 8, Code of Federal Regulations § 103.2(b)(3)
+              - Title 8, Code of Federal Regulations § 103.2(b)(3)
             </p>
           </div>
 

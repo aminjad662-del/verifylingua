@@ -58,7 +58,7 @@ export function RejectionMoatSection() {
                 <span>Research-Backed Rejection Prevention</span>
               </div>
               <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-[1.02] font-display">
-                Why USCIS Rejects Translations — And How We Eliminate Every Risk.
+                Why USCIS Rejects Translations : And How We Eliminate Every Risk.
               </h2>
               <p className="text-base sm:text-lg text-white/70 leading-relaxed text-lead max-w-[56ch]">
                 We studied hundreds of USCIS Requests for Evidence (RFEs) and incumbent failure modes. VerifyLingua is built specifically to protect your immigration case.

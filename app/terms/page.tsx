@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ShieldCheck, Award, FileCheck2, Scale, AlertCircle, ArrowRight } from "lucide-react";
 
 export const metadata = {
-  title: "Terms of Service & Acceptance Guarantee — VerifyLingua",
+  title: "Terms of Service & Acceptance Guarantee | VerifyLingua",
   description:
     "VerifyLingua service terms: automated document processing, USCIS 8 CFR § 103.2 certified translations, 100% acceptance guarantee, and transparent flat-rate billing.",
 };

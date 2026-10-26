@@ -147,7 +147,7 @@ export default async function ProjectsListPage({
                       {project.fidelityScore ? (
                         <span className="font-bold text-emerald-600">{project.fidelityScore}%</span>
                       ) : (
-                        <span className="text-text-muted">—</span>
+                        <span className="text-text-muted">-</span>
                       )}
                     </td>
                     <td className="py-3.5 px-4 text-text-muted">

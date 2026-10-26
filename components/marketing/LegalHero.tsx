@@ -8,10 +8,9 @@ import {
   QrCode, 
   CheckCircle2, 
   Lock, 
-  FileCheck2, 
-  Scale, 
-  Building2,
-  FileText
+  FileText,
+  BadgeCheck,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -20,41 +19,51 @@ export function LegalHero() {
 
   return (
     <section className="relative pt-8 pb-16 sm:pt-14 sm:pb-24 overflow-hidden bg-canvas border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Subtle background grid pattern */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundSize: "24px 24px"
+        }}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           
           {/* Left Column: Authoritative Editorial Copy */}
           <div className="lg:col-span-6 space-y-6 text-left">
             {/* Regulatory Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface shadow-xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-text-muted">
-                8 CFR § 103.2(b)(3) Compliant · ATA No. 278190
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-surface shadow-xs">
+              <span className="flex h-2 w-2 rounded-full bg-court-emerald" />
+              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-muted">
+                8 CFR § 103.2(b)(3) Compliant · ATA Member No. 278190
               </span>
             </div>
 
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-5xl font-extrabold tracking-tight text-brand-ink leading-[1.12]">
-              Certified Legal Translations for USCIS and Federal Courts
+            {/* Main Headline with Editorial Contrast */}
+            <h1 className="text-3xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-brand-ink leading-[1.08]">
+              Certified Legal Translations <br className="hidden sm:inline" />
+              for <span className="font-serif italic font-normal text-brand-700">USCIS</span> and Federal Courts
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-text-muted leading-relaxed max-w-xl">
-              Sworn translator competence affidavits, 1:1 format preservation, and cryptographic verification accepted by all immigration judges and consular posts.
+              Sworn translator competence affidavits, 1:1 coordinate format preservation, and cryptographic verification accepted by all immigration judges, consular officers, and university evaluators.
             </p>
 
             {/* Direct Action CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
                 href="/order/triage"
-                className="h-11 px-6 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors"
+                className="h-11 px-6 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer"
               >
                 <span>Start Certified Translation</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/verify"
-                className="h-11 px-5 rounded-xl border border-border bg-surface hover:bg-surface-raised text-text font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                className="h-11 px-5 rounded-xl border border-border bg-surface hover:bg-surface-raised text-text font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] cursor-pointer"
               >
                 <QrCode className="w-4 h-4 text-text-muted" />
                 <span>Verify Document Seal</span>
@@ -63,16 +72,16 @@ export function LegalHero() {
 
             {/* Institutional Acceptance Indicators */}
             <div className="pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-text-muted">
-              <div className="flex items-center gap-1.5 font-medium">
+              <div className="flex items-center gap-2 font-medium">
                 <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
-                <span>100% USCIS Acceptance</span>
+                <span>100% Acceptance Guarantee</span>
               </div>
-              <div className="flex items-center gap-1.5 font-medium">
-                <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
-                <span>Under 24-Hour Delivery</span>
+              <div className="flex items-center gap-2 font-medium">
+                <Clock className="w-4 h-4 text-status-success shrink-0" />
+                <span>Under 24-Hour Turnaround</span>
               </div>
-              <div className="flex items-center gap-1.5 font-medium col-span-2 sm:col-span-1">
-                <CheckCircle2 className="w-4 h-4 text-status-success shrink-0" />
+              <div className="flex items-center gap-2 font-medium col-span-2 sm:col-span-1">
+                <ShieldCheck className="w-4 h-4 text-status-success shrink-0" />
                 <span>Free RFE Legal Defense</span>
               </div>
             </div>
@@ -80,7 +89,7 @@ export function LegalHero() {
 
           {/* Right Column: Interactive Document Inspector */}
           <div className="lg:col-span-6">
-            <div className="rounded-2xl border border-border bg-surface-raised shadow-lg overflow-hidden">
+            <div className="rounded-2xl border border-border bg-surface-raised shadow-md overflow-hidden">
               {/* Document Header & State Switcher */}
               <div className="h-12 px-4 bg-surface border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -88,24 +97,24 @@ export function LegalHero() {
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                   <span className="text-xs font-mono font-medium text-text-muted ml-2">
-                    Matter #VL-8492-CERT.pdf
+                    Docket #VL-8492-CERT.pdf
                   </span>
                 </div>
 
                 <div className="flex items-center gap-1 bg-surface-raised p-0.5 rounded-lg border border-border">
                   <button
                     onClick={() => setActiveView("translated")}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                    className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                       activeView === "translated"
                         ? "bg-brand-600 text-white shadow-xs"
                         : "text-text-muted hover:text-brand-ink"
                     }`}
                   >
-                    Translation
+                    Certified Translation
                   </button>
                   <button
                     onClick={() => setActiveView("source")}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                    className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                       activeView === "source"
                         ? "bg-brand-600 text-white shadow-xs"
                         : "text-text-muted hover:text-brand-ink"
@@ -115,19 +124,19 @@ export function LegalHero() {
                   </button>
                   <button
                     onClick={() => setActiveView("ledger")}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                    className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                       activeView === "ledger"
                         ? "bg-brand-600 text-white shadow-xs"
                         : "text-text-muted hover:text-brand-ink"
                     }`}
                   >
-                    Audit Seal
+                    Audit Ledger
                   </button>
                 </div>
               </div>
 
               {/* Document Paper Preview */}
-              <div className="p-6 bg-canvas min-h-[380px] flex flex-col justify-between">
+              <div className="p-6 bg-canvas min-h-[390px] flex flex-col justify-between">
                 <AnimatePresence mode="wait">
                   {activeView === "translated" && (
                     <motion.div
@@ -139,21 +148,21 @@ export function LegalHero() {
                       className="space-y-4"
                     >
                       {/* Certified Header Banner */}
-                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-between">
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
                             ATA
                           </div>
                           <div>
-                            <div className="text-xs font-bold text-amber-950">
+                            <div className="text-xs font-bold text-amber-950 dark:text-amber-200">
                               American Translators Association Corporate Member
                             </div>
-                            <div className="text-[10px] font-mono text-amber-800">
+                            <div className="text-[10px] font-mono text-amber-800 dark:text-amber-400">
                               Member ID: No. 278190 · Sworn Certification of Fluency
                             </div>
                           </div>
                         </div>
-                        <div className="text-[10px] font-mono font-bold text-amber-900 px-2 py-0.5 rounded bg-amber-100 border border-amber-300">
+                        <div className="text-[10px] font-mono font-bold text-amber-900 dark:text-amber-300 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30">
                           SEALED
                         </div>
                       </div>
@@ -180,7 +189,7 @@ export function LegalHero() {
                             <span className="font-semibold text-brand-ink">Maria Sofia Rodriguez Navarro</span>
                           </div>
                           <div>
-                            <span className="text-text-subtle block text-[10px] uppercase font-mono">Date of Registration</span>
+                            <span className="text-text-subtle block text-[10px] uppercase font-mono">Registration Date</span>
                             <span className="font-semibold text-brand-ink">October 14, 1994</span>
                           </div>
                           <div>
@@ -194,7 +203,7 @@ export function LegalHero() {
                         </div>
 
                         <div className="p-2.5 rounded-lg bg-surface border border-border text-[11px] text-text-muted italic">
-                          &quot;I hereby certify that I am fluent in Spanish and English, and that the above is a true and accurate translation of the attached foreign civil record.&quot;
+                          &quot;I hereby certify that I am fluent in Spanish and English, and that the above is a true, complete, and accurate translation of the attached foreign civil record.&quot;
                         </div>
                       </div>
 
@@ -204,7 +213,8 @@ export function LegalHero() {
                           <Lock className="w-3.5 h-3.5 text-status-success" />
                           SHA-256: 7d4a98f1c8...e89b21
                         </span>
-                        <span className="text-status-success font-semibold">
+                        <span className="text-status-success font-semibold flex items-center gap-1">
+                          <BadgeCheck className="w-3.5 h-3.5" />
                           Tamper Proof Certified
                         </span>
                       </div>
@@ -221,16 +231,16 @@ export function LegalHero() {
                       className="space-y-4"
                     >
                       <div className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between text-xs">
-                        <span className="font-semibold text-text">Original Scanned Civil Document (ES)</span>
+                        <span className="font-semibold text-text">Original Foreign Civil Record (ES)</span>
                         <span className="font-mono text-[10px] text-text-muted">Resolution: 300 DPI</span>
                       </div>
 
-                      <div className="p-5 rounded-xl bg-surface-raised border border-border space-y-3 font-serif text-slate-700 text-xs">
+                      <div className="p-5 rounded-xl bg-surface-raised border border-border space-y-3 font-serif text-slate-700 dark:text-slate-300 text-xs">
                         <div className="text-center border-b border-border pb-2">
                           <div className="font-bold tracking-widest uppercase text-[10px] text-slate-500">
                             ESTADOS UNIDOS MEXICANOS
                           </div>
-                          <div className="font-bold text-sm text-slate-800">
+                          <div className="font-bold text-sm text-slate-800 dark:text-slate-100">
                             ACTA DE NACIMIENTO
                           </div>
                           <div className="text-[10px] text-slate-500">
@@ -242,11 +252,11 @@ export function LegalHero() {
                           <p>
                             En la ciudad de Guadalajara, a catorce de Octubre de mil novecientos noventa y cuatro, ante mi compareció Carlos Alberto Rodriguez para registrar el nacimiento de:
                           </p>
-                          <p className="font-bold text-slate-900">
+                          <p className="font-bold text-slate-900 dark:text-slate-100">
                             MARIA SOFIA RODRIGUEZ NAVARRO
                           </p>
                           <p className="text-[10px] text-slate-500 pt-1">
-                            Sello Oficial del Registro Civil y firma del Oficial Registrador delegatorio.
+                            Sello Oficial del Registro Civil y firma autógrafa del Oficial Registrador delegatorio.
                           </p>
                         </div>
                       </div>
@@ -272,7 +282,7 @@ export function LegalHero() {
                           <QrCode className="w-4 h-4 text-brand-600" />
                           <span className="font-bold text-brand-ink">Digital Certification Audit Ledger</span>
                         </div>
-                        <span className="text-[10px] font-bold text-status-success bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                        <span className="text-[10px] font-bold text-status-success bg-status-success/10 px-2 py-0.5 rounded border border-status-success/30">
                           VALIDATED
                         </span>
                       </div>
@@ -284,7 +294,7 @@ export function LegalHero() {
                         </div>
                         <div className="flex justify-between border-b border-border pb-1.5">
                           <span className="text-text-subtle">ATA Member Number</span>
-                          <span className="font-bold text-brand-ink">278190</span>
+                          <span className="font-bold text-brand-ink">No. 278190</span>
                         </div>
                         <div className="flex justify-between border-b border-border pb-1.5">
                           <span className="text-text-subtle">Document SHA-256</span>

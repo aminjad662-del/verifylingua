@@ -345,12 +345,12 @@ function OrderTrackingContent() {
 
           <h1 className="text-2xl sm:text-3xl font-black text-ink tracking-tight font-serif">
             {trackerStatus === "DRAFT_READY"
-              ? "Draft Completed — Action Required"
+              ? "Draft Completed - Action Required"
               : trackerStatus === "FAILED"
-              ? "Translation Failed — Order Protected"
+              ? "Translation Failed - Order Protected"
               : trackerStatus === "NEEDS_MANUAL"
               ? "Manual Certified Review Required"
-              : "Translation in Progress — In Certified Hands"}
+              : "Translation in Progress - In Certified Hands"}
           </h1>
 
           <p className="text-xs sm:text-sm text-ink-muted">
@@ -570,7 +570,7 @@ function OrderTrackingContent() {
           </motion.div>
         ) : (
           /* =========================================================================
-             STATE B: DRAFT READY (Action Required Mode) — THIS FIXES THE BLOCKER
+             STATE B: DRAFT READY (Action Required Mode) - THIS FIXES THE BLOCKER
              - Page UI changes with focus overlay / dark paper ambiance
              - Massive unmissable amber CTA: "Action Required: Review & Approve Translation"
              - Center of attention, not buried in small button

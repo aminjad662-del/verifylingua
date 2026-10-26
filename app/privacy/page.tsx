@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ShieldCheck, Lock, Trash2, Clock, CheckCircle2, Server, EyeOff, FileText } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy & Zero Data Retention — VerifyLingua",
+  title: "Privacy Policy & Zero Data Retention | VerifyLingua",
   description:
     "VerifyLingua automated document processing privacy commitment: 24h/30d hard retention lifecycle, named subprocessors, zero model training, and instant self-serve deletion.",
 };

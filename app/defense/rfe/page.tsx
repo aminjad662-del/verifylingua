@@ -83,7 +83,7 @@ function RFEDefenseContent() {
               <span>USCIS Request for Evidence (RFE) Defense Shield</span>
             </h1>
             <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
-              Did a USCIS adjudicator or consular officer issue an RFE or Notice of Intent to Deny regarding a translation? Submit your Form I-797E notice below. Our senior ATA legal team will compile and dispatch an official Supplemental Re-Affidavit Packet in under 4 hours—100% free under our Acceptance Guarantee.
+              Did a USCIS adjudicator or consular officer issue an RFE or Notice of Intent to Deny regarding a translation? Submit your Form I-797E notice below. Our senior ATA legal team will compile and dispatch an official Supplemental Re-Affidavit Packet in under 4 hours (100% free under our Acceptance Guarantee) under our Acceptance Guarantee.
             </p>
           </div>
         </div>
