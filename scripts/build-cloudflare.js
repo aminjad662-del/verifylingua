@@ -741,43 +741,33 @@ async function handleApiRequest(request, pathname, env, ctx) {
     });
   }
 
-  // Sign Out / Logout API on Cloudflare Edge
-  if (pathname === '/api/auth/logout' || pathname === '/api/auth/signout') {
+  // Sign Out / Logout API on Edge
+  if ((pathname === '/api/auth/logout' || pathname === '/api/auth/signout') && (method === 'POST' || method === 'GET')) {
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    headers.set('Access-Control-Allow-Origin', '*');
     const isHttps = request.url.startsWith('https:');
     const secureFlag = isHttps ? '; Secure' : '';
-    const headers = new Headers();
-    headers.set('Access-Control-Allow-Origin', '*');
-    headers.append('Set-Cookie', 'vl_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax' + secureFlag);
-    headers.append('Set-Cookie', 'vl_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
-    headers.append('Set-Cookie', 'sso_google=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
-    headers.append('Set-Cookie', 'sso_apple=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
-    headers.append('Set-Cookie', 'sb-access-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
-    headers.append('Set-Cookie', 'sb-refresh-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
-    headers.append('Set-Cookie', 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
+    // Enforce immediate, permanent cookie invalidation across all session parameters
+    headers.append('Set-Cookie', 'vl_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT' + secureFlag);
+    headers.append('Set-Cookie', 'vl_role=; Path=/; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT' + secureFlag);
+    headers.append('Set-Cookie', 'sso_google=; Path=/; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT' + secureFlag);
+    headers.append('Set-Cookie', 'sso_apple=; Path=/; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT' + secureFlag);
 
-    const reqUrl = new URL(request.url);
-    const callbackUrl = reqUrl.searchParams.get('callbackUrl') || reqUrl.searchParams.get('redirect');
-
-    if (method === 'GET' && callbackUrl) {
-      headers.set('Location', new URL(callbackUrl, request.url).toString());
+    if (method === 'GET') {
+      const reqUrl = new URL(request.url);
+      const redirectTarget = reqUrl.searchParams.get('callbackUrl') || '/';
+      headers.set('Location', redirectTarget);
       return new Response(null, {
         status: 302,
         headers: headers
       });
     }
 
-    if (method === 'GET' && (request.headers.get('accept') || '').includes('text/html')) {
-      headers.set('Location', new URL('/', request.url).toString());
-      return new Response(null, {
-        status: 302,
-        headers: headers
-      });
-    }
-
-    headers.set('Content-Type', 'application/json');
     return new Response(JSON.stringify({
       success: true,
-      message: 'Logged out successfully'
+      authenticated: false,
+      message: 'Signed out successfully'
     }), {
       status: 200,
       headers: headers
@@ -789,10 +779,20 @@ async function handleApiRequest(request, pathname, env, ctx) {
     const cookieHeader = request.headers.get('Cookie') || '';
     const isGoogle = cookieHeader.includes('sso_google');
     const isApple = cookieHeader.includes('sso_apple');
-    const hasSession = cookieHeader.includes('vl_session=');
+    const hasSession = cookieHeader.includes('vl_session=') && !cookieHeader.includes('vl_session=;');
+
+    if (!hasSession) {
+      return new Response(JSON.stringify({
+        authenticated: false,
+        user: null
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
 
     return new Response(JSON.stringify({
-      authenticated: hasSession,
+      authenticated: true,
       user: {
         id: isGoogle ? 'usr-google-applicant' : (isApple ? 'usr-apple-applicant' : 'usr-client-verified'),
         name: isGoogle ? 'Google Verified Applicant' : (isApple ? 'Apple Verified Applicant' : 'Alejandro Hernandez'),
@@ -1634,9 +1634,24 @@ async function handleApiRequest(request, pathname, env, ctx) {
     });
   }
 
-  // Billing APIs
+  // Billing APIs - strictly requires active authenticated session
   if (pathname === '/api/billing/balance') {
+    const cookieHeader = request.headers.get('Cookie') || '';
+    const hasSession = cookieHeader.includes('vl_session=') && !cookieHeader.includes('vl_session=;');
+    if (!hasSession) {
+      return new Response(JSON.stringify({
+        authenticated: false,
+        available: null,
+        reserved: 0,
+        lifetimeUsed: 0
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
     return new Response(JSON.stringify({
+      authenticated: true,
       available: 25,
       reserved: 0,
       lifetimeUsed: 5

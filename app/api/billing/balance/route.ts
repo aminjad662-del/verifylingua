@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserCreditBalance } from "@/lib/services/credit-service";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -16,20 +15,12 @@ export async function GET(req: NextRequest) {
     } else if (isTestEnv || process.env.NODE_ENV === "development") {
       const { searchParams } = new URL(req.url);
       userId = searchParams.get("userId");
-      if (!userId) {
-        // Fallback to most recent user in local development
-        const latestUser = await prisma.user.findFirst({
-          orderBy: { updatedAt: "desc" },
-          select: { id: true },
-        });
-        if (latestUser) userId = latestUser.id;
-      }
     }
 
     if (!userId) {
       return NextResponse.json({
         authenticated: false,
-        available: 20,
+        available: null,
         reserved: 0,
         lifetimeUsed: 0,
       });
@@ -45,13 +36,13 @@ export async function GET(req: NextRequest) {
       lifetimeUsed: balance.lifetimeUsed,
     });
   } catch (error: any) {
-    console.error("[billing/balance] Error:", error);
+    console.error("[billing/balance] Error:", error?.message);
     return NextResponse.json({
       authenticated: false,
-      available: 20,
+      available: null,
       reserved: 0,
       lifetimeUsed: 0,
-      error: error.message,
+      error: error?.message,
     }, { status: 200 });
   }
 }

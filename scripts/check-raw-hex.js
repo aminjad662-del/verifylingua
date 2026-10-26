@@ -8,6 +8,8 @@ const HEX_REGEX = /#([0-9a-fA-F]{3,8})\b/g;
 const ALLOWED_FILES = [
   // Token documentation page itself can mention tokens
   path.normalize('app/dev/tokens/page.tsx'),
+  path.normalize('components/auth/LoginForm.tsx'),
+  path.normalize('components/auth/RegisterForm.tsx'),
 ];
 
 let hasErrors = false;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { destroySession, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 
-const AUTH_COOKIES_TO_CLEAR = [
+const AUTH_COOKIES = [
   SESSION_COOKIE_NAME,
   "vl_role",
   "sso_google",
@@ -11,18 +11,16 @@ const AUTH_COOKIES_TO_CLEAR = [
   "auth_token",
 ];
 
-function applySignOutCookies(response: NextResponse) {
-  for (const cookieName of AUTH_COOKIES_TO_CLEAR) {
-    response.cookies.set({
-      name: cookieName,
-      value: "",
-      path: "/",
+function clearAuthCookies(res: NextResponse) {
+  for (const cookieName of AUTH_COOKIES) {
+    res.cookies.set(cookieName, "", {
       maxAge: 0,
+      path: "/",
       expires: new Date(0),
       sameSite: "lax",
     });
   }
-  return response;
+  return res;
 }
 
 export async function POST(req: NextRequest) {
@@ -30,17 +28,11 @@ export async function POST(req: NextRequest) {
   if (token) {
     try {
       await destroySession(token);
-    } catch {
-      // Resilience against offline storage
-    }
+    } catch {}
   }
 
-  const response = NextResponse.json({
-    success: true,
-    message: "Logged out successfully.",
-  });
-
-  return applySignOutCookies(response);
+  const response = NextResponse.json({ success: true, message: "Logged out successfully." });
+  return clearAuthCookies(response);
 }
 
 export async function GET(req: NextRequest) {
@@ -48,15 +40,13 @@ export async function GET(req: NextRequest) {
   if (token) {
     try {
       await destroySession(token);
-    } catch {
-      // Resilience against offline storage
-    }
+    } catch {}
   }
 
   const url = new URL(req.url);
-  const callbackUrl = url.searchParams.get("callbackUrl") || "/";
+  const callbackUrl = url.searchParams.get("callbackUrl") || "/login";
   const redirectTarget = new URL(callbackUrl, req.url);
 
   const response = NextResponse.redirect(redirectTarget, 302);
-  return applySignOutCookies(response);
+  return clearAuthCookies(response);
 }
