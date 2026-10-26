@@ -21,6 +21,7 @@ export function DashboardNav() {
   const pathname = usePathname();
   const [isDark, setIsDark] = React.useState(false);
   const [user, setUser] = React.useState<{ name: string | null; email: string; role?: string } | null>(null);
+  const [signingOut, setSigningOut] = React.useState(false);
 
   React.useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -34,6 +35,19 @@ export function DashboardNav() {
       })
       .catch(() => {});
   }, []);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    document.cookie = "vl_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "vl_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "sso_google=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "sso_apple=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    window.location.href = "/";
+  };
 
   const toggleDarkMode = () => {
     const nextDark = !isDark;
@@ -109,7 +123,7 @@ export function DashboardNav() {
 
           <button
             onClick={toggleDarkMode}
-            className="w-9 h-9 rounded-xl border border-border bg-surface flex items-center justify-center text-text-muted hover:text-brand-ink hover:bg-surface-raised transition-colors"
+            className="w-9 h-9 rounded-xl border border-border bg-surface flex items-center justify-center text-text-muted hover:text-brand-ink hover:bg-surface-raised transition-colors cursor-pointer"
             title="Toggle theme"
           >
             {isDark ? <Sun className="w-4 h-4 text-status-warning" /> : <Moon className="w-4 h-4" />}
@@ -122,6 +136,15 @@ export function DashboardNav() {
             >
               {userInitial}
             </div>
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              title="Sign out"
+              aria-label="Sign out"
+              className="w-8 h-8 rounded-xl border border-border bg-surface flex items-center justify-center text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   ShieldCheck, ArrowRight, Download, Search, CheckCircle2,
-  Clock, AlertTriangle, Filter, ChevronDown, Lock, Shield, FileText, Plus, Bell, Settings, User
+  Clock, AlertTriangle, Filter, ChevronDown, Lock, Shield, FileText, Plus, Bell, Settings, User, LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,20 @@ const matters = [
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    document.cookie = "vl_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "vl_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "sso_google=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "sso_apple=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    window.location.href = "/";
+  };
 
   const filteredMatters = matters.filter((m) => {
     if (activeTab === "COMPLETED" && m.status !== "COMPLETED") return false;
@@ -54,12 +68,23 @@ export default function DashboardPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+          <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer">
             <Bell className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-200 text-slate-700 font-bold text-sm border border-slate-300">
-            JD
-          </button>
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-200 text-slate-700 font-bold text-sm border border-slate-300">
+              JD
+            </div>
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              title="Sign out"
+              aria-label="Sign out"
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </header>
 

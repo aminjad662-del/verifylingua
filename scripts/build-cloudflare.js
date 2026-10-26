@@ -741,6 +741,49 @@ async function handleApiRequest(request, pathname, env, ctx) {
     });
   }
 
+  // Sign Out / Logout API on Cloudflare Edge
+  if (pathname === '/api/auth/logout' || pathname === '/api/auth/signout') {
+    const isHttps = request.url.startsWith('https:');
+    const secureFlag = isHttps ? '; Secure' : '';
+    const headers = new Headers();
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.append('Set-Cookie', 'vl_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax' + secureFlag);
+    headers.append('Set-Cookie', 'vl_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
+    headers.append('Set-Cookie', 'sso_google=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
+    headers.append('Set-Cookie', 'sso_apple=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
+    headers.append('Set-Cookie', 'sb-access-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
+    headers.append('Set-Cookie', 'sb-refresh-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
+    headers.append('Set-Cookie', 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax' + secureFlag);
+
+    const reqUrl = new URL(request.url);
+    const callbackUrl = reqUrl.searchParams.get('callbackUrl') || reqUrl.searchParams.get('redirect');
+
+    if (method === 'GET' && callbackUrl) {
+      headers.set('Location', new URL(callbackUrl, request.url).toString());
+      return new Response(null, {
+        status: 302,
+        headers: headers
+      });
+    }
+
+    if (method === 'GET' && (request.headers.get('accept') || '').includes('text/html')) {
+      headers.set('Location', new URL('/', request.url).toString());
+      return new Response(null, {
+        status: 302,
+        headers: headers
+      });
+    }
+
+    headers.set('Content-Type', 'application/json');
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Logged out successfully'
+    }), {
+      status: 200,
+      headers: headers
+    });
+  }
+
   // Current user authentication API
   if (pathname === '/api/auth/me') {
     const cookieHeader = request.headers.get('Cookie') || '';

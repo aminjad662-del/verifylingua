@@ -49,6 +49,21 @@ export function ClientAppNav() {
     ? user.email.charAt(0).toUpperCase()
     : "U";
 
+  const [signingOut, setSigningOut] = React.useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    document.cookie = "vl_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "vl_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "sso_google=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "sso_apple=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    window.location.href = "/login";
+  };
+
   return (
     <aside className="w-64 border-r border-border bg-surface flex flex-col justify-between shrink-0 h-screen sticky top-0 select-none">
       <div>
@@ -121,13 +136,16 @@ export function ClientAppNav() {
               </p>
             </div>
           </div>
-          <Link
-            href="/login"
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
             title="Sign out"
-            className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-surface transition-colors"
+            aria-label="Sign out of client workspace"
+            className="p-1.5 rounded-lg text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
           >
             <LogOut className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>
