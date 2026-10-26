@@ -11,7 +11,10 @@ import {
   Lock,
   Layers,
   FileCheck2,
-  FileText
+  FileText,
+  BadgeCheck,
+  Check,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
@@ -39,20 +42,20 @@ const STEPS: WorkflowStep[] = [
   {
     id: "upload",
     number: "01",
-    title: "Document Triage & Structure Extraction",
-    shortDesc: "Coordinate parsing that maps stamps, signatures, and marginalia.",
+    title: "Secure Intake & Geometry Calibration",
+    shortDesc: "Automated OCR coordinate mapping for stamps, folios, and tables.",
     description: "Upload high-resolution scans or photos of civil records. Our OCR engine parses document layout geometry down to exact pixel coordinates before linguist assignment.",
     icon: UploadCloud,
     tag: "AES-256 Vault",
-    previewHeading: "Physical Geometry & Structure Extraction",
+    previewHeading: "Document Intake & Geometry Extraction",
     previewSubheading: "Automated pre-flight detects seals, multi-column tables, and handwritten marginal notes.",
     details: [
-      { label: "Security", value: "TLS 1.3 / AES-256" },
-      { label: "AI Retention", value: "Zero Training Policy" },
+      { label: "Vault Security", value: "TLS 1.3 / AES-256" },
+      { label: "Data Retention", value: "Zero Training Policy" },
       { label: "Accepted Formats", value: "PDF, JPG, TIFF, PNG" },
     ],
     artifactSnippet: {
-      badge: "PRE-FLIGHT TRIAGE",
+      badge: "PRE-FLIGHT CALIBRATION",
       line1: "Civil Registry Certificate: 300 DPI Validated",
       line2: "Bounding boxes calibrated: 14 structural zones detected",
       status: "CALIBRATION READY",
@@ -62,7 +65,7 @@ const STEPS: WorkflowStep[] = [
     id: "linguist",
     number: "02",
     title: "Sworn ATA Linguist Human Translation",
-    shortDesc: "Court-admissible translation certified by verified linguists.",
+    shortDesc: "Court-admissible translation certified by verified ATA specialists.",
     description: "A certified professional translator translates every sentence, official seal, registration folio, and endorsement in full accordance with statutory guidelines.",
     icon: Award,
     tag: "ATA No. 278190",
@@ -84,7 +87,7 @@ const STEPS: WorkflowStep[] = [
     id: "seal",
     number: "03",
     title: "Cryptographic SHA-256 Sealing",
-    shortDesc: "Public audit ledger stamp with embedded QR code.",
+    shortDesc: "Public audit ledger stamp with embedded QR verification code.",
     description: "Each completed translation is digitally bound with a formal translator competence affidavit, tamper-evident SHA-256 hash, and adjudicator verification QR code.",
     icon: ShieldCheck,
     tag: "Tamper Evident",
@@ -105,9 +108,9 @@ const STEPS: WorkflowStep[] = [
   {
     id: "delivery",
     number: "04",
-    title: "Instant Download & Physical Dispatch",
-    shortDesc: "Court-ready PDF under 24 hours with optional overnight mail.",
-    description: "Receive your certified, adjudication-ready PDF in under 24 hours. Need physical embossed copies? We ship via FedEx Overnight directly to your law firm or home address.",
+    title: "Instant Download & Physical Courier",
+    shortDesc: "Court-ready PDF under 24 hours with optional FedEx Overnight dispatch.",
+    description: "Receive your certified, adjudication-ready PDF in under 24 hours. Need physical embossed copies? We ship via FedEx Priority directly to your law firm or home address.",
     icon: Download,
     tag: "Under 24 Hours",
     previewHeading: "Adjudication-Ready Filing Packet",
@@ -131,14 +134,18 @@ export function WorkflowInteractive() {
   const activeStep = STEPS.find((s) => s.id === activeStepId) || STEPS[0];
 
   return (
-    <section className="py-16 sm:py-24 bg-surface border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section className="py-20 sm:py-28 bg-surface border-b border-border/80">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+        
         {/* Section Header */}
         <div className="max-w-3xl text-left space-y-3">
-          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1 rounded-full border border-brand-200 dark:border-brand-800">
-            Certified Workflow
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-[2.65rem] font-bold tracking-tight text-brand-ink leading-tight">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface-raised">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-600" />
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-brand-600">
+              Certified Legal Workflow
+            </span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold tracking-tight text-brand-ink leading-tight">
             How VerifyLingua Delivers Court-Ready Translations
           </h2>
           <p className="text-base text-text-muted leading-relaxed">
@@ -167,9 +174,9 @@ export function WorkflowInteractive() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3.5">
                       <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-colors shrink-0 ${
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
                           isActive
-                            ? "bg-brand-600 text-white shadow-xs"
+                            ? "bg-brand-600 text-white shadow-xs scale-105"
                             : "bg-surface-raised border border-border text-text-muted"
                         }`}
                       >
@@ -188,7 +195,7 @@ export function WorkflowInteractive() {
                       {step.tag}
                     </span>
                   </div>
-                  <p className="text-xs text-text-muted leading-relaxed mt-2 pl-[46px]">
+                  <p className="text-xs text-text-muted leading-relaxed mt-2.5 pl-[50px]">
                     {step.shortDesc}
                   </p>
                 </button>
@@ -199,6 +206,7 @@ export function WorkflowInteractive() {
           {/* Right Column: Step Preview Card (Col Span 7) */}
           <div className="lg:col-span-7">
             <div className="p-6 sm:p-8 rounded-2xl bg-surface-raised border border-border shadow-xs space-y-6">
+              
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-brand-600" />
@@ -218,16 +226,16 @@ export function WorkflowInteractive() {
                 <p className="text-sm text-text-muted leading-relaxed">
                   {activeStep.description}
                 </p>
-                <p className="text-xs text-text-subtle leading-relaxed bg-surface p-3.5 rounded-xl border border-border">
+                <p className="text-xs text-text-subtle leading-relaxed bg-canvas p-3.5 rounded-xl border border-border">
                   {activeStep.previewSubheading}
                 </p>
               </div>
 
               {/* Stage Artifact Snippet */}
-              <div className="p-4 rounded-xl bg-surface border border-border font-mono text-xs space-y-2">
+              <div className="p-4 rounded-xl bg-canvas border border-border font-mono text-xs space-y-2">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-text-subtle uppercase">{activeStep.artifactSnippet.badge}</span>
-                  <span className="font-bold text-status-success bg-status-success/10 px-2 py-0.5 rounded border border-status-success/30">
+                  <span className="font-bold text-court-emerald bg-court-emerald/10 px-2 py-0.5 rounded border border-court-emerald/30">
                     {activeStep.artifactSnippet.status}
                   </span>
                 </div>
@@ -244,7 +252,7 @@ export function WorkflowInteractive() {
                 {activeStep.details.map((metric) => (
                   <div
                     key={metric.label}
-                    className="p-3.5 rounded-xl bg-surface border border-border text-center space-y-1"
+                    className="p-3.5 rounded-xl bg-canvas border border-border text-center space-y-1"
                   >
                     <span className="text-[10px] font-mono uppercase text-text-subtle block">
                       {metric.label}
