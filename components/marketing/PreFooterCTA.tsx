@@ -11,7 +11,7 @@ export function PreFooterCTA() {
         
         {/* Headline */}
         <div className="space-y-4 max-w-2xl mx-auto">
-          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-brand-ink leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-brand-ink leading-tight font-display">
             Ready to Submit Court-Ready Certified Translations?
           </h2>
           <p className="text-base sm:text-lg text-text-muted leading-relaxed">
@@ -40,7 +40,7 @@ export function PreFooterCTA() {
         <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-text-muted font-medium">
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
-            100% USCIS Acceptance Guarantee
+            USCIS Acceptance Guarantee & Warranty
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
@@ -48,7 +48,7 @@ export function PreFooterCTA() {
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
-            Zero-Knowledge Privacy Vault
+            Statutory Privacy & Ephemeral Storage
           </span>
         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { 
   UploadCloud, 
   Award, 
@@ -23,6 +24,7 @@ interface WorkflowStep {
   title: string;
   shortDesc: string;
   description: string;
+  image: string;
   icon: React.ElementType;
   tag: string;
   previewHeading: string;
@@ -43,6 +45,7 @@ const STEPS: WorkflowStep[] = [
     title: "Document Triage & Structure Extraction",
     shortDesc: "Coordinate parsing that maps stamps, signatures, and marginalia.",
     description: "Upload high-resolution scans or photos of civil records. Our OCR engine parses document layout geometry down to exact pixel coordinates before linguist assignment.",
+    image: "/images/step-ai-triage-3d.jpg",
     icon: UploadCloud,
     tag: "AES-256 Vault",
     previewHeading: "Physical Geometry & Structure Extraction",
@@ -65,6 +68,7 @@ const STEPS: WorkflowStep[] = [
     title: "Sworn ATA Linguist Human Translation",
     shortDesc: "Court-admissible translation certified by verified linguists.",
     description: "A certified professional translator translates every sentence, official seal, registration folio, and endorsement in full accordance with statutory guidelines.",
+    image: "/images/step-human-cert-3d.jpg",
     icon: Award,
     tag: "ATA No. 278190",
     previewHeading: "Human Translation & Peer Review",
@@ -87,6 +91,7 @@ const STEPS: WorkflowStep[] = [
     title: "Cryptographic SHA-256 Sealing",
     shortDesc: "Public audit ledger stamp with embedded QR code.",
     description: "Each completed translation is digitally bound with a formal translator competence affidavit, tamper-evident SHA-256 hash, and adjudicator verification QR code.",
+    image: "/images/step-qr-verified-3d.jpg",
     icon: ShieldCheck,
     tag: "Tamper Evident",
     previewHeading: "Cryptographic Integrity Ledger",
@@ -99,7 +104,7 @@ const STEPS: WorkflowStep[] = [
     artifactSnippet: {
       badge: "CRYPTOGRAPHIC SEAL",
       line1: "Digest: SHA-256: 7d4a98f1c830b201...e89b21d01",
-      line2: "Public Verification URL: verifylingua.com/verify?docket=VL-8492",
+      line2: "Public Verification URL: verifylingua.pages.dev/verify",
       status: "IMMUTABLE LEDGER",
     },
   },
@@ -108,14 +113,15 @@ const STEPS: WorkflowStep[] = [
     number: "04",
     title: "Instant Download & Physical Dispatch",
     shortDesc: "Court-ready PDF under 24 hours with optional overnight mail.",
-    description: "Receive your certified, adjudication-ready PDF in under 24 hours. Need physical embossed copies? We ship via FedEx Overnight directly to your law firm or home address.",
+    description: "Receive your certified, adjudication-ready PDF in under 24 hours. Need physical embossed copies? We ship via FedEx Priority directly to your law firm or home address.",
+    image: "/images/doc-certificate-3d.jpg",
     icon: Download,
     tag: "Under 24 Hours",
     previewHeading: "Adjudication-Ready Filing Packet",
     previewSubheading: "Ready for immediate upload to USCIS online portals or court submission binders.",
     details: [
       { label: "Standard SLA", value: "Under 24 Hours Guaranteed" },
-      { label: "Acceptance", value: "100% Guaranteed or Refund" },
+      { label: "Acceptance", value: "Guaranteed or Full Refund" },
       { label: "Physical Courier", value: "FedEx Priority Available" },
     ],
     artifactSnippet: {
@@ -136,7 +142,7 @@ export function WorkflowInteractive() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Section Header */}
         <div className="max-w-3xl text-left space-y-3">
-          <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold tracking-tight text-brand-ink leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold tracking-tight text-brand-ink leading-tight font-display">
             How VerifyLingua Delivers Court-Ready Translations
           </h2>
           <p className="text-base text-text-muted leading-relaxed">
@@ -196,74 +202,87 @@ export function WorkflowInteractive() {
 
           {/* Right Column: Stage Preview Inspector (Col Span 7) */}
           <div className="lg:col-span-7">
-            <div className="p-6 sm:p-8 rounded-2xl bg-surface-raised border border-border shadow-xs space-y-6 text-left">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-brand-600" />
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted">
-                    {activeStep.previewHeading}
-                  </span>
-                </div>
-                <span className="text-xs font-mono text-brand-600 font-semibold">
-                  Stage {activeStep.number} of 04
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-xl sm:text-2xl font-bold text-brand-ink">
-                  {activeStep.title}
-                </h3>
-                <p className="text-sm text-text-muted leading-relaxed">
-                  {activeStep.description}
-                </p>
-                <p className="text-xs text-text-subtle leading-relaxed bg-surface p-3.5 rounded-xl border border-border">
-                  {activeStep.previewSubheading}
-                </p>
-              </div>
-
-              {/* Stage Operational Artifact */}
-              <div className="p-4 rounded-xl bg-surface border border-border font-mono text-xs space-y-2">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-text-subtle uppercase">{activeStep.artifactSnippet.badge}</span>
-                  <span className="font-bold text-status-success bg-status-success/10 px-2 py-0.5 rounded border border-status-success/30">
-                    {activeStep.artifactSnippet.status}
-                  </span>
-                </div>
-                <div className="text-[11px] text-brand-ink font-semibold">
-                  {activeStep.artifactSnippet.line1}
-                </div>
-                <div className="text-[10px] text-text-muted">
-                  {activeStep.artifactSnippet.line2}
-                </div>
-              </div>
-
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-3 gap-3 pt-1">
-                {activeStep.details.map((metric) => (
-                  <div
-                    key={metric.label}
-                    className="p-3.5 rounded-xl bg-surface border border-border text-center space-y-1"
+            <div className="rounded-2xl bg-surface-raised border border-border shadow-md overflow-hidden text-left">
+              
+              {/* Visual Asset Header for Active Stage */}
+              <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-neutral-900 border-b border-border">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeStep.id}
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative w-full h-full"
                   >
-                    <span className="text-[10px] font-mono uppercase text-text-subtle block">
-                      {metric.label}
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-brand-ink block truncate">
-                      {metric.value}
+                    <Image
+                      src={activeStep.image}
+                      alt={activeStep.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 58vw"
+                      className="object-cover object-center brightness-[0.8] contrast-[1.05]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                    
+                    <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-white">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/80">
+                          {activeStep.previewHeading}
+                        </span>
+                        <h4 className="text-base font-bold text-white">
+                          {activeStep.title}
+                        </h4>
+                      </div>
+                      <span className="text-xs font-mono px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold">
+                        Stage {activeStep.number} of 04
+                      </span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Stage Body Specs & Artifact */}
+              <div className="p-6 sm:p-8 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-text leading-relaxed">
+                    {activeStep.description}
+                  </p>
+                  <p className="text-xs text-text-muted leading-relaxed bg-surface p-3 rounded-xl border border-border">
+                    {activeStep.previewSubheading}
+                  </p>
+                </div>
+
+                {/* Stage Operational Artifact */}
+                <div className="p-4 rounded-xl bg-surface border border-border font-mono text-xs space-y-2">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-text-subtle uppercase">{activeStep.artifactSnippet.badge}</span>
+                    <span className="font-bold text-status-success bg-status-success/10 px-2 py-0.5 rounded border border-status-success/30">
+                      {activeStep.artifactSnippet.status}
                     </span>
                   </div>
-                ))}
+                  <div className="text-[11px] text-brand-ink font-semibold">
+                    {activeStep.artifactSnippet.line1}
+                  </div>
+                  <div className="text-[10px] text-text-muted">
+                    {activeStep.artifactSnippet.line2}
+                  </div>
+                </div>
+
+                {/* Metrics Grid */}
+                <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border">
+                  {activeStep.details.map((detail, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="text-[10px] font-mono text-text-subtle uppercase truncate">
+                        {detail.label}
+                      </div>
+                      <div className="text-xs font-bold text-brand-ink truncate">
+                        {detail.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Action Link */}
-              <div className="pt-2 flex justify-end">
-                <Link
-                  href="/order/triage"
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <span>Start certified order with this stage</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
             </div>
           </div>
 

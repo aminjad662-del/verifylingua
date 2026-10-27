@@ -252,14 +252,14 @@
   --status-warning-bg: #FBF0DC;
   --status-danger-bg:  #F9E9E9;
 
-  /* ─── Surfaces */
-  --canvas:           #FFFFFF;
-  --surface:          #F7F8FD;
-  --surface-warm:     #FBF9F5;
+  /* ─── Surfaces: Warm Architectural Gallery Ivory & Tactile Depth */
+  --canvas:           #FBFBF9;
+  --surface:          #F4F4F0;
+  --surface-warm:     #F0EFEA;
   --surface-raised:   #FFFFFF;
-  --surface-sunken:   #EFF1F9;
-  --border:           #D9DDE8;
-  --border-strong:    #B9C0D4;
+  --surface-sunken:   #ECEBE5;
+  --border:           rgba(15, 23, 42, 0.08);
+  --border-strong:    rgba(15, 23, 42, 0.16);
   --text:             #080A1F;
   --text-muted:       #5A6178;
   --text-subtle:      #858BA0;

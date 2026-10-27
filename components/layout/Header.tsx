@@ -50,14 +50,14 @@ const SOLUTIONS_ITEMS = [
     description: "Immigration officers scan the embedded QR code to verify cryptographic authenticity.",
     href: "/verify",
     icon: QrCode,
-    badge: "Zero-Fraud",
+    badge: "Cryptographic Seal",
   },
   {
     title: "USCIS RFE Defense Shield",
-    description: "100% money-back guarantee with free instant legal response packets if queried.",
+    description: "Guaranteed acceptance warranty with free instant legal response packets if queried.",
     href: "/defense/rfe",
     icon: ShieldAlert,
-    badge: "100% Guaranteed",
+    badge: "RFE Warranty",
   },
 ];
 
