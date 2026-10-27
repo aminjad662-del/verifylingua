@@ -258,6 +258,11 @@
   --surface-warm:     #F0EFEA;
   --surface-raised:   #FFFFFF;
   --surface-sunken:   #ECEBE5;
+
+  /* ─── Emil Kowalski Custom Easing Tokens */
+  --ease-out:         cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out:     cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer:      cubic-bezier(0.32, 0.72, 0, 1);
   --border:           rgba(15, 23, 42, 0.08);
   --border-strong:    rgba(15, 23, 42, 0.16);
   --text:             #080A1F;
