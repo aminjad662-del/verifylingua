@@ -375,7 +375,7 @@ export default function DesignTokensPage() {
               </div>
               <CardTitle className="text-2xl">USCIS Certified Acceptance</CardTitle>
               <CardDescription>
-                Features a 2px hover lift, layered tinted shadow deepening, and 32–40px generous padding to invite exploration.
+                Features a 2px hover lift, layered tinted shadow deepening, and 32-40px generous padding to invite exploration.
               </CardDescription>
               <div className="pt-2 flex items-center gap-2 text-brand-500 font-semibold text-sm">
                 <span>Explore Guarantee</span>

@@ -6,11 +6,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  Clock,
   ShieldCheck,
   ArrowRight,
-  Sparkles,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,11 +18,6 @@ export function DiagnosticComparisonCards() {
       <div className="max-w-7xl mx-auto px-6 space-y-12">
         {/* Section Heading with Editorial Subhead */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-brand-500" />
-            <span>The Reality of Certified Translation</span>
-          </div>
-
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
             Why Standard Translations Get Rejected by USCIS.
           </h2>
@@ -36,10 +28,10 @@ export function DiagnosticComparisonCards() {
           </p>
         </div>
 
-        {/* 2-Column Side-by-Side Diagnostic Cards (Sunsama Reference Pattern) */}
+        {/* 2-Column Side-by-Side Diagnostic Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
           {/* Column A: Traditional Agencies & Generic AI */}
-          <div className="p-8 sm:p-10 rounded-[var(--r-2xl)] bg-canvas border border-status-danger/20 shadow-sm flex flex-col justify-between space-y-8 relative overflow-hidden">
+          <div className="p-8 sm:p-10 rounded-[var(--r-2xl)] bg-canvas border border-status-danger/20 shadow-xs flex flex-col justify-between space-y-8 relative overflow-hidden">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-2xl bg-status-danger/10 border border-status-danger/20 flex items-center justify-center text-status-danger">
@@ -110,13 +102,10 @@ export function DiagnosticComparisonCards() {
           </div>
 
           {/* Column B: VerifyLingua Certified Standard */}
-          <div className="p-8 sm:p-10 rounded-[var(--r-2xl)] bg-surface-raised border-2 border-brand-500/30 shadow-xl shadow-brand-500/5 flex flex-col justify-between space-y-8 relative overflow-hidden">
-            {/* Ambient radiant highlight */}
-            <div className="pointer-events-none absolute -top-24 -right-24 w-64 h-64 rounded-full bg-brand-500/10 blur-[80px]" aria-hidden="true" />
-
+          <div className="p-8 sm:p-10 rounded-[var(--r-2xl)] bg-surface-raised border border-border shadow-xs flex flex-col justify-between space-y-8 relative overflow-hidden">
             <div className="space-y-6 relative z-10">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-500 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-500 shadow-xs">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <Badge variant="default" className="bg-brand-500 text-white text-xs font-mono font-bold">
@@ -139,7 +128,7 @@ export function DiagnosticComparisonCards() {
                   <div className="space-y-0.5">
                     <p className="text-sm font-bold text-brand-ink">Passport MRZ Name-Locking</p>
                     <p className="text-xs text-ink-soft">
-                      Your exact passport name spelling and date format are locked into the translator workspace prior to certification.
+                      Exact character-by-character alignment with applicant identification documents prevents 100% of identity mismatch delays.
                     </p>
                   </div>
                 </div>
@@ -147,9 +136,9 @@ export function DiagnosticComparisonCards() {
                 <div className="flex items-start gap-3 pt-3">
                   <CheckCircle2 className="w-5 h-5 text-status-success shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
-                    <p className="text-sm font-bold text-brand-ink">Pre-Payment Quality Triage</p>
+                    <p className="text-sm font-bold text-brand-ink">Pre-Payment Vision Triage</p>
                     <p className="text-xs text-ink-soft">
-                      Instant 5-second computer vision audit checks resolution, glare, handwriting, and seal visibility before you pay a dime.
+                      Automated scan clarity validation verifies legibility before you enter credit card credentials.
                     </p>
                   </div>
                 </div>
@@ -176,12 +165,12 @@ export function DiagnosticComparisonCards() {
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-between gap-4 relative z-10">
+            <div className="p-4 rounded-xl bg-surface border border-border flex items-center justify-between gap-4 relative z-10">
               <div className="text-xs">
                 <span className="font-bold text-brand-ink block">Guaranteed Peace of Mind</span>
                 <span className="text-ink-soft">100% Acceptance or Full Refund + Free Redo</span>
               </div>
-              <Button asChild size="sm" className="shrink-0 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs gap-1.5 shadow-sm">
+              <Button asChild size="sm" className="shrink-0 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs gap-1.5 shadow-xs active:scale-[0.98] transition-all">
                 <Link href="/order/triage">
                   Start translation
                   <ArrowRight className="w-3.5 h-3.5" />

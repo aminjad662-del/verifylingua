@@ -114,6 +114,22 @@ export async function GET(
         userId: user.id,
       },
     }).catch(() => null);
+
+    // Keep memory cache updated for tests and instant edge session resolution
+    memoryUsers.set(user.id, {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      passwordHash: "",
+      role: user.role,
+      accountType: user.accountType,
+      companyName: user.companyName,
+      phone: user.phone,
+      isGuest: user.isGuest,
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
   } catch {
     // Memory store fallback
     let memUser = Array.from(memoryUsers.values()).find((u) => u.email === ssoEmail);

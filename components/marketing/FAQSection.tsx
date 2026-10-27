@@ -40,7 +40,7 @@ const FAQS = [
   {
     question: "What is the turnaround time and how is it calculated?",
     answer:
-      "Standard orders of 1–3 pages are delivered in 24 hours or less. Expedited orders are delivered in 12 hours. Unlike competitors who provide vague '24-hour' estimates, our pricing engine calculates an exact deterministic delivery date and time (e.g., 'Tuesday, Sep 2, 9:00 AM EST') factoring in notarization batch timing.",
+      "Standard orders of 1-3 pages are delivered in 24 hours or less. Expedited orders are delivered in 12 hours. Unlike competitors who provide vague '24-hour' estimates, our pricing engine calculates an exact deterministic delivery date and time (e.g., 'Tuesday, Sep 2, 9:00 AM EST') factoring in notarization batch timing.",
   },
   {
     question: "What is your USCIS 100% Acceptance Guarantee?",

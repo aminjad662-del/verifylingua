@@ -245,20 +245,9 @@ export function TranslationCinematicShowcase() {
 
   return (
     <section ref={containerRef} className="py-20 md:py-32 bg-canvas border-b border-border/60 relative overflow-hidden">
-      {/* Warm Radiant Sunset Halo (Synthesia & Sunsama Reference Style) */}
-      <div
-        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] rounded-full bg-brand-500/10 blur-[140px] -z-10"
-        aria-hidden="true"
-      />
-
       <div className="max-w-7xl mx-auto px-6 space-y-12">
         {/* Flagship Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
-            <Layers className="w-4 h-4 text-brand-500" />
-            <span>Interactive Layout Preservation Simulator</span>
-          </div>
-
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-brand-ink tracking-tight font-display leading-[1.02]">
             Look Inside the <br className="hidden sm:inline" />
             <span className="text-brand-500">1:1 Translation Engine.</span>

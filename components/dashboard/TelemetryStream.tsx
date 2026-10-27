@@ -52,9 +52,6 @@ export function TelemetryStream({ jobs, onRefresh, loading }: TelemetryStreamPro
 
   return (
     <section aria-labelledby="telemetry-heading" className="relative rounded-2xl bg-neutral-950 text-white border border-white/10 p-6 sm:p-8 shadow-xl overflow-hidden space-y-6">
-      {/* Subtle Ambient Top Accent */}
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-36 bg-emerald-500/10 blur-[90px] pointer-events-none" />
-
       {/* Header & Status Indicator */}
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/10">
         <div className="space-y-1.5 max-w-2xl">

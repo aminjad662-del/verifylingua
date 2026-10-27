@@ -155,12 +155,8 @@ function CounselDeskContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-xs font-mono font-bold text-brand-700 uppercase tracking-wider">
-                <Briefcase className="w-3.5 h-3.5 text-brand-500" />
-                <span>CounselDesk™ Immigration B2B Workspace</span>
-              </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-ink tracking-tight font-display">
-                Immigration Law Firm Matter Management
+                CounselDesk Immigration Law Firm Workspace
               </h1>
               <p className="text-xs sm:text-sm text-text-muted max-w-3xl">
                 Batch-process foreign client exhibits, enforce strict passport name locks across legal teams, and generate 1-click USCIS &amp; EOIR court-ready packets with index tabs.
@@ -170,7 +166,7 @@ function CounselDeskContent() {
             <div className="flex items-center gap-3 shrink-0">
               <Button
                 onClick={() => setNewModalOpen(true)}
-                className="h-10 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs gap-1.5 shadow-sm"
+                className="h-10 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs gap-1.5 shadow-sm active:scale-[0.98] transition-all"
               >
                 <Plus className="w-4 h-4" />
                 <span>Open New Client Matter</span>
@@ -345,7 +341,7 @@ function CounselDeskContent() {
                           <Button
                             size="sm"
                             onClick={() => handleCompileBundle(m)}
-                            className="h-8 px-3 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-[11px] font-semibold gap-1.5 shadow-xs"
+                            className="h-8 px-3 rounded-lg bg-brand-500 hover:bg-brand-600 text-white text-[11px] font-semibold gap-1.5 shadow-xs active:scale-[0.98] transition-all"
                           >
                             <Layers className="w-3.5 h-3.5" />
                             <span>1-Click Court Bundle</span>
@@ -355,7 +351,7 @@ function CounselDeskContent() {
                             asChild
                             size="sm"
                             variant="outline"
-                            className="h-8 px-3 rounded-lg text-[11px] gap-1.5"
+                            className="h-8 px-3 rounded-lg text-[11px] gap-1.5 active:scale-[0.98] transition-all"
                           >
                             <Link href={`/order/${m.orders[0]?.publicCode || "VL-8921-XQ"}/proof`}>
                               <span>Open Proofing</span>
@@ -478,7 +474,7 @@ function CounselDeskContent() {
                   type="submit"
                   size="sm"
                   disabled={creating}
-                  className="rounded-xl bg-brand-500 hover:bg-brand-600 text-white"
+                  className="rounded-xl bg-brand-500 hover:bg-brand-600 text-white active:scale-[0.98] transition-all"
                 >
                   {creating ? "Opening Matter..." : "Create Matter Workspace"}
                 </Button>
@@ -559,7 +555,7 @@ function CounselDeskContent() {
                   </Button>
                   <Button
                     onClick={() => window.open(bundleResult.downloadUrl, "_blank")}
-                    className="rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs gap-2"
+                    className="rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs gap-2 active:scale-[0.98] transition-all"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download Merged Court PDF</span>

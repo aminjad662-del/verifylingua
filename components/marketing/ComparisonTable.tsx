@@ -147,7 +147,7 @@ export function ComparisonTable() {
 
             <div className="pt-2 border-t border-border flex items-center justify-between text-xs font-mono text-text-muted">
               <span>Failure Mode: Bureaucratic RFE</span>
-              <span className="text-status-danger font-bold">Avg. Delay: 6–12 Weeks</span>
+              <span className="text-status-danger font-bold">Avg. Delay: 6-12 Weeks</span>
             </div>
           </div>
 

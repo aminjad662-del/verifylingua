@@ -57,7 +57,7 @@ export function PostDownloadFeedback({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
-      setErrorMessage("Please select a 1–5 star rating to submit feedback.");
+      setErrorMessage("Please select a 1-5 star rating to submit feedback.");
       return;
     }
 
@@ -270,7 +270,7 @@ export function PostDownloadFeedback({
             3. Value Assessment
           </label>
           <p className="mt-0.5 text-xs text-text-muted">
-            Was this translation worth $0.30–$0.40/page to your workflow?
+            Was this translation worth $0.30-$0.40/page to your workflow?
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {VALUE_VERDICTS.map((verdict) => {

@@ -188,8 +188,6 @@ function CheckoutContent() {
 
           {/* Payment Card Inputs */}
           <div className="p-8 rounded-[32px] bg-white border border-slate-200 shadow-sm space-y-8 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-80 h-80 bg-blue-600/5 blur-[100px] rounded-full pointer-events-none" />
-
             <div className="flex items-center justify-between border-b border-slate-100 pb-6 relative z-10">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">

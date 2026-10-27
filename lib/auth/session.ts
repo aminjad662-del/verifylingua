@@ -91,7 +91,32 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
   // 2. Fallback to in-memory session cache
   const memSession = memorySessions.get(token);
   if (memSession && memSession.expires >= new Date()) {
-    const memUser = memoryUsers.get(memSession.userId);
+    let memUser = memoryUsers.get(memSession.userId);
+    if (!memUser) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: memSession.userId },
+        });
+        if (dbUser) {
+          memUser = {
+            id: dbUser.id,
+            email: dbUser.email,
+            name: dbUser.name,
+            role: dbUser.role,
+            accountType: dbUser.accountType,
+            companyName: dbUser.companyName,
+            phone: dbUser.phone,
+            isGuest: dbUser.isGuest,
+            emailVerified: dbUser.emailVerified ?? null,
+            createdAt: dbUser.createdAt,
+            passwordHash: "",
+            updatedAt: dbUser.updatedAt,
+          };
+          memoryUsers.set(dbUser.id, memUser);
+        }
+      } catch {}
+    }
+
     if (memUser) {
       return {
         id: memUser.id,
