@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const REJECTION_MOATS = [
   {
-    title: "100% Seal & Stamp Translation",
+    title: "Complete Seal & Stamp Translation",
     problem: "USCIS rejects partial translations where small rubber stamps, embossed seals, or handwriting notes are omitted.",
     solution: "Our certified linguists mirror every visual seal, stamp notation, and official emblem with bracketed verification tags.",
     icon: Stamp,
@@ -13,7 +13,7 @@ const REJECTION_MOATS = [
   {
     title: "Passport Name & Date Consistency Lock",
     problem: "A single letter difference in name transliteration triggers a Request for Evidence (RFE) and months of delays.",
-    solution: "We hard-lock your exact passport spelling into the translator workspace to guarantee 100% government record consistency.",
+    solution: "We hard-lock your exact passport spelling into the translator workspace to maintain complete government record consistency.",
     icon: Lock,
   },
   {
@@ -116,14 +116,14 @@ export function RejectionMoatSection() {
           <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="space-y-1">
               <p className="text-base font-bold text-white">
-                Backed by our 100% Acceptance Guarantee
+                Backed by our USCIS Acceptance Warranty
               </p>
               <p className="text-xs text-white/70">
-                If rejected by USCIS for any translation defect, we redo it immediately free and refund 100% of your order.
+                If questioned by USCIS for any translation defect, our senior legal staff dispatches a free supplemental affidavit or issues an expedited complete refund.
               </p>
             </div>
 
-            <Button size="lg" asChild className="gap-2 shrink-0 bg-brand-500 hover:bg-brand-700 text-white font-bold h-14 px-8 rounded-2xl shadow-lg">
+            <Button size="lg" asChild className="gap-2 shrink-0 bg-brand-500 hover:bg-brand-600 text-white font-bold h-14 px-8 rounded-2xl shadow-lg active:scale-[0.98] transition-all">
               <Link href="/order/triage">
                 Start translation
                 <ArrowRight className="w-4 h-4" />

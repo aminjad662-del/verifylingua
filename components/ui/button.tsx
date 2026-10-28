@@ -11,30 +11,30 @@ import { cn } from "@/lib/utils";
  * - Solid --brand-500 primary, never gradient-filled.
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-md)] text-base font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--focus-ring)] disabled:pointer-events-none disabled:opacity-50 min-h-[44px] select-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-md)] text-base font-medium transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--focus-ring)] disabled:pointer-events-none disabled:opacity-50 min-h-[44px] select-none",
   {
     variants: {
       variant: {
         default:
-          "bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:scale-[0.985] group",
+          "bg-brand-500 text-white shadow-sm hover:bg-brand-600 group",
         primary:
-          "bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:scale-[0.985] group",
+          "bg-brand-500 text-white shadow-sm hover:bg-brand-600 group",
         cta:
-          "bg-cta text-white shadow-md hover:bg-cta-hover active:bg-cta-active active:scale-[0.985] group font-semibold",
+          "bg-cta text-white shadow-md hover:bg-cta-hover active:bg-cta-active group font-semibold",
         secondary:
-          "bg-canvas text-brand-ink border border-border-strong hover:bg-surface-sunken active:scale-[0.985]",
+          "bg-canvas text-brand-ink border border-border-strong hover:bg-surface-sunken",
         outline:
-          "border border-border-strong bg-transparent hover:bg-surface-sunken text-brand-ink active:scale-[0.985]",
+          "border border-border-strong bg-transparent hover:bg-surface-sunken text-brand-ink",
         ghost:
           "hover:bg-surface-sunken text-text-muted hover:text-brand-ink",
         tertiary:
-          "text-brand-ink hover:text-brand-500 p-0 min-h-0 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-brand-500 hover:after:w-full after:transition-all after:duration-150",
+          "text-brand-ink hover:text-brand-500 p-0 min-h-0 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-brand-500 hover:after:w-full after:transition-[width] after:duration-150 after:ease-out",
         link:
           "text-brand-500 underline-offset-4 hover:underline p-0 min-h-0",
         destructive:
-          "bg-status-danger text-white hover:bg-status-danger/90 active:scale-[0.985]",
+          "bg-status-danger text-white hover:bg-status-danger/90",
         dark:
-          "bg-brand-ink text-white hover:bg-brand-900 active:scale-[0.985]",
+          "bg-brand-ink text-white hover:bg-brand-900",
       },
       size: {
         default: "h-12 px-7 py-3",          // 28px md padding (§3.6.3)

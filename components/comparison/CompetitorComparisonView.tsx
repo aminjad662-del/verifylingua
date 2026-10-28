@@ -313,7 +313,7 @@ export function CompetitorComparisonView({ profile }: { profile: CompetitorProfi
             Ready for a Modern, Zero-Risk Certified Translation?
           </h2>
           <p className="text-base sm:text-lg text-ink-soft max-w-xl mx-auto leading-relaxed">
-            Upload your documents now. Get instant AI scan triage, locked delivery time, and 100% guaranteed USCIS acceptance for $24.95/page.
+            Upload your documents now. Get instant AI scan triage, locked delivery time, and guaranteed statutory USCIS acceptance for $24.95/page.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <MagneticButton>

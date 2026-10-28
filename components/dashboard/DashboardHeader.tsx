@@ -170,7 +170,7 @@ export function DashboardHeader({ user, orders = [], onTrackFiling }: DashboardH
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
               Encrypted Documents in Vault
             </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <div className="w-7 h-7 rounded-lg bg-surface-sunken border border-border flex items-center justify-center text-text-muted">
               <FolderLock className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -184,11 +184,11 @@ export function DashboardHeader({ user, orders = [], onTrackFiling }: DashboardH
           </div>
         </div>
 
-        {/* Stat 4: 100% USCIS Acceptance */}
+        {/* Stat 4: USCIS Acceptance Warranty */}
         <div className="p-4 rounded-xl bg-surface border border-border shadow-sm flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
-              100% USCIS Acceptance
+            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-text-muted">
+              USCIS Acceptance Warranty
             </span>
             <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -199,7 +199,7 @@ export function DashboardHeader({ user, orders = [], onTrackFiling }: DashboardH
               100%
             </div>
             <p className="text-[11px] text-text-muted mt-0.5">
-              Guaranteed 8 CFR § 103.2 compliance
+              Certified 8 CFR § 103.2 compliance
             </p>
           </div>
         </div>

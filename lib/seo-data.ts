@@ -85,7 +85,7 @@ export const SEO_DOCUMENTS: DocumentSpoke[] = [
       },
       {
         question: "Do I need to notarize my birth certificate translation?",
-        answer: "USCIS does not require notarization—a certified translation suffices. However, if submitting to certain state courts, DMVs, or foreign consulates, notarization is required and can be selected with one click.",
+        answer: "USCIS does not require notarization; a certified translation suffices. However, if submitting to certain state courts, DMVs, or foreign consulates, notarization is required and can be selected with one click.",
       },
     ],
     siblingSlugs: ["marriage-certificate", "academic-diploma", "passport"],

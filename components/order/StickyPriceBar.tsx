@@ -128,7 +128,7 @@ export function StickyPriceBar({
             <div className="text-center">
               <span className="text-[11px] text-trust font-semibold flex items-center justify-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-trust" />
-                100% USCIS Acceptance Guarantee
+                USCIS Acceptance Warranty
               </span>
             </div>
           </div>

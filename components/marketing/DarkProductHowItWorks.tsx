@@ -51,7 +51,7 @@ const STEPS: StepDetail[] = [
       { label: "Resolution & Contrast", value: "300 DPI • Crisp", isGood: true },
       { label: "Seal & Stamp Detection", value: "2 Official Emblems Found", isGood: true },
       { label: "Word Count Audit", value: "218 words (1 Page Rate)", isGood: true },
-      { label: "Calculated Price", value: "$24.95 Flat Guaranteed", isGood: true },
+      { label: "Calculated Price", value: "$24.95 Flat Rate", isGood: true },
     ],
     summary:
       "Our AI audit analyzes your scan in seconds to guarantee it meets strict USCIS image clarity standards before linguists begin.",
@@ -67,7 +67,7 @@ const STEPS: StepDetail[] = [
         icon: FileSearch,
       },
       {
-        title: "Guaranteed $24.95 Flat Quote",
+        title: "Transparent $24.95 Flat Quote",
         description: "Exact word and page count calculation with zero post-payment cost surprises.",
         icon: Zap,
       },
@@ -86,7 +86,7 @@ const STEPS: StepDetail[] = [
       { label: "Name Match Lock", value: "Locked to Passport Data", isGood: true },
       { label: "Marginal Transcriptions", value: "All Stamps Bracketed [SEAL]", isGood: true },
       { label: "Legal Date Standard", value: "Standardized US Format", isGood: true },
-      { label: "Turnaround Countdown", value: "Guaranteed within 24h", isGood: true },
+      { label: "Turnaround Countdown", value: "Promised within 24h", isGood: true },
     ],
     summary:
       "Every document is translated by an accredited human linguist who maintains strict typographic and structural parity with the source document.",
@@ -121,7 +121,7 @@ const STEPS: StepDetail[] = [
       { label: "Document Hash", value: "SHA-256: 8f92...a34e", isGood: true },
       { label: "Public Portal URL", value: "/verify/VL-8942-US", isGood: true },
       { label: "USCIS 8 CFR Affidavit", value: "Sworn Statement Bound", isGood: true },
-      { label: "Acceptance Guarantee", value: "100% Guaranteed", isGood: true },
+      { label: "Acceptance Guarantee", value: "USCIS Warranted", isGood: true },
     ],
     summary:
       "Immigration officers and court clerks can instantly scan the live QR code on the certificate to confirm validity and translator credentials.",
@@ -133,7 +133,7 @@ const STEPS: StepDetail[] = [
       },
       {
         title: "SHA-256 Cryptographic Ledger",
-        description: "Immutable mathematical hash guaranteeing the document has not been altered.",
+        description: "Immutable mathematical hash certifying the document has not been altered.",
         icon: Sparkles,
       },
       {
@@ -159,7 +159,7 @@ export function DarkProductHowItWorks() {
 
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto space-y-4 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 text-brand-300 text-xs font-bold uppercase tracking-wider font-mono">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/15 bg-white/5 text-brand-300 text-xs font-bold uppercase tracking-wider font-sans">
               <Zap className="w-4 h-4 text-brand-300" />
               <span>Engineered For Zero Rejections</span>
             </div>

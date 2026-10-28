@@ -34,11 +34,11 @@ export function ToggleRow({
     <div
       onClick={() => !disabled && onCheckedChange(!checked)}
       className={cn(
-        "flex items-center justify-between p-4 md:p-5 rounded-2xl border transition-all cursor-pointer select-none",
+        "flex items-center justify-between p-4 md:p-5 rounded-2xl border transition-[border-color,background-color,transform,box-shadow] duration-100 ease-out active:scale-[0.99] cursor-pointer select-none",
         checked
           ? "border-brand-500 bg-brand-50/50 shadow-sm"
           : "border-border bg-surface-raised hover:border-brand-300/60 hover:bg-surface",
-        disabled && "opacity-50 cursor-not-allowed",
+        disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         className
       )}
     >

@@ -24,7 +24,7 @@ export const INCUMBENT_COMPARISONS = [
     nameDateLock: true,
     deterministicDelivery: true,
     publicVerificationPortal: true,
-    guarantee: "100% USCIS Acceptance or Full Refund + Free Redo",
+    guarantee: "USCIS Acceptance Warranty: Expedited Redo or Complete Refund",
     highlight: true,
   },
   {
@@ -117,7 +117,7 @@ export const RECEIVING_PARTIES = [
     description: "Accepts Certified Translation with signed statement of competence.",
     requiresNotarization: false,
     requiresCertified: true,
-    badgeText: "100% Guaranteed Acceptance",
+    badgeText: "Certified Statutory Acceptance",
     specSummary: "Certified translation matching exact visual format, all stamps & seals translated, translator certificate with competence statement.",
   },
   {

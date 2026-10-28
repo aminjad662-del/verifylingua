@@ -13,9 +13,9 @@ import { Badge } from "@/components/ui/badge";
 
 const FAQS = [
   {
-    question: "What is a Certified Translation, and is it 100% accepted by USCIS?",
+    question: "What is a Certified Translation, and how is it accepted by USCIS?",
     answer:
-      "A certified translation includes a formal Certificate of Accuracy signed by an accredited professional linguist, certifying fluency in both languages and exact word-for-word accuracy under 8 CFR § 103.2(b)(3). VerifyLingua translations are 100% accepted by USCIS, the National Visa Center (NVC), federal courts, state licensing boards, and US universities.",
+      "A certified translation includes a formal Certificate of Accuracy signed by an accredited professional linguist, certifying fluency in both languages and exact word-for-word accuracy under 8 CFR § 103.2(b)(3). VerifyLingua translations strictly comply with federal statutory criteria and are universally accepted by USCIS, the National Visa Center (NVC), federal courts, state licensing boards, and US universities.",
   },
   {
     question: "Do I need Notarization or an Apostille for my submission?",
@@ -43,9 +43,9 @@ const FAQS = [
       "Standard orders of 1-3 pages are delivered in 24 hours or less. Expedited orders are delivered in 12 hours. Unlike competitors who provide vague '24-hour' estimates, our pricing engine calculates an exact deterministic delivery date and time (e.g., 'Tuesday, Sep 2, 9:00 AM EST') factoring in notarization batch timing.",
   },
   {
-    question: "What is your USCIS 100% Acceptance Guarantee?",
+    question: "What is your USCIS Acceptance Warranty and Redo Policy?",
     answer:
-      "If your certified translation is rejected by USCIS for any translation accuracy or formatting defect, we will revise the document immediately for free and issue a 100% full refund of your order.",
+      "If your certified translation is questioned or contested by USCIS for any translation accuracy or formatting defect, our senior legal staff dispatches a free supplemental affidavit within 4 hours, or issues an expedited complete refund of your order.",
   },
 ];
 
@@ -57,7 +57,7 @@ export function FAQSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column (Sticky 4-col Sidebar) */}
           <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-sans font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Compliance &amp; Legal FAQ</span>
             </div>
@@ -86,7 +86,7 @@ export function FAQSection() {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
-                    <span className="text-xs font-mono font-bold text-brand-ink">Linguists Online</span>
+                    <span className="text-xs font-sans font-bold text-brand-ink">Linguists Online</span>
                   </div>
                   <p className="text-xs text-ink-softer">Average response &lt;2 mins</p>
                 </div>
@@ -101,7 +101,7 @@ export function FAQSection() {
 
               <Link
                 href="/help"
-                className="inline-flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100/80 text-brand-500 text-xs font-bold transition-colors"
+                className="inline-flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100/80 text-brand-500 text-xs font-bold transition-all active:scale-[0.98]"
               >
                 <span>Ask Compliance Specialist</span>
                 <ArrowRight className="w-3.5 h-3.5" />

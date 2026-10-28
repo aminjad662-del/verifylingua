@@ -99,3 +99,32 @@ Re-insert translated text at the exact original spatial coordinates using PyMuPD
 ### System Verification & Integration
 - [ ] Both pipelines exposed through clean, testable service interfaces in the application.
 - [ ] Full regression test suite passes with automated verification tests for both scanned inpainting and vector PDF stream editing.
+
+
+## Follow-up — 2026-10-27T17:27:06Z
+
+Complete architectural and visual redesign of VerifyLingua's certified legal translation platform, rethinking the core design logic, layout structure, interaction models, and institutional typography from the ground up according to Apple HIG, Emil Kowalski design engineering, and bespoke editorial standards.
+
+Working directory: c:\Users\aminj\Downloads\SAAS 7
+Integrity mode: development
+
+## Requirements
+
+### R1. Complete Design Logic Architecture Rethink
+Replace the conventional linear marketing template with a cohesive, document-first Interactive Legal Translation Docket & Studio Console that merges marketing persuasion directly into a tangible, high-density professional tool.
+
+### R2. Strict Design Engineering & Polish Standards
+Implement bespoke typography, tactile micro-interactions (Emil Kowalski spring physics, custom cubic-bezier easing, :active press feedback), non-card spatial layouts (dividers and typographic hierarchy over generic boxed cards), and 100% warm ivory gallery theme lock.
+
+### R3. Flawless Verification & Zero Clichés
+Enforce 0 raw hex colors in TSX, 0 em/en dashes in copy, 0 absolute claims, 0 generic AI blur orbs/gradients, and complete test suite parity (100% green).
+
+## Acceptance Criteria
+
+### Visual & Interactive Craftsmanship
+- [x] Non-linear, document-first workspace layout replacing standard stacked card sections
+- [x] Custom spring physics and :active:scale-[0.98] tactile press states on every interactive element
+- [x] 0 raw hex colors in .tsx files (node scripts/check-raw-hex.js passes with 0 violations)
+- [x] 0 em-dashes (\u2014) and 0 en-dashes (\u2013) anywhere in source copy
+- [x] Full test suite passes 100% (npm test passes all tests)
+- [x] Production build succeeds and deploys cleanly to Cloudflare Pages

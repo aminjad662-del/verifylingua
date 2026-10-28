@@ -1,8 +1,10 @@
 import React from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { SovereignLegalConsole } from "@/components/marketing/SovereignLegalConsole";
-import { LegalPipelineLedger } from "@/components/marketing/LegalPipelineLedger";
+import { LegalHero } from "@/components/marketing/LegalHero";
+import { InstitutionalTrustStrip } from "@/components/marketing/InstitutionalTrustStrip";
+import { LegalPrecisionBento } from "@/components/marketing/LegalPrecisionBento";
+import { WorkflowInteractive } from "@/components/marketing/WorkflowInteractive";
 import { LegalComparisonMatrix } from "@/components/marketing/LegalComparisonMatrix";
 import { PreFooterCTA } from "@/components/marketing/PreFooterCTA";
 
@@ -13,20 +15,26 @@ export default function HomePage() {
       <Header />
       
       <main className="flex-1 w-full">
-        {/* 2. Unified Sovereign Legal Console: Jurisdiction Switcher, Living Exhibit Docket, and 4 Pillars */}
-        <SovereignLegalConsole />
+        {/* 2. Asymmetric Legal Translation Hero with Interactive Document Inspector */}
+        <LegalHero />
 
-        {/* 3. Auditable Chain of Custody Pipeline Ledger */}
-        <LegalPipelineLedger />
+        {/* 3. Federal & Court Institutional Trust Strip */}
+        <InstitutionalTrustStrip />
 
-        {/* 4. Transparent Feature & Compliance Comparison Matrix */}
+        {/* 4. Asymmetric Bento Grid: 1:1 Preservation, SHA-256 Seal, Sworn Affidavit, RFE Warranty */}
+        <LegalPrecisionBento />
+
+        {/* 5. 4-Stage Interactive Workflow in Unified Light Theme */}
+        <WorkflowInteractive />
+
+        {/* 6. Transparent Feature & Compliance Comparison Matrix */}
         <LegalComparisonMatrix />
 
-        {/* 5. Sovereign Pre-Footer Intake Hub */}
+        {/* 7. Sovereign Pre-Footer CTA */}
         <PreFooterCTA />
       </main>
 
-      {/* 6. Global Comprehensive Theme-Locked Footer */}
+      {/* 8. Global Comprehensive Footer */}
       <Footer />
     </div>
   );

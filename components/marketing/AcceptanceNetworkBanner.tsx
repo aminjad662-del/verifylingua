@@ -59,7 +59,7 @@ export function AcceptanceNetworkBanner() {
             </Button>
             <Button asChild variant="outline" size="lg" className="h-13 px-6 rounded-full font-bold border-border hover:bg-surface active:scale-[0.98] transition-transform">
               <Link href="/acceptance-guarantee">
-                Read our 100% USCIS Acceptance Guarantee
+                Read our USCIS Acceptance Warranty &amp; Compliance Charter
               </Link>
             </Button>
           </div>

@@ -162,10 +162,10 @@ export function WorkflowInteractive() {
                 <button
                   key={step.id}
                   onClick={() => setActiveStepId(step.id)}
-                  className={`w-full p-4 sm:p-5 rounded-2xl text-left transition-all cursor-pointer border ${
+                  className={`w-full p-4 sm:p-5 rounded-2xl text-left transition-all duration-150 cursor-pointer border active:scale-[0.98] ${
                     isActive
-                      ? "bg-surface-raised border-brand-500 shadow-xs ring-1 ring-brand-500/20"
-                      : "bg-surface border-border hover:bg-surface-raised hover:border-slate-300"
+                      ? "bg-surface-raised border-brand-500 shadow-2xs ring-1 ring-brand-500/20"
+                      : "bg-surface border-border hover:bg-surface-raised hover:border-border-strong"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -173,8 +173,8 @@ export function WorkflowInteractive() {
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-colors shrink-0 ${
                           isActive
-                            ? "bg-brand-600 text-white shadow-xs"
-                            : "bg-surface-raised border border-border text-text-muted"
+                            ? "bg-brand-500 text-white shadow-2xs"
+                            : "bg-surface-raised border border-border text-brand-ink"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -188,7 +188,7 @@ export function WorkflowInteractive() {
                         </h4>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-surface border border-border text-text-muted shrink-0">
+                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-md bg-surface border border-border text-text-muted shrink-0">
                       {step.tag}
                     </span>
                   </div>
@@ -256,7 +256,7 @@ export function WorkflowInteractive() {
                 <div className="p-4 rounded-xl bg-surface border border-border font-mono text-xs space-y-2">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-text-subtle uppercase">{activeStep.artifactSnippet.badge}</span>
-                    <span className="font-bold text-status-success bg-status-success/10 px-2 py-0.5 rounded border border-status-success/30">
+                    <span className="font-bold text-brand-500 bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-500/20">
                       {activeStep.artifactSnippet.status}
                     </span>
                   </div>

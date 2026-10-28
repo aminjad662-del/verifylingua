@@ -370,8 +370,8 @@ export function TranslationCinematicShowcase() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Badge variant="default" className="text-[11px] font-mono py-1 px-3 bg-brand-500 text-white">
-                  {isTranslated ? "100% Geometry Match" : "Source Dimensions: 300 DPI"}
+                <Badge variant="default" className="text-[11px] font-sans font-bold py-1 px-3 bg-brand-500 text-white">
+                  {isTranslated ? "1:1 Coordinate Geometry Lock" : "Source Dimensions: 300 DPI"}
                 </Badge>
               </div>
             </div>
@@ -381,7 +381,7 @@ export function TranslationCinematicShowcase() {
               <h3 className="text-base sm:text-xl md:text-2xl font-black text-brand-ink tracking-tight font-display">
                 {isTranslated ? activeDoc.translatedHeader : activeDoc.originalHeader}
               </h3>
-              <p className="text-xs font-mono text-gray-500 uppercase tracking-wider">
+              <p className="text-xs font-sans text-gray-500 uppercase tracking-wider">
                 {isTranslated ? activeDoc.subHeaderEn : activeDoc.subHeaderEs}
               </p>
             </div>
@@ -415,7 +415,7 @@ export function TranslationCinematicShowcase() {
                   <Stamp className="w-4 h-4 text-brand-500 shrink-0" />
                   <span className="font-mono">{isTranslated ? activeDoc.sealNoticeEn : activeDoc.sealNoticeEs}</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-brand-500 uppercase shrink-0">
+                <span className="text-[10px] font-sans font-bold text-brand-500 uppercase shrink-0">
                   Transcribed in [Brackets]
                 </span>
               </div>
@@ -441,7 +441,7 @@ export function TranslationCinematicShowcase() {
               </div>
 
               <div className="text-right">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-status-success/10 text-status-success border border-status-success/20 text-xs font-bold font-mono">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-status-success/10 text-status-success border border-status-success/20 text-xs font-bold font-sans">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>USCIS Competence Sworn</span>
                 </div>

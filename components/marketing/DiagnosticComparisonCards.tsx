@@ -37,7 +37,7 @@ export function DiagnosticComparisonCards() {
                 <div className="w-12 h-12 rounded-2xl bg-status-danger/10 border border-status-danger/20 flex items-center justify-center text-status-danger">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
-                <Badge variant="outline" className="border-status-danger/30 text-status-danger text-xs font-mono font-bold">
+                <Badge variant="outline" className="border-status-danger/30 text-status-danger text-xs font-sans font-bold">
                   Legacy Agency Pitfalls
                 </Badge>
               </div>
@@ -108,7 +108,7 @@ export function DiagnosticComparisonCards() {
                 <div className="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-500 shadow-xs">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <Badge variant="default" className="bg-brand-500 text-white text-xs font-mono font-bold">
+                <Badge variant="default" className="bg-brand-500 text-white text-xs font-sans font-bold">
                   The VerifyLingua Standard
                 </Badge>
               </div>
@@ -128,7 +128,7 @@ export function DiagnosticComparisonCards() {
                   <div className="space-y-0.5">
                     <p className="text-sm font-bold text-brand-ink">Passport MRZ Name-Locking</p>
                     <p className="text-xs text-ink-soft">
-                      Exact character-by-character alignment with applicant identification documents prevents 100% of identity mismatch delays.
+                      Exact character-by-character alignment with applicant identification documents is engineered to prevent identity mismatch delays.
                     </p>
                   </div>
                 </div>
@@ -167,8 +167,8 @@ export function DiagnosticComparisonCards() {
 
             <div className="p-4 rounded-xl bg-surface border border-border flex items-center justify-between gap-4 relative z-10">
               <div className="text-xs">
-                <span className="font-bold text-brand-ink block">Guaranteed Peace of Mind</span>
-                <span className="text-ink-soft">100% Acceptance or Full Refund + Free Redo</span>
+                <span className="font-bold text-brand-ink block">USCIS Acceptance Warranty</span>
+                <span className="text-ink-soft">Statutory Admissibility: Expedited Redo or Complete Refund</span>
               </div>
               <Button asChild size="sm" className="shrink-0 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs gap-1.5 shadow-xs active:scale-[0.98] transition-all">
                 <Link href="/order/triage">

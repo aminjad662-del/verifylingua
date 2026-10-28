@@ -279,10 +279,10 @@ export default function PricingPage() {
                     <div className="text-center space-y-1">
                       <p className="text-xs text-status-success font-bold flex items-center justify-center gap-1.5">
                         <ShieldCheck className="w-4 h-4" />
-                        100% USCIS Acceptance Guarantee
+                        USCIS Acceptance Warranty
                       </p>
                       <p className="text-[11px] text-text-muted">
-                        Rejected by USCIS? Free redo + full 100% refund.
+                        Statutory Admissibility: Expedited Redo or Complete Refund.
                       </p>
                     </div>
                   </div>

@@ -4,13 +4,8 @@ const path = require('path');
 const DIRECTORIES_TO_SCAN = ['app', 'components'];
 const HEX_REGEX = /#([0-9a-fA-F]{3,8})\b/g;
 
-// Allowed exceptions if any (e.g. within specific documentation files or SVG raw icon definitions if required)
-const ALLOWED_FILES = [
-  // Token documentation page itself can mention tokens
-  path.normalize('app/dev/tokens/page.tsx'),
-  path.normalize('components/auth/LoginForm.tsx'),
-  path.normalize('components/auth/RegisterForm.tsx'),
-];
+// Zero exceptions allowed: all .tsx files in app/ and components/ must strictly adhere to design system tokens
+const ALLOWED_FILES = [];
 
 let hasErrors = false;
 

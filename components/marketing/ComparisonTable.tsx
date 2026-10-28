@@ -54,7 +54,7 @@ const COMPARISON_ROWS = [
   },
   {
     feature: "USCIS Rejection Protection Policy",
-    verifyLingua: "Free Redo + 100% Full Refund",
+    verifyLingua: "Free Expedited Redo + Complete Refund",
     rushTranslate: "Free Redo Only",
     immiTranslate: "Standard Redo",
     translayte: "Standard Redo",
@@ -68,7 +68,7 @@ export function ComparisonTable() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16 w-full overflow-hidden">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
+          <span className="text-xs font-sans font-bold uppercase tracking-widest text-brand-500">
             System Architecture Comparison
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-brand-ink tracking-tight font-display">
@@ -84,11 +84,11 @@ export function ComparisonTable() {
           {/* Left Panel: Traditional Agency Reality */}
           <div className="rounded-[var(--r-2xl)] border border-status-danger/25 bg-surface p-7 sm:p-9 space-y-6 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-danger/10 border border-status-danger/20 text-status-danger text-xs font-mono font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-danger/10 border border-status-danger/20 text-status-danger text-xs font-sans font-bold uppercase tracking-wider">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>Traditional Agency Reality</span>
               </div>
-              <span className="text-xs font-mono text-status-danger font-bold">
+              <span className="text-xs font-sans text-status-danger font-bold">
                 High Risk of RFE
               </span>
             </div>
@@ -155,13 +155,13 @@ export function ComparisonTable() {
           <div className="rounded-[var(--r-2xl)] border-2 border-brand-500/40 bg-surface-raised p-7 sm:p-9 space-y-6 shadow-xl relative overflow-hidden">
             {/* Subtle glow badge */}
             <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-success/10 border border-status-success/30 text-status-success text-xs font-mono font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-status-success/10 border border-status-success/30 text-status-success text-xs font-sans font-bold uppercase tracking-wider">
                 <ShieldCheck className="w-3.5 h-3.5 text-status-success" />
                 <span>VerifyLingua Precision Architecture</span>
               </div>
-              <span className="text-xs font-mono text-status-success font-bold flex items-center gap-1">
+              <span className="text-xs font-sans text-court-emerald font-bold flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
-                100% Acceptance
+                Universal Admissibility
               </span>
             </div>
 
@@ -219,7 +219,7 @@ export function ComparisonTable() {
 
             <div className="pt-2 border-t border-border flex items-center justify-between text-xs font-mono text-text-muted">
               <span>Standard: 8 CFR 103.2(a)(3)</span>
-              <span className="text-brand-500 font-bold">100% Money-Back Guarantee</span>
+              <span className="text-brand-500 font-bold font-sans">Statutory Acceptance Warranty</span>
             </div>
           </div>
         </div>
@@ -335,9 +335,9 @@ export function ComparisonTable() {
         </div>
 
         <div className="text-center pt-2">
-          <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md active:scale-[0.97] transition-all duration-200">
+          <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md active:scale-[0.98] transition-all duration-200">
             <Link href="/order/triage">
-              Start translation with 100% guarantee
+              Start translation with statutory warranty
               <ArrowRight className="w-5 h-5" />
             </Link>
           </Button>

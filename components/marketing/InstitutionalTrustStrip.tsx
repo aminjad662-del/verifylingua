@@ -53,7 +53,7 @@ export function InstitutionalTrustStrip() {
                   key={partner.name}
                   className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-raised border border-border/80 hover:border-border transition-all duration-150 group text-left shadow-2xs"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-surface border border-border flex items-center justify-center text-brand-600 shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-8 h-8 rounded-lg bg-surface border border-border flex items-center justify-center text-brand-ink group-hover:text-brand-500 shrink-0 group-hover:scale-105 transition-all">
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="min-w-0 flex-1">
