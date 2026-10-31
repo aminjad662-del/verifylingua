@@ -40,6 +40,9 @@ export async function GET(
         targetText: "UNITED MEXICAN STATES • CIVIL REGISTRY OFFICE",
         locked: false,
         status: "TRANSLATED",
+        confidence: 0.994,
+        boundingBox: { x: 12, y: 5, width: 76, height: 4, page: 1 },
+        coordinateNotice: "X: 120mm, Y: 48mm (300 DPI)",
       },
       {
         id: "seg-2",
@@ -48,6 +51,9 @@ export async function GET(
         targetText: "OFFICIAL BIRTH CERTIFICATE • OFFICIAL FOLIO RECORD",
         locked: false,
         status: "TRANSLATED",
+        confidence: 0.988,
+        boundingBox: { x: 12, y: 11, width: 76, height: 3, page: 1 },
+        coordinateNotice: "X: 120mm, Y: 110mm (300 DPI)",
       },
       {
         id: "seg-3",
@@ -56,6 +62,9 @@ export async function GET(
         targetText: "Certificate / Folio Number: 04829-B / Volume: 12",
         locked: true,
         status: "VERIFIED",
+        confidence: 0.998,
+        boundingBox: { x: 12, y: 18, width: 76, height: 4, page: 1 },
+        coordinateNotice: "X: 120mm, Y: 180mm (300 DPI)",
       },
       {
         id: "seg-4",
@@ -64,6 +73,9 @@ export async function GET(
         targetText: `Registered Individual's Name: ${primaryName}`,
         locked: true,
         status: "VERIFIED",
+        confidence: 0.998,
+        boundingBox: { x: 12, y: 25, width: 76, height: 4, page: 1 },
+        coordinateNotice: "X: 120mm, Y: 250mm (300 DPI)",
       },
       {
         id: "seg-5",
@@ -72,6 +84,9 @@ export async function GET(
         targetText: "Date of Birth: May 02, 1994 (May Second, Nineteen Ninety-Four)",
         locked: true,
         status: "VERIFIED",
+        confidence: 0.991,
+        boundingBox: { x: 12, y: 32, width: 76, height: 4, page: 1 },
+        coordinateNotice: "X: 120mm, Y: 320mm (300 DPI)",
       },
       {
         id: "seg-6",
@@ -80,6 +95,9 @@ export async function GET(
         targetText: "[Official Circular Seal: General Directorate of the Civil Registry • State of Jalisco]",
         locked: false,
         status: "TRANSLATED",
+        confidence: 0.942,
+        boundingBox: { x: 62, y: 74, width: 26, height: 16, page: 1 },
+        coordinateNotice: "X: 620mm, Y: 740mm (300 DPI)",
       },
     ];
 
@@ -92,6 +110,7 @@ export async function GET(
         sourceLang: defaultSourceLang,
         targetLang: defaultTargetLang,
         documentName: order?.documents?.[0]?.fileName || "Certificado_Nacimiento_Oficial.pdf",
+        specimenImagePath: "/images/docs/birth-certificate.jpg",
         serviceType: order?.serviceType || "CERTIFIED",
         assignedTranslator: {
           name: "Elena V.",

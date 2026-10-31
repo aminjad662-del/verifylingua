@@ -52,7 +52,7 @@ export function AcceptanceNetworkBanner() {
           {/* Action CTA */}
           <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
             <Button asChild size="lg" className="gap-2 px-8 h-13 rounded-full font-bold shadow-md bg-brand-500 hover:bg-brand-600 text-white active:scale-[0.98] transition-transform">
-              <Link href="/order/triage">
+              <Link href="/translate">
                 Start your translation ($24.95/page)
                 <ArrowRight className="w-4 h-4" />
               </Link>

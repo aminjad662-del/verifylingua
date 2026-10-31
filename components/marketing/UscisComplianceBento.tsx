@@ -85,7 +85,7 @@ export function UscisComplianceBento() {
         
         {/* Section Header with Architectural Typography */}
         <div className="max-w-3xl space-y-3 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface text-signal-accent text-xs font-mono uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface text-signal-accent text-xs font-sans font-semibold uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 text-signal-accent" />
             <span>FEDERAL COMPLIANCE ARCHITECTURE</span>
           </div>

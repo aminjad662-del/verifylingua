@@ -15,7 +15,9 @@ export type AuthAuditAction =
   | "LOGIN_FAILED"
   | "PASSWORD_RESET_REQUESTED"
   | "PASSWORD_RESET_SUCCESS"
-  | "LOGOUT";
+  | "LOGOUT"
+  | `SSO_LOGIN_${string}`
+  | `SSO_CALLBACK_SUCCESS_${string}`;
 
 export interface LogAuthAuditEventParams {
   userId?: string | null;

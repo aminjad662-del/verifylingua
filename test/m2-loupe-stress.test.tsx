@@ -347,7 +347,7 @@ describe("Milestone M2 Adversarial Stress Suite: Loupe Math, Slider Stress & Spe
       expect(html).toContain("ATA Corporate Member No. 278190");
 
       // Primary CTA to /order/triage
-      expect(html).toContain("href=\"/order/triage\"");
+      expect(html).toContain("href=\"/translate\"");
       expect(html).toContain("Proceed to certified triage");
       expect(html).toContain("bg-brand-500");
 

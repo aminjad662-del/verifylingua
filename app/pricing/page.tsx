@@ -16,8 +16,10 @@ import { ToggleRow } from "@/components/ui/toggle-row";
 import { ShieldCheck, CheckCircle2, ArrowRight, Clock, FileText } from "lucide-react";
 import { PRICING_CONFIG } from "@/lib/constants";
 import { calculatePricing, formatDeliveryDate } from "@/lib/pricing";
+import { useTranslationModal } from "@/components/translation/TranslationModalContext";
 
 export default function PricingPage() {
+  const { openModal } = useTranslationModal();
   const [serviceType, setServiceType] = React.useState<"CERTIFIED" | "STANDARD">("CERTIFIED");
   const [pageCount, setPageCount] = React.useState(2);
   const [wordCount, setWordCount] = React.useState(500);
@@ -270,7 +272,11 @@ export default function PricingPage() {
                     </div>
 
                     <Button size="lg" asChild className="w-full h-14 rounded-2xl text-base font-bold gap-2 shadow-md bg-brand-500 hover:bg-brand-600 text-white active:scale-[0.98] transition-transform">
-                      <Link href={`/order/triage?pages=${pricing.pageCount}&expedited=${isExpedited}&notarization=${needsNotarization}`}>
+                      <Link
+                        href={`/translate?pages=${pricing.pageCount}&expedited=${isExpedited}&notarization=${needsNotarization}&tier=certified`}
+                        
+                        
+                      >
                         Start translation
                         <ArrowRight className="w-5 h-5" />
                       </Link>

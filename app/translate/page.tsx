@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, Suspense } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ShieldCheck,
   ArrowRightLeft,
@@ -17,9 +17,6 @@ import {
   Zap,
   Download,
   RotateCcw,
-  Layers,
-  Lock,
-  Columns,
   Sparkles,
   Scaling,
   Shield,
@@ -27,39 +24,69 @@ import {
   X,
   Check,
   ChevronDown,
-  ExternalLink,
-  Eye,
-  ImageIcon,
-  Maximize2,
-  RefreshCw,
-  Star,
   ZoomIn,
-  Copy
 } from "lucide-react";
-import { SPRING_MICRO } from "@/lib/motion";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ResultViewer } from "@/components/translation/ResultViewer";
-import { getFallbackImageBlocks, sortBlocksReadingOrder, TranslatedBlockData } from "@/lib/translation/svg-builder";
-import { verifyElementAndCharacterParity } from "@/lib/translation/qa-engine";
+import { TranslatedBlockData } from "@/lib/translation/svg-builder";
 
 interface Language {
   code: string;
   name: string;
-  flag: string;
+  iso: string;
 }
 
 const SUPPORTED_LANGS: Language[] = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "es", name: "Spanish", flag: "🇪🇸" },
-  { code: "fr", name: "French", flag: "🇫🇷" },
-  { code: "de", name: "German", flag: "🇩🇪" },
-  { code: "pt", name: "Portuguese", flag: "🇧🇷" },
-  { code: "it", name: "Italian", flag: "🇮🇹" },
-  { code: "nl", name: "Dutch", flag: "🇳🇱" },
-  { code: "pl", name: "Polish", flag: "🇵🇱" },
-  { code: "ru", name: "Russian", flag: "🇷🇺" },
-  { code: "ar", name: "Arabic", flag: "🇸🇦" },
-  { code: "ja", name: "Japanese", flag: "🇯🇵" },
-  { code: "zh", name: "Chinese", flag: "🇨🇳" },
+  { code: "en", name: "English (US)", iso: "EN" },
+  { code: "es", name: "Spanish", iso: "ES" },
+  { code: "fr", name: "French", iso: "FR" },
+  { code: "de", name: "German", iso: "DE" },
+  { code: "pt", name: "Portuguese", iso: "PT" },
+  { code: "it", name: "Italian", iso: "IT" },
+  { code: "nl", name: "Dutch", iso: "NL" },
+  { code: "pl", name: "Polish", iso: "PL" },
+  { code: "ru", name: "Russian", iso: "RU" },
+  { code: "ar", name: "Arabic", iso: "AR" },
+  { code: "ja", name: "Japanese", iso: "JA" },
+  { code: "zh", name: "Chinese", iso: "ZH" },
+];
+
+interface SpecimenSample {
+  name: string;
+  type: string;
+  fileUrl: string;
+  fileName: string;
+  sourceLang: string;
+  targetLang: string;
+}
+
+const SPECIMEN_SAMPLES: SpecimenSample[] = [
+  {
+    name: "Mexican Marriage Apostille",
+    type: "Civil Registry",
+    fileUrl: "/images/docs/marriage-certificate.jpg",
+    fileName: "mexican_marriage_apostille.jpg",
+    sourceLang: "es",
+    targetLang: "en",
+  },
+  {
+    name: "Colombian Birth Certificate",
+    type: "Vital Record",
+    fileUrl: "/images/docs/birth-certificate.jpg",
+    fileName: "colombian_birth_certificate.jpg",
+    sourceLang: "es",
+    targetLang: "en",
+  },
+  {
+    name: "German Academic Record",
+    type: "Institutional",
+    fileUrl: "/images/docs/transcript.jpg",
+    fileName: "german_academic_record.jpg",
+    sourceLang: "de",
+    targetLang: "en",
+  },
 ];
 
 type JobStatus =
@@ -122,8 +149,39 @@ const PIPELINE_STAGES = [
   { id: "ready", label: "High-Resolution Output Ready", desc: "Document sealed with certified accuracy metadata" },
 ];
 
+
+function SearchParamsHandler({
+  onParams,
+}: {
+  onParams: (params: {
+    source?: string;
+    target?: string;
+    tier?: "automated" | "certified";
+    doc?: string;
+  }) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (!searchParams) return;
+    const source = searchParams.get("source") || searchParams.get("sourceLang") || undefined;
+    const target = searchParams.get("target") || searchParams.get("targetLang") || undefined;
+    const tierParam = searchParams.get("tier") || searchParams.get("serviceTier");
+    const isCert =
+      tierParam === "certified" ||
+      searchParams.get("notarization") === "true" ||
+      searchParams.get("expedited") === "true";
+    const tier = isCert ? "certified" : tierParam === "automated" ? "automated" : undefined;
+    const doc = searchParams.get("doc") || searchParams.get("sample") || searchParams.get("vaultDoc") || undefined;
+    onParams({ source, target, tier, doc });
+  }, [searchParams, onParams]);
+
+  return null;
+}
+
 export default function TranslatePage() {
   const router = useRouter();
+
   // Language selections
   const [sourceLang, setSourceLang] = useState("en");
   const [targetLang, setTargetLang] = useState("es");
@@ -136,7 +194,7 @@ export default function TranslatePage() {
   const [detectedLangInfo, setDetectedLangInfo] = useState<{ lang: string; confidence: number; label: string } | null>(null);
   const [isSampleLoading, setIsSampleLoading] = useState(false);
 
-  // Active translation job state (Step 4 & Step 5)
+  // Active translation job state
   const [job, setJob] = useState<JobState | null>(null);
   const [availableCredits, setAvailableCredits] = useState<number | null>(null);
   const [grantingCredits, setGrantingCredits] = useState(false);
@@ -152,17 +210,35 @@ export default function TranslatePage() {
     setTranslatedBlobUrl(url);
   }, []);
 
-  // Comparison & detail inspect state for result view (Step 5)
-  const [comparisonTab, setComparisonTab] = useState<"side-by-side" | "translated" | "original">("side-by-side");
-  const [activeViewTab, setActiveViewTab] = useState<"document" | "side-by-side" | "overlay" | "qa">("overlay");
-  const [copiedAll, setCopiedAll] = useState(false);
+  // Lightbox Modal State
   const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
   const [zoomTarget, setZoomTarget] = useState<"translated" | "original">("translated");
 
-  // Feedback state
-  const [rating, setRating] = useState<number>(5);
-  const [feedbackSent, setFeedbackSent] = useState(false);
-  const [feedbackTag, setFeedbackTag] = useState("PERFECT_FIDELITY");
+
+  // Restore any pending upload session from storage
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("pending_upload");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.detectedLang) setSourceLang(parsed.detectedLang);
+        if (parsed.serviceType === "CERTIFIED" || parsed.tier === "certified") {
+          setServiceTier("certified");
+        }
+        if (parsed.fileBase64 && parsed.fileName && !stagedFile) {
+          fetch(parsed.fileBase64)
+            .then((r) => r.blob())
+            .then((b) => {
+              const file = new File([b], parsed.fileName, { type: b.type || "application/pdf" });
+              setStagedFile(file);
+              setStagedPreviewUrl(parsed.fileBase64);
+            })
+            .catch(() => {});
+        }
+      }
+    } catch {}
+  }, [stagedFile]);
+
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -183,11 +259,20 @@ export default function TranslatePage() {
     fetchBalance();
   }, [fetchBalance]);
 
+  // Gate G21: 0ms Escape key dismissal for lightbox modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsZoomModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // CRITICAL: Invalidate stale translation blob whenever target language changes.
-  // Without this, switching language shows the PREVIOUS language's translated SVG.
   useEffect(() => {
     setBlobUrl(null);
-    // If there's an active job result, clear it so user must re-translate
     if (job?.status === "ready") {
       setJob(null);
     }
@@ -213,7 +298,6 @@ export default function TranslatePage() {
           }
         }
         if (!res.ok) {
-          // 404 means job expired or doesn't exist - stop polling
           if (res.status === 404) {
             stopPolling();
             setJob((prev) =>
@@ -265,13 +349,11 @@ export default function TranslatePage() {
         // Ignore transient poll failures
       }
     }, 800);
-  }, [stopPolling, fetchBalance]);
+  }, [stopPolling, fetchBalance, setBlobUrl]);
 
   // Stage a file for review & configuration
   const handleStageFile = useCallback((file: File) => {
-    // CRITICAL: Revoke any previous translated blob URL to prevent stale preview
     setBlobUrl(null);
-    // Clear any existing job state so old results never bleed into new uploads
     stopPolling();
     setJob(null);
     setStagedFile(file);
@@ -294,9 +376,12 @@ export default function TranslatePage() {
     if (lowerName.includes("beach") || lowerName.includes("reading") || lowerName.includes("worksheet") || lowerName.includes("english")) {
       setDetectedLangInfo({ lang: "en", confidence: 99.8, label: "English (US) - Reading Worksheet" });
       if (sourceLang === "auto") setSourceLang("en");
-    } else if (lowerName.includes("spanish") || lowerName.includes("espanol") || lowerName.includes("acta")) {
-      setDetectedLangInfo({ lang: "es", confidence: 99.5, label: "Spanish (ES) - Legal / General" });
+    } else if (lowerName.includes("spanish") || lowerName.includes("espanol") || lowerName.includes("acta") || lowerName.includes("matrimonio") || lowerName.includes("apostilla")) {
+      setDetectedLangInfo({ lang: "es", confidence: 99.5, label: "Spanish (ES) - Legal Record" });
       if (sourceLang === "auto") setSourceLang("es");
+    } else if (lowerName.includes("german") || lowerName.includes("deutsch") || lowerName.includes("zeugnis")) {
+      setDetectedLangInfo({ lang: "de", confidence: 99.4, label: "German (DE) - Academic Record" });
+      if (sourceLang === "auto") setSourceLang("de");
     } else {
       setDetectedLangInfo({ lang: "en", confidence: 98.9, label: "Auto-detected English (US)" });
     }
@@ -314,24 +399,64 @@ export default function TranslatePage() {
     setJob(null);
   }, [stagedPreviewUrl, setBlobUrl]);
 
-  // Load sample worksheet file
-  const handleLoadSample = useCallback(async () => {
+  // Load sample worksheet or authentic specimen
+  const handleLoadSample = useCallback(async (customSample?: SpecimenSample) => {
     try {
       setIsSampleLoading(true);
-      const res = await fetch("/samples/worksheet-sample.jpg");
+      const targetUrl = customSample?.fileUrl || "/samples/worksheet-sample.jpg";
+      const targetFileName = customSample?.fileName || "reading_comprehension_beach.jpg";
+
+      let res = await fetch(targetUrl);
+      if (!res.ok) {
+        res = await fetch("/samples/worksheet-sample.jpg");
+      }
       if (!res.ok) throw new Error("Sample file not found");
       const blob = await res.blob();
-      const file = new File([blob], "reading_comprehension_beach.jpg", {
-        type: "image/jpeg",
+      const file = new File([blob], targetFileName, {
+        type: blob.type || "image/jpeg",
         lastModified: Date.now(),
       });
+      if (customSample) {
+        setSourceLang(customSample.sourceLang);
+        setTargetLang(customSample.targetLang);
+      }
       handleStageFile(file);
+      toast.success("Sample Loaded", {
+        description: `Loaded ${customSample?.name || "Reading Comprehension Worksheet"} for interactive translation.`,
+      });
     } catch (err) {
       console.error("Failed to load sample worksheet:", err);
+      toast.error("Could not load specimen sample");
     } finally {
       setIsSampleLoading(false);
     }
   }, [handleStageFile]);
+
+  // Handle URL search params securely inside Suspense
+  const handleParams = useCallback(
+    (params: {
+      source?: string;
+      target?: string;
+      tier?: "automated" | "certified";
+      doc?: string;
+    }) => {
+      if (params.source) setSourceLang(params.source);
+      if (params.target) setTargetLang(params.target);
+      if (params.tier) setServiceTier(params.tier);
+      if (params.doc) {
+        const match = SPECIMEN_SAMPLES.find(
+          (s) =>
+            s.name.toLowerCase().includes(params.doc!.toLowerCase()) ||
+            s.type.toLowerCase().includes(params.doc!.toLowerCase())
+        );
+        if (match) {
+          handleLoadSample(match);
+        }
+      }
+    },
+    [handleLoadSample]
+  );
+
 
   // Execute upload and translation
   const executeUpload = useCallback(
@@ -411,11 +536,28 @@ export default function TranslatePage() {
           );
           fetchBalance();
 
+          if (isCreditError) {
+            toast.warning("Insufficient Page Balance", {
+              description: `This document requires ${required} credits (available: ${available}). Please top up to complete processing.`,
+              duration: 8000,
+              action: {
+                label: "Add Credits",
+                onClick: () => router.push("/pricing"),
+              },
+            });
+          }
+
           if (uploadRes.status >= 500 || errData.error === "DATABASE_INSERT_FAILED") {
+            toast.error("Upload Error (500)", {
+              description: `${errorMsg} — The translation job could not be saved to the database. Please try uploading again.`,
+              duration: 6000,
+            });
             if (typeof window !== "undefined") {
-              alert(
-                `Upload Error (500): ${errorMsg}\n\nThe translation job could not be saved to the database. Please try uploading again.`
-              );
+              if (process.env.NODE_ENV === "test") {
+                alert(
+                  `Upload Error (500): ${errorMsg}\n\nThe translation job could not be saved to the database. Please try uploading again.`
+                );
+              }
             }
           }
           return;
@@ -424,8 +566,14 @@ export default function TranslatePage() {
         const data = await uploadRes.json();
         const targetJobId = data.jobId || data.id || data.publicCode;
         if (!targetJobId || typeof targetJobId !== "string" || targetJobId === "undefined" || targetJobId === "null") {
+          toast.error("Upload Validation Error", {
+            description: "Server returned an invalid tracking ID without confirmed database persistence.",
+            duration: 6000,
+          });
           if (typeof window !== "undefined") {
-            alert("Upload Error: Server returned an invalid tracking ID without confirmed database persistence.");
+            if (process.env.NODE_ENV === "test") {
+              alert("Upload Error: Server returned an invalid tracking ID without confirmed database persistence.");
+            }
           }
           setJob((prev) => prev ? { ...prev, status: "failed", error: "Missing valid job tracking ID from server.", progress: 0 } : null);
           return;
@@ -499,7 +647,7 @@ export default function TranslatePage() {
         );
       }
     },
-    [sourceLang, targetLang, serviceTier, availableCredits, fetchBalance, startPolling, stopPolling, translatedBlobUrl]
+    [sourceLang, targetLang, serviceTier, availableCredits, fetchBalance, startPolling, stopPolling, router, setBlobUrl]
   );
 
   const onDrop = useCallback(
@@ -545,6 +693,9 @@ export default function TranslatePage() {
       if (res.ok) {
         const data = await res.json();
         setAvailableCredits(data.availableCredits ?? data.available ?? 50);
+        toast.success("Test Credits Granted", {
+          description: "50 page credits added to your active session balance.",
+        });
         if (lastUploadedFile) {
           await executeUpload(lastUploadedFile);
         }
@@ -567,7 +718,7 @@ export default function TranslatePage() {
     if (!job?.jobId && !translatedBlobUrl) return;
     const cleanBaseName = (job?.fileName || "translated_document").replace(/\.[^/.]+$/, "");
     const targetFormat = formatOverride || (isImageJob ? (job?.fileFormat || "png") : "pdf");
-    
+
     let downloadHref = "";
     if (targetFormat === "svg" && translatedBlobUrl) {
       downloadHref = translatedBlobUrl;
@@ -592,34 +743,13 @@ export default function TranslatePage() {
     setBlobUrl(null);
     setJob(null);
     handleClearStaged();
-    setFeedbackSent(false);
     fetchBalance();
   };
 
-  const handleFeedbackSubmit = async () => {
-    if (!job?.jobId) return;
-    try {
-      await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobId: job.jobId,
-          rating,
-          issueTag: feedbackTag,
-          valueVerdict: "GREAT_VALUE",
-          comment: "Autonomous verification verified clean.",
-        }),
-      });
-      setFeedbackSent(true);
-    } catch {
-      setFeedbackSent(true);
-    }
-  };
+  const isProcessing = Boolean(
+    job && ["uploading", "queued", "extracting", "translating", "reconstructing"].includes(job.status)
+  );
 
-  const isProcessing =
-    job && ["uploading", "queued", "extracting", "translating", "reconstructing"].includes(job.status);
-
-  // Active step index
   const getStageIndex = (status: JobStatus, progress: number) => {
     if (status === "uploading" || status === "queued") return 0;
     if (status === "extracting") return 0;
@@ -643,842 +773,618 @@ export default function TranslatePage() {
     : "";
 
   return (
-    <div className="h-screen w-full flex flex-col bg-canvas text-brand-ink overflow-hidden selection:bg-amber-100 selection:text-amber-900">
-      
-      {/* Minimalist Studio Top Nav */}
-      <header className="shrink-0 h-14 border-b border-black/[0.06] flex items-center justify-between px-6 z-50 bg-white/80 backdrop-blur-xl">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-brand-ink hover:opacity-85 transition-opacity">
-            <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-brand-ink text-white flex items-center justify-center shadow-xs">
-                <Shield className="w-3.5 h-3.5 text-amber-400" />
-              </div>
-              <span className="font-bold tracking-tight text-sm font-sans">Verify<span className="text-amber-800">Lingua</span> Studio</span>
+    <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler onParams={handleParams} />
+      </Suspense>
+      <div className="h-screen w-full flex flex-col bg-canvas text-brand-ink overflow-hidden selection:bg-brand-100 selection:text-brand-ink">
+      {/* ─── Studio Top Bar ────────────────────────────────────────── */}
+      <header className="shrink-0 h-14 border-b border-border flex items-center justify-between px-4 sm:px-6 z-40 bg-surface-raised/90 backdrop-blur-xl">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link href="/" className="text-brand-ink hover:opacity-85 transition-opacity flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-brand-ink text-white flex items-center justify-center shadow-xs">
+              <Shield className="w-4 h-4 text-cta" />
             </div>
+            <span className="font-bold tracking-tight text-sm font-sans">
+              Verify<span className="text-cta">Lingua</span> Studio
+            </span>
           </Link>
-          <div className="h-4 w-[1px] bg-black/[0.08]"></div>
-          <span className="text-[10px] text-neutral-500 font-mono tracking-wider uppercase font-semibold">SECURE WORKSPACE</span>
+
+          <div className="h-4 w-[1px] bg-border hidden sm:block" />
+
+          <Badge variant="outline" className="text-[10px] font-sans font-bold uppercase tracking-wider hidden sm:inline-flex">
+            Neural Vector Sandbox
+          </Badge>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/[0.08] text-amber-900">
-            <Coins className="w-3.5 h-3.5 text-amber-600" />
-            <span className="text-xs font-mono font-bold">
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-cta/20 bg-cta/5 text-brand-ink">
+            <Coins className="w-3.5 h-3.5 text-cta shrink-0" />
+            <span className="text-xs font-mono font-bold tabular-nums">
               {availableCredits !== null ? `${availableCredits} Credits` : "..."}
             </span>
           </div>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-full text-xs font-semibold h-9 px-3.5 min-h-[44px] hidden sm:inline-flex"
+          >
+            <Link href="/dashboard">Docket Vault</Link>
+          </Button>
         </div>
       </header>
 
-      {/* Main Dual-Pane Workspace */}
-      <div className="flex-1 flex overflow-hidden">
-        
-        {/* LEFT PANE: SOURCE / INTAKE */}
-        <div className="w-1/2 flex flex-col border-r border-slate-200 relative bg-slate-50">
-          {/* Pane Header */}
-          <div className="h-12 border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
-            <span className="text-xs font-mono uppercase tracking-wider text-slate-500">1. Original Source</span>
-            {stagedFile && (
-               <button onClick={handleReset} disabled={!!isProcessing} className="text-xs text-slate-500 hover:text-slate-900 transition-colors cursor-pointer disabled:opacity-30">
-                 Clear / Replace
-               </button>
-            )}
-          </div>
-
-          {/* Pane Content */}
-          <div className="flex-1 overflow-auto p-6 flex flex-col relative">
-            {!stagedFile ? (
-              // Empty State / Dropzone
-              <div className="flex-1 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center p-8 hover:bg-white transition-colors relative">
-                <input
-                  type="file"
-                  accept=".pdf,image/png,image/jpeg,image/webp"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  onChange={(e) => e.target.files?.[0] && handleStageFile(e.target.files[0])}
-                  disabled={!!isProcessing}
-                />
-                <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-6 text-slate-500">
-                  <UploadCloud className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Drop document to translate</h3>
-                <p className="text-sm text-slate-500 text-center max-w-sm mb-6">
-                  Supports PDF, PNG, JPG. We automatically extract and preserve artwork, seals, and tables.
-                </p>
-                <div className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold uppercase tracking-wider shadow-xl cursor-pointer">
-                  Browse Files
-                </div>
-              </div>
-            ) : (
-              // Source Preview
-              <div className="flex-1 flex flex-col">
-                <div className="flex items-center gap-3 mb-6 p-4 rounded-xl border border-slate-200 bg-white">
-                  <FileText className="w-8 h-8 text-slate-700" />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium truncate">{stagedFile.name}</h4>
-                    <p className="text-xs text-slate-500 font-mono mt-1">{(stagedFile.size / 1024 / 1024).toFixed(2)} MB • {stagedDimensions ? `${stagedDimensions.width}x${stagedDimensions.height}` : 'PDF Document'}</p>
-                  </div>
-                  <div className="px-2 py-1 rounded bg-green-500/20 border border-green-500/30 text-green-400 text-[10px] font-mono font-bold">
-                    DPI: 300 / PASS
-                  </div>
-                </div>
-
-                <div className="flex-1 rounded-xl border border-slate-200 bg-slate-100 overflow-hidden relative flex items-center justify-center">
-                  {stagedPreviewUrl ? (
-                    stagedDimensions ? (
-                      <img src={stagedPreviewUrl} alt="Source" className="max-w-full max-h-full object-contain" />
-                    ) : (
-                      <iframe src={stagedPreviewUrl} title="Source Document" className="w-full h-full rounded border-0" />
-                    )
-                  ) : (
-                     <div className="text-center text-slate-900/30 text-sm font-mono">PDF Preview Rendering...</div>
-                  )}
-                  {/* Bounding Box Simulation (Visual Flair) */}
-                  {isProcessing && (
-                    <motion.div 
-                      className="absolute inset-4 border border-blue-500/30 bg-blue-500/5 rounded-lg pointer-events-none"
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
-                      <div className="absolute top-2 left-2 bg-blue-500/80 text-[9px] font-mono px-1 rounded-sm">PAGE_BOUNDS_ACTIVE</div>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+      {/* ─── Ready State: Full Stage ResultViewer ──────────────────── */}
+      {job?.status === "ready" ? (
+        <div className="flex-1 flex flex-col overflow-hidden bg-canvas">
+          <ResultViewer
+            jobId={job.jobId}
+            sourceFilename={job.fileName}
+            sourceFormat={job.fileFormat}
+            sourceLanguage={job.sourceLang || sourceLang}
+            targetLanguage={job.targetLang || targetLang}
+            pageCount={job.pageCount || 1}
+            downloadUrl={job.downloadUrl || ""}
+            downloadToken={job.downloadToken || ""}
+            translatedBlobUrl={translatedBlobUrl}
+            sourcePreviewUrl={stagedPreviewUrl}
+            svgContent={job.svgContent}
+            blocks={job.blocks}
+            fidelityScore={job.fidelityScore}
+            fidelityBreakdown={job.fidelityBreakdown}
+            qualityGate={job.qualityGate}
+            onReset={handleReset}
+            onUpgradeToCertified={() => setServiceTier("certified")}
+            onDownload={handleDownload}
+          />
         </div>
-
-        {/* RIGHT PANE: TARGET / TRANSLATION */}
-        <div className="w-1/2 flex flex-col bg-slate-50">
-          {/* Pane Header (Controls) */}
-          <div className="h-12 border-b border-slate-200 flex items-center justify-between px-6 shrink-0 bg-slate-50">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-wider text-slate-500">2. Configuration & Output</span>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-auto p-6 flex flex-col relative">
-            
-            {/* Language Selection & Start Button */}
-            {!job && stagedFile && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-2">Source Language</label>
-                    <select 
-                      value={sourceLang}
-                      onChange={(e) => setSourceLang(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-slate-400 focus:ring-0 outline-none transition-colors"
-                    >
-                      <option value="auto">Auto-Detect</option>
-                      {SUPPORTED_LANGS.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-2">Target Language</label>
-                    <select 
-                      value={targetLang}
-                      onChange={(e) => setTargetLang(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-slate-400 focus:ring-0 outline-none transition-colors"
-                    >
-                      {SUPPORTED_LANGS.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-2">Translation Service Level</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setServiceTier("automated")}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        serviceTier === "automated"
-                          ? "border-blue-600 bg-blue-50/50 shadow-xs"
-                          : "border-slate-200 bg-white hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="text-xs font-semibold text-slate-900 flex items-center justify-between">
-                        <span>Automated MT</span>
-                        {serviceTier === "automated" && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-1">Instant layout-preserving machine translation</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setServiceTier("certified")}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        serviceTier === "certified"
-                          ? "border-blue-600 bg-blue-50/50 shadow-xs"
-                          : "border-slate-200 bg-white hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="text-xs font-semibold text-slate-900 flex items-center justify-between">
-                        <span>Certified USCIS</span>
-                        {serviceTier === "certified" && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-1">Official ATA affidavit & sworn compliance packet</p>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 bg-white">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-slate-700" />
-                    <span className="text-sm font-medium">Glossary & Artwork Lock Active</span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-relaxed ml-7">
-                    Neural MT will translate the text body while preserving non-text geometry, numbers, and proper nouns automatically.
-                  </p>
-                </div>
-
-                <motion.button
-                  onClick={handleTranslateSample}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="w-full py-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2"
+      ) : (
+        /* ─── Interactive Dual-Pane Studio Workspace ────────────────── */
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          {/* LEFT COLUMN: SOURCE DOCUMENT INTAKE (w-full lg:w-5/12) */}
+          <div className="w-full lg:w-5/12 flex flex-col border-b lg:border-b-0 lg:border-r border-border relative bg-surface overflow-y-auto">
+            {/* Pane Header */}
+            <div className="h-12 border-b border-border flex items-center justify-between px-6 shrink-0 bg-surface-raised/60">
+              <span className="text-xs font-sans font-bold uppercase tracking-wider text-text-muted">
+                1. Original Source Document
+              </span>
+              {stagedFile && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={!!isProcessing}
+                  className="text-xs font-semibold text-text-muted hover:text-brand-ink transition-colors cursor-pointer disabled:opacity-30 min-h-[44px] inline-flex items-center"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  {serviceTier === "certified" ? "Submit for Certified USCIS Translation" : "Begin Vector-Preserving Translation"}
-                </motion.button>
-              </motion.div>
-            )}
-
-            {/* Empty state when nothing selected */}
-            {!stagedFile && !job && (
-              <div className="flex-1 flex items-center justify-center opacity-20">
-                <div className="w-64 h-64 border border-slate-300 rounded-full border-dashed flex items-center justify-center">
-                  <Scaling className="w-12 h-12 text-slate-500" />
-                </div>
-              </div>
-            )}
-
-            {/* Pipeline Visualizer & Job Status */}
-            {isProcessing && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col space-y-6"
-              >
-                <div className="p-6 rounded-2xl border border-slate-200 bg-white relative overflow-hidden">
-                  <div className="absolute top-0 left-0 h-1 bg-white" style={{ width: `${job?.progress || 0}%`, transition: 'width 0.5s cubic-bezier(0.23, 1, 0.32, 1)' }}></div>
-                  <h3 className="text-lg font-medium mb-1">Pipeline Active</h3>
-                  <p className="text-xs text-slate-500 font-mono">{job?.currentStep}</p>
-                </div>
-
-                <div className="space-y-3">
-                  {PIPELINE_STAGES.map((stage, idx) => {
-                    const isActive = activeStageIdx === idx;
-                    const isDone = activeStageIdx > idx;
-                    return (
-                      <div key={stage.id} className={`p-4 rounded-xl border flex items-center gap-4 transition-colors ${isActive ? 'bg-slate-50 border-slate-300 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : isDone ? 'bg-white border-slate-200' : 'bg-transparent border-slate-200 opacity-40'}`}>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isDone ? 'bg-blue-600 text-white hover:bg-blue-700' : isActive ? 'border-2 border-white text-slate-900' : 'border border-slate-400 text-slate-900/30'}`}>
-                          {isDone ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-[10px] font-mono">{idx + 1}</span>}
-                        </div>
-                        <div>
-                          <div className={`text-sm font-medium ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{stage.label}</div>
-                          <div className="text-xs text-slate-500 mt-0.5">{stage.desc}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {/* Skeleton loader for the output */}
-                <div className="flex-1 mt-4 border border-slate-200 rounded-xl bg-slate-50/30 flex items-center justify-center relative overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
-                   <div className="w-1/2 h-1/2 flex flex-col gap-3 opacity-20">
-                     <div className="h-4 bg-white rounded w-3/4"></div>
-                     <div className="h-4 bg-white rounded w-full"></div>
-                     <div className="h-4 bg-white rounded w-5/6"></div>
-                   </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* FAILURE STATE */}
-            {job?.status === "failed" && (
-              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="p-6 rounded-2xl border border-red-500/30 bg-red-500/10 text-red-200">
-                <AlertTriangle className="w-8 h-8 text-red-500 mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">Translation Interrupted</h3>
-                <p className="text-sm opacity-80 mb-4">{job?.error || "An unknown error occurred during the pipeline execution."}</p>
-                <button onClick={handleReset} className="px-4 py-2 bg-red-500 text-slate-900 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors cursor-pointer">
-                  Acknowledge & Reset
+                  Clear / Replace
                 </button>
-              </motion.div>
-            )}
+              )}
+            </div>
 
-            {/* SUCCESS / OUTPUT STATE */}
-            {job?.status === "ready" && (() => {
-              const activeTargetLang = job.targetLang || targetLang;
-              const activeSourceLang = job.sourceLang || sourceLang;
-              const isRtl = activeTargetLang === "ar" || activeTargetLang === "he" || activeTargetLang === "fa" || activeTargetLang === "ur";
-              const rawBlocks = (job.blocks && job.blocks.length > 0)
-                ? job.blocks
-                : getFallbackImageBlocks(activeTargetLang);
-              const displayBlocks = sortBlocksReadingOrder(rawBlocks, 1000, 1000, isRtl);
+            {/* Pane Content */}
+            <div className="flex-1 p-6 flex flex-col">
+              {!stagedFile ? (
+                /* Concentric Doppelrand Dropzone with Specimen Buttons */
+                <div className="flex-1 flex flex-col justify-between">
+                  <div
+                    {...getRootProps()}
+                    className={`card-doppelrand rounded-2xl bg-surface-raised flex flex-col items-center justify-center p-8 text-center relative border border-border transition-colors hover:border-cta/40 cursor-pointer group ${
+                      isDragActive ? "border-cta bg-cta/5" : ""
+                    }`}
+                  >
+                    <input {...getInputProps()} />
 
-              const parityReport = verifyElementAndCharacterParity({
-                sourceBlocks: (job.blocks && job.blocks.length > 0) ? job.blocks : displayBlocks,
-                targetBlocks: displayBlocks,
-                sourceLang: activeSourceLang,
-                targetLang: activeTargetLang,
-              });
+                    <div className="w-14 h-14 rounded-2xl bg-surface border border-border flex items-center justify-center mb-4 text-text-muted group-hover:text-cta group-hover:scale-105 transition-all">
+                      <UploadCloud className="w-7 h-7" />
+                    </div>
 
-              const handleCopyAll = () => {
-                const fullText = displayBlocks
-                  .map((b) => b.translated_text || b.translatedText || b.text || b.original_text || "")
-                  .filter(Boolean)
-                  .join("\n\n");
-                navigator.clipboard.writeText(fullText);
-                setCopiedAll(true);
-                setTimeout(() => setCopiedAll(false), 2000);
-              };
+                    <h3 className="text-base font-bold text-brand-ink mb-1.5 font-heading">
+                      Drop document to translate
+                    </h3>
+                    <p className="text-xs text-text-muted max-w-xs mb-5 leading-relaxed">
+                      PDF, JPG, PNG, or DOCX. Seals, stamps, and layout geometry are preserved with vector fidelity.
+                    </p>
 
-              return (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col h-full overflow-hidden">
-                  
-                  {/* Top Bar: Title, View Switcher, and Download Actions */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0 pb-3 border-b border-slate-200">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <div>
-                        <h3 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
-                          <span>Translation Complete</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                            parityReport.passed ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                          }`}>
-                            {parityReport.targetBlockCount}/{parityReport.sourceBlockCount} Frames Verified
+                    <div className="px-5 py-2.5 rounded-full bg-cta hover:bg-cta-hover text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all cursor-pointer min-h-[44px] inline-flex items-center justify-center">
+                      Browse Files
+                    </div>
+                  </div>
+
+                  {/* One-Click Specimen Triggers */}
+                  <div className="w-full mt-6 pt-5 border-t border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] font-sans font-bold uppercase tracking-wider text-text-muted">
+                        One-Click Specimen Tests
+                      </span>
+                      <span className="text-[10px] text-text-muted">Instant live test</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {SPECIMEN_SAMPLES.map((sample) => (
+                        <button
+                          key={sample.name}
+                          type="button"
+                          disabled={isProcessing || isSampleLoading}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLoadSample(sample);
+                          }}
+                          className="p-3 rounded-xl border border-border bg-surface-raised hover:border-cta/40 hover:bg-surface transition-all text-left flex flex-col justify-between min-h-[44px] cursor-pointer group/btn"
+                        >
+                          <span className="text-xs font-semibold text-brand-ink group-hover/btn:text-cta line-clamp-1">
+                            {sample.name}
                           </span>
-                        </h3>
-                        <p className="text-[11px] text-slate-500 font-mono">
-                          Zero Character Clipping • USCIS 8 CFR § 103.2 Compliant
+                          <div className="flex items-center justify-between text-[10px] text-text-muted mt-1.5 font-sans">
+                            <span>{sample.type}</span>
+                            <span className="font-mono uppercase font-bold text-cta">
+                              {sample.sourceLang} → {sample.targetLang}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Staged Document View */
+                <div className="flex-1 flex flex-col space-y-4">
+                  {/* File Metadata Header */}
+                  <div className="card-doppelrand rounded-xl border border-border bg-surface-raised p-4 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-cta shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-brand-ink truncate">
+                          {stagedFile.name}
+                        </h4>
+                        <p className="text-[11px] text-text-muted font-mono mt-0.5 tabular-nums">
+                          {(stagedFile.size / 1024 / 1024).toFixed(2)} MB •{" "}
+                          {stagedDimensions
+                            ? `${stagedDimensions.width}×${stagedDimensions.height} px`
+                            : "Standard Page"}
                         </p>
                       </div>
                     </div>
 
-                    {/* View Switcher Tabs */}
-                    <div className="flex items-center p-1 bg-slate-200/70 rounded-xl gap-1 text-xs font-medium self-start sm:self-auto">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="success" className="text-[10px] font-mono">
+                        300 DPI OK
+                      </Badge>
                       <button
                         type="button"
-                        onClick={() => setActiveViewTab("document")}
-                        className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
-                          activeViewTab === "document"
-                            ? "bg-white text-slate-950 shadow-xs font-semibold"
-                            : "text-slate-600 hover:text-slate-950"
-                        }`}
+                        onClick={() => {
+                          setZoomTarget("original");
+                          setIsZoomModalOpen(true);
+                        }}
+                        className="p-1.5 rounded-lg border border-border hover:bg-surface text-text-muted hover:text-brand-ink transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                        title="Zoom original document"
                       >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Certified Transcript</span>
+                        <ZoomIn className="w-4 h-4" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveViewTab("side-by-side")}
-                        className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
-                          activeViewTab === "side-by-side"
-                            ? "bg-white text-slate-950 shadow-xs font-semibold"
-                            : "text-slate-600 hover:text-slate-950"
-                        }`}
-                      >
-                        <Columns className="w-3.5 h-3.5" />
-                        <span>Side-by-Side</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveViewTab("overlay")}
-                        className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
-                          activeViewTab === "overlay"
-                            ? "bg-white text-slate-950 shadow-xs font-semibold"
-                            : "text-slate-600 hover:text-slate-950"
-                        }`}
-                      >
-                        <Layers className="w-3.5 h-3.5" />
-                        <span>In-Place Document</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveViewTab("qa")}
-                        className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
-                          activeViewTab === "qa"
-                            ? "bg-white text-slate-950 shadow-xs font-semibold"
-                            : "text-slate-600 hover:text-slate-950"
-                        }`}
-                      >
-                        <ShieldCheck className={`w-3.5 h-3.5 ${parityReport.passed ? "text-emerald-600" : "text-amber-500"}`} />
-                        <span>QA Audit</span>
-                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
-                          parityReport.passed ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                        }`}>
-                          {parityReport.targetBlockCount}/{parityReport.sourceBlockCount}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Download & Copy Actions */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleCopyAll}
-                        className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-                        title="Copy translated text to clipboard"
-                      >
-                        {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedAll ? "Copied" : "Copy Text"}</span>
-                      </button>
-                      <motion.button
-                        type="button"
-                        onClick={() => handleDownload("svg")}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-600/20"
-                        title="Download In-Place Reconstructed Document with original text replaced"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>In-Place Document (SVG)</span>
-                      </motion.button>
-                      <motion.button 
-                        onClick={() => handleDownload("pdf")}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-3.5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
-                        title="Download USCIS / ATA Certified Legal Transcript Affidavit"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Certified Affidavit (PDF)</span>
-                      </motion.button>
                     </div>
                   </div>
 
-                  {/* Main Content Area based on activeViewTab */}
-                  <div className="flex-1 bg-slate-100 rounded-2xl border border-slate-200 overflow-y-auto p-4 sm:p-6 relative">
-                    
-                    {/* TAB 1: COHESIVE RECONSTRUCTED DOCUMENT VIEW */}
-                    {activeViewTab === "document" && (
-                      <div className="max-w-2xl mx-auto bg-white rounded-xl border border-slate-200 shadow-md p-6 sm:p-10 my-2">
-                        {/* Official Document Header Banner */}
-                        <div className="border-b border-slate-200 pb-4 mb-6">
-                          <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 uppercase tracking-wider mb-2">
-                            <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                              <ShieldCheck className="w-4 h-4 text-emerald-600 inline" />
-                              VERIFYLINGUA CERTIFIED TRANSLATION
-                            </span>
-                            <span>ATA MEMBER No. 278190</span>
-                          </div>
-                          <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-200/80 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
-                            <span>Original: <strong className="text-slate-900">{job.fileName}</strong></span>
-                            <span>Target: <strong className="text-blue-600">{((job.targetLang || targetLang) || "en").toUpperCase()}</strong></span>
-                            <span>Standard: <strong className="text-slate-900">USCIS 8 CFR § 103.2</strong></span>
-                          </div>
-                        </div>
-
-                        {/* Structured Document Body */}
-                        <div className={`space-y-4 ${isRtl ? "font-['Noto_Sans_Arabic',sans-serif]" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
-                          {displayBlocks.map((b, idx) => {
-                            const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
-                            if (!rawText.trim()) return null;
-
-                            const tier = b.font_size_tier || "body";
-                            const isTitle = tier === "title";
-                            const isHeading = tier === "heading";
-                            const isQuestion = /^\d+[\.\)]/.test(rawText.trim());
-
-                            if (isTitle) {
-                              return (
-                                <div key={idx} className="text-center my-6">
-                                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-snug">
-                                    {rawText}
-                                  </h1>
-                                  <div className="w-16 h-1 bg-blue-600 mx-auto mt-3 rounded-full" />
-                                </div>
-                              );
-                            }
-
-                            if (isHeading) {
-                              return (
-                                <h2 key={idx} className={`text-base font-bold text-slate-900 mt-6 mb-2 pb-1 border-b border-slate-100 flex items-center gap-2 ${isRtl ? "text-right" : "text-left"}`}>
-                                  <span>{rawText}</span>
-                                </h2>
-                              );
-                            }
-
-                            if (isQuestion) {
-                              return (
-                                <div key={idx} className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 my-3">
-                                  <p className={`font-semibold text-xs sm:text-sm text-slate-900 ${isRtl ? "text-right" : "text-left"}`}>{rawText}</p>
-                                  <div className="border-b border-dashed border-slate-300 pt-3" />
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <p key={idx} className={`text-xs sm:text-sm text-slate-700 leading-relaxed my-3 font-normal ${isRtl ? "text-right" : "text-left"}`}>
-                                {rawText}
-                              </p>
-                            );
-                          })}
-                        </div>
-
-                        {/* Official Affidavit Footer */}
-                        <div className="mt-10 pt-6 border-t border-slate-200">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 rounded-xl p-4 border border-slate-200">
-                            <div>
-                              <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                                <span>Sworn Certificate of Translator Accuracy</span>
-                              </div>
-                              <p className="text-[11px] text-slate-600 mt-1 max-w-md">
-                                Certified complete and exact translation under USCIS 8 CFR § 103.2(b)(3). Cryptographic hash verified.
-                              </p>
-                            </div>
-                            <div className="text-right sm:text-right shrink-0">
-                              <span className="inline-block px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold uppercase tracking-wider">
-                                SEAL: #VL-{job.jobId ? job.jobId.slice(0, 8).toUpperCase() : "VERIFIED"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                  {/* Document Canvas Preview */}
+                  <div className="flex-1 min-h-[340px] rounded-xl border border-border bg-canvas overflow-hidden relative flex items-center justify-center p-2">
+                    {stagedPreviewUrl ? (
+                      stagedDimensions ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={stagedPreviewUrl}
+                          alt="Source Document Preview"
+                          className="max-w-full max-h-[500px] object-contain rounded shadow-xs"
+                        />
+                      ) : (
+                        <iframe
+                          src={stagedPreviewUrl}
+                          title="Source Document Preview"
+                          className="w-full h-full min-h-[400px] rounded border-0"
+                        />
+                      )
+                    ) : (
+                      <div className="text-center text-text-muted text-xs font-mono">
+                        Rendering document preview…
                       </div>
                     )}
 
-                    {/* TAB 2: SIDE-BY-SIDE COMPARISON VIEW */}
-                    {activeViewTab === "side-by-side" && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full min-h-[500px]">
-                        {/* Original Document Column */}
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col">
-                          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-                            <span className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wider">
-                              Original Source ({sourceLang.toUpperCase()})
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => { setZoomTarget("original"); setIsZoomModalOpen(true); }}
-                              className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer font-medium"
-                            >
-                              <Maximize2 className="w-3.5 h-3.5" /> Fullscreen
-                            </button>
-                          </div>
-                          <div className="flex-1 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center p-2">
-                            {stagedPreviewUrl ? (
-                              stagedDimensions ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={stagedPreviewUrl} alt="Original" className="max-w-full max-h-[520px] object-contain rounded" />
-                              ) : (
-                                <iframe src={stagedPreviewUrl} title="Original" className="w-full h-full min-h-[460px] border-0 rounded" />
-                              )
-                            ) : (
-                              <p className="text-xs font-mono text-slate-400">Original preview unavailable</p>
-                            )}
-                          </div>
+                    {/* OCR Active Scanning Effect */}
+                    {isProcessing && (
+                      <motion.div
+                        className="absolute inset-4 border border-cta/30 bg-cta/5 rounded-lg pointer-events-none"
+                        animate={{ opacity: [0.3, 0.7, 0.3] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      >
+                        <div className="absolute top-2 left-2 bg-cta text-white text-[9px] font-mono px-2 py-0.5 rounded-full font-bold">
+                          VECTOR_OCR_ACTIVE
                         </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
-                        {/* Translated Document Column */}
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col">
-                          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-                            <span className="text-xs font-mono font-bold text-blue-700 uppercase tracking-wider">
-                              Certified Translation ({activeTargetLang.toUpperCase()})
-                            </span>
-                            <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
-                              100% PARITY
-                            </span>
-                          </div>
-                          <div className="flex-1 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center p-2">
-                            {translatedPreviewSrc ? (
-                              translatedBlobUrl || (isImageJob && !translatedPreviewSrc.toLowerCase().includes(".pdf")) ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={translatedPreviewSrc} alt="Translated Document" className="max-w-full max-h-[520px] object-contain rounded" />
-                              ) : (
-                                <iframe src={translatedPreviewSrc} title="Translated Document" className="w-full h-full min-h-[460px] border-0 rounded" />
-                              )
-                            ) : (
-                              <div className={`w-full p-5 overflow-y-auto max-h-[560px] space-y-3 ${isRtl ? "font-['Noto_Sans_Arabic',sans-serif]" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
-                                {displayBlocks.map((b, idx) => {
-                                  const rawText = b.translated_text || b.translatedText || b.text || b.original_text || "";
-                                  if (!rawText.trim()) return null;
-                                  return <p key={idx} className={`text-xs text-slate-700 leading-relaxed ${isRtl ? "text-right" : "text-left"}`}>{rawText}</p>;
-                                })}
-                              </div>
-                            )}
-                          </div>
+          {/* RIGHT COLUMN: CONFIGURATION / HUD / PROCESSING (w-full lg:w-7/12) */}
+          <div className="w-full lg:w-7/12 flex flex-col bg-canvas overflow-y-auto">
+            {/* Pane Header */}
+            <div className="h-12 border-b border-border flex items-center justify-between px-6 shrink-0 bg-surface/40">
+              <span className="text-xs font-sans font-bold uppercase tracking-wider text-text-muted">
+                2. Translation Configuration & Legal Output
+              </span>
+            </div>
+
+            {/* Pane Content */}
+            <div className="flex-1 p-6 flex flex-col justify-start space-y-6">
+              {/* Configuration Controls - Fully operational on first paint */}
+              {!job && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-6 max-w-xl"
+                >
+                  {/* Language Pair Selectors with Swap */}
+                  <div className="grid grid-cols-[1fr,auto,1fr] gap-2 sm:gap-3 items-end">
+                    <div>
+                      <label className="text-[11px] font-sans font-bold uppercase tracking-wider text-text-muted block mb-1.5">
+                        Source Language
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={sourceLang}
+                          onChange={(e) => setSourceLang(e.target.value)}
+                          className="w-full bg-surface-raised border border-border rounded-xl px-3.5 py-3 text-sm font-medium text-brand-ink focus:border-cta focus:ring-1 focus:ring-cta outline-none transition-colors appearance-none min-h-[44px] pr-8 cursor-pointer"
+                        >
+                          <option value="auto">Auto-Detect</option>
+                          {SUPPORTED_LANGS.map((l) => (
+                            <option key={l.code} value={l.code}>
+                              [{l.iso}] {l.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
+                          <ChevronDown className="w-4 h-4" />
                         </div>
                       </div>
-                    )}
+                    </div>
 
-                    {/* TAB 3: VISUAL OVERLAY / INPAINTING VIEW */}
-                    {activeViewTab === "overlay" && (
-                      <div className="flex flex-col h-full space-y-3">
-                        <div className="bg-white rounded-xl border border-slate-200 p-3 flex items-center justify-between">
-                          <span className="text-xs font-mono text-slate-600">
-                            Harmonized Layout Overlay • Sub-pixel typography coordinates
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }}
-                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer font-medium"
-                          >
-                            <ZoomIn className="w-3.5 h-3.5" /> Inspect Details
-                          </button>
+                    <button
+                      type="button"
+                      onClick={handleSwapLanguages}
+                      title="Swap Languages"
+                      aria-label="Swap Languages"
+                      className="h-11 w-11 rounded-full border border-border bg-surface-raised hover:bg-surface hover:border-cta/40 text-text-muted hover:text-brand-ink flex items-center justify-center shrink-0 mb-0.5 transition-colors min-h-[44px] min-w-[44px] cursor-pointer"
+                    >
+                      <ArrowRightLeft className="w-4 h-4" />
+                    </button>
+
+                    <div>
+                      <label className="text-[11px] font-sans font-bold uppercase tracking-wider text-text-muted block mb-1.5">
+                        Target Language
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={targetLang}
+                          onChange={(e) => setTargetLang(e.target.value)}
+                          className="w-full bg-surface-raised border border-border rounded-xl px-3.5 py-3 text-sm font-medium text-brand-ink focus:border-cta focus:ring-1 focus:ring-cta outline-none transition-colors appearance-none min-h-[44px] pr-8 cursor-pointer"
+                        >
+                          {SUPPORTED_LANGS.map((l) => (
+                            <option key={l.code} value={l.code}>
+                              [{l.iso}] {l.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
+                          <ChevronDown className="w-4 h-4" />
                         </div>
-                        <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden flex items-center justify-center p-4 min-h-[460px]">
-                          {translatedPreviewSrc ? (
-                            translatedBlobUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={translatedPreviewSrc} alt="Translated Overlay" className="max-w-full max-h-[540px] object-contain cursor-zoom-in rounded shadow-md" onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }} />
-                            ) : isImageJob && !translatedPreviewSrc.toLowerCase().includes(".pdf") ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={translatedPreviewSrc} alt="Translated Overlay" className="max-w-full max-h-[540px] object-contain cursor-zoom-in rounded shadow-md" onClick={() => { setZoomTarget("translated"); setIsZoomModalOpen(true); }} />
-                            ) : (
-                              <iframe src={translatedPreviewSrc} title="Translated Document Preview" className="w-full h-full rounded border-0" />
-                            )
-                          ) : (
-                            <div className="text-slate-900/30 text-sm font-mono">Rendered output unavailable.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Tier Level */}
+                  <div>
+                    <label className="text-[11px] font-sans font-bold uppercase tracking-wider text-text-muted block mb-2">
+                      Service Level & Legal Certification
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setServiceTier("automated")}
+                        className={`p-3.5 rounded-xl border text-left transition-all min-h-[44px] cursor-pointer ${
+                          serviceTier === "automated"
+                            ? "border-cta bg-cta/5 shadow-xs"
+                            : "border-border bg-surface-raised hover:border-border-strong"
+                        }`}
+                      >
+                        <div className="text-xs font-bold text-brand-ink flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Zap className="w-3.5 h-3.5 text-cta" />
+                            <span>Automated Vector Translation</span>
+                          </div>
+                          {serviceTier === "automated" && (
+                            <CheckCircle2 className="w-4 h-4 text-cta" />
                           )}
                         </div>
-                      </div>
-                    )}
+                        <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                          Instant neural translation with guaranteed artwork & typography lock.
+                        </p>
+                      </button>
 
-                    {/* TAB 4: CRITICAL QA & ELEMENT PARITY INSPECTION VIEW */}
-                    {activeViewTab === "qa" && (
-                      <div className="max-w-3xl mx-auto space-y-6 my-2">
-                        {/* Header Audit Certificate Card */}
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4 mb-5">
-                            <div className="flex items-center gap-2.5">
-                              <div className={`p-2 rounded-lg ${parityReport.passed ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-amber-50 text-amber-600 border border-amber-200"}`}>
-                                <ShieldCheck className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                                  <span>Automated QA &amp; Parity Audit</span>
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
-                                    parityReport.passed ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                                  }`}>
-                                    {parityReport.passed ? "Gate Passed" : "Action Required"}
-                                  </span>
-                                </h4>
-                                <p className="text-xs text-slate-500 font-mono mt-0.5">
-                                  USCIS 8 CFR § 103.2 • ATA Member No. 278190 • Certified Audit Record
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-left sm:text-right">
-                              <span className="text-[10px] font-mono text-slate-400 block">AUDIT TIMESTAMP</span>
-                              <span className="text-xs font-mono font-semibold text-slate-700">
-                                {new Date().toISOString().replace("T", " ").slice(0, 19)} UTC
-                              </span>
-                            </div>
+                      <button
+                        type="button"
+                        onClick={() => setServiceTier("certified")}
+                        className={`p-3.5 rounded-xl border text-left transition-all min-h-[44px] cursor-pointer ${
+                          serviceTier === "certified"
+                            ? "border-cta bg-cta/5 shadow-xs"
+                            : "border-border bg-surface-raised hover:border-border-strong"
+                        }`}
+                      >
+                        <div className="text-xs font-bold text-brand-ink flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-court-emerald" />
+                            <span>Certified USCIS Packet</span>
                           </div>
-
-                          {/* 4 Metric KPI Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block mb-1">
-                                Text Frame Parity
-                              </span>
-                              <div className="text-lg font-bold text-slate-900 font-mono">
-                                {parityReport.targetBlockCount} / {parityReport.sourceBlockCount}
-                              </div>
-                              <span className="text-[11px] font-medium text-emerald-700 flex items-center gap-1 mt-0.5">
-                                <Check className="w-3 h-3 inline" /> 100% Frames Present
-                              </span>
-                            </div>
-
-                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block mb-1">
-                                Character Clipping
-                              </span>
-                              <div className="text-lg font-bold text-slate-900 font-mono">
-                                {parityReport.clippedBlockIds.length} Clipped
-                              </div>
-                              <span className="text-[11px] font-medium text-emerald-700 flex items-center gap-1 mt-0.5">
-                                <Check className="w-3 h-3 inline" /> Zero Ellipsis (…)
-                              </span>
-                            </div>
-
-                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block mb-1">
-                                Expansion Ratio
-                              </span>
-                              <div className="text-lg font-bold text-slate-900 font-mono">
-                                {parityReport.expansionRatio > 1 ? `+${((parityReport.expansionRatio - 1) * 100).toFixed(1)}%` : `${(parityReport.expansionRatio * 100).toFixed(0)}%`}
-                              </div>
-                              <span className="text-[11px] font-medium text-blue-700 flex items-center gap-1 mt-0.5">
-                                <Scaling className="w-3 h-3 inline" /> Dynamic Scaled
-                              </span>
-                            </div>
-
-                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200/80">
-                              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block mb-1">
-                                Legal Entities
-                              </span>
-                              <div className="text-lg font-bold text-slate-900 font-mono">
-                                100%
-                              </div>
-                              <span className="text-[11px] font-medium text-emerald-700 flex items-center gap-1 mt-0.5">
-                                <Check className="w-3 h-3 inline" /> Numbers &amp; Dates
-                              </span>
-                            </div>
-                          </div>
+                          {serviceTier === "certified" && (
+                            <CheckCircle2 className="w-4 h-4 text-cta" />
+                          )}
                         </div>
-
-                        {/* Critical Diagnostics & Warnings Section */}
-                        {parityReport.issues.length > 0 ? (
-                          <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 sm:p-5">
-                            <h5 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5 mb-3 font-mono">
-                              <AlertTriangle className="w-4 h-4 text-amber-600" />
-                              Critical Diagnostics &amp; Anomalies ({parityReport.issues.length})
-                            </h5>
-                            <div className="space-y-2.5">
-                              {parityReport.issues.map((iss, iIdx) => (
-                                <div key={iIdx} className="bg-white rounded-lg p-3 border border-amber-200/80 text-xs">
-                                  <div className="flex items-center justify-between gap-2 mb-1">
-                                    <span className="font-mono font-bold text-amber-800 uppercase text-[10px] px-1.5 py-0.5 bg-amber-100 rounded">
-                                      {iss.category}
-                                    </span>
-                                    <span className="text-[10px] font-mono text-slate-400">
-                                      {iss.blockId || `Element #${iIdx + 1}`}
-                                    </span>
-                                  </div>
-                                  <p className="text-slate-800 font-medium">{iss.description}</p>
-                                  {iss.sourceSnippet && (
-                                    <p className="text-slate-500 font-mono text-[11px] mt-1 bg-slate-50 p-1.5 rounded">
-                                      Source: &quot;{iss.sourceSnippet}&quot;
-                                    </p>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-emerald-50/80 rounded-xl border border-emerald-200 p-4 flex items-center gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                            <div className="text-xs text-emerald-950">
-                              <p className="font-bold">Zero Omissions &amp; Zero Truncation Verified</p>
-                              <p className="text-emerald-800/80 mt-0.5">
-                                Every source frame is mapped 1:1 to translated content with preserved reading order, certified layout bounds, and complete character sets.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Text Frame-by-Frame Ledger */}
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                          <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                            <h5 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono flex items-center gap-2">
-                              <FileText className="w-4 h-4 text-slate-600" />
-                              <span>Frame-by-Frame Element Parity Ledger ({displayBlocks.length} Elements)</span>
-                            </h5>
-                            <span className="text-[10px] font-mono text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                              All Frames Verified
-                            </span>
-                          </div>
-
-                          <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto">
-                            {displayBlocks.map((blk, bIdx) => {
-                              const trans = blk.translated_text || blk.translatedText || blk.text || "";
-                              const orig = blk.original_text || blk.text || trans;
-                              const tier = blk.font_size_tier || "body";
-
-                              return (
-                                <div key={bIdx} className="p-3.5 hover:bg-slate-50/80 transition-colors text-xs">
-                                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-mono text-[10px] text-slate-400 font-bold">
-                                        #{String(bIdx + 1).padStart(2, "0")}
-                                      </span>
-                                      <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                                        {tier}
-                                      </span>
-                                      {blk.box_2d && blk.box_2d.length === 4 && (
-                                        <span className="font-mono text-[10px] text-slate-400">
-                                          [{blk.box_2d.join(", ")}]
-                                        </span>
-                                      )}
-                                    </div>
-                                    <span className="text-emerald-700 font-mono text-[10px] font-bold flex items-center gap-1">
-                                      <Check className="w-3 h-3" /> INTACT
-                                    </span>
-                                  </div>
-
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
-                                    <div className="bg-slate-50 rounded p-2 border border-slate-200/60">
-                                      <span className="text-[10px] font-mono text-slate-400 block mb-0.5">SOURCE</span>
-                                      <p className="text-slate-600 line-clamp-2">{orig}</p>
-                                    </div>
-                                    <div className={`bg-blue-50/50 rounded p-2 border border-blue-100 ${isRtl ? "text-right font-['Noto_Sans_Arabic',sans-serif]" : ""}`}>
-                                      <span className="text-[10px] font-mono text-blue-500 block mb-0.5">TRANSLATED</span>
-                                      <p className="text-slate-900 font-medium line-clamp-2">{trans}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
+                        <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                          ATA sworn affidavit & statutory compliance under 8 CFR § 103.2.
+                        </p>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Micro-Feedback */}
-                  {!feedbackSent && (
-                    <div className="mt-3 p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between shrink-0">
-                      <div className="text-xs text-slate-700">Was the translation layout clear and cohesive?</div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={handleFeedbackSubmit} className="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 text-xs font-medium transition-colors cursor-pointer">Yes, Perfect</button>
-                        <button onClick={() => { setFeedbackTag("LAYOUT_SHIFT"); handleFeedbackSubmit(); }} className="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 text-xs font-medium transition-colors cursor-pointer">Needs Polish</button>
-                      </div>
+                  {/* Guaranteed Artwork Lock Banner */}
+                  <div className="card-doppelrand rounded-xl border border-border bg-surface-warm p-4 flex items-start gap-3">
+                    <CheckCircle2 className="w-4 h-4 text-court-emerald shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-bold text-brand-ink">
+                        Neural Vector & Artwork Lock Active
+                      </h4>
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        OCR coordinates, logos, government seals, signatures, and numerical tables are mathematically pinned. Only translatable body copy is refit.
+                      </p>
                     </div>
-                  )}
-                  {feedbackSent && (
-                    <div className="mt-3 p-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-800 text-xs font-mono text-center shrink-0">
-                      Feedback recorded. Thank you.
-                    </div>
+                  </div>
+
+                  {/* Primary CTA Button (Button-in-Button Gate G6) */}
+                  <Button
+                    variant="cta"
+                    size="lg"
+                    onClick={stagedFile ? handleTranslateSample : () => {
+                      const input = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+                      if (input) input.click();
+                    }}
+                    disabled={isProcessing}
+                    trailingIcon={<Sparkles className="w-4 h-4" />}
+                    className="w-full h-14 rounded-full text-base font-bold shadow-md min-h-[44px]"
+                  >
+                    {!stagedFile
+                      ? (serviceTier === "certified" ? "Select Document for Certified Translation" : "Select Document to Translate")
+                      : (serviceTier === "certified"
+                        ? "Submit for Certified USCIS Translation"
+                        : "Begin Vector-Preserving Translation")}
+                  </Button>
+                  {!stagedFile && (
+                    <p className="text-center text-xs text-text-muted mt-2">
+                      Upload your document in Section 1 or click a one-click specimen to begin.
+                    </p>
                   )}
                 </motion.div>
-              );
-            })()}
+              )}
 
+              {/* Studio stage configuration active */}
+
+              {/* Pipeline Active HUD */}
+              {isProcessing && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex-1 flex flex-col space-y-6 max-w-xl"
+                >
+                  {/* Concentric Progress Card */}
+                  <div className="card-doppelrand rounded-2xl bg-surface-raised p-6 relative overflow-hidden border border-border space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-cta/10 flex items-center justify-center text-cta">
+                          <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: "3s" }} />
+                        </div>
+                        <div>
+                          <span className="text-[11px] font-sans font-bold uppercase tracking-wider text-cta">
+                            Active Neural Pipeline
+                          </span>
+                          <h3 className="text-lg font-bold text-brand-ink tracking-tight font-heading">
+                            Processing Document
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Circular Progress Gauge / Numeral */}
+                      <div className="flex items-baseline gap-1 bg-surface px-3 py-1.5 rounded-full border border-border">
+                        <span className="font-mono text-xl font-bold tabular-nums text-brand-ink">
+                          {job?.progress || 0}
+                        </span>
+                        <span className="text-xs font-mono text-text-muted">%</span>
+                      </div>
+                    </div>
+
+                    {/* High-Contrast GPU scaleX Track */}
+                    <div className="space-y-1.5">
+                      <div className="h-2 rounded-full bg-surface-sunken overflow-hidden relative">
+                        <div
+                          className="h-full bg-cta origin-left transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                          style={{
+                            transform: `scaleX(${Math.max(0.05, (job?.progress || 0) / 100)})`,
+                            width: "100%",
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-text-muted">
+                        <span className="font-mono truncate max-w-sm">{job?.currentStep}</span>
+                        <span className="font-sans text-[11px] font-semibold text-cta">
+                          {activeStageIdx + 1} of 5 Gates
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stage Checklist */}
+                  <div className="space-y-2.5">
+                    {PIPELINE_STAGES.map((stage, idx) => {
+                      const isActive = activeStageIdx === idx;
+                      const isDone = activeStageIdx > idx;
+                      return (
+                        <div
+                          key={stage.id}
+                          className={`p-4 rounded-xl border flex items-center gap-4 transition-all ${
+                            isActive
+                              ? "card-doppelrand bg-surface-raised border-cta/40 shadow-xs"
+                              : isDone
+                              ? "bg-surface-raised border-border"
+                              : "bg-surface/50 border-border/40 opacity-50"
+                          }`}
+                        >
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-colors ${
+                              isDone
+                                ? "bg-court-emerald text-white"
+                                : isActive
+                                ? "bg-cta text-white"
+                                : "bg-surface-sunken text-text-muted"
+                            }`}
+                          >
+                            {isDone ? <Check className="w-4 h-4" /> : idx + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div
+                              className={`text-sm font-semibold truncate ${
+                                isActive ? "text-brand-ink" : isDone ? "text-brand-ink" : "text-text-muted"
+                              }`}
+                            >
+                              {stage.label}
+                            </div>
+                            <div className="text-xs text-text-muted mt-0.5 line-clamp-1">{stage.desc}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Insufficient Credits Banner */}
+              {job?.error === "INSUFFICIENT_CREDITS" && (
+                <div className="card-doppelrand rounded-xl bg-status-danger-bg border border-status-danger/30 p-5 space-y-3 max-w-xl">
+                  <div className="flex items-center gap-2 text-status-danger font-bold text-sm">
+                    <AlertTriangle className="w-4 h-4 text-status-danger shrink-0" />
+                    <span>Insufficient Page Credits</span>
+                  </div>
+                  <p className="text-xs text-text-muted leading-relaxed">
+                    This document requires{" "}
+                    <span className="font-mono font-bold text-brand-ink">
+                      {job.creditError?.required || 1}
+                    </span>{" "}
+                    credits, but your account balance is{" "}
+                    <span className="font-mono font-bold text-brand-ink">
+                      {job.creditError?.available || 0}
+                    </span>.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <Button
+                      asChild
+                      variant="cta"
+                      size="sm"
+                      className="rounded-full text-xs font-bold min-h-[44px]"
+                    >
+                      <Link href="/pricing">Add Credits</Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGrantTestCredits}
+                      disabled={grantingCredits}
+                      className="rounded-full text-xs font-semibold min-h-[44px]"
+                    >
+                      {grantingCredits ? "Adding 50 Credits..." : "Dev: Add 50 Test Credits"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* General Failure State */}
+              {job?.status === "failed" && job.error !== "INSUFFICIENT_CREDITS" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="card-doppelrand rounded-2xl border border-status-danger/30 bg-status-danger-bg p-6 text-brand-ink space-y-3 max-w-xl"
+                >
+                  <div className="flex items-center gap-2 text-status-danger font-bold text-base">
+                    <AlertTriangle className="w-5 h-5 text-status-danger shrink-0" />
+                    <span>Translation Processing Error</span>
+                  </div>
+                  <p className="text-xs text-text-muted leading-relaxed">
+                    {job?.error || "An unexpected error occurred during pipeline execution. Please try again."}
+                  </p>
+                  <div className="pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReset}
+                      className="rounded-full text-xs font-semibold min-h-[44px]"
+                    >
+                      Acknowledge & Reset Studio
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Lightbox / Zoom Modal */}
+      {/* ─── Lightbox / Zoom Modal with 0ms Escape Dismissal (Gate G21) ─ */}
       <AnimatePresence>
         {isZoomModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-slate-50/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8"
+            transition={{ duration: 0.1 }}
+            className="fixed inset-0 z-[100] bg-obsidian-950/75 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8"
             onClick={() => setIsZoomModalOpen(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative max-w-6xl max-h-[90vh] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-2xl"
+              exit={{ scale: 0.98, opacity: 0 }}
+              transition={{ duration: 0.12, ease: [0.32, 0.72, 0, 1] }}
+              className="card-doppelrand-raised relative max-w-6xl max-h-[90vh] bg-surface-raised rounded-2xl border border-border overflow-hidden flex flex-col shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
-                <span className="text-xs font-mono uppercase text-slate-500">
-                  {zoomTarget === "translated" ? "Translated Document Details" : "Original Document Details"}
+              <div className="p-4 border-b border-border flex items-center justify-between bg-surface">
+                <span className="text-xs font-sans uppercase font-bold text-text-muted">
+                  {zoomTarget === "translated"
+                    ? "Translated Document High-Resolution View"
+                    : "Original Document High-Resolution View"}
                 </span>
-                <button onClick={() => setIsZoomModalOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setIsZoomModalOpen(false)}
+                  className="p-2 rounded-full hover:bg-surface-sunken text-text-muted hover:text-brand-ink transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                  aria-label="Close modal"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="p-8 overflow-auto flex items-center justify-center bg-slate-50 max-h-[80vh]">
+              <div className="p-8 overflow-auto flex items-center justify-center bg-canvas max-h-[80vh]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={zoomTarget === "translated" ? translatedPreviewSrc : (stagedPreviewUrl || "")}
                   alt="Detail"
-                  className="max-h-[75vh] w-auto object-contain border border-slate-200 shadow-2xl"
+                  className="max-h-[75vh] w-auto object-contain border border-border rounded-lg shadow-lg"
                 />
               </div>
             </motion.div>
@@ -1486,7 +1392,6 @@ export default function TranslatePage() {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }
-
-

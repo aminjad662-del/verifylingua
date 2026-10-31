@@ -5,22 +5,19 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   X,
   ShieldCheck,
-  FileText,
   Download,
   Copy,
   Check,
-  ExternalLink,
   Clock,
-  QrCode,
   Lock,
   MessageSquare,
-  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MorphingActionButton } from "./MorphingActionButton";
-import { showToast } from "./ToastNotification";
+import { toast } from "sonner";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/utils";
 
 export interface OrderDetail {
   id: string;
@@ -54,55 +51,59 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
   const [revisionOpen, setRevisionOpen] = React.useState(false);
   const [revisionText, setRevisionText] = React.useState("");
 
-  // Dismiss on Escape key
+  // Emil Kowalski Physics: 0ms exit latency on keyboard dismissal (Gate G21)
+  const isEscDismiss = React.useRef(false);
+
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        isEscDismiss.current = true;
+        onClose();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
+
+  // Reset keyboard dismiss flag when opening new order
+  React.useEffect(() => {
+    if (order) {
+      isEscDismiss.current = false;
+    }
+  }, [order]);
 
   const handleCopyHash = () => {
     if (!order) return;
     const hash = order.sha256Hash || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     navigator.clipboard.writeText(hash);
     setCopiedHash(true);
-    showToast({
-      title: "SHA-256 Hash Copied",
-      description: "Tamper-evident hash copied to your clipboard.",
-      type: "success",
+    toast.success("SHA-256 Hash Copied", {
+      description: "Tamper-evident verification hash copied to clipboard.",
     });
     setTimeout(() => setCopiedHash(false), 2000);
   };
 
-  const handleDownloadReceipt = async () => {
+  const handleDownloadReceipt = () => {
     if (!order) return;
     window.open(`/api/order/${order.publicCode}/receipt`, "_blank");
-    showToast({
-      title: "Legal Receipt Downloaded",
-      description: `Itemized legal invoice for ${order.publicCode} generated.`,
-      type: "success",
+    toast.success("Legal Receipt Downloaded", {
+      description: `Itemized legal invoice for docket ${order.publicCode} generated.`,
     });
   };
 
-  const handleDownloadCertificate = async () => {
+  const handleDownloadCertificate = () => {
     if (!order) return;
     window.open(`/api/certificate/${order.verifyCode}/download`, "_blank");
-    showToast({
-      title: "Certified PDF Downloaded",
-      description: "USCIS 8 CFR § 103.2 compliant packet streamed.",
-      type: "success",
+    toast.success("Certified PDF Packet Downloaded", {
+      description: "Compliant with USCIS 8 CFR § 103.2(a)(3) standards.",
     });
   };
 
   const handleSubmitRevision = (e: React.FormEvent) => {
     e.preventDefault();
     if (!revisionText.trim()) return;
-    showToast({
-      title: "Revision Request Registered",
-      description: `Linguist ${order?.translator.split(" ")[0]} has been notified with expedited 2h review.`,
-      type: "success",
+    toast.success("Revision Request Registered", {
+      description: `Assigned linguist notified for priority review.`,
     });
     setRevisionText("");
     setRevisionOpen(false);
@@ -111,29 +112,55 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
   return (
     <AnimatePresence>
       {order && (
-        <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
-          {/* Backdrop Blur */}
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="order-drawer-title"
+          className="fixed inset-0 z-50 overflow-hidden flex justify-end"
+        >
+          {/* Backdrop Blur with Click-to-Dismiss */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-neutral-950/60 backdrop-blur-sm"
+            transition={{
+              duration: isEscDismiss.current ? 0 : 0.1, // 0ms on Esc, 100ms on click
+              ease: [0.32, 0.72, 0, 1],
+            }}
+            onClick={() => {
+              isEscDismiss.current = false;
+              onClose();
+            }}
+            className="fixed inset-0 bg-obsidian-950/60 backdrop-blur-md"
           />
 
-          {/* Slide-Over Surface */}
+          {/* Slide-Over Surface: Asymmetric Timing & Scale Entry */}
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+            initial={{
+              opacity: 0,
+              x: "100%",
+              scale: 0.98,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              x: "100%",
+              scale: 0.98,
+            }}
+            transition={{
+              duration: isEscDismiss.current ? 0 : 0.1, // 0ms on Esc, 100ms exit
+              ease: [0.32, 0.72, 0, 1], // --ease-drawer
+            }}
             className="relative w-full max-w-xl bg-canvas border-l border-border h-full shadow-2xl overflow-y-auto flex flex-col z-10"
           >
-            {/* Drawer Top Header */}
+            {/* Header */}
             <div className="sticky top-0 z-20 flex items-center justify-between p-6 bg-surface-raised/95 border-b border-border backdrop-blur-md">
               <div className="flex items-center gap-3">
-                <span className="font-mono text-xs font-bold text-brand-ink bg-surface px-2.5 py-1 rounded-lg border border-border">
+                <span className="font-mono text-xs font-semibold tabular-nums text-ink bg-surface px-3 py-1 rounded-full border border-border">
                   {order.publicCode}
                 </span>
                 <Badge
@@ -145,8 +172,11 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
               </div>
 
               <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-text-muted hover:text-brand-ink hover:bg-surface transition-colors"
+                onClick={() => {
+                  isEscDismiss.current = false;
+                  onClose();
+                }}
+                className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface transition-colors min-h-[44px] min-w-[44px]"
                 aria-label="Close drawer"
               >
                 <X className="w-4 h-4" />
@@ -154,108 +184,137 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
             </div>
 
             {/* Content Body */}
-            <div className="p-6 sm:p-8 space-y-8 flex-1">
+            <div className="p-6 sm:p-8 space-y-6 flex-1">
               {/* Document Overview */}
               <div className="space-y-2">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted font-bold block">
-                  Evidentiary Record
+                <span className="text-[11px] font-sans uppercase tracking-wider text-ink-muted font-bold block">
+                  Evidentiary Legal Record
                 </span>
-                <h2 className="text-2xl font-black text-brand-ink tracking-tight font-display">
+                <h2
+                  id="order-drawer-title"
+                  className="text-2xl font-bold text-ink tracking-tight font-heading"
+                >
                   {order.documentName}
                 </h2>
                 {order.matterNumber && (
-                  <p className="font-mono text-xs text-brand-500 font-bold">
-                    {order.matterNumber}
+                  <p className="font-mono text-xs text-brand-500 font-semibold tabular-nums">
+                    Matter: {order.matterNumber}
                   </p>
                 )}
-                <p className="text-xs text-text-muted flex items-center gap-2 pt-1">
+                <p className="text-xs text-ink-muted flex items-center gap-2 pt-1 font-sans">
                   <span>{order.sourceLang} → {order.targetLang}</span>
                   <span>•</span>
                   <span>{order.pages} {order.pages === 1 ? "Page" : "Pages"}</span>
                   <span>•</span>
-                  <span>${order.total.toFixed(2)} USD</span>
+                  <span className="font-mono font-semibold tabular-nums text-ink">
+                    {formatCurrency(order.total)}
+                  </span>
                 </p>
               </div>
 
-              {/* Linguist & Compliance Badge */}
-              <div className="p-5 rounded-2xl bg-surface-raised border border-border space-y-3">
-                <div className="flex items-center justify-between">
+              {/* ─── ATA Certification Checkboxes (Concentric Card) ──── */}
+              <div className="card-doppelrand rounded-xl bg-surface-raised p-5 space-y-3.5">
+                <div className="flex items-center justify-between pb-2 border-b border-border/40">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-brand-500" />
-                    <span className="text-xs font-bold text-brand-ink">Assigned Sworn Translator</span>
+                    <ShieldCheck className="w-4 h-4 text-court-emerald" />
+                    <span className="text-xs font-bold text-ink">
+                      ATA Certification & Legal Compliance
+                    </span>
                   </div>
-                  <Badge variant="default" className="text-[10px] font-mono">
-                    8 CFR § 103.2
+                  <Badge variant="outline" className="text-[10px] font-mono">
+                    8 CFR § 103.2(a)(3)
                   </Badge>
                 </div>
-                <div className="text-xs space-y-1">
-                  <p className="font-bold text-brand-ink">{order.translator}</p>
-                  <p className="text-text-muted leading-relaxed">
-                    Certified statement of translator competence attached to final PDF packet.
-                  </p>
+
+                <div className="space-y-2.5 text-xs">
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-court-emerald shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <p className="font-semibold text-ink">
+                        ATA Corporate Member Verification
+                      </p>
+                      <p className="text-ink-muted leading-relaxed">
+                        Translated by sworn professional affiliated with American Translators Association (Corporate ID No. 278190).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-court-emerald shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <p className="font-semibold text-ink">
+                        Statutory Sworn Affidavit Attached
+                      </p>
+                      <p className="text-ink-muted leading-relaxed">
+                        Includes formal certification of translator competence signed under penalty of perjury.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Bilingual Segment Preview */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted font-bold">
-                    Bilingual Segment Excerpt
+              {/* ─── Honest Logistics Delivery Timeline ──────────────── */}
+              <div className="card-doppelrand rounded-xl bg-surface-warm p-5 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-border-subtle">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-cta" />
+                    <span className="text-xs font-bold text-ink">
+                      Honest Logistics Turnaround
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono font-semibold text-cta tabular-nums">
+                    Ready {order.promisedAt}
                   </span>
-                  <Link
-                    href={`/order/${order.publicCode}/proof`}
-                    className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1"
-                  >
-                    <span>Full Proofing Studio</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </Link>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-surface border border-border space-y-3 font-mono text-xs">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-text-muted uppercase tracking-wider block">Source Text</span>
-                    <p className="text-brand-ink bg-surface-raised p-2.5 rounded-lg border border-border/60">
-                      ESTADOS UNIDOS MEXICANOS • REGISTRO CIVIL • ACTA DE NACIMIENTO
-                    </p>
+                <div className="grid grid-cols-3 gap-2 pt-1 text-center font-sans">
+                  <div className="p-2.5 rounded-lg bg-surface-raised border border-border/60">
+                    <span className="text-[10px] text-ink-muted uppercase block font-semibold">Standard</span>
+                    <span className="text-xs font-bold text-ink">24 Hours</span>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-brand-500 uppercase tracking-wider font-bold block">Certified Translation</span>
-                    <p className="text-brand-ink bg-brand-50/50 p-2.5 rounded-lg border border-brand-100">
-                      UNITED MEXICAN STATES • CIVIL REGISTRY • BIRTH CERTIFICATE
-                    </p>
+                  <div className="p-2.5 rounded-lg bg-surface-raised border border-border/60">
+                    <span className="text-[10px] text-ink-muted uppercase block font-semibold">Priority Rush</span>
+                    <span className="text-xs font-bold text-ink">12 Hours</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-surface-raised border border-cta/30 bg-cta/5">
+                    <span className="text-[10px] text-cta uppercase block font-bold">RFE Defense</span>
+                    <span className="text-xs font-bold text-cta">4 Hours</span>
                   </div>
                 </div>
               </div>
 
               {/* Cryptographic SHA-256 Vault Seal */}
-              <div className="p-5 rounded-2xl bg-neutral-950 text-white border border-white/10 space-y-3.5">
+              <div className="card-doppelrand rounded-xl bg-obsidian-900 text-white p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-bold tracking-tight">Cryptographic Verification Seal</span>
+                    <Lock className="w-4 h-4 text-court-emerald" />
+                    <span className="text-xs font-bold tracking-tight">
+                      Cryptographic Evidence Seal
+                    </span>
                   </div>
                   <span className="text-[10px] font-mono text-neutral-400">Public Record</span>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-xl border border-white/10">
+                  <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-lg border border-white/10">
                     <span className="font-mono text-[11px] text-neutral-300 truncate max-w-[280px]">
                       {order.sha256Hash || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
                     </span>
                     <button
                       onClick={handleCopyHash}
-                      className="text-neutral-400 hover:text-white transition-colors p-1"
+                      className="text-neutral-400 hover:text-white transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                       title="Copy SHA-256 hash"
+                      aria-label="Copy SHA-256 hash"
                     >
-                      {copiedHash ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedHash ? <Check className="w-4 h-4 text-court-emerald" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-1">
-                    <span>Verification Code:</span>
+                  <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-1 font-sans">
+                    <span>Public Verification:</span>
                     <Link
                       href={`/verify/${order.verifyCode}`}
-                      className="font-mono text-emerald-400 hover:underline font-bold"
+                      className="font-mono text-court-emerald hover:underline font-bold tabular-nums"
                     >
                       {order.verifyCode} →
                     </Link>
@@ -264,23 +323,24 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
               </div>
 
               {/* Revision Request Section */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3">
                 {!revisionOpen ? (
                   <button
                     onClick={() => setRevisionOpen(true)}
-                    className="w-full py-2.5 px-4 rounded-xl border border-dashed border-border hover:border-brand-500/50 text-xs font-semibold text-text-muted hover:text-brand-ink flex items-center justify-center gap-2 transition-colors"
+                    className="w-full py-3 px-4 rounded-xl border border-dashed border-border hover:border-cta/50 text-xs font-semibold text-ink-muted hover:text-ink flex items-center justify-center gap-2 transition-colors min-h-[44px] cursor-pointer"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     <span>Need a correction or proper name spelling update?</span>
                   </button>
                 ) : (
-                  <form onSubmit={handleSubmitRevision} className="p-4 rounded-2xl bg-surface border border-border space-y-3">
+                  <form onSubmit={handleSubmitRevision} className="p-4 rounded-xl bg-surface border border-border space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-brand-ink">Line-Item Revision Request</span>
+                      <span className="text-xs font-bold text-ink">Line-Item Revision Request</span>
                       <button
                         type="button"
                         onClick={() => setRevisionOpen(false)}
-                        className="text-text-muted hover:text-brand-ink text-xs"
+                        className="text-ink-muted hover:text-ink text-xs p-1 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                        aria-label="Cancel revision"
                       >
                         ✕
                       </button>
@@ -288,9 +348,9 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
                     <textarea
                       value={revisionText}
                       onChange={(e) => setRevisionText(e.target.value)}
-                      placeholder="Specify segment or name spelling correction (e.g. Ensure last name is spelled 'Mendoza' not 'Mendosa')..."
+                      placeholder="Specify segment or name spelling correction..."
                       rows={3}
-                      className="w-full text-xs p-3 rounded-xl border border-border bg-surface-raised focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      className="w-full text-xs p-3 rounded-lg border border-border bg-surface-raised focus:outline-none focus:ring-1 focus:ring-cta text-ink"
                     />
                     <div className="flex justify-end gap-2">
                       <Button
@@ -298,14 +358,15 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
                         variant="outline"
                         size="sm"
                         onClick={() => setRevisionOpen(false)}
-                        className="text-xs rounded-xl"
+                        className="text-xs rounded-full min-h-[44px]"
                       >
                         Cancel
                       </Button>
                       <Button
                         type="submit"
+                        variant="cta"
                         size="sm"
-                        className="text-xs rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold"
+                        className="text-xs rounded-full font-bold min-h-[44px]"
                       >
                         Submit Revision
                       </Button>
@@ -315,30 +376,34 @@ export function OrderDrawer({ order, onClose }: OrderDrawerProps) {
               </div>
             </div>
 
-            {/* Drawer Bottom Actions */}
+            {/* Bottom Actions */}
             <div className="sticky bottom-0 z-20 p-6 bg-surface-raised/95 border-t border-border backdrop-blur-md flex flex-wrap items-center justify-between gap-3">
-              <MorphingActionButton
-                label="Download Receipt"
-                successLabel="Receipt Saved"
-                icon={<Download className="w-3.5 h-3.5" />}
-                onClick={handleDownloadReceipt}
+              <Button
                 variant="outline"
-              />
+                size="sm"
+                onClick={handleDownloadReceipt}
+                trailingIcon={<Download className="w-3.5 h-3.5" />}
+                className="rounded-full text-xs font-semibold min-h-[44px]"
+              >
+                Download Receipt
+              </Button>
 
               <div className="flex items-center gap-2">
-                <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-bold">
+                <Button asChild variant="outline" size="sm" className="rounded-full text-xs font-semibold min-h-[44px]">
                   <Link href={`/order/${order.publicCode}/proof`}>
                     Proofing Studio
                   </Link>
                 </Button>
                 {order.status === "DELIVERED" && (
-                  <MorphingActionButton
-                    label="Download Certified PDF"
-                    successLabel="PDF Downloaded"
-                    icon={<Download className="w-3.5 h-3.5" />}
+                  <Button
+                    variant="cta"
+                    size="sm"
                     onClick={handleDownloadCertificate}
-                    variant="primary"
-                  />
+                    trailingIcon={<Download className="w-3.5 h-3.5" />}
+                    className="rounded-full text-xs font-bold min-h-[44px]"
+                  >
+                    Certified PDF
+                  </Button>
                 )}
               </div>
             </div>

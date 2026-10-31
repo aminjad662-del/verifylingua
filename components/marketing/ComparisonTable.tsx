@@ -1,7 +1,12 @@
+"use client";
+
+import * as React from "react";
+
 import { Check, X, ShieldCheck, ArrowRight, AlertTriangle, FileX, FileCheck2, QrCode, Clock, Lock, Sparkles, XCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useTranslationModal } from "@/components/translation/TranslationModalContext";
 
 const COMPARISON_ROWS = [
   {
@@ -63,6 +68,7 @@ const COMPARISON_ROWS = [
 ];
 
 export function ComparisonTable() {
+  const { openModal } = useTranslationModal();
   return (
     <section className="py-20 md:py-32 bg-canvas border-b border-border/60 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16 w-full overflow-hidden">
@@ -336,7 +342,14 @@ export function ComparisonTable() {
 
         <div className="text-center pt-2">
           <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md active:scale-[0.98] transition-all duration-200">
-            <Link href="/order/triage">
+            <Link
+              href="/translate"
+              
+              onClick={(e) => {
+                e.preventDefault();
+                openModal();
+              }}
+            >
               Start translation with statutory warranty
               <ArrowRight className="w-5 h-5" />
             </Link>

@@ -46,7 +46,7 @@ export default function AcceptanceGuaranteePage() {
               <span>8 CFR § 103.2(b)(3) Certified</span>
             </Badge>
             <Button asChild size="sm" className="font-bold">
-              <Link href="/order/triage">Get Certified Translation</Link>
+              <Link href="/translate">Get Certified Translation</Link>
             </Button>
           </div>
         </div>

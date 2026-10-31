@@ -439,7 +439,7 @@ export default function TrackerClient({ initialId }: TrackerClientProps) {
                   <span>Start New Translation</span>
                 </Button>
               </Link>
-              <Link href="/order/triage" className="w-full sm:w-auto">
+              <Link href="/translate" className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full sm:w-auto border-slate-700 bg-slate-800/40 text-slate-300 hover:bg-slate-800 hover:text-white">
                   <span>Intake Studio</span>
                 </Button>

@@ -100,7 +100,7 @@ export default async function DocumentSpokePage({
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md">
-                <Link href={`/order/triage?doc=${doc.slug}`}>
+                <Link href={`/translate?doc=${doc.slug}`}>
                   Start translation with this document
                   <ArrowRight className="w-5 h-5" />
                 </Link>

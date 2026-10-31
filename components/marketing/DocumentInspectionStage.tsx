@@ -33,6 +33,7 @@ export interface DocumentSpecimen {
   jurisdictionTag: string;
   sourceLanguage: string;
   targetLanguage: string;
+  direction?: "ltr" | "rtl";
   authoritySource: string;
   authorityTranslated: string;
   sourceImagePath: string;
@@ -206,6 +207,65 @@ export const SPECIMENS: DocumentSpecimen[] = [
   },
 ];
 
+export const EGYPTIAN_BIRTH_SPECIMEN: DocumentSpecimen = {
+  id: "egyptian-birth",
+  name: "Civil Birth Certificate",
+  jurisdictionTag: "USCIS Vital Record (Arabic)",
+  sourceLanguage: "Arabic",
+  targetLanguage: "English",
+  direction: "rtl",
+  authoritySource: "جمهورية مصر العربية : وزارة الداخلية - مصلحة الأحوال المدنية",
+  authorityTranslated: "ARAB REPUBLIC OF EGYPT : MINISTRY OF INTERIOR - CIVIL STATUS ORGANIZATION",
+  sourceImagePath: "/images/docs/egyptian-birth-certificate.jpg",
+  clauses: [
+    {
+      id: "authority",
+      label: "Issuing Civil Registry Office",
+      sourceText: "مكتب صحة قصر النيل : محافظة القاهرة : قيد رقم ٨٤٩٢",
+      translatedText: "Qasr El Nil Health Bureau : Cairo Governorate : Entry No. 8492",
+      sourceCoordinate: "X: 460, Y: 85 (300 DPI)",
+      statuteNotice: "BiDi HarfBuzz shaping preserved with Arabic-Indic digit parity",
+    },
+    {
+      id: "name",
+      label: "Full Legal Name of Registered",
+      sourceText: "طارق عمر عبد الرحمن الشريف",
+      translatedText: "TAREK OMAR ABDEL RAHMAN EL-SHERIF",
+      sourceCoordinate: "X: 460, Y: 155 (300 DPI)",
+      statuteNotice: "Transliterated per US Department of State and BGN standards",
+    },
+    {
+      id: "vital",
+      label: "Date and Place of Birth",
+      sourceText: "١٥ شعبان ١٤١٩ هـ (1998/12/04 م) : القاهرة",
+      translatedText: "December 4, 1998 (15 Sha'ban 1419 AH) : Cairo, Egypt",
+      sourceCoordinate: "X: 460, Y: 225 (300 DPI)",
+      statuteNotice: "Dual Hijri and Gregorian chronological conversion verified against astronomical ledger",
+    },
+    {
+      id: "filiation",
+      label: "Parentage / Filiation Information",
+      sourceText: "الأب: عمر عبد الرحمن الشريف (مصري) / الأم: منى سامي الكردي (مصرية)",
+      translatedText: "Father: Omar Abdel Rahman El-Sherif (Egyptian) / Mother: Mona Sami El-Kourdy (Egyptian)",
+      sourceCoordinate: "X: 460, Y: 295 (300 DPI)",
+      statuteNotice: "Maternal and paternal filiation verified per 8 CFR Section 204.2",
+    },
+  ],
+  sealTranscription: {
+    source: "[ختم شعار الجمهورية: مصلحة الأحوال المدنية بالقاهرة : توقيع الموثق]",
+    translated: "[EMBOSSED ARAB REPUBLIC EMBLEM SEAL: CAIRO CIVIL STATUS AUTHORITY : REGISTRAR SIGNATURE]",
+  },
+  sha256Digest: "5c8b210459c31e89b21d017d4a98f1c830b201f82e04d7c81a942b8219c04a8f",
+  qrCodeUrl: "VL-CAI-9182-EGYP",
+  juratStatement: "I certify that I am competent to translate Arabic legal documents into English and that the Arabic-Indic numerals, dual Hijri dates, and Diacritics are faithfully transcribed under penalty of perjury.",
+  linguistCredential: "Kareem Mansour : ATA Certified Arabic-English Master Translator No. 278190",
+};
+
+export const ALL_SPECIMENS: DocumentSpecimen[] = [
+  ...SPECIMENS,
+  EGYPTIAN_BIRTH_SPECIMEN,
+];
+
 export function DocumentInspectionStage() {
   const [selectedDocId, setSelectedDocId] = useState<string>("colombian-birth");
   const [activeMode, setActiveMode] = useState<"slider" | "side-by-side" | "loupe" | "ledger">("slider");
@@ -215,17 +275,50 @@ export function DocumentInspectionStage() {
   const [hashCopied, setHashCopied] = useState<boolean>(false);
   const [simulatedCheck, setSimulatedCheck] = useState<boolean>(false);
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(false);
+  const [stageWidth, setStageWidth] = useState<number>(600);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
 
-  const activeDoc = SPECIMENS.find((d) => d.id === selectedDocId) || SPECIMENS[0];
+  const activeDoc = ALL_SPECIMENS.find((d) => d.id === selectedDocId) || ALL_SPECIMENS[0];
+  const isRtl = activeDoc.direction === "rtl";
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsTouchDevice(window.matchMedia("(pointer: coarse)").matches);
     }
+    if (!stageRef.current) return;
+    const updateWidth = () => {
+      if (stageRef.current) setStageWidth(stageRef.current.clientWidth);
+    };
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(stageRef.current);
+    return () => ro.disconnect();
   }, []);
+
+  const handleSliderKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    let step = 5;
+    if (e.shiftKey) step = 10;
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        setSliderPos((prev) => Math.max(0, Math.min(100, isRtl ? prev + step : prev - step)));
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        setSliderPos((prev) => Math.max(0, Math.min(100, isRtl ? prev - step : prev + step)));
+        break;
+      case "Home":
+        e.preventDefault();
+        setSliderPos(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setSliderPos(100);
+        break;
+    }
+  };
 
   // MOTION VALUE LOUPE MECHANICS (Compositor Thread Only - 0 React Re-renders on mousemove)
   const mouseX = useMotionValue(200);
@@ -311,7 +404,7 @@ export function DocumentInspectionStage() {
           <div className="flex items-center gap-1 bg-surface-raised p-0.5 rounded-lg border border-border">
             <button
               onClick={() => setActiveMode("slider")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
+              className={`min-h-[44px] sm:min-h-[32px] px-3 py-2 sm:py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation ${
                 activeMode === "slider"
                   ? "bg-brand-500 text-white shadow-2xs"
                   : "text-text-muted hover:text-brand-ink"
@@ -322,7 +415,7 @@ export function DocumentInspectionStage() {
             </button>
             <button
               onClick={() => setActiveMode("side-by-side")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
+              className={`min-h-[44px] sm:min-h-[32px] px-3 py-2 sm:py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation ${
                 activeMode === "side-by-side"
                   ? "bg-brand-500 text-white shadow-2xs"
                   : "text-text-muted hover:text-brand-ink"
@@ -333,7 +426,7 @@ export function DocumentInspectionStage() {
             </button>
             <button
               onClick={() => setActiveMode("loupe")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
+              className={`min-h-[44px] sm:min-h-[32px] px-3 py-2 sm:py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation ${
                 activeMode === "loupe"
                   ? "bg-brand-500 text-white shadow-2xs"
                   : "text-text-muted hover:text-brand-ink"
@@ -344,7 +437,7 @@ export function DocumentInspectionStage() {
             </button>
             <button
               onClick={() => setActiveMode("ledger")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
+              className={`min-h-[44px] sm:min-h-[32px] px-3 py-2 sm:py-1 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation ${
                 activeMode === "ledger"
                   ? "bg-brand-500 text-white shadow-2xs"
                   : "text-text-muted hover:text-brand-ink"
@@ -358,13 +451,13 @@ export function DocumentInspectionStage() {
 
         {/* Specimen Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {SPECIMENS.map((doc) => {
+          {ALL_SPECIMENS.map((doc) => {
             const isSelected = doc.id === selectedDocId;
             return (
               <button
                 key={doc.id}
                 onClick={() => setSelectedDocId(doc.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer active:scale-[0.98] flex items-center gap-1.5 ${
+                className={`min-h-[44px] sm:min-h-[32px] px-3.5 py-2 sm:py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer active:scale-[0.98] flex items-center gap-1.5 touch-manipulation ${
                   isSelected
                     ? "bg-brand-50 text-brand-ink border border-brand-200"
                     : "text-text-muted hover:text-brand-ink hover:bg-surface-raised border border-transparent"
@@ -454,8 +547,9 @@ export function DocumentInspectionStage() {
             {/* Overlaid Layer: Foreign Scanned Record (Clipped by Slider) */}
             <div
               className="absolute inset-0 p-6 sm:p-8 bg-canvas-subtle/70 flex flex-col justify-between overflow-hidden pointer-events-none"
+              dir={isRtl ? "rtl" : "ltr"}
               style={{
-                clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
+                clipPath: isRtl ? `inset(0 0 0 ${100 - sliderPos}%)` : `inset(0 ${100 - sliderPos}% 0 0)`,
                 transition: isDraggingSlider ? "none" : "clip-path 200ms cubic-bezier(0.32, 0.72, 0, 1)",
               }}
             >
@@ -465,7 +559,7 @@ export function DocumentInspectionStage() {
                     <span className="font-mono text-[10px] font-bold text-amber-statutory uppercase tracking-wider block">
                       FOREIGN CIVIL SOURCE DOCUMENT (ORIGINAL SCAN)
                     </span>
-                    <h3 className="font-bold text-brand-ink text-sm sm:text-base font-serif italic">
+                    <h3 className={`font-bold text-brand-ink text-sm sm:text-base ${isRtl ? "font-arabic" : "font-serif italic"}`}>
                       {activeDoc.authoritySource}
                     </h3>
                   </div>
@@ -484,7 +578,7 @@ export function DocumentInspectionStage() {
                         <span className="font-mono text-[10px] text-amber-statutory uppercase block">
                           {clause.label} (Original)
                         </span>
-                        <div className="font-serif text-brand-ink text-xs font-semibold">
+                        <div className={`text-brand-ink text-xs font-semibold ${isRtl ? "font-arabic text-sm" : "font-serif"}`}>
                           {clause.sourceText}
                         </div>
                       </div>
@@ -515,14 +609,21 @@ export function DocumentInspectionStage() {
             {/* Draggable Divider Line & Grip Knob */}
             <div
               className="absolute top-0 bottom-0 z-30 pointer-events-none"
-              style={{ left: `${sliderPos}%` }}
+              style={{ left: `${isRtl ? 100 - sliderPos : sliderPos}%` }}
             >
               <div className="absolute top-0 bottom-0 w-0.5 bg-signal-accent -translate-x-1/2 shadow-sm" />
               
               <div
+                role="slider"
+                aria-label="Document comparison split slider"
+                aria-valuenow={sliderPos}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                tabIndex={0}
+                onKeyDown={handleSliderKeyDown}
                 onPointerDown={handleSliderPointerDown}
                 onPointerUp={handleSliderPointerUp}
-                className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-surface-raised border border-border shadow-lg flex items-center justify-center text-brand-ink cursor-ew-resize hover:scale-110 active:scale-95 transition-transform pointer-events-auto"
+                className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-surface-raised border border-border shadow-lg flex items-center justify-center text-brand-ink cursor-ew-resize hover:scale-110 active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-transform pointer-events-auto touch-manipulation"
                 title="Drag to compare original scan and certified translation"
               >
                 <MoveHorizontal className="w-4 h-4 text-signal-accent" />
@@ -534,7 +635,7 @@ export function DocumentInspectionStage() {
               <span className="font-mono text-[10px] text-text-subtle mr-1">PRESETS:</span>
               <button
                 onClick={() => setSliderPos(100)}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer active:scale-[0.98] ${
+                className={`min-h-[44px] sm:min-h-[26px] px-2.5 py-2 sm:py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer active:scale-[0.98] touch-manipulation flex items-center ${
                   sliderPos === 100 ? "bg-brand-500 text-white" : "hover:bg-surface text-text-muted"
                 }`}
               >
@@ -542,7 +643,7 @@ export function DocumentInspectionStage() {
               </button>
               <button
                 onClick={() => setSliderPos(50)}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer active:scale-[0.98] ${
+                className={`min-h-[44px] sm:min-h-[26px] px-2.5 py-2 sm:py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer active:scale-[0.98] touch-manipulation flex items-center ${
                   sliderPos === 50 ? "bg-brand-500 text-white" : "hover:bg-surface text-text-muted"
                 }`}
               >
@@ -550,7 +651,7 @@ export function DocumentInspectionStage() {
               </button>
               <button
                 onClick={() => setSliderPos(0)}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer active:scale-[0.98] ${
+                className={`min-h-[44px] sm:min-h-[26px] px-2.5 py-2 sm:py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer active:scale-[0.98] touch-manipulation flex items-center ${
                   sliderPos === 0 ? "bg-brand-500 text-white" : "hover:bg-surface text-text-muted"
                 }`}
               >
@@ -570,7 +671,7 @@ export function DocumentInspectionStage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
               {/* Source Column */}
-              <div className="space-y-3">
+              <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
                 <div className="font-mono text-[10px] text-amber-statutory uppercase font-bold flex items-center justify-between">
                   <span>FOREIGN SOURCE SCAN</span>
                   <span>{activeDoc.sourceLanguage}</span>
@@ -592,7 +693,7 @@ export function DocumentInspectionStage() {
                         <span>{clause.label}</span>
                         <span>{clause.sourceCoordinate}</span>
                       </div>
-                      <div className="font-serif text-brand-ink text-xs font-semibold">
+                      <div className={`text-brand-ink text-xs font-semibold ${isRtl ? "font-arabic text-sm text-right" : "font-serif"}`}>
                         {clause.sourceText}
                       </div>
                     </div>
@@ -727,7 +828,7 @@ export function DocumentInspectionStage() {
                     x: contentTranslateX,
                     y: contentTranslateY,
                     transformOrigin: "0 0",
-                    width: 600,
+                    width: stageWidth || 600,
                     height: 460,
                     scale: MAGNIFICATION,
                   }}
@@ -784,7 +885,7 @@ export function DocumentInspectionStage() {
                   </span>
                   <button
                     onClick={copyHash}
-                    className="p-1.5 rounded hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer shrink-0 active:scale-[0.98]"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer shrink-0 active:scale-[0.98] touch-manipulation"
                     title="Copy SHA-256 digest"
                   >
                     {hashCopied ? (
@@ -835,7 +936,7 @@ export function DocumentInspectionStage() {
               </span>
               <button
                 onClick={() => setSimulatedCheck(!simulatedCheck)}
-                className="font-bold text-brand-ink hover:text-signal-accent cursor-pointer active:scale-[0.98] transition-transform"
+                className="min-h-[44px] inline-flex items-center font-bold text-brand-ink hover:text-signal-accent cursor-pointer active:scale-[0.98] transition-transform touch-manipulation"
               >
                 {simulatedCheck ? "Reset verification simulation" : "Simulate consular QR check"}
               </button>

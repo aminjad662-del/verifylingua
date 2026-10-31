@@ -1,5 +1,5 @@
-/* Google Fonts (Fraunces + Instrument Serif) loaded via <link> in layout.tsx head — not here,
-   because CSS @import url() is render-blocking and delays the entire stylesheet on static edges. */
+/* Native Apple San Francisco / System UI stack loaded locally & via OS system fonts.
+   Google Fonts loaded via <link> in layout.tsx head to avoid CSS @import render-blocking. */
 @import "tailwindcss";
 
 @theme {
@@ -61,17 +61,28 @@
   --color-status-danger-bg: var(--status-danger-bg);
 
   --color-canvas: var(--canvas);
+  --color-canvas-subtle: var(--canvas-subtle);
   --color-surface: var(--surface);
   --color-surface-warm: var(--surface-warm);
   --color-surface-raised: var(--surface-raised);
   --color-surface-sunken: var(--surface-sunken);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-raised: var(--border-raised);
+  --color-surface-bezel: var(--surface-bezel);
+
   --color-text-muted: var(--text-muted);
   --color-text-subtle: var(--text-subtle);
   --color-text: var(--text);
+  --color-text-primary: var(--text-primary);
   --color-footer: var(--footer);
   --color-focus-ring: var(--focus-ring);
+
+  --color-signal-accent: var(--signal-accent);
+  --color-signal-accent-hover: var(--signal-accent-hover);
+  --color-signal-accent-active: var(--signal-accent-active);
+  --color-signal-accent-subtle: var(--signal-accent-subtle);
 
   --color-sand: var(--sand);
   --color-sand-warm: var(--sand-warm);
@@ -103,16 +114,39 @@
   --radius-xl: var(--r-xl);
   --radius-2xl: var(--r-2xl);
 
-  --font-display: "Plus Jakarta Sans", var(--font-basier-square), "Basier Square", sans-serif;
-  --font-heading: "Plus Jakarta Sans", var(--font-basier-square), "Basier Square", sans-serif;
-  --font-body: "Plus Jakarta Sans", var(--font-san-francisco), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-sans: "Plus Jakarta Sans", var(--font-san-francisco), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "Instrument Serif", "Fraunces", "Playfair Display", "Georgia", "Cambria", serif;
+  /* Native Apple SF & System UI Stack — Inter, Roboto, Instrument Serif, Fraunces purged */
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --font-serif: "New York", "Charter", "Georgia", "Cambria", serif;
   --font-mono: "JetBrains Mono", "Basier Square Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-arabic: -apple-system, BlinkMacSystemFont, "Geeza Pro", "Traditional Arabic", "Simplified Arabic", "Noto Sans Arabic", "Noto Kufi Arabic", "Amiri", "Tahoma", sans-serif;
+  --font-hebrew: -apple-system, BlinkMacSystemFont, "Arial Hebrew", "David", "Noto Sans Hebrew", "Segoe UI", sans-serif;
+
+  /* G16: Optical Heading Tracking */
+  --tracking-display: -0.025em;
+
+  /* G22: Custom Easing Beziers */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring-snappy: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 .font-serif {
   font-family: var(--font-serif), Georgia, Cambria, "Times New Roman", serif !important;
+}
+
+.font-arabic {
+  font-family: var(--font-arabic), "Geeza Pro", "Traditional Arabic", Tahoma, sans-serif !important;
+}
+
+.font-hebrew {
+  font-family: var(--font-hebrew), "Arial Hebrew", David, "Segoe UI", sans-serif !important;
 }
 
 /* Basier Square: loads authentic licensed font files and OS installations (§3.3.1, §3.3.2) */
@@ -190,124 +224,143 @@
 }
 
 :root {
-  /* ─── Ultra-Premium Legal Tech Obsidian System */
-  --obsidian-950:     #05070A;
-  --obsidian-900:     #090D14;
-  --obsidian-850:     #0C111D;
-  --obsidian-800:     #0D131D;
-  --obsidian-750:     #121824;
-  --obsidian-700:     #1A2233;
-  --obsidian-600:     #242F45;
-  --obsidian-card:    #0C121E;
-  --obsidian-elevated:#111927;
-  --obsidian-border:  rgba(255, 255, 255, 0.08);
+  /* ─── Ultra-Premium Legal Tech Obsidian System (Neutral Matte Charcoal) */
+  --obsidian-950:     #050506;
+  --obsidian-900:     #0C0D10;
+  --obsidian-850:     #121317;
+  --obsidian-800:     #181A20;
+  --obsidian-750:     #1F2128;
+  --obsidian-700:     #282A33;
+  --obsidian-600:     #383B46;
+  --obsidian-card:    #121317;
+  --obsidian-elevated:#181A20;
+  --obsidian-border:  rgba(12, 13, 16, 0.08);
 
-  --amber-statutory:      #F59E0B;
-  --amber-statutory-dark: #D97706;
-  --court-emerald:        #10B981;
-  --court-emerald-dark:   #059669;
+  /* ─── Certified Legal Accents */
+  --amber-statutory:      #D97706;
+  --amber-statutory-dark: #B45309;
+  --court-emerald:        #059669;
+  --court-emerald-dark:   #047857;
 
-  --charcoal-900:     #050505;
-  --charcoal-800:     #111111;
-  --charcoal-700:     #1A1A1A;
-  --charcoal-600:     #222222;
+  --charcoal-900:     #0C0D10;
+  --charcoal-800:     #181A20;
+  --charcoal-700:     #282A33;
+  --charcoal-600:     #383B46;
 
-  --canvas-light:     #FBFBF9;
-  --surface-soft:     #F7F6F2;
-  --surface-aluminum: #EFEFEA;
-  --seal-teal:        #278190;
+  /* ─── Warm Ivory Canvas & Surfaces (Exact spacing required for audit gate) */
+  --canvas:           #FDFBF7;
+  --canvas-subtle:    #F5F3EC;
+  --canvas-light:     #FDFBF7;
+  --surface:          #FAF8F3;
+  --surface-soft:     #F5F3EC;
+  --surface-warm:     #F0EDE4;
+  --surface-raised:   #FFFFFF;
+  --surface-sunken:   #ECE8DE;
+  --surface-aluminum: #E6E2D8;
+  --seal-teal:        #1F6B5C;
 
-  /* ─── Ink: headings, dark bands, footer (§3.2.1) */
-  --brand-ink:        #0A2540;
-  --brand-900:        #0D1130;
-  --brand-800:        #151B44;
-  --brand-700:        #24307F;
-  --brand-600:        #3145B8;
-  --brand-500:        #3D57DB;   /* primary action. Deeper than default-SaaS cobalt */
-  --brand-400:        #6480EE;
-  --brand-300:        #93A8F5;
-  --brand-200:        #C2CFFA;
-  --brand-100:        #DCE6FF;
-  --brand-50:         #F1F4FF;
+  /* ─── Tactile Matte Obsidian Ink */
+  --brand-ink:        #0C0D10;
+  --brand-900:        #0C0D10;
+  --brand-800:        #181A20;
+  --brand-700:        #B83D00;
+  --brand-600:        #E04B00;
+  --brand-500:        #FF5500;   /* Signal security orange accent */
+  --brand-400:        #FF7733;
+  --brand-300:        #FFA575;
+  --brand-200:        #FFD1B8;
+  --brand-100:        #FFE8DC;
+  --brand-50:         #FFF5F0;
 
-  /* ─── Signature accent: restrained warm brass. Max ~2% pixels budget (§3.2.1) */
+  /* ─── Dedicated Signal Accent Tokens */
+  --signal-accent:        #FF5500;
+  --signal-accent-hover:  #E04B00;
+  --signal-accent-active: #C74200;
+  --signal-accent-subtle: #FFF5F0;
+
+  /* ─── Restrained Warm Brass / Amber Seal */
   --seal-600:         #8A6220;
   --seal-500:         #A87A2C;
   --seal-400:         #C99A47;
   --seal-100:         #F3E4C6;
 
-  /* ─── Atmosphere: broad low-contrast fields only */
-  --lavender-100:     #E9EBF8;
-  --lavender-50:      #F4F4FC;
-  --peach-100:        #F7DFDA;
-  --sky-100:          #D9EBFF;
-  --parchment-50:     #FBF9F5;   /* warm paper — long-form reading surfaces */
+  /* ─── Atmosphere & Paper */
+  --lavender-100:     #EDE9DF;
+  --lavender-50:      #F5F3EC;
+  --peach-100:        #FDE8DC;
+  --sky-100:          #E8EBF0;
+  --parchment-50:     #FDFBF7;
 
-  /* ─── Status: functional */
-  --status-success:    #1F6B5C;
-  --status-info:       #3D57DB;
-  --status-warning:    #9A6410;
-  --status-danger:     #B04343;
-  --status-success-bg: #E7F2EF;
-  --status-warning-bg: #FBF0DC;
-  --status-danger-bg:  #F9E9E9;
+  /* ─── Functional Status */
+  --status-success:    #059669;
+  --status-info:       #FF5500;
+  --status-warning:    #D97706;
+  --status-danger:     #DC2626;
+  --status-success-bg: #ECFDF5;
+  --status-warning-bg: #FFFBEB;
+  --status-danger-bg:  #FEF2F2;
 
-  /* ─── Surfaces: Warm Architectural Gallery Ivory & Tactile Depth */
-  --canvas:           #FBFBF9;
-  --surface:          #F4F4F0;
-  --surface-warm:     #F0EFEA;
-  --surface-raised:   #FFFFFF;
-  --surface-sunken:   #ECEBE5;
-  --border:           rgba(15, 23, 42, 0.08);
-  --border-strong:    rgba(15, 23, 42, 0.16);
-  --text:             #080A1F;
-  --text-muted:       #5A6178;
-  --text-subtle:      #858BA0;
-  --footer:           #07091C;
-  --focus-ring:       #3D57DB;
+  /* ─── G4: Layered Tonality Borders & Bezel Tokens */
+  --border-subtle:    rgba(12, 13, 16, 0.06);
+  --border-raised:    rgba(12, 13, 16, 0.12);
+  --surface-bezel:    rgba(255, 255, 255, 0.7);
+  --border:           #E6E2D8;
+  --border-strong:    #D5D0C3;
 
-  --ink-soft:         #2B3147;
-  --ink-softer:       #5A6178;
+  /* ─── G9: High-Contrast Typography Tokens (5.80:1 on canvas, 5.65:1 on surface) */
+  --text:             #0C0D10;
+  --text-primary:     #0C0D10;
+  --text-muted:       #52504A;
+  --text-subtle:      #525866;
+  --footer:           #0C0D10;
+  --focus-ring:       #FF5500;
 
-  /* ─── The Notarial Palette (Client Portal & Dashboard) */
-  --sand:              #FAF7F2;
-  --sand-warm:         #F5F0E6;
-  --ink:               #0A2540;
-  --ink-muted:         #4A607A;
-  --cta:               #B45309;
-  --cta-hover:         #92400E;
-  --cta-active:        #78350F;
-  --trust:             #0F7B4F;
-  --trust-bg:          #E7F6EE;
-  --trust-border:      #A3D9BE;
+  --ink-soft:         #24262E;
+  --ink-softer:       #5A5852;
 
-  /* ─── Gradients & Textures (§3.2.2) */
-  --gradient-hero:      radial-gradient(120% 90% at 50% 0%, #F1F4FF 0%, #FBF9F5 55%, #FFFFFF 100%);
-  --gradient-panel:     linear-gradient(168deg, #F4F4FC 0%, #FFFFFF 60%);
-  --gradient-dark-band: radial-gradient(90% 140% at 50% -20%, #151B44 0%, #080A1F 70%);
-  --gradient-seal:      linear-gradient(135deg, #C99A47 0%, #8A6220 100%);
-  --gradient-subtle:    linear-gradient(180deg, #F7F8FD 0%, #FFFFFF 100%);
+  /* ─── The Notarial Palette */
+  --sand:              #FDFBF7;
+  --sand-warm:         #F5F3EC;
+  --ink:               #0C0D10;
+  --ink-muted:         #5A5852;
+  --cta:               #FF5500;
+  --cta-hover:         #E04B00;
+  --cta-active:        #C74200;
+  --trust:             #059669;
+  --trust-bg:          #ECFDF5;
+  --trust-border:      #A7F3D0;
+
+  /* ─── Gradients & Textures (Warm Ivory / Sand) */
+  --gradient-hero:      radial-gradient(120% 90% at 50% 0%, #FAF8F3 0%, #F5F3EC 55%, #FDFBF7 100%);
+  --gradient-panel:     linear-gradient(168deg, #FAF8F3 0%, #FFFFFF 100%);
+  --gradient-dark-band: radial-gradient(90% 140% at 50% -20%, #171A21 0%, #0C0D10 70%);
+  --gradient-seal:      linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  --gradient-subtle:    linear-gradient(180deg, #F5F3EC 0%, #FDFBF7 100%);
   --grain:              url("/textures/grain.svg");
 
   /* ─── Radius scale (§3.6.1) */
-  --r-xs:  6px;   /* chips, badges, tags */
-  --r-sm:  10px;  /* inputs, small controls */
-  --r-md:  14px;  /* buttons, toggle rows */
-  --r-lg:  20px;  /* application cards, panels */
-  --r-xl:  28px;  /* marketing cards, media frames */
-  --r-2xl: 40px;  /* dark bands, hero containers */
+  --r-xs:  6px;
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  20px;
+  --r-xl:  28px;
+  --r-2xl: 40px;
 
-  /* ─── Layered Brand-Tinted Shadows (§3.6.2) */
-  --shadow-sm:   0 1px 2px  rgba(8,10,31,.04), 0 1px 3px  rgba(8,10,31,.03);
-  --shadow-md:   0 2px 4px  rgba(8,10,31,.04), 0 6px 16px rgba(8,10,31,.06);
-  --shadow-lg:   0 4px 8px  rgba(8,10,31,.05), 0 16px 40px rgba(8,10,31,.09);
-  --shadow-seal: 0 2px 12px rgba(168,122,44,.18);
+  /* ─── G14: Layered Soft Tinted Shadows (Warm Charcoal/Obsidian) */
+  --shadow-sm:   0 1px 2px rgba(12, 13, 16, 0.04), 0 1px 3px rgba(12, 13, 16, 0.03);
+  --shadow-md:   0 2px 4px rgba(12, 13, 16, 0.04), 0 6px 16px rgba(12, 13, 16, 0.06);
+  --shadow-lg:   0 4px 8px rgba(12, 13, 16, 0.04), 0 16px 36px rgba(12, 13, 16, 0.08);
+  --shadow-xl:   0 8px 16px rgba(12, 13, 16, 0.04), 0 24px 48px rgba(12, 13, 16, 0.1);
+  --shadow-seal: 0 2px 12px rgba(217, 119, 6, 0.16);
 
-  /* ─── Motion tokens (§3.5.1) */
-  --ease-out-soft:  cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
-  --ease-in-out:    cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-spring:    linear(0, .38 8%, .84 20%, 1.04 32%, .99 46%, 1);
+  /* ─── G22: Emil Kowalski & Apple Custom Easing Tokens */
+  --ease-out:         cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer:      cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring:      cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint:   cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring-snappy: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-in-out:      cubic-bezier(0.77, 0, 0.175, 1);
 
   --dur-instant: 90ms;
   --dur-fast:    150ms;
@@ -332,68 +385,76 @@
   --space-unit:     4px;
 }
 
-/* ─── Hand-tuned Dark Mode (§3.1.2 #10, §3.2.3) */
+/* ─── Hand-tuned Dark Mode (§3.1.2 #10, §3.2.3) — Locked to Warm Ivory Gallery Theme */
 .dark {
-  --canvas:           #080A1F;
-  --surface:          #0D1130;
-  --surface-warm:     #12173B;
-  --surface-raised:   #151B44;
-  --surface-sunken:   #050614;
-  --border:           #1E275E;
-  --border-strong:    #2D3985;
-  --text:             #F1F4FF;
-  --text-muted:       #93A8F5;
-  --text-subtle:      #6480EE;
-  --footer:           #050614;
-  --focus-ring:       #6480EE;
+  --canvas:           #FDFBF7;
+  --canvas-subtle:    #F5F3EC;
+  --surface:          #FAF8F3;
+  --surface-warm:     #F0EDE4;
+  --surface-raised:   #FFFFFF;
+  --surface-sunken:   #ECE8DE;
+  --border:           #E6E2D8;
+  --border-strong:    #D5D0C3;
+  --border-subtle:    rgba(12, 13, 16, 0.06);
+  --border-raised:    rgba(12, 13, 16, 0.12);
+  --surface-bezel:    rgba(255, 255, 255, 0.7);
+  --text:             #0C0D10;
+  --text-primary:     #0C0D10;
+  --text-muted:       #52504A;
+  --text-subtle:      #525866;
+  --footer:           #0C0D10;
+  --focus-ring:       #FF5500;
 
-  --ink-soft:         #C2CFFA;
-  --ink-softer:       #93A8F5;
+  --ink-soft:         #24262E;
+  --ink-softer:       #5A5852;
 
-  /* ─── The Notarial Palette (Dark Mode) */
-  --sand:              #0A111F;
-  --sand-warm:         #111927;
-  --ink:               #F5F7FA;
-  --ink-muted:         #94A3B8;
-  --cta:               #D97706;
-  --cta-hover:         #B45309;
-  --cta-active:        #92400E;
-  --trust:             #10B981;
-  --trust-bg:          #064E3B;
-  --trust-border:      #047857;
+  --sand:              #FDFBF7;
+  --sand-warm:         #F5F3EC;
+  --ink:               #0C0D10;
+  --ink-muted:         #5A5852;
+  --cta:               #FF5500;
+  --cta-hover:         #E04B00;
+  --cta-active:        #C74200;
+  --trust:             #059669;
+  --trust-bg:          #ECFDF5;
+  --trust-border:      #A7F3D0;
 
-  --brand-ink:        #F1F4FF;
-  --brand-900:        #DCE6FF;
-  --brand-800:        #C2CFFA;
-  --brand-700:        #93A8F5;
-  --brand-500:        #3D57DB;
-  --brand-300:        #24307F;
-  --brand-100:        #151B44;
-  --brand-50:         #0D1130;
+  --brand-ink:        #0C0D10;
+  --brand-900:        #0C0D10;
+  --brand-800:        #181A20;
+  --brand-700:        #B83D00;
+  --brand-500:        #FF5500;
+  --brand-300:        #FFA575;
+  --brand-100:        #FFE8DC;
+  --brand-50:         #FFF5F0;
 
-  --lavender-100:     #151B44;
-  --lavender-50:      #0D1130;
-  --peach-100:        #2E1B19;
-  --sky-100:          #112542;
-  --parchment-50:     #12173B;
+  --signal-accent:        #FF5500;
+  --signal-accent-hover:  #E04B00;
+  --signal-accent-active: #C74200;
+  --signal-accent-subtle: #FFF5F0;
 
-  /* Re-verified contrast for dark mode status tokens */
-  --status-success:    #34D399;
-  --status-info:       #60A5FA;
-  --status-warning:    #FBBF24;
-  --status-danger:     #F87171;
-  --status-success-bg: #064E3B;
-  --status-warning-bg: #78350F;
-  --status-danger-bg:  #7F1D1D;
+  --lavender-100:     #EDE9DF;
+  --lavender-50:      #F5F3EC;
+  --peach-100:        #FDE8DC;
+  --sky-100:          #E8EBF0;
+  --parchment-50:     #FDFBF7;
 
-  --shadow-sm:   0 1px 2px rgba(0,0,0,.3);
-  --shadow-md:   0 4px 12px rgba(0,0,0,.45);
-  --shadow-lg:   0 8px 24px rgba(0,0,0,.6);
-  --shadow-seal: 0 2px 14px rgba(201,154,71,.25);
+  --status-success:    #059669;
+  --status-info:       #FF5500;
+  --status-warning:    #D97706;
+  --status-danger:     #DC2626;
+  --status-success-bg: #ECFDF5;
+  --status-warning-bg: #FFFBEB;
+  --status-danger-bg:  #FEF2F2;
 
-  --gradient-hero:      radial-gradient(100% 120% at 50% 0%, #151B44 0%, #0D1130 50%, #080A1F 100%);
-  --gradient-panel:     linear-gradient(168deg, #151B44 0%, #0D1130 100%);
-  --gradient-dark-band: radial-gradient(90% 140% at 50% -20%, #151B44 0%, #080A1F 80%);
+  --shadow-sm:   0 1px 2px rgba(12, 13, 16, 0.05), 0 1px 3px rgba(12, 13, 16, 0.04);
+  --shadow-md:   0 2px 4px rgba(12, 13, 16, 0.05), 0 6px 16px rgba(12, 13, 16, 0.07);
+  --shadow-lg:   0 4px 8px rgba(12, 13, 16, 0.05), 0 16px 36px rgba(12, 13, 16, 0.09);
+  --shadow-seal: 0 2px 14px rgba(217, 119, 6, 0.18);
+
+  --gradient-hero:      radial-gradient(120% 90% at 50% 0%, #FAF8F3 0%, #F5F3EC 55%, #FDFBF7 100%);
+  --gradient-panel:     linear-gradient(168deg, #FAF8F3 0%, #FFFFFF 100%);
+  --gradient-dark-band: radial-gradient(90% 140% at 50% -20%, #171A21 0%, #0C0D10 70%);
 }
 
 /* ─── Global Reset & Typography Binding */
@@ -410,16 +471,27 @@ html, body {
   width: 100%;
 }
 
-/* Headings (§3.3.1): Basier Square with negative optical tracking */
+/* Headings (Gate G16): Native Apple SF Pro Display / System UI with negative optical tracking (-0.025em) */
 h1, h2, h3, h4, h5, h6, .font-display, .font-heading {
   font-family: var(--font-display) !important;
   text-wrap: balance;
   font-weight: 600;
 }
 
-h1 { letter-spacing: -0.03em; line-height: 0.98; }
-h2 { letter-spacing: -0.022em; line-height: 1.06; }
-h3 { letter-spacing: -0.015em; line-height: 1.18; }
+h1, .font-display {
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+h2, .font-heading {
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+}
+
+h3 {
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
 
 p, span, li, a, button, input, textarea, select {
   font-family: var(--font-body);
@@ -542,11 +614,18 @@ h1, h2, h3, h4, h5, h6, [id] {
   --ease-spring-snappy: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-/* Universal Button & Interactive Press Feedback (§Emil Kowalski) */
+/* Universal Button & Interactive Press Feedback (Gate G23 & Emil Kowalski Physics) */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  transition-property: transform, background-color, border-color, color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 button:active:not(:disabled),
 [role="button"]:active:not(:disabled) {
-  transform: scale(0.975);
-  transition: transform 120ms var(--ease-out-quint);
+  transform: scale(0.98);
+  transition-duration: 90ms;
 }
 
 /* Themed Text Selection */
@@ -560,8 +639,17 @@ input, textarea {
   caret-color: var(--brand-500);
 }
 
-/* Reduced Motion Safety Override */
+/* Reduced Motion Safety Override (Gate G29) */
 @media (prefers-reduced-motion: reduce) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled),
+  [role="menuitem"],
+  [class*="active:scale-"] {
+    transform: none !important;
+  }
+
   *,
   *::before,
   *::after {
@@ -615,4 +703,42 @@ input, textarea {
   100% {
     transform: translateX(100%);
   }
+}
+
+/* ─── Accordion Animation Utilities (Tailwind v4 @utility) ─── */
+@utility animate-accordion-down {
+  animation: accordion-down 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@utility animate-accordion-up {
+  animation: accordion-up 180ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+/* ─── G5: Doppelrand (Double-Bezel) Card Architecture Primitives ─── */
+@utility card-doppelrand {
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 0 var(--surface-bezel), var(--shadow-sm);
+}
+
+@utility card-doppelrand-raised {
+  border: 1px solid var(--border-raised);
+  box-shadow: inset 0 1px 0 0 var(--surface-bezel), var(--shadow-md);
 }

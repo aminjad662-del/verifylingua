@@ -76,7 +76,7 @@ export default function UseCasesHubPage() {
                   </Button>
 
                   <Button asChild size="sm" className="gap-1.5 rounded-xl text-xs font-bold">
-                    <Link href="/order/triage">
+                    <Link href="/translate">
                       Start translation
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>

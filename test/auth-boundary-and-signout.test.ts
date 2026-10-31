@@ -18,8 +18,10 @@ describe("Strict View Separation & Authentication Boundary Suite", () => {
       accountType: "LAW_FIRM",
       companyName: "Firm Boundary LLP",
       phone: null,
+      passwordHash: "mock_password_hash",
       isGuest: false,
       createdAt: new Date(),
+      updatedAt: new Date(),
     });
   });
 

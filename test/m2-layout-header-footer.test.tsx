@@ -45,7 +45,7 @@ describe("Milestone M2 Layout & Copy Anti-Cliché Test Suite", () => {
       expect(html).toContain("USCIS CERTIFIED");
 
       // Signal Orange Primary CTA routing to /order/triage
-      expect(html).toContain("href=\"/order/triage\"");
+      expect(html).toContain("href=\"/translate\"");
       expect(html).toContain("bg-brand-500");
       expect(html).toContain("text-white");
 
@@ -68,7 +68,7 @@ describe("Milestone M2 Layout & Copy Anti-Cliché Test Suite", () => {
       expect(html).toContain("href=\"/how-it-works\"");
       expect(html).toContain("href=\"/counsel\"");
       expect(html).toContain("href=\"/verify\"");
-      expect(html).toContain("href=\"/order/triage\"");
+      expect(html).toContain("href=\"/translate\"");
     });
   });
 

@@ -70,7 +70,7 @@ export default function LanguagesPage() {
             </div>
 
             <Button size="sm" asChild className="shrink-0 gap-1.5">
-              <Link href="/order/triage?source=ar">
+              <Link href="/translate?source=ar">
                 Translate Arabic Document
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -130,7 +130,7 @@ export default function LanguagesPage() {
                   <div className="pt-3 border-t border-border flex items-center justify-between">
                     <span className="text-xs font-mono text-text-muted">24h Delivery</span>
                     <Button asChild size="sm" variant="outline" className="h-8 px-3 rounded-lg text-xs font-bold">
-                      <Link href={`/order/triage?source=${lang.code}`}>
+                      <Link href={`/translate?source=${lang.code}`}>
                         Select →
                       </Link>
                     </Button>

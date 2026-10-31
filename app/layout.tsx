@@ -62,6 +62,7 @@ const sanFrancisco = localFont({
 
 import { THEME_COLOR_LIGHT, THEME_COLOR_DARK } from "@/lib/theme-constants";
 import { ChunkErrorListener } from "@/components/chunk-error-listener";
+import { TranslationModalProvider } from "@/components/translation/TranslationModalContext";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -87,19 +88,21 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${basierSquare.variable} ${sanFrancisco.variable}`} suppressHydrationWarning>
       <head>
-        {/* Non-blocking Google Fonts: preconnect first, then stylesheet link.
-            Using <link> instead of CSS @import avoids render-blocking on Cloudflare edge. */}
+        {/* Non-blocking Google Fonts: JetBrains Mono for technical metadata; display/body uses native Apple SF stack.
+            Inter, Roboto, Instrument Serif, and Fraunces purged per Gate G1. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         />
       </head>
       <body className={`${basierSquare.variable} ${sanFrancisco.variable} min-h-screen bg-canvas text-ink-soft antialiased`}>
         <ChunkErrorListener />
-        {children}
+        <TranslationModalProvider>
+          {children}
+        </TranslationModalProvider>
         <SonnerProvider />
       </body>
     </html>

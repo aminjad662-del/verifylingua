@@ -20,8 +20,10 @@ import {
   Award,
   ChevronRight,
 } from "lucide-react";
+import { useTranslationModal } from "@/components/translation/TranslationModalContext";
 
 export function CompetitorComparisonView({ profile }: { profile: CompetitorProfile }) {
+  const { openModal } = useTranslationModal();
   const otherCompetitors = Object.values(COMPETITORS).filter(
     (c) => c.slug !== profile.slug
   );
@@ -60,7 +62,14 @@ export function CompetitorComparisonView({ profile }: { profile: CompetitorProfi
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <MagneticButton>
               <Button size="lg" asChild className="h-14 px-8 rounded-2xl text-base font-bold gap-2 shadow-md">
-                <Link href="/order/triage">
+                <Link
+                  href="/translate"
+                  
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openModal();
+                  }}
+                >
                   Start translation ($24.95/page)
                   <ArrowRight className="w-5 h-5" />
                 </Link>
@@ -318,7 +327,14 @@ export function CompetitorComparisonView({ profile }: { profile: CompetitorProfi
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <MagneticButton>
               <Button size="lg" asChild className="h-14 px-8 rounded-2xl text-base font-bold gap-2 shadow-md">
-                <Link href="/order/triage">
+                <Link
+                  href="/translate"
+                  
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openModal();
+                  }}
+                >
                   Start translation
                   <ArrowRight className="w-5 h-5" />
                 </Link>

@@ -22,32 +22,32 @@ export function PreFooterCTA() {
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 pt-1">
           <Link
-            href="/order/triage"
-            className="h-12 px-7 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer"
+            href="/translate"
+            className="h-12 px-7 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer"
           >
             <span>Start certified translation</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/counsel"
-            className="h-12 px-6 rounded-xl border border-border bg-surface-raised hover:bg-surface text-brand-ink font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] cursor-pointer"
+            className="h-12 px-6 rounded-xl border border-border bg-surface-raised hover:bg-surface text-text font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] cursor-pointer"
           >
             <span>Institutional law firm portal</span>
           </Link>
         </div>
 
         {/* Institutional Trust Badges */}
-        <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-text-muted font-mono">
+        <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-text-muted font-medium">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-brand-500" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
             USCIS Acceptance Guarantee & Warranty
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-brand-ink" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
             ATA Corporate Member No. 278190
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-brand-ink" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
             Statutory Privacy & Ephemeral Storage
           </span>
         </div>

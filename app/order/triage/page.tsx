@@ -89,6 +89,13 @@ const SPRING_TRANSITION = {
 
 export default function TriagePage() {
   const router = useRouter();
+
+  // Gracefully redirect directly to /translate
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      router.replace("/translate" + (window.location.search || ""));
+    }
+  }, [router]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // GSAP animated container refs

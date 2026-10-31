@@ -102,7 +102,7 @@ export default async function LanguageSpokePage({
 
             <div className="pt-4 flex items-center justify-center">
               <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md">
-                <Link href={`/order/triage?source=${lang.code}`}>
+                <Link href={`/translate?source=${lang.code}`}>
                   Translate {lang.name} Document
                   <ArrowRight className="w-5 h-5" />
                 </Link>

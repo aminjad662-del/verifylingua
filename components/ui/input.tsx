@@ -20,7 +20,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "flex h-12 w-full rounded-[var(--r-sm)] border border-border-strong bg-canvas px-4 py-3 text-base text-text placeholder:text-text-subtle transition-all duration-150",
+          "flex h-12 w-full rounded-[var(--r-sm)] border border-border-strong bg-canvas px-4 py-3 text-base text-text placeholder:text-text-subtle transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--focus-ring)] focus-visible:border-transparent",
           "disabled:cursor-not-allowed disabled:opacity-50",
           error && "border-status-danger focus-visible:ring-status-danger",

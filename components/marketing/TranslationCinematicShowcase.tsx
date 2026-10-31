@@ -499,7 +499,7 @@ export function TranslationCinematicShowcase() {
         {/* Direct Action Link */}
         <div className="text-center pt-2">
           <Button asChild size="lg" className="gap-2 px-8 h-14 rounded-full font-bold shadow-lg active:scale-[0.97] bg-brand-500 hover:bg-brand-600 text-white">
-            <Link href="/order/triage">
+            <Link href="/translate">
               Translate your document with 1:1 layout preservation
               <ArrowRight className="w-4 h-4" />
             </Link>

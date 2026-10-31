@@ -61,16 +61,16 @@ export function LegalComparisonMatrix() {
     if (typeof val === "boolean") {
       return val ? (
         <span
-          className={`inline-flex items-center justify-center w-6 h-6 rounded-md ${
+          className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
             isPrimary
-              ? "bg-brand-500/10 text-brand-500 border border-brand-500/20"
+              ? "bg-brand-50 dark:bg-brand-950/60 text-brand-600 border border-brand-200 dark:border-brand-800"
               : "bg-surface text-text-muted border border-border"
           }`}
         >
-          <CheckCircle2 className={`w-4 h-4 ${isPrimary ? "text-brand-500" : "text-brand-ink"}`} />
+          <CheckCircle2 className="w-4 h-4 text-status-success" />
         </span>
       ) : (
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-surface text-text-subtle border border-border">
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-surface text-text-subtle">
           <XCircle className="w-4 h-4 text-text-subtle" />
         </span>
       );
@@ -80,7 +80,7 @@ export function LegalComparisonMatrix() {
       <span
         className={`text-xs ${
           isPrimary 
-            ? "text-brand-500 font-bold" 
+            ? "text-brand-600 font-bold" 
             : "text-text-muted font-medium"
         }`}
       >
@@ -109,7 +109,7 @@ export function LegalComparisonMatrix() {
               <thead>
                 <tr className="border-b border-border bg-surface text-[11px] font-mono uppercase tracking-wider text-text-muted">
                   <th className="py-4 px-6 font-bold">Standard / Capability</th>
-                  <th className="py-4 px-6 font-bold text-brand-500 bg-surface-raised border-x border-border">
+                  <th className="py-4 px-6 font-bold text-brand-600 bg-brand-50/50 dark:bg-brand-950/30 border-x border-border">
                     VerifyLingua
                   </th>
                   <th className="py-4 px-6 font-bold">Traditional Agency</th>
@@ -123,7 +123,7 @@ export function LegalComparisonMatrix() {
                       <div className="font-bold text-brand-ink text-xs">{row.feature}</div>
                       <div className="text-[11px] text-text-muted mt-0.5">{row.subtext}</div>
                     </td>
-                    <td className="py-4 px-6 bg-surface-raised border-x border-border font-semibold">
+                    <td className="py-4 px-6 bg-brand-50/20 dark:bg-brand-950/20 border-x border-border font-semibold">
                       {renderCell(row.verifyLingua, true)}
                     </td>
                     <td className="py-4 px-6">

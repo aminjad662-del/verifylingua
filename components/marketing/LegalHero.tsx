@@ -64,8 +64,8 @@ export function LegalHero() {
           {/* Left Column: Authoritative Editorial Copy */}
           <div className="lg:col-span-6 space-y-6 text-left">
             {/* Regulatory Accreditation Marker */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg border border-border bg-surface-raised text-text-muted text-xs font-mono font-medium shadow-2xs">
-              <span className="flex h-1.5 w-1.5 rounded-full bg-brand-500" />
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-border bg-surface-raised text-text-muted text-xs font-medium shadow-xs">
+              <span className="flex h-2 w-2 rounded-full bg-court-emerald animate-pulse" />
               <span>USCIS 8 CFR § 103.2(b)(3) Compliance • ATA Member No. 278190</span>
             </div>
 
@@ -82,17 +82,17 @@ export function LegalHero() {
             {/* Primary & Secondary CTAs */}
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <Link
-                href="/order/triage"
-                className="h-12 px-6 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer"
+                href="/translate"
+                className="h-12 px-6 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-150 active:scale-[0.98] cursor-pointer"
               >
                 <span>Start certified translation</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/counsel"
-                className="h-12 px-5 rounded-xl border border-border bg-surface-raised hover:bg-surface text-brand-ink font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] cursor-pointer"
+                className="h-12 px-5 rounded-xl border border-border bg-surface-raised hover:bg-surface text-text font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] cursor-pointer"
               >
-                <Scale className="w-4 h-4 text-brand-500" />
+                <Scale className="w-4 h-4 text-brand-600" />
                 <span>Institutional law firm portal</span>
               </Link>
             </div>
@@ -101,7 +101,7 @@ export function LegalHero() {
             <div className="pt-4 border-t border-border grid grid-cols-3 gap-3 text-xs text-text-muted">
               <div className="space-y-0.5">
                 <div className="font-semibold text-brand-ink flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-status-success shrink-0" />
                   <span>Guaranteed Acceptance</span>
                 </div>
                 <div className="text-[11px] text-text-subtle">USCIS & federal courts</div>
@@ -109,7 +109,7 @@ export function LegalHero() {
 
               <div className="space-y-0.5">
                 <div className="font-semibold text-brand-ink flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-brand-ink shrink-0" />
+                  <Clock className="w-3.5 h-3.5 text-status-success shrink-0" />
                   <span>Under 24 Hours</span>
                 </div>
                 <div className="text-[11px] text-text-subtle">Standard turnaround</div>
@@ -117,7 +117,7 @@ export function LegalHero() {
 
               <div className="space-y-0.5">
                 <div className="font-semibold text-brand-ink flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand-ink shrink-0" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-status-success shrink-0" />
                   <span>RFE Defense</span>
                 </div>
                 <div className="text-[11px] text-text-subtle">Free 4-hour re-affidavit</div>
@@ -146,7 +146,7 @@ export function LegalHero() {
                     onClick={() => setActiveView("physical")}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                       activeView === "physical"
-                        ? "bg-brand-500 text-white shadow-2xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "text-text-muted hover:text-brand-ink"
                     }`}
                   >
@@ -156,7 +156,7 @@ export function LegalHero() {
                     onClick={() => setActiveView("translated")}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                       activeView === "translated"
-                        ? "bg-brand-500 text-white shadow-2xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "text-text-muted hover:text-brand-ink"
                     }`}
                   >
@@ -166,7 +166,7 @@ export function LegalHero() {
                     onClick={() => setActiveView("ledger")}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                       activeView === "ledger"
-                        ? "bg-brand-500 text-white shadow-2xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "text-text-muted hover:text-brand-ink"
                     }`}
                   >
@@ -261,21 +261,21 @@ export function LegalHero() {
                       className="p-5 sm:p-6 space-y-4 text-left"
                     >
                       {/* Certified Header Ribbon */}
-                      <div className="p-3.5 rounded-xl bg-surface border border-border flex items-center justify-between">
+                      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-surface-raised border border-border text-brand-ink flex items-center justify-center font-bold text-xs shadow-2xs">
+                          <div className="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
                             ATA
                           </div>
                           <div>
-                            <div className="text-xs font-bold text-brand-ink">
+                            <div className="text-xs font-bold text-amber-950 dark:text-amber-200">
                               American Translators Association Corporate Member
                             </div>
-                            <div className="text-[10px] font-mono text-text-muted">
+                            <div className="text-[10px] font-mono text-amber-800 dark:text-amber-400">
                               Member ID: No. 278190 • Sworn Certification of Fluency
                             </div>
                           </div>
                         </div>
-                        <div className="text-[10px] font-mono font-bold text-brand-ink px-2 py-0.5 rounded-md bg-surface-raised border border-border">
+                        <div className="text-[10px] font-mono font-bold text-amber-900 dark:text-amber-300 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30">
                           SEALED
                         </div>
                       </div>
@@ -291,7 +291,7 @@ export function LegalHero() {
                               Issuing Authority: Civil Registry of Mexico City • Folio No. 8492-C
                             </div>
                           </div>
-                          <span className="text-[10px] font-mono bg-surface border border-border text-brand-ink px-2 py-0.5 rounded-md font-semibold">
+                          <span className="text-[10px] font-mono bg-court-emerald/10 text-court-emerald px-2 py-0.5 rounded font-semibold">
                             8 CFR § 103.2
                           </span>
                         </div>
@@ -317,7 +317,7 @@ export function LegalHero() {
 
                         <div className="pt-2 border-t border-border flex items-center justify-between text-[10px] text-text-subtle font-mono">
                           <span>Signatures & Notary Stamps: Authenticated 1:1</span>
-                          <span className="text-brand-500 font-semibold">Ready for USCIS</span>
+                          <span className="text-status-success font-semibold">Ready for USCIS</span>
                         </div>
                       </div>
                     </motion.div>
@@ -336,7 +336,7 @@ export function LegalHero() {
                       <div className="p-4 rounded-xl bg-surface-raised border border-border space-y-3 font-mono text-xs">
                         <div className="flex items-center justify-between border-b border-border pb-2">
                           <span className="text-text-subtle text-[10px]">CERTIFICATE LEDGER RECORD</span>
-                          <span className="text-brand-500 text-[10px] font-bold bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-500/20">
+                          <span className="text-status-success text-[10px] font-bold bg-status-success/10 px-2 py-0.5 rounded border border-status-success/30">
                             IMMUTABLE
                           </span>
                         </div>
@@ -364,8 +364,8 @@ export function LegalHero() {
                         </div>
 
                         <div className="flex items-center justify-between text-[10px] text-text-subtle pt-1">
-                          <span className="flex items-center gap-1 text-brand-ink font-medium">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-brand-500" />
+                          <span className="flex items-center gap-1 text-court-emerald">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
                             Federal Evidentiary Rule 902(11) Self-Authenticating
                           </span>
                         </div>
@@ -377,12 +377,12 @@ export function LegalHero() {
                 {/* Sub-Docket Verification Strip */}
                 <div className="p-3 bg-surface border-t border-border flex items-center justify-between text-xs font-mono text-text-muted">
                   <span className="flex items-center gap-1.5 text-[11px]">
-                    <Lock className="w-3 h-3 text-brand-ink" />
+                    <Lock className="w-3 h-3 text-status-success" />
                     Zero-Knowledge Privacy Vault
                   </span>
                   <Link
                     href="/verify"
-                    className="text-[11px] font-semibold text-brand-500 hover:text-brand-600 flex items-center gap-1 transition-colors"
+                    className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-colors"
                   >
                     <span>Inspect verification ledger</span>
                     <ArrowRight className="w-3 h-3" />

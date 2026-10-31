@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
+import { useTranslationModal } from "@/components/translation/TranslationModalContext";
 
 interface UserProfile {
   name: string | null;
@@ -93,6 +94,7 @@ const LOCALES = [
 
 export function Header() {
   const pathname = usePathname();
+  const { openModal } = useTranslationModal();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [activeDropdown, setActiveDropdown] = React.useState<"solutions" | "documents" | null>(null);
   const [scrolled, setScrolled] = React.useState(false);
@@ -408,7 +410,7 @@ export function Header() {
                 {/* Credit Balance Badge (Only visible when authenticated) */}
                 {credits !== null && (
                   <Link
-                    href="/order/triage"
+                    href="/translate"
                     className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-statutory/30 bg-amber-statutory/10 text-amber-statutory text-xs font-semibold hover:bg-amber-statutory/20 transition-all active:scale-[0.98] shrink-0"
                     title="Available translation credits"
                   >
@@ -471,7 +473,7 @@ export function Header() {
 
             {/* Primary Action Button */}
             <Link
-              href="/order/triage"
+              href="/translate"
               className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs sm:text-sm font-semibold shadow-[0_2px_10px_rgba(255,85,0,0.22)] transition-all duration-150 ease-out active:scale-[0.98] group cursor-pointer whitespace-nowrap shrink-0 min-h-[40px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <span>Start translation</span>
@@ -507,12 +509,12 @@ export function Header() {
                   Navigation
                 </div>
                 <Link
-                  href="/order/triage"
+                  href="/translate"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-between p-2.5 rounded-xl hover:bg-canvas-subtle text-sm font-semibold text-brand-ink active:scale-[0.98] transition-transform"
                 >
-                  <span>Studio & Translation Intake</span>
-                  <ArrowRight className="w-4 h-4 text-text-muted" />
+                  <span>Start translation</span>
+                  <ArrowRight className="w-4 h-4 text-brand-500" />
                 </Link>
                 <Link
                   href="/how-it-works"

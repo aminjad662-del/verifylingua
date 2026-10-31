@@ -1,7 +1,12 @@
+"use client";
+
+import * as React from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ShieldAlert, ShieldCheck, CheckCircle2, Lock, Stamp, FileSearch, QrCode, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslationModal } from "@/components/translation/TranslationModalContext";
 
 const REJECTION_MOATS = [
   {
@@ -43,6 +48,7 @@ const REJECTION_MOATS = [
 ];
 
 export function RejectionMoatSection() {
+  const { openModal } = useTranslationModal();
   return (
     <section className="py-24 md:py-40 bg-canvas">
       <div className="max-w-7xl mx-auto px-6">
@@ -124,7 +130,14 @@ export function RejectionMoatSection() {
             </div>
 
             <Button size="lg" asChild className="gap-2 shrink-0 bg-brand-500 hover:bg-brand-600 text-white font-bold h-14 px-8 rounded-2xl shadow-lg active:scale-[0.98] transition-all">
-              <Link href="/order/triage">
+              <Link
+                href="/translate"
+                
+                onClick={(e) => {
+                  e.preventDefault();
+                  openModal();
+                }}
+              >
                 Start translation
                 <ArrowRight className="w-4 h-4" />
               </Link>

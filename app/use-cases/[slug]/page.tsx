@@ -95,7 +95,7 @@ export default async function UseCaseSpokePage({
 
             <div className="pt-4 flex items-center justify-center">
               <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md">
-                <Link href="/order/triage">
+                <Link href="/translate">
                   Start translation for this filing
                   <ArrowRight className="w-5 h-5" />
                 </Link>

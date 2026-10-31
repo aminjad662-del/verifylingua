@@ -125,7 +125,7 @@ export default async function GuideSpokePage({
                 Get an instant quote and pre-payment readability check in under 5 seconds. Flat $24.95/page.
               </p>
               <Button size="lg" asChild className="gap-2 px-8 h-12 rounded-xl text-sm font-bold shadow-md">
-                <Link href="/order/triage">
+                <Link href="/translate">
                   Start translation
                   <ArrowRight className="w-4 h-4" />
                 </Link>

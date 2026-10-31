@@ -16,8 +16,10 @@ describe("Sign Out & Session Destruction Suite", () => {
       accountType: "INDIVIDUAL",
       companyName: null,
       phone: null,
+      passwordHash: "mock_password_hash",
       isGuest: false,
       createdAt: new Date(),
+      updatedAt: new Date(),
     });
   });
 

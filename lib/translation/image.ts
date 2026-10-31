@@ -1,7 +1,7 @@
 import { sortBlocksReadingOrder } from "./svg-builder";
 import { Jimp } from "jimp";
 import { translateText } from "./translator";
-import { TranslationOptions } from "./types";
+import { TranslationOptions, SpatialTextBlock } from "./types";
 
 // Standard 5x7 bitmap font definitions for ASCII characters (32 to 126)
 const FONT_5X7: Record<string, number[]> = {
@@ -322,7 +322,8 @@ export async function translateImage(
   };
 
   // Sort blocks in natural reading order
-  const sortedBlocks = sortBlocksReadingOrder(
+  const blockMap = new Map(blocks.map((b) => [b.id, b]));
+  const sortedBlocks: SpatialTextBlock[] = sortBlocksReadingOrder(
     blocks.map((b) => ({
       id: b.id,
       x: b.x,
@@ -336,8 +337,14 @@ export async function translateImage(
     height,
     isRtl
   ).map((b) => {
-    const orig = blocks.find((ob) => ob.id === b.id) || b;
-    return { ...orig, x: b.x ?? orig.x, y: b.y ?? orig.y, width: b.width ?? orig.width, height: b.height ?? orig.height };
+    const orig = (b.id ? blockMap.get(b.id) : undefined) || blocks[0];
+    return {
+      ...orig,
+      x: b.x ?? orig.x,
+      y: b.y ?? orig.y,
+      width: b.width ?? orig.width,
+      height: b.height ?? orig.height,
+    };
   });
 
   // Inpaint original text regions and render translated text with collision prevention

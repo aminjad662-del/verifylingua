@@ -186,7 +186,7 @@ export default function DashboardPage() {
               <span>Verify Any Seal</span>
             </Link>
             <Link 
-              href="/order/triage" 
+              href="/translate" 
               className="h-10 px-5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />

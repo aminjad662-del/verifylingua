@@ -89,7 +89,7 @@ export function DashboardHeader({ user, orders = [], onTrackFiling }: DashboardH
             size="sm"
             className="h-10 px-3.5 rounded-xl text-xs font-bold gap-1.5 border-border bg-surface hover:bg-surface-raised text-brand-ink shadow-sm"
           >
-            <Link href="/order/triage">
+            <Link href="/translate">
               <FileUp className="w-3.5 h-3.5 text-brand-500" />
               <span>Upload Exhibit</span>
             </Link>
@@ -113,7 +113,7 @@ export function DashboardHeader({ user, orders = [], onTrackFiling }: DashboardH
               size="sm"
               className="h-10 px-4 rounded-xl font-black text-xs gap-2 bg-neutral-950 hover:bg-neutral-800 text-white shadow-sm"
             >
-              <Link href="/order/triage">
+              <Link href="/translate">
                 <Plus className="w-3.5 h-3.5" />
                 <span>+ Start New Translation</span>
               </Link>

@@ -289,8 +289,8 @@ describe("Document Paragraph Completeness & Layout Order Verification", () => {
 
     // Paragraph 2 (column beside illustration) stays clamped to xmax=568 so illustration is untouched
     const p2Block = esBlocks[5];
-    expect(p2Block.box_2d[1]).toBe(50);
-    expect(p2Block.box_2d[3]).toBe(568);
+    expect(p2Block.box_2d![1]).toBe(50);
+    expect(p2Block.box_2d![3]).toBe(568);
 
     // Copyright spans wide (x=520 to 940) to fit on one single line
     const copyrightBlock = esBlocks[11];

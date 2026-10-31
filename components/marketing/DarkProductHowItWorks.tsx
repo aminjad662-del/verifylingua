@@ -280,7 +280,7 @@ export function DarkProductHowItWorks() {
                   <div className="pt-2">
                     <MagneticButton>
                       <Button size="lg" asChild className="gap-2 shadow-md">
-                        <Link href="/order/triage">
+                        <Link href="/translate">
                           Test with your scan ($24.95/page)
                           <ArrowRight className="w-4 h-4" />
                         </Link>

@@ -1,9 +1,14 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
 import { ShieldCheck, Lock, Globe2, FileCheck, CheckCircle, ArrowRight, Scale, Building2 } from "lucide-react";
 import { PRODUCT_NAME } from "@/lib/constants";
+import { useTranslationModal } from "@/components/translation/TranslationModalContext";
 
 export function Footer() {
+  const { openModal } = useTranslationModal();
+
   return (
     <footer className="bg-surface text-text border-t border-border pt-16 pb-12 px-4 sm:px-6 w-full overflow-hidden relative">
       <div className="max-w-7xl mx-auto space-y-12 relative z-10">
@@ -25,7 +30,7 @@ export function Footer() {
 
           <div className="flex flex-wrap items-center gap-3.5">
             <Link
-              href="/order/triage"
+              href="/translate"
               className="inline-flex items-center justify-center gap-2.5 h-12 px-6 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold shadow-xs transition-transform duration-150 ease-out active:scale-[0.98] cursor-pointer group"
             >
               <span>Start translation</span>

@@ -98,7 +98,7 @@ export default function HowItWorksPage() {
 
             <div className="text-center pt-4">
               <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-full text-base font-bold shadow-md bg-brand-500 hover:bg-brand-600 text-white active:scale-[0.98] transition-transform">
-                <Link href="/order/triage">
+                <Link href="/translate">
                   Start your certified translation ($24.95/page)
                   <ArrowRight className="w-5 h-5" />
                 </Link>

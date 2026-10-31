@@ -129,7 +129,7 @@ export default function DocumentsPage() {
                         ~{doc.typicalPages} page avg. • 24h turnaround
                       </span>
                       <Button asChild size="sm" className="gap-1.5 rounded-xl font-bold">
-                        <Link href={`/order/triage?doc=${doc.slug}`}>
+                        <Link href={`/translate?doc=${doc.slug}`}>
                           Translate
                           <ArrowRight className="w-3.5 h-3.5" />
                         </Link>

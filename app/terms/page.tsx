@@ -114,7 +114,7 @@ export default function TermsPage() {
             </p>
             <div className="pt-2">
               <Link
-                href="/order/triage"
+                href="/translate"
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-brand-ink text-white text-xs font-bold hover:bg-brand-900 transition-colors"
               >
                 <span>Upload Document</span>

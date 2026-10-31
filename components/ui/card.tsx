@@ -3,18 +3,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "border border-border text-text transition-all duration-200",
+  "text-text transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200",
   {
     variants: {
       variant: {
         application:
-          "rounded-[var(--r-lg)] bg-surface-raised shadow-sm", // Application: --r-lg (20px), flatter, shadow-sm, no hover lift (§3.6.4)
+          "rounded-[var(--r-xl)] bg-surface-raised/60 border border-border/80 p-1.5 md:p-2 shadow-xs",
         marketing:
-          "rounded-[var(--r-xl)] bg-canvas shadow-md hover:-translate-y-0.5 hover:shadow-lg duration-220", // Marketing: --r-xl (28px), shadow-md, 2px hover lift (§3.6.4)
+          "rounded-[var(--r-xl)] bg-surface-raised/60 border border-border/80 p-1.5 md:p-2 shadow-md hover:-translate-y-0.5 hover:shadow-lg duration-220",
         warm:
-          "rounded-[var(--r-xl)] bg-surface-warm shadow-sm",
+          "rounded-[var(--r-xl)] bg-surface-warm/60 border border-border/80 p-1.5 md:p-2 shadow-xs",
         sunken:
           "rounded-[var(--r-lg)] bg-surface-sunken border-transparent",
+        doubleBezel:
+          "rounded-[var(--r-xl)] bg-surface-raised/60 border border-border/80 p-1.5 md:p-2 shadow-xs",
+        doppelrand:
+          "rounded-[var(--r-xl)] bg-surface-raised/60 border border-border/80 p-1.5 md:p-2 shadow-xs",
+        doppelrandRaised:
+          "rounded-[var(--r-xl)] bg-surface-raised border border-border-raised shadow-md",
       },
     },
     defaultVariants: {
@@ -25,18 +31,74 @@ const cardVariants = cva(
 
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+    VariantProps<typeof cardVariants> {
+  /** Enables concentric double-bezel enclosure (default: true, false for sunken) */
+  doubleBezel?: boolean;
+  /** Additional classes applied directly to the inner concentric core */
+  innerClassName?: string;
+}
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(cardVariants({ variant, className }))}
-      {...props}
-    />
-  )
+  (
+    {
+      className,
+      variant = "application",
+      doubleBezel,
+      innerClassName,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const isDouble =
+      doubleBezel !== undefined ? doubleBezel : variant !== "sunken";
+
+    if (!isDouble) {
+      return (
+        <div
+          ref={ref}
+          className={cn(cardVariants({ variant, className }))}
+          {...props}
+        >
+          {children}
+        </div>
+      );
+    }
+
+    return (
+      <div
+        ref={ref}
+        className={cn(cardVariants({ variant, className }))}
+        {...props}
+      >
+        <div
+          className={cn(
+            "rounded-[calc(var(--r-xl)-0.375rem)] md:rounded-[calc(var(--r-xl)-0.5rem)] bg-surface text-text shadow-xs border border-border/40 flex flex-col flex-1 h-full w-full overflow-hidden",
+            innerClassName
+          )}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
 );
 Card.displayName = "Card";
+
+const CardInner = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-[calc(var(--r-xl)-0.375rem)] md:rounded-[calc(var(--r-xl)-0.5rem)] bg-surface text-text shadow-xs border border-border/40 flex flex-col flex-1 h-full w-full overflow-hidden",
+      className
+    )}
+    {...props}
+  />
+));
+CardInner.displayName = "CardInner";
 
 const CardHeader = React.forwardRef<
   HTMLDivElement,
@@ -97,4 +159,4 @@ const CardFooter = React.forwardRef<
 ));
 CardFooter.displayName = "CardFooter";
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants };
+export { Card, CardInner, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants };

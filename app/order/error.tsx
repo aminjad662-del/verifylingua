@@ -90,7 +90,7 @@ export default function OrderError({
           </button>
 
           <Link
-            href="/order/triage"
+            href="/translate"
             className="w-full sm:w-auto h-12 px-5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4 text-slate-500" />

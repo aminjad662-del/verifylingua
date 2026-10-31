@@ -7,10 +7,9 @@ import { ShieldCheck, Lock, ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const FUNNEL_STEPS = [
-  { path: "/order/triage", name: "Triage", step: 1 },
-  { path: "/order/precheck", name: "Configure", step: 2 },
-  { path: "/order/configure", name: "Lock", step: 3 },
-  { path: "/order/checkout", name: "Checkout", step: 4 },
+  { path: "/order/precheck", name: "Configure", step: 1 },
+  { path: "/order/configure", name: "Lock", step: 2 },
+  { path: "/order/checkout", name: "Checkout", step: 3 },
 ];
 
 export default function OrderLayout({

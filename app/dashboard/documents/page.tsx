@@ -66,7 +66,7 @@ export default function DocumentVaultPage() {
           </div>
 
           <Button asChild size="lg" className="gap-2 rounded-2xl font-bold shadow-md">
-            <Link href="/order/triage">
+            <Link href="/translate">
               <Plus className="w-5 h-5" />
               Upload New Document
             </Link>
@@ -130,7 +130,7 @@ export default function DocumentVaultPage() {
 
               <div className="pt-4 border-t border-border flex items-center justify-between gap-3">
                 <Button asChild size="sm" className="gap-1.5 rounded-xl text-xs font-bold flex-1">
-                  <Link href={`/order/triage?vaultDoc=${doc.id}`}>
+                  <Link href={`/translate?vaultDoc=${doc.id}`}>
                     Re-Translate
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>

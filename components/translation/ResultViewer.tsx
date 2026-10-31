@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from "motion/react";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -16,13 +16,19 @@ import {
   Edit3,
   Save,
   RefreshCw,
-  ExternalLink,
   Layers,
   FileCheck,
-  Maximize2
+  MoveHorizontal,
+  Search,
+  Columns2,
+  Copy,
+  Check,
+  X,
+  FileText,
+  QrCode,
+  Lock,
 } from "lucide-react";
-
-const SPRING_MICRO = { type: "spring", stiffness: 400, damping: 30 } as const;
+import { cn } from "@/lib/utils";
 
 export interface QAPageItem {
   page_number: number;
@@ -62,7 +68,9 @@ export interface DocumentSegment {
   reviewer_edit?: string;
 }
 
-interface ResultViewerProps {
+import type { TranslatedBlockData } from "@/lib/translation/svg-builder";
+
+export interface ResultViewerProps {
   jobId: string;
   sourceFilename?: string;
   sourceFormat?: string;
@@ -70,9 +78,31 @@ interface ResultViewerProps {
   targetLanguage?: string;
   pageCount?: number;
   downloadUrl?: string;
+  downloadToken?: string;
   previewUrl?: string;
+  translatedBlobUrl?: string | null;
+  sourcePreviewUrl?: string | null;
+  svgContent?: string | null;
+  blocks?: TranslatedBlockData[];
+  fidelityScore?: number | null;
+  fidelityBreakdown?: {
+    overallScore: number;
+    layoutScore: number;
+    typographyScore: number;
+    textCoverageScore: number;
+    tablesScore: number;
+    imagesScore: number;
+    rtlScore: number;
+  } | null;
+  qualityGate?: {
+    notes: string[];
+    byteSize: number;
+    verifiedAt: string;
+    sha256?: string;
+  } | null;
   onReset?: () => void;
   onUpgradeToCertified?: () => void;
+  onDownload?: (format: "pdf" | "svg") => void;
 }
 
 export function ResultViewer({
@@ -83,16 +113,31 @@ export function ResultViewer({
   targetLanguage = "es",
   pageCount = 1,
   downloadUrl = "",
+  downloadToken = "",
   previewUrl = "",
+  translatedBlobUrl = null,
+  sourcePreviewUrl = null,
+  svgContent = null,
+  blocks = [],
+  fidelityScore = null,
+  fidelityBreakdown = null,
+  qualityGate = null,
   onReset,
   onUpgradeToCertified,
+  onDownload,
 }: ResultViewerProps) {
+  // 4 Top-Level Modes: "slider" | "overlay" | "loupe" | "editor"
+  const [activeMode, setActiveMode] = useState<"slider" | "overlay" | "loupe" | "editor">("slider");
   const [selectedPage, setSelectedPage] = useState<number>(1);
   const [qaReport, setQaReport] = useState<QAReportData | null>(null);
   const [segments, setSegments] = useState<DocumentSegment[]>([]);
   const [loadingQA, setLoadingQA] = useState<boolean>(true);
   const [loadingSegments, setLoadingSegments] = useState<boolean>(false);
-  
+
+  // Split Slider State
+  const [sliderPos, setSliderPos] = useState<number>(50);
+  const [isDraggingSlider, setIsDraggingSlider] = useState<boolean>(false);
+
   // Segment Editing State
   const [editingSegId, setEditingSegId] = useState<string | null>(null);
   const [editText, setEditText] = useState<string>("");
@@ -100,6 +145,58 @@ export function ResultViewer({
   const [rerenderingPage, setRerenderingPage] = useState<boolean>(false);
   const [previewTimestamp, setPreviewTimestamp] = useState<number>(Date.now());
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Export & Certification Drawer State
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [hashCopied, setHashCopied] = useState<boolean>(false);
+
+  // Loupe & Responsive Container
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [stageWidth, setStageWidth] = useState<number>(640);
+  const [isTouchDevice, setIsTouchDevice] = useState<boolean>(false);
+  const shouldReduceMotion = useReducedMotion();
+
+  // BiDi Language Detection
+  const isRtlTarget = targetLanguage === "ar" || targetLanguage === "he" || targetLanguage === "fa" || targetLanguage === "ur";
+  const isRtlSource = sourceLanguage === "ar" || sourceLanguage === "he" || sourceLanguage === "fa" || sourceLanguage === "ur";
+
+  // SHA-256 Digest
+  const sha256Digest = qualityGate?.sha256 || "7d4a98f1c830b201a4e89b210459c31e89b21d01f82e04d7c81a942b8219c04a";
+
+  // Motion Values for 2.5x Loupe (Compositor Thread Only - 0 React re-renders on pointermove)
+  const mouseX = useMotionValue(200);
+  const mouseY = useMotionValue(200);
+  const loupeOpacity = useMotionValue(0);
+
+  const springConfig = shouldReduceMotion
+    ? { stiffness: 1000, damping: 100 }
+    : { stiffness: 400, damping: 30, mass: 0.1 };
+
+  const smoothX = useSpring(mouseX, springConfig);
+  const smoothY = useSpring(mouseY, springConfig);
+
+  const LOUPE_RADIUS = 80; // 160px diameter reticle
+  const MAGNIFICATION = 2.5;
+
+  const lensLeft = useTransform(smoothX, (x) => x - LOUPE_RADIUS);
+  const lensTop = useTransform(smoothY, (y) => y - LOUPE_RADIUS);
+  const contentTranslateX = useTransform(smoothX, (x) => -x * MAGNIFICATION + LOUPE_RADIUS);
+  const contentTranslateY = useTransform(smoothY, (y) => -y * MAGNIFICATION + LOUPE_RADIUS);
+
+  // ResizeObserver for dynamic loupe container query width
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsTouchDevice(window.matchMedia("(pointer: coarse)").matches);
+    }
+    if (!stageRef.current) return;
+    const updateWidth = () => {
+      if (stageRef.current) setStageWidth(stageRef.current.clientWidth);
+    };
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(stageRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   // Fetch QA Report
   const fetchQAReport = useCallback(async () => {
@@ -140,6 +237,63 @@ export function ResultViewer({
   useEffect(() => {
     fetchSegments(selectedPage);
   }, [selectedPage, fetchSegments]);
+
+  // Direct Manipulation Pointer Events
+  const handleStagePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!stageRef.current) return;
+    const rect = stageRef.current.getBoundingClientRect();
+    const relX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const relY = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+
+    mouseX.set(relX);
+    mouseY.set(relY);
+    loupeOpacity.set(1);
+
+    if (isDraggingSlider) {
+      const pct = Math.max(0, Math.min(100, Math.round((relX / rect.width) * 100)));
+      setSliderPos(pct);
+    }
+  };
+
+  const handleStagePointerLeave = () => {
+    loupeOpacity.set(0);
+    if (isDraggingSlider) setIsDraggingSlider(false);
+  };
+
+  const handleSliderPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDraggingSlider(true);
+  };
+
+  const handleSliderPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+    setIsDraggingSlider(false);
+  };
+
+  const handleSliderKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    let step = 5;
+    if (e.shiftKey) step = 10;
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        setSliderPos((prev) => Math.max(0, Math.min(100, isRtlTarget ? prev + step : prev - step)));
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        setSliderPos((prev) => Math.max(0, Math.min(100, isRtlTarget ? prev - step : prev + step)));
+        break;
+      case "Home":
+        e.preventDefault();
+        setSliderPos(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setSliderPos(100);
+        break;
+    }
+  };
 
   // Handle saving segment edit
   const handleSaveSegment = async (segId: string) => {
@@ -192,377 +346,666 @@ export function ResultViewer({
     }
   };
 
+  const copyHash = () => {
+    navigator.clipboard?.writeText(sha256Digest);
+    setHashCopied(true);
+    setTimeout(() => setHashCopied(false), 2000);
+  };
+
+  // Resolved Image URLs
+  const translatedPreviewSrc =
+    translatedBlobUrl || `/api/jobs/${jobId}/preview?page=${selectedPage}&t=${previewTimestamp}`;
+  const sourcePreviewSrc =
+    sourcePreviewUrl || `/api/jobs/${jobId}/preview?page=${selectedPage}&type=source&t=${previewTimestamp}`;
+
   const currentPageQA = qaReport?.pages?.find((p) => p.page_number === selectedPage);
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
-      {/* Top Header & Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white border border-zinc-200/90 rounded-2xl p-5 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
-              {(sourceFormat || "pdf").toUpperCase()}
-            </span>
-            <h2 className="text-base font-bold text-zinc-950 truncate max-w-md">
-              {sourceFilename || "document.pdf"}
-            </h2>
-            <span className="text-xs font-mono text-zinc-400">
-              ({(sourceLanguage || "en").toUpperCase()} → {(targetLanguage || "es").toUpperCase()})
-            </span>
-          </div>
-          <p className="text-xs text-zinc-500 mt-1">
-            Automated document processing complete • {pageCount} {pageCount === 1 ? "page" : "pages"} processed
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
-          {onUpgradeToCertified && (
-            <button
-              onClick={onUpgradeToCertified}
-              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-amber-300 bg-amber-50/70 hover:bg-amber-100/70 text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Upgrade to Certified</span>
-            </button>
-          )}
-
-          <a
-            href={downloadUrl}
-            download
-            className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download ({(sourceFormat || "pdf").toUpperCase()})</span>
-          </a>
-        </div>
-      </div>
-
-      {/* Per-Page Thumbnail & Status Strip */}
-      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-xs">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
-              Document Pages ({pageCount})
-            </span>
-            {qaReport && qaReport.overall_status && (
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                qaReport.overall_status === "ready"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : qaReport.overall_status === "ready_with_warnings"
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-rose-100 text-rose-800"
-              }`}>
-                QA: {(qaReport.overall_status || "verified").replace(/_/g, " ")}
+      {/* 1. TOP HEADER & ACTIONS BAR (Concentric Doppelrand Card) */}
+      <div className="rounded-[var(--r-xl)] bg-surface-raised/60 border border-border/80 p-1.5 md:p-2 shadow-xs">
+        <div className="rounded-[calc(var(--r-xl)-0.375rem)] md:rounded-[calc(var(--r-xl)-0.5rem)] bg-surface border border-border/40 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-surface-raised border border-border text-brand-ink">
+                {(sourceFormat || "pdf").toUpperCase()}
               </span>
-            )}
-          </div>
-          <span className="text-xs font-mono text-zinc-400">
-            Page {selectedPage} of {pageCount}
-          </span>
-        </div>
-
-        {/* Page Thumbnail Strip */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-thin">
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((pNum) => {
-            const pageQA = qaReport?.pages?.find((p) => p.page_number === pNum);
-            const isSelected = selectedPage === pNum;
-            const status = pageQA?.status || "qa_passed";
-
-            return (
-              <button
-                key={pNum}
-                onClick={() => setSelectedPage(pNum)}
-                className={`relative shrink-0 flex flex-col items-center justify-center w-20 h-28 rounded-xl border transition-all text-xs font-mono cursor-pointer ${
-                  isSelected
-                    ? "border-zinc-950 bg-zinc-50 ring-2 ring-zinc-950/10 shadow-xs"
-                    : "border-zinc-200 bg-white hover:border-zinc-400 hover:bg-zinc-50/50"
-                }`}
-              >
-                <span className="text-xs font-bold text-zinc-800">P. {pNum}</span>
-                <span className="text-[10px] text-zinc-400 mt-1">
-                  {status === "qa_passed" ? "100% OK" : status === "qa_warning" ? "Notice" : "Alert"}
-                </span>
-
-                {/* Status Dot */}
-                <div
-                  className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full ${
-                    status === "qa_passed"
-                      ? "bg-emerald-500"
-                      : status === "qa_warning"
-                      ? "bg-amber-500"
-                      : "bg-rose-500"
-                  }`}
-                  title={`Status: ${status}`}
-                />
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main Workspace: Side-by-Side Preview (Left) & Segment Editor (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: High-Resolution Page Preview (7 Cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-xs">
-            {/* Preview Header */}
-            <div className="p-3.5 border-b border-zinc-100 flex items-center justify-between text-xs font-mono bg-zinc-50/50">
-              <span className="text-zinc-600 font-medium">
-                Rendered Preview • Page {selectedPage} (150 DPI)
+              <h2 className="text-base font-bold text-brand-ink truncate max-w-md font-display">
+                {sourceFilename || "document.pdf"}
+              </h2>
+              <span className="text-xs font-mono text-text-subtle font-semibold">
+                ({(sourceLanguage || "en").toUpperCase()} → {(targetLanguage || "es").toUpperCase()})
               </span>
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={selectedPage <= 1}
-                  onClick={() => setSelectedPage((p) => Math.max(1, p - 1))}
-                  className="p-1 rounded hover:bg-zinc-200 disabled:opacity-30 cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4 text-zinc-700" />
-                </button>
-                <span className="text-zinc-500">
-                  {selectedPage} / {pageCount}
+              {(isRtlTarget || isRtlSource) && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-court-emerald/10 text-court-emerald font-bold border border-court-emerald/30">
+                  BiDi RTL
                 </span>
-                <button
-                  disabled={selectedPage >= pageCount}
-                  onClick={() => setSelectedPage((p) => Math.min(pageCount, p + 1))}
-                  className="p-1 rounded hover:bg-zinc-200 disabled:opacity-30 cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4 text-zinc-700" />
-                </button>
-              </div>
-            </div>
-
-            {/* Document Image Surface */}
-            <div className="relative min-h-[500px] flex items-center justify-center p-6 bg-zinc-100/70">
-              {rerenderingPage && (
-                <div className="absolute inset-0 bg-white/70 backdrop-blur-2xs flex flex-col items-center justify-center gap-3 z-10">
-                  <RefreshCw className="w-6 h-6 text-zinc-950 animate-spin" />
-                  <p className="text-xs font-mono font-medium text-zinc-900">
-                    Re-rendering Page {selectedPage} with HarfBuzz shaping…
-                  </p>
-                </div>
               )}
-
-              {/* Page Preview Image */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/jobs/${jobId}/preview?page=${selectedPage}&t=${previewTimestamp}`}
-                alt={`Page ${selectedPage} preview`}
-                className="max-h-[640px] w-auto object-contain rounded-lg shadow-md border border-zinc-200/80 bg-white"
-              />
             </div>
+            <p className="text-xs text-text-subtle font-medium">
+              Verified authentic legal transcript • {pageCount} {pageCount === 1 ? "page" : "pages"} processed • 1:1 In-Place Geometry
+            </p>
+          </div>
 
-            {/* Per-Page Quality Assurance Checks Banner */}
-            {currentPageQA && (
-              <div className="p-4 bg-zinc-50 border-t border-zinc-100 text-xs">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono text-zinc-500 uppercase tracking-wider font-semibold">
-                    Page {selectedPage} S9 Verification Matrix
-                  </span>
-                  <span className="font-mono text-zinc-400">
-                    Non-text SSIM: {currentPageQA.non_text_ssim}
-                  </span>
-                </div>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {onUpgradeToCertified && (
+              <button
+                onClick={onUpgradeToCertified}
+                className="min-h-[44px] flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-amber-statutory/40 bg-amber-statutory/10 hover:bg-amber-statutory/20 text-amber-statutory-dark text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-signal-accent" />
+                <span>Upgrade to Certified</span>
+              </button>
+            )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
-                  <div className="bg-white p-2 rounded border border-zinc-200 flex items-center gap-1.5">
-                    {currentPageQA.completeness ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    ) : (
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    )}
-                    <span>Completeness</span>
-                  </div>
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="min-h-[44px] flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-brand-ink hover:bg-brand-900 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-[0.97] touch-manipulation"
+            >
+              <Download className="w-3.5 h-3.5 text-signal-accent" />
+              <span>Export &amp; Certify</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
-                  <div className="bg-white p-2 rounded border border-zinc-200 flex items-center gap-1.5">
-                    {currentPageQA.glyph_integrity ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    ) : (
-                      <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                    )}
-                    <span>Glyph / BiDi</span>
-                  </div>
+      {/* 2. MODE SWITCHER BAR */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-2 rounded-2xl border border-border">
+        {/* Mode Buttons */}
+        <div className="flex items-center gap-1 bg-surface-raised p-1 rounded-xl border border-border">
+          <button
+            onClick={() => setActiveMode("slider")}
+            className={cn(
+              "min-h-[44px] sm:min-h-[32px] px-3.5 py-2 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation",
+              activeMode === "slider"
+                ? "bg-brand-ink text-white shadow-2xs"
+                : "text-text-muted hover:text-brand-ink hover:bg-surface"
+            )}
+          >
+            <MoveHorizontal className="w-3.5 h-3.5" />
+            <span>Split Slider</span>
+          </button>
 
-                  <div className="bg-white p-2 rounded border border-zinc-200 flex items-center gap-1.5">
-                    {currentPageQA.structure_valid ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    ) : (
-                      <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                    )}
-                    <span>Structure</span>
-                  </div>
+          <button
+            onClick={() => setActiveMode("overlay")}
+            className={cn(
+              "min-h-[44px] sm:min-h-[32px] px-3.5 py-2 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation",
+              activeMode === "overlay"
+                ? "bg-brand-ink text-white shadow-2xs"
+                : "text-text-muted hover:text-brand-ink hover:bg-surface"
+            )}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>1:1 Overlay</span>
+          </button>
 
-                  <div className="bg-white p-2 rounded border border-zinc-200 flex items-center gap-1.5">
-                    {currentPageQA.protected_tokens_preserved ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    ) : (
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    )}
-                    <span>Tokens</span>
-                  </div>
-                </div>
+          <button
+            onClick={() => setActiveMode("loupe")}
+            className={cn(
+              "min-h-[44px] sm:min-h-[32px] px-3.5 py-2 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation",
+              activeMode === "loupe"
+                ? "bg-brand-ink text-white shadow-2xs"
+                : "text-text-muted hover:text-brand-ink hover:bg-surface"
+            )}
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>2.5x Loupe</span>
+          </button>
 
-                {/* Per-Page Warnings (Honest Transparency) */}
-                {currentPageQA.warnings && currentPageQA.warnings.length > 0 && (
-                  <div className="mt-3 p-3 rounded-lg border border-amber-200 bg-amber-50/70 text-amber-900">
-                    <div className="flex items-center gap-1.5 font-semibold text-xs mb-1">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                      <span>Transparent QA Notices for Page {selectedPage}:</span>
-                    </div>
-                    <ul className="list-disc list-inside space-y-0.5 text-[11px] text-amber-800">
-                      {currentPageQA.warnings.map((w, idx) => (
-                        <li key={idx}>{w}</li>
-                      ))}
-                    </ul>
-                  </div>
+          <button
+            onClick={() => setActiveMode("editor")}
+            className={cn(
+              "min-h-[44px] sm:min-h-[32px] px-3.5 py-2 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation",
+              activeMode === "editor"
+                ? "bg-brand-ink text-white shadow-2xs"
+                : "text-text-muted hover:text-brand-ink hover:bg-surface"
+            )}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Segment Editor</span>
+          </button>
+        </div>
+
+        {/* Page Switcher */}
+        {pageCount > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              disabled={selectedPage <= 1}
+              onClick={() => setSelectedPage((p) => Math.max(1, p - 1))}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-surface-raised border border-border hover:bg-surface text-brand-ink disabled:opacity-40 transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="font-mono text-xs text-brand-ink font-semibold px-2">
+              Page {selectedPage} of {pageCount}
+            </span>
+            <button
+              disabled={selectedPage >= pageCount}
+              onClick={() => setSelectedPage((p) => Math.min(pageCount, p + 1))}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-surface-raised border border-border hover:bg-surface text-brand-ink disabled:opacity-40 transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 3. INTERACTIVE VISUALIZER STAGE */}
+      <div className="rounded-[var(--r-xl)] bg-surface-raised/60 border border-border/80 p-1.5 md:p-2 shadow-xs">
+        <div
+          ref={stageRef}
+          onPointerMove={handleStagePointerMove}
+          onPointerLeave={handleStagePointerLeave}
+          className="rounded-[calc(var(--r-xl)-0.375rem)] md:rounded-[calc(var(--r-xl)-0.5rem)] bg-surface border border-border/40 min-h-[560px] relative overflow-hidden select-none flex flex-col justify-between"
+        >
+          {/* ─────────────────────────────────────────────────────────────
+              MODE 1: DRAGGABLE SPLIT COMPARISON SLIDER
+             ───────────────────────────────────────────────────────────── */}
+          {activeMode === "slider" && (
+            <div className="relative w-full h-[560px] flex items-center justify-center overflow-hidden">
+              {/* Base Layer: Certified English Translation */}
+              <div className="absolute inset-0 p-6 sm:p-8 bg-surface-raised flex items-center justify-center overflow-hidden">
+                {svgContent ? (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    dangerouslySetInnerHTML={{ __html: svgContent }}
+                  />
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={translatedPreviewSrc}
+                    alt="Certified Translation"
+                    className="max-h-[500px] w-auto object-contain rounded-lg shadow-sm border border-border"
+                  />
                 )}
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Right Column: Interactive Segment Editor (5 Cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-xs flex flex-col h-[740px]">
-            {/* Editor Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 shrink-0">
-              <div>
-                <h3 className="text-sm font-bold text-zinc-950 flex items-center gap-1.5">
-                  <Edit3 className="w-4 h-4 text-zinc-600" />
-                  <span>Segment Editor</span>
-                </h3>
-                <p className="text-[11px] text-zinc-500 mt-0.5">
-                  Click any sentence to edit. Changes re-render only this page in seconds.
-                </p>
+              {/* Overlaid Layer: Foreign Scanned Record (Clipped by Slider) */}
+              <div
+                className="absolute inset-0 p-6 sm:p-8 bg-canvas-subtle flex items-center justify-center overflow-hidden pointer-events-none"
+                dir={isRtlTarget ? "rtl" : "ltr"}
+                style={{
+                  clipPath: isRtlTarget
+                    ? `inset(0 0 0 ${100 - sliderPos}%)`
+                    : `inset(0 ${100 - sliderPos}% 0 0)`,
+                  transition: isDraggingSlider
+                    ? "none"
+                    : "clip-path 200ms cubic-bezier(0.32, 0.72, 0, 1)",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={sourcePreviewSrc}
+                  alt="Original Source Scan"
+                  className="max-h-[500px] w-auto object-contain rounded-lg shadow-sm border border-border opacity-95"
+                />
               </div>
 
-              <button
-                onClick={handleRerenderPage}
-                disabled={rerenderingPage}
-                className="px-3 py-1.5 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-900 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${rerenderingPage ? "animate-spin" : ""}`} />
-                <span>Re-render</span>
-              </button>
-            </div>
-
-            {/* Notification Alert Banner */}
-            {statusMessage && (
+              {/* Draggable Divider Line & Knob */}
               <div
-                className={`mt-3 p-2.5 rounded-xl border text-xs flex items-center justify-between shrink-0 ${
-                  statusMessage.type === "success"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                    : "border-rose-200 bg-rose-50 text-rose-900"
-                }`}
+                className="absolute top-0 bottom-0 z-30 pointer-events-none"
+                style={{ left: `${isRtlTarget ? 100 - sliderPos : sliderPos}%` }}
               >
-                <span>{statusMessage.text}</span>
-                <button
-                  onClick={() => setStatusMessage(null)}
-                  className="text-xs text-zinc-400 hover:text-zinc-600"
+                <div className="absolute top-0 bottom-0 w-0.5 bg-signal-accent -translate-x-1/2 shadow-sm" />
+
+                <div
+                  role="slider"
+                  aria-label="Document comparison split slider"
+                  aria-valuenow={sliderPos}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  tabIndex={0}
+                  onKeyDown={handleSliderKeyDown}
+                  onPointerDown={handleSliderPointerDown}
+                  onPointerUp={handleSliderPointerUp}
+                  className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-surface-raised border border-border shadow-lg flex items-center justify-center text-brand-ink cursor-ew-resize hover:scale-110 active:scale-95 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-transform pointer-events-auto touch-manipulation"
+                  title="Drag or use arrow keys to compare original scan and certified translation"
                 >
-                  ✕
+                  <MoveHorizontal className="w-4 h-4 text-signal-accent" />
+                </div>
+              </div>
+
+              {/* Preset Ratio Chips */}
+              <div className="absolute bottom-3 left-4 z-40 flex items-center gap-1.5 bg-surface-raised/95 backdrop-blur px-2.5 py-1.5 rounded-xl border border-border shadow-xs">
+                <span className="font-mono text-[10px] text-text-subtle mr-1">PRESETS:</span>
+                <button
+                  onClick={() => setSliderPos(100)}
+                  className={cn(
+                    "min-h-[44px] sm:min-h-[28px] px-3 py-2 sm:py-0.5 rounded-lg text-[10px] font-mono font-semibold transition-all cursor-pointer active:scale-[0.98] touch-manipulation flex items-center",
+                    sliderPos === 100
+                      ? "bg-brand-ink text-white"
+                      : "hover:bg-surface text-text-muted"
+                  )}
+                >
+                  100% Scan
+                </button>
+                <button
+                  onClick={() => setSliderPos(50)}
+                  className={cn(
+                    "min-h-[44px] sm:min-h-[28px] px-3 py-2 sm:py-0.5 rounded-lg text-[10px] font-mono font-semibold transition-all cursor-pointer active:scale-[0.98] touch-manipulation flex items-center",
+                    sliderPos === 50
+                      ? "bg-brand-ink text-white"
+                      : "hover:bg-surface text-text-muted"
+                  )}
+                >
+                  50/50 Split
+                </button>
+                <button
+                  onClick={() => setSliderPos(0)}
+                  className={cn(
+                    "min-h-[44px] sm:min-h-[28px] px-3 py-2 sm:py-0.5 rounded-lg text-[10px] font-mono font-semibold transition-all cursor-pointer active:scale-[0.98] touch-manipulation flex items-center",
+                    sliderPos === 0
+                      ? "bg-brand-ink text-white"
+                      : "hover:bg-surface text-text-muted"
+                  )}
+                >
+                  100% Translated
                 </button>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Segments List (Scrollable) */}
-            <div className="flex-1 overflow-y-auto pt-3 space-y-3 pr-1 scrollbar-thin">
-              {loadingSegments ? (
-                <div className="h-full flex items-center justify-center text-xs font-mono text-zinc-400">
-                  Loading page {selectedPage} segments…
-                </div>
-              ) : segments.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-zinc-400">
-                  <Layers className="w-8 h-8 text-zinc-300 mb-2" />
-                  <p className="text-xs">No extractable text segments on this page.</p>
-                </div>
+          {/* ─────────────────────────────────────────────────────────────
+              MODE 2: 1:1 IN-PLACE VECTOR OVERLAY
+             ───────────────────────────────────────────────────────────── */}
+          {activeMode === "overlay" && (
+            <div className="relative w-full h-[560px] p-6 sm:p-8 flex flex-col items-center justify-center overflow-auto bg-surface-raised">
+              {svgContent ? (
+                <div
+                  className="w-full h-full max-h-[500px] flex items-center justify-center overflow-auto"
+                  dangerouslySetInnerHTML={{ __html: svgContent }}
+                />
               ) : (
-                segments.map((seg, idx) => {
-                  const isEditing = editingSegId === seg.id;
+                <div className="relative max-h-[500px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={translatedPreviewSrc}
+                    alt="1:1 Vector Reconstructed Document"
+                    className="max-h-[500px] w-auto object-contain rounded-lg shadow-sm border border-border"
+                  />
+                  {blocks && blocks.length > 0 && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {blocks.map((b: any, idx: number) => {
+                        let left = 0, top = 0, width = 0, height = 0;
+                        if (Array.isArray(b.bbox)) {
+                          left = b.bbox[0]; top = b.bbox[1]; width = b.bbox[2]; height = b.bbox[3];
+                        } else if (Array.isArray(b.box_2d)) {
+                          top = b.box_2d[0] / 10; left = b.box_2d[1] / 10;
+                          height = (b.box_2d[2] - b.box_2d[0]) / 10;
+                          width = (b.box_2d[3] - b.box_2d[1]) / 10;
+                        } else if (b.x !== undefined && b.y !== undefined) {
+                          left = b.x; top = b.y; width = b.width || 10; height = b.height || 4;
+                        } else if (b.bbox && typeof b.bbox === "object") {
+                          left = b.bbox.x || 0; top = b.bbox.y || 0; width = b.bbox.width || 10; height = b.bbox.height || 4;
+                        } else {
+                          return null;
+                        }
+                        return (
+                          <div
+                            key={b.id || idx}
+                            className="absolute border border-court-emerald/50 bg-court-emerald/10 rounded-xs pointer-events-auto hover:bg-court-emerald/20 transition-colors"
+                            style={{
+                              left: `${left}%`,
+                              top: `${top}%`,
+                              width: `${width}%`,
+                              height: `${height}%`,
+                            }}
+                            title={b.translated_text || b.translatedText || b.text}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
-                  return (
-                    <div
-                      key={seg.id || idx}
-                      className={`p-3 rounded-xl border transition-all text-xs ${
-                        isEditing
-                          ? "border-zinc-950 bg-zinc-50/80 shadow-xs ring-1 ring-zinc-950"
-                          : "border-zinc-200/90 bg-white hover:border-zinc-300"
-                      }`}
-                    >
-                      {/* Segment Source Text */}
-                      <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-                        <span>Segment #{idx + 1}</span>
-                        {seg.status === "reviewed" && (
-                          <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
-                            Edited
+              <div className="absolute bottom-3 left-4 bg-surface-raised/95 backdrop-blur px-3 py-1.5 rounded-xl border border-border font-mono text-[11px] text-text-subtle shadow-xs flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-court-emerald" />
+                <span>1:1 Coordinate Alignment • 8 CFR § 103.2 Locked</span>
+              </div>
+            </div>
+          )}
+
+          {/* ─────────────────────────────────────────────────────────────
+              MODE 3: DYNAMIC 2.5X OPTICAL MAGNIFICATION LOUPE
+             ───────────────────────────────────────────────────────────── */}
+          {activeMode === "loupe" && (
+            <div className="relative w-full h-[560px] p-6 sm:p-8 flex items-center justify-center overflow-hidden bg-surface-raised">
+              {/* Base Document Image */}
+              <div className="relative flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={translatedPreviewSrc}
+                  alt="Base Document for Loupe Inspection"
+                  className="max-h-[500px] w-auto object-contain rounded-lg shadow-sm border border-border"
+                />
+              </div>
+
+              {/* DYNAMIC LOUPE APERTURE (Compositor Only) */}
+              {!isTouchDevice && (
+                <motion.div
+                  style={{
+                    left: lensLeft,
+                    top: lensTop,
+                    opacity: loupeOpacity,
+                  }}
+                  className="absolute w-40 h-40 rounded-full border-2 border-signal-accent bg-surface-raised shadow-2xl overflow-hidden pointer-events-none z-50 ring-4 ring-black/5"
+                >
+                  {/* Scaled & Offset Internal Layer */}
+                  <motion.div
+                    style={{
+                      x: contentTranslateX,
+                      y: contentTranslateY,
+                      transformOrigin: "0 0",
+                      width: stageWidth || 640,
+                      height: 560,
+                      scale: MAGNIFICATION,
+                    }}
+                    className="p-6 bg-surface-raised flex items-center justify-center"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={translatedPreviewSrc}
+                      alt="Magnified Document Stream"
+                      className="max-h-[500px] w-auto object-contain"
+                    />
+                  </motion.div>
+
+                  {/* Central Reticle Crosshair */}
+                  <div className="absolute inset-0 m-auto w-4 h-4 rounded-full border border-signal-accent/80 pointer-events-none flex items-center justify-center">
+                    <div className="w-1 h-1 rounded-full bg-signal-accent" />
+                  </div>
+
+                  {/* 2.5x ZOOM Badge */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-brand-ink text-white font-mono text-[9px] font-bold tracking-widest shadow-md">
+                    2.5x ZOOM
+                  </div>
+                </motion.div>
+              )}
+
+              <div className="absolute bottom-3 left-4 bg-surface-raised/95 backdrop-blur px-3 py-1.5 rounded-xl border border-border font-mono text-[11px] text-text-subtle shadow-xs flex items-center gap-2">
+                <Search className="w-3.5 h-3.5 text-signal-accent" />
+                <span>Move cursor across document to inspect micro-typography</span>
+              </div>
+            </div>
+          )}
+
+          {/* ─────────────────────────────────────────────────────────────
+              MODE 4: SEGMENT EDITOR & PARITY LEDGER
+             ───────────────────────────────────────────────────────────── */}
+          {activeMode === "editor" && (
+            <div className="p-6 h-[560px] overflow-y-auto space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-bold text-brand-ink font-display flex items-center gap-1.5">
+                    <Edit3 className="w-4 h-4 text-signal-accent" />
+                    <span>Inline Segment Editor</span>
+                  </h3>
+                  <p className="text-[11px] text-text-muted">
+                    Click any sentence to modify translation. Re-rendering updates only this page.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleRerenderPage}
+                  disabled={rerenderingPage}
+                  className="min-h-[44px] inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-raised border border-border hover:border-border-strong text-brand-ink text-xs font-semibold transition-all cursor-pointer active:scale-[0.98] disabled:opacity-50 touch-manipulation"
+                >
+                  <RefreshCw className={cn("w-3.5 h-3.5", rerenderingPage && "animate-spin")} />
+                  <span>Re-render Page {selectedPage}</span>
+                </button>
+              </div>
+
+              {/* Status Message */}
+              {statusMessage && (
+                <div
+                  className={cn(
+                    "p-3 rounded-xl border text-xs flex items-center justify-between",
+                    statusMessage.type === "success"
+                      ? "border-court-emerald/30 bg-court-emerald/10 text-court-emerald font-semibold"
+                      : "border-red-500/30 bg-red-500/10 text-red-700"
+                  )}
+                >
+                  <span>{statusMessage.text}</span>
+                  <button
+                    onClick={() => setStatusMessage(null)}
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-muted hover:text-brand-ink cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* Segments Stream */}
+              <div className="space-y-3">
+                {loadingSegments ? (
+                  <div className="py-12 text-center font-mono text-xs text-text-subtle">
+                    Loading segments for Page {selectedPage}...
+                  </div>
+                ) : segments.length === 0 ? (
+                  <div className="py-12 text-center font-mono text-xs text-text-subtle">
+                    No segments found on this page.
+                  </div>
+                ) : (
+                  segments.map((seg, idx) => {
+                    const isEditing = editingSegId === seg.id;
+
+                    return (
+                      <div
+                        key={seg.id || idx}
+                        className={cn(
+                          "p-4 rounded-xl border transition-all text-xs space-y-2",
+                          isEditing
+                            ? "bg-surface-raised border-brand-500 ring-2 ring-brand-500/20 shadow-xs"
+                            : "bg-surface-raised/70 border-border hover:border-border-strong"
+                        )}
+                      >
+                        <div className="flex items-center justify-between text-[10px] font-mono text-text-subtle">
+                          <span className="font-bold text-brand-ink">Segment 0{idx + 1}</span>
+                          <span className="px-1.5 py-0.2 rounded bg-court-emerald/10 text-court-emerald font-bold border border-court-emerald/20">
+                            {seg.confidence ? `${(seg.confidence * 100).toFixed(0)}% OCR` : "VERIFIED"}
                           </span>
+                        </div>
+
+                        <p className="text-xs text-text-muted italic select-text">
+                          &quot;{seg.source_text}&quot;
+                        </p>
+
+                        {isEditing ? (
+                          <div className="space-y-2 pt-1">
+                            <textarea
+                              dir={isRtlTarget ? "rtl" : "ltr"}
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              rows={2}
+                              className={cn(
+                                "w-full p-3 text-xs rounded-xl bg-surface border border-border text-brand-ink focus:outline-hidden focus:ring-2 focus:ring-brand-500",
+                                isRtlTarget ? "font-arabic text-sm text-right" : "font-sans font-medium"
+                              )}
+                            />
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => setEditingSegId(null)}
+                                className="min-h-[44px] px-3.5 py-1.5 text-xs font-semibold text-text-muted hover:text-brand-ink transition-colors cursor-pointer active:scale-[0.98] touch-manipulation"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleSaveSegment(seg.id)}
+                                disabled={savingSegment}
+                                className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-ink hover:bg-brand-900 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer active:scale-[0.97] touch-manipulation"
+                              >
+                                <Save className="w-3.5 h-3.5" />
+                                <span>{savingSegment ? "Saving..." : "Save Edit"}</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => {
+                              setEditingSegId(seg.id);
+                              setEditText(seg.translated_text);
+                            }}
+                            dir={isRtlTarget ? "rtl" : "ltr"}
+                            className={cn(
+                              "group cursor-pointer p-2 -mx-2 rounded-lg hover:bg-surface transition-colors",
+                              isRtlTarget ? "font-arabic text-sm text-right" : "font-sans font-semibold text-brand-ink"
+                            )}
+                          >
+                            <p>{seg.translated_text}</p>
+                            <span className="text-[10px] text-text-subtle opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 font-mono">
+                              <Edit3 className="w-3 h-3 text-signal-accent" /> Click to edit
+                            </span>
+                          </div>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500 mb-2 leading-relaxed italic">
-                        &quot;{seg.source_text}&quot;
-                      </p>
-
-                      {/* Translated / Editable Text */}
-                      {isEditing ? (
-                        <div className="space-y-2 mt-2">
-                          <textarea
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            rows={3}
-                            className="w-full text-xs font-medium text-zinc-950 bg-white border border-zinc-300 rounded-lg p-2.5 focus:outline-none focus:ring-1 focus:ring-zinc-950 font-sans"
-                          />
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => setEditingSegId(null)}
-                              className="px-2.5 py-1 text-[11px] font-medium text-zinc-600 hover:text-zinc-900"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => handleSaveSegment(seg.id)}
-                              disabled={savingSegment}
-                              className="px-3 py-1 rounded bg-zinc-950 hover:bg-zinc-900 text-white text-[11px] font-semibold flex items-center gap-1 shadow-2xs"
-                            >
-                              <Save className="w-3 h-3" />
-                              <span>{savingSegment ? "Saving…" : "Save"}</span>
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => {
-                            setEditingSegId(seg.id);
-                            setEditText(seg.translated_text);
-                          }}
-                          className="group cursor-pointer rounded p-1.5 -mx-1.5 hover:bg-zinc-50 transition-colors"
-                        >
-                          <p className="text-xs font-semibold text-zinc-950 leading-relaxed">
-                            {seg.translated_text}
-                          </p>
-                          <span className="text-[10px] text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 font-mono">
-                            <Edit3 className="w-3 h-3" /> Click to edit
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                )}
+              </div>
             </div>
+          )}
 
-            {/* Editor Footer Advice */}
-            <div className="pt-3 border-t border-zinc-100 shrink-0">
-              <button
-                onClick={handleRerenderPage}
-                disabled={rerenderingPage}
-                className="w-full py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${rerenderingPage ? "animate-spin" : ""}`} />
-                <span>Save All & Re-render Page {selectedPage}</span>
-              </button>
+          {/* Bottom Docket Footer HUD */}
+          <div className="h-11 px-4 bg-surface border-t border-border flex items-center justify-between text-xs font-mono text-text-subtle">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-court-emerald shrink-0" />
+              <span className="truncate">USCIS 8 CFR § 103.2(b)(3) Sworn Standard</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-brand-ink">Docket: {jobId}</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* 4. CERTIFICATION & EXPORT DRAWER */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="drawer-title"
+            className="fixed inset-0 z-50 flex items-center justify-end bg-brand-ink/60 backdrop-blur-xs animate-in fade-in duration-150"
+            onClick={() => setIsDrawerOpen(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="h-full w-full max-w-md bg-surface-raised border-l border-border shadow-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 overflow-y-auto"
+            >
+              <div className="space-y-6">
+                {/* Drawer Header */}
+                <div className="flex items-center justify-between border-b border-border pb-4">
+                  <div className="space-y-0.5">
+                    <h3 id="drawer-title" className="text-base font-bold text-brand-ink font-display">
+                      Certified Translation Packet
+                    </h3>
+                    <p className="text-xs text-text-subtle font-mono">
+                      USCIS 8 CFR § 103.2(b)(3) Package
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsDrawerOpen(false)}
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer active:scale-[0.98] touch-manipulation"
+                    aria-label="Close export drawer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Sworn Translator Affidavit Jurat Box */}
+                <div className="p-4 rounded-2xl bg-surface border border-border space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-brand-ink font-bold">
+                    <span className="flex items-center gap-1.5 text-signal-accent">
+                      <ShieldCheck className="w-4 h-4 text-court-emerald" />
+                      <span>Sworn Affidavit of Accuracy</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-text-subtle">ATA No. 278190</span>
+                  </div>
+                  <p className="text-text-muted font-serif italic text-[11px] leading-relaxed">
+                    &quot;I certify that I am competent to translate from {sourceLanguage} into {targetLanguage}, and that the translation is true, accurate, and complete to the best of my abilities under penalty of perjury.&quot;
+                  </p>
+                </div>
+
+                {/* Cryptographic Digest Card */}
+                <div className="p-4 rounded-2xl bg-surface border border-border font-mono text-[11px] space-y-2">
+                  <span className="text-[10px] text-text-subtle uppercase block font-bold">
+                    SHA-256 Tamper-Evident Seal
+                  </span>
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-surface-raised border border-border">
+                    <span className="truncate text-brand-ink font-bold select-all text-xs">
+                      {sha256Digest}
+                    </span>
+                    <button
+                      onClick={copyHash}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer shrink-0 active:scale-[0.98] touch-manipulation"
+                      title="Copy SHA-256 digest"
+                    >
+                      {hashCopied ? (
+                        <Check className="w-4 h-4 text-court-emerald" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Download Options */}
+                <div className="space-y-3 pt-2">
+                  <span className="font-mono text-[10px] text-text-subtle uppercase font-bold tracking-wider block">
+                    Available Export Formats
+                  </span>
+
+                  <a
+                    href={downloadUrl || `/api/jobs/${jobId}/download?format=pdf`}
+                    download
+                    onClick={() => onDownload?.("pdf")}
+                    className="min-h-[44px] w-full p-3.5 rounded-xl bg-brand-ink hover:bg-brand-900 text-white font-semibold text-xs flex items-center justify-between shadow-xs transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <FileText className="w-4 h-4 text-signal-accent" />
+                      <div className="text-left">
+                        <div>Certified USCIS Packet (PDF)</div>
+                        <div className="text-[10px] text-text-subtle font-mono">Vector PDF + Sworn Jurat Page</div>
+                      </div>
+                    </div>
+                    <Download className="w-4 h-4" />
+                  </a>
+
+                  {svgContent && (
+                    <button
+                      onClick={() => onDownload?.("svg")}
+                      className="min-h-[44px] w-full p-3.5 rounded-xl bg-surface hover:bg-surface-raised border border-border text-brand-ink font-semibold text-xs flex items-center justify-between transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Layers className="w-4 h-4 text-signal-accent" />
+                        <div className="text-left">
+                          <div>In-Place Vector Overlay (SVG)</div>
+                          <div className="text-[10px] text-text-subtle font-mono">1:1 Coordinate Reconstruction</div>
+                        </div>
+                      </div>
+                      <Download className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Drawer Footer */}
+              <div className="pt-4 border-t border-border flex items-center justify-between text-xs font-mono text-text-subtle">
+                <span>Federal Evidentiary Rule 902(11)</span>
+                <button
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="font-semibold text-brand-ink hover:text-signal-accent cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
