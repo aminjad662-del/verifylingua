@@ -64,11 +64,7 @@ export function CompetitorComparisonView({ profile }: { profile: CompetitorProfi
               <Button size="lg" asChild className="h-14 px-8 rounded-2xl text-base font-bold gap-2 shadow-md">
                 <Link
                   href="/translate"
-                  
-                  onClick={(e) => {
-                    e.preventDefault();
-                    openModal();
-                  }}
+                  className="flex items-center gap-2"
                 >
                   Start translation ($24.95/page)
                   <ArrowRight className="w-5 h-5" />
@@ -329,11 +325,7 @@ export function CompetitorComparisonView({ profile }: { profile: CompetitorProfi
               <Button size="lg" asChild className="h-14 px-8 rounded-2xl text-base font-bold gap-2 shadow-md">
                 <Link
                   href="/translate"
-                  
-                  onClick={(e) => {
-                    e.preventDefault();
-                    openModal();
-                  }}
+                  className="flex items-center gap-2"
                 >
                   Start translation
                   <ArrowRight className="w-5 h-5" />

@@ -23,6 +23,20 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/order/triage",
+        destination: "/translate",
+        permanent: false,
+      },
+      {
+        source: "/order/triage/:path*",
+        destination: "/translate",
+        permanent: false,
+      },
+    ];
+  },
   webpack: (config, { dev, isServer }) => {
     config.resolve = config.resolve || {};
     config.resolve.alias = {

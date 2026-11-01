@@ -11,10 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useTranslationModal } from "@/components/translation/TranslationModalContext";
-
 export function DiagnosticComparisonCards() {
-  const { openModal } = useTranslationModal();
   return (
     <section className="py-16 md:py-24 bg-surface border-b border-border/60 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 space-y-12">
@@ -175,11 +172,7 @@ export function DiagnosticComparisonCards() {
               <Button asChild size="sm" className="shrink-0 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs gap-1.5 shadow-xs active:scale-[0.98] transition-all">
                 <Link
                   href="/translate"
-                  
-                  onClick={(e) => {
-                    e.preventDefault();
-                    openModal();
-                  }}
+                  className="flex items-center gap-1.5"
                 >
                   Start translation
                   <ArrowRight className="w-3.5 h-3.5" />

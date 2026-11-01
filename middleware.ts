@@ -19,6 +19,13 @@ const SESSION_COOKIE = "vl_session";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Layer 2 Redirect: Route /order/triage directly to /translate preserving search parameters
+  if (pathname === "/order/triage" || pathname.startsWith("/order/triage/")) {
+    const redirectUrl = new URL("/translate", req.url);
+    redirectUrl.search = req.nextUrl.search;
+    return NextResponse.redirect(redirectUrl, 307);
+  }
+
   const isClientProtected = PROTECTED_CLIENT_ROUTES.some((route) => pathname.startsWith(route));
   const isAdminRoute = pathname.startsWith(ADMIN_ROUTE_PREFIX);
 

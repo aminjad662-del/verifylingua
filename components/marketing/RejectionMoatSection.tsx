@@ -132,11 +132,6 @@ export function RejectionMoatSection() {
             <Button size="lg" asChild className="gap-2 shrink-0 bg-brand-500 hover:bg-brand-600 text-white font-bold h-14 px-8 rounded-2xl shadow-lg active:scale-[0.98] transition-all">
               <Link
                 href="/translate"
-                
-                onClick={(e) => {
-                  e.preventDefault();
-                  openModal();
-                }}
               >
                 Start translation
                 <ArrowRight className="w-4 h-4" />

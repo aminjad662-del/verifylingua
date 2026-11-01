@@ -150,16 +150,18 @@ const PIPELINE_STAGES = [
 ];
 
 
-function SearchParamsHandler({
-  onParams,
-}: {
+interface SearchParamsHandlerProps {
   onParams: (params: {
     source?: string;
     target?: string;
     tier?: "automated" | "certified";
     doc?: string;
+    vaultDoc?: string;
+    pages?: number;
   }) => void;
-}) {
+}
+
+function SearchParamsHandler({ onParams }: SearchParamsHandlerProps) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -172,8 +174,12 @@ function SearchParamsHandler({
       searchParams.get("notarization") === "true" ||
       searchParams.get("expedited") === "true";
     const tier = isCert ? "certified" : tierParam === "automated" ? "automated" : undefined;
-    const doc = searchParams.get("doc") || searchParams.get("sample") || searchParams.get("vaultDoc") || undefined;
-    onParams({ source, target, tier, doc });
+    const doc = searchParams.get("doc") || searchParams.get("sample") || undefined;
+    const vaultDoc = searchParams.get("vaultDoc") || undefined;
+    const rawPages = searchParams.get("pages");
+    const pages = rawPages ? parseInt(rawPages, 10) : undefined;
+
+    onParams({ source, target, tier, doc, vaultDoc, pages });
   }, [searchParams, onParams]);
 
   return null;
@@ -215,29 +221,7 @@ export default function TranslatePage() {
   const [zoomTarget, setZoomTarget] = useState<"translated" | "original">("translated");
 
 
-  // Restore any pending upload session from storage
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("pending_upload");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.detectedLang) setSourceLang(parsed.detectedLang);
-        if (parsed.serviceType === "CERTIFIED" || parsed.tier === "certified") {
-          setServiceTier("certified");
-        }
-        if (parsed.fileBase64 && parsed.fileName && !stagedFile) {
-          fetch(parsed.fileBase64)
-            .then((r) => r.blob())
-            .then((b) => {
-              const file = new File([b], parsed.fileName, { type: b.type || "application/pdf" });
-              setStagedFile(file);
-              setStagedPreviewUrl(parsed.fileBase64);
-            })
-            .catch(() => {});
-        }
-      }
-    } catch {}
-  }, [stagedFile]);
+
 
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -399,6 +383,44 @@ export default function TranslatePage() {
     setJob(null);
   }, [stagedPreviewUrl, setBlobUrl]);
 
+  // Restore any pending upload session from storage with full fidelity
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem("pending_upload");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+
+      if (parsed.detectedLang && (parsed.detectedLang === "auto" || SUPPORTED_LANGS.some((l) => l.code === parsed.detectedLang))) {
+        setSourceLang(parsed.detectedLang);
+      }
+      if (parsed.serviceType === "CERTIFIED" || parsed.tier === "certified") {
+        setServiceTier("certified");
+      }
+      if (parsed.fileBase64 && parsed.fileName && !stagedFile) {
+        fetch(parsed.fileBase64)
+          .then((r) => r.blob())
+          .then((blob) => {
+            const ext = parsed.fileName.split(".").pop()?.toLowerCase() || "";
+            const mimeType = ext === "pdf" ? "application/pdf" : blob.type || "image/jpeg";
+            const file = new File([blob], parsed.fileName, {
+              type: mimeType,
+              lastModified: Date.now(),
+            });
+            handleStageFile(file);
+            toast.info("Session Restored", {
+              description: `Restored uploaded document: ${parsed.fileName}`,
+            });
+          })
+          .catch((err) => {
+            console.warn("[Translate] Could not restore file from base64:", err);
+          });
+      }
+    } catch (e) {
+      console.warn("[Translate] Failed to read pending_upload from sessionStorage:", e);
+    }
+  }, [handleStageFile, stagedFile]);
+
   // Load sample worksheet or authentic specimen
   const handleLoadSample = useCallback(async (customSample?: SpecimenSample) => {
     try {
@@ -439,19 +461,45 @@ export default function TranslatePage() {
       target?: string;
       tier?: "automated" | "certified";
       doc?: string;
+      vaultDoc?: string;
+      pages?: number;
     }) => {
-      if (params.source) setSourceLang(params.source);
-      if (params.target) setTargetLang(params.target);
+      // 1. Language validation against SUPPORTED_LANGS
+      if (params.source) {
+        const sLower = params.source.toLowerCase();
+        if (sLower === "auto" || SUPPORTED_LANGS.some((l) => l.code === sLower)) {
+          setSourceLang(sLower);
+        }
+      }
+      if (params.target) {
+        const tLower = params.target.toLowerCase();
+        if (SUPPORTED_LANGS.some((l) => l.code === tLower)) {
+          setTargetLang(tLower);
+        }
+      }
+
+      // 2. Service Tier
       if (params.tier) setServiceTier(params.tier);
+
+      // 3. Specimen sample auto-load with hyphen normalization
       if (params.doc) {
+        const normalizedDoc = params.doc.toLowerCase().replace(/[-_]/g, " ");
         const match = SPECIMEN_SAMPLES.find(
           (s) =>
-            s.name.toLowerCase().includes(params.doc!.toLowerCase()) ||
-            s.type.toLowerCase().includes(params.doc!.toLowerCase())
+            s.name.toLowerCase().includes(normalizedDoc) ||
+            s.type.toLowerCase().includes(normalizedDoc) ||
+            s.fileName.toLowerCase().includes(params.doc!.toLowerCase())
         );
         if (match) {
           handleLoadSample(match);
         }
+      }
+
+      // 4. Docket Vault document notification
+      if (params.vaultDoc) {
+        toast.info("Vault Exhibit Selected", {
+          description: `Exhibit ${params.vaultDoc} staged from your Docket Vault.`,
+        });
       }
     },
     [handleLoadSample]
@@ -792,8 +840,17 @@ export default function TranslatePage() {
 
           <div className="h-4 w-[1px] bg-border hidden sm:block" />
 
-          <Badge variant="outline" className="text-[10px] font-sans font-bold uppercase tracking-wider hidden sm:inline-flex">
-            Neural Vector Sandbox
+          <Link
+            href="/"
+            className="text-xs font-semibold text-text-muted hover:text-brand-ink transition-colors hidden sm:inline-flex items-center gap-1"
+          >
+            ← Overview
+          </Link>
+
+          <div className="h-4 w-[1px] bg-border hidden md:block" />
+
+          <Badge variant="outline" className="text-[10px] font-sans font-bold uppercase tracking-wider hidden md:inline-flex">
+            USCIS 8 CFR § 103.2 Compliant
           </Badge>
         </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React from "react";
 import Link from "next/link";
 import { ShieldCheck, Lock, Globe2, FileCheck, CheckCircle, ArrowRight, Scale, Building2 } from "lucide-react";
 import { PRODUCT_NAME } from "@/lib/constants";

@@ -65,11 +65,6 @@ export function TranslationModalProvider({
         "[data-start-translation-trigger]"
       );
       if (target) {
-        // If the target explicitly links to /translate, allow direct navigation
-        const href = target.getAttribute("href");
-        if (href && (href === "/translate" || href.startsWith("/translate?") || href.startsWith("/translate/"))) {
-          return;
-        }
         event.preventDefault();
         event.stopPropagation();
         openModal();

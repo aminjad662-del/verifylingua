@@ -344,11 +344,6 @@ export function ComparisonTable() {
           <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-2xl text-base font-bold shadow-md active:scale-[0.98] transition-all duration-200">
             <Link
               href="/translate"
-              
-              onClick={(e) => {
-                e.preventDefault();
-                openModal();
-              }}
             >
               Start translation with statutory warranty
               <ArrowRight className="w-5 h-5" />

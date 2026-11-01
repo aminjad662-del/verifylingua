@@ -245,9 +245,20 @@ export function TranslationCinematicShowcase() {
 
   return (
     <section ref={containerRef} className="py-20 md:py-32 bg-canvas border-b border-border/60 relative overflow-hidden">
+      {/* Warm Radiant Sunset Halo (Synthesia & Sunsama Reference Style) */}
+      <div
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] rounded-full bg-brand-500/10 blur-[140px] -z-10"
+        aria-hidden="true"
+      />
+
       <div className="max-w-7xl mx-auto px-6 space-y-12">
         {/* Flagship Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
+            <Layers className="w-4 h-4 text-brand-500" />
+            <span>Interactive Layout Preservation Simulator</span>
+          </div>
+
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-brand-ink tracking-tight font-display leading-[1.02]">
             Look Inside the <br className="hidden sm:inline" />
             <span className="text-brand-500">1:1 Translation Engine.</span>
@@ -370,8 +381,8 @@ export function TranslationCinematicShowcase() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Badge variant="default" className="text-[11px] font-sans font-bold py-1 px-3 bg-brand-500 text-white">
-                  {isTranslated ? "1:1 Coordinate Geometry Lock" : "Source Dimensions: 300 DPI"}
+                <Badge variant="default" className="text-[11px] font-mono py-1 px-3 bg-brand-500 text-white">
+                  {isTranslated ? "100% Geometry Match" : "Source Dimensions: 300 DPI"}
                 </Badge>
               </div>
             </div>
@@ -381,7 +392,7 @@ export function TranslationCinematicShowcase() {
               <h3 className="text-base sm:text-xl md:text-2xl font-black text-brand-ink tracking-tight font-display">
                 {isTranslated ? activeDoc.translatedHeader : activeDoc.originalHeader}
               </h3>
-              <p className="text-xs font-sans text-gray-500 uppercase tracking-wider">
+              <p className="text-xs font-mono text-gray-500 uppercase tracking-wider">
                 {isTranslated ? activeDoc.subHeaderEn : activeDoc.subHeaderEs}
               </p>
             </div>
@@ -415,7 +426,7 @@ export function TranslationCinematicShowcase() {
                   <Stamp className="w-4 h-4 text-brand-500 shrink-0" />
                   <span className="font-mono">{isTranslated ? activeDoc.sealNoticeEn : activeDoc.sealNoticeEs}</span>
                 </div>
-                <span className="text-[10px] font-sans font-bold text-brand-500 uppercase shrink-0">
+                <span className="text-[10px] font-mono font-bold text-brand-500 uppercase shrink-0">
                   Transcribed in [Brackets]
                 </span>
               </div>
@@ -441,7 +452,7 @@ export function TranslationCinematicShowcase() {
               </div>
 
               <div className="text-right">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-status-success/10 text-status-success border border-status-success/20 text-xs font-bold font-sans">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-status-success/10 text-status-success border border-status-success/20 text-xs font-bold font-mono">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>USCIS Competence Sworn</span>
                 </div>

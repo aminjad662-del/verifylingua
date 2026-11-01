@@ -20,6 +20,11 @@ export default function HowItWorksPage() {
         {/* Page Header */}
         <section className="pt-16 pb-12 md:pt-24 md:pb-16 bg-gradient-hero border-b border-border/60 text-center px-6">
           <div className="max-w-4xl mx-auto space-y-4">
+            <Badge variant="default" className="gap-1.5 py-1 px-4 text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-brand-500" />
+              Engineered for 100% USCIS Acceptance
+            </Badge>
+
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-brand-ink tracking-tight font-display">
               The Architecture Behind <br />
               <span className="text-brand-500">Rejection-Proof Translations.</span>
@@ -47,6 +52,9 @@ export default function HowItWorksPage() {
         <section className="py-20 md:py-28 bg-surface border-b border-border/60 px-6">
           <div className="max-w-5xl mx-auto space-y-12">
             <div className="text-center space-y-3">
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-brand-500">
+                Deterministic Turnaround Schedule
+              </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-ink">
                 How We Deliver in 24 Hours or Less
               </h2>
@@ -97,7 +105,7 @@ export default function HowItWorksPage() {
             </div>
 
             <div className="text-center pt-4">
-              <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-full text-base font-bold shadow-md bg-brand-500 hover:bg-brand-600 text-white active:scale-[0.98] transition-transform">
+              <Button size="lg" asChild className="gap-2 px-8 h-14 rounded-full text-base font-bold shadow-md bg-brand-500 hover:bg-brand-600 text-white">
                 <Link href="/translate">
                   Start your certified translation ($24.95/page)
                   <ArrowRight className="w-5 h-5" />

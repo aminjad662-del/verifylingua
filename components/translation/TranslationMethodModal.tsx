@@ -55,14 +55,13 @@ export function TranslationMethodModal({
   const handleSelectCertified = React.useCallback(() => {
     onOpenChange(false);
     let target = "/translate";
-    const searchParams = new URLSearchParams();
-    searchParams.set("tier", "certified");
     if (options?.targetQuery && Object.keys(options.targetQuery).length > 0) {
+      const searchParams = new URLSearchParams();
       Object.entries(options.targetQuery).forEach(([k, v]) => {
         searchParams.set(k, String(v));
       });
+      target = `${target}?${searchParams.toString()}`;
     }
-    target = `${target}?${searchParams.toString()}`;
     safeNavigate(router, target);
   }, [onOpenChange, options, router]);
 

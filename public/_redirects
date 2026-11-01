@@ -1,0 +1,4 @@
+/order/triage /translate 302
+/order/triage/ /translate 302
+/order/triage/* /translate 302
+/order/triage/:splat /translate 302

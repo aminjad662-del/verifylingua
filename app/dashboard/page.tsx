@@ -222,7 +222,7 @@ export default function DashboardPage() {
           <div className="p-5 rounded-xl bg-surface-raised border border-border shadow-xs flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-[11px] font-mono font-bold text-text-muted uppercase tracking-wider">USCIS Acceptance</p>
-              <h4 className="text-2xl font-bold text-court-emerald tabular-nums">100% Guaranteed</h4>
+              <h4 className="text-2xl font-bold text-court-emerald tabular-nums">Guaranteed Acceptance</h4>
               <p className="text-[10px] text-court-emerald">Backed by free RFE legal defense</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-court-emerald/10 flex items-center justify-center border border-court-emerald/25 text-court-emerald">
