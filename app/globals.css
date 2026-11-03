@@ -236,9 +236,9 @@
   --obsidian-elevated:#181A20;
   --obsidian-border:  rgba(12, 13, 16, 0.08);
 
-  /* ─── Certified Legal Accents */
-  --amber-statutory:      #D97706;
-  --amber-statutory-dark: #B45309;
+  /* ─── Certified Legal Accents (Bleu Precision) */
+  --amber-statutory:      #2563EB;
+  --amber-statutory-dark: #1D4ED8;
   --court-emerald:        #059669;
   --court-emerald-dark:   #047857;
 
@@ -259,24 +259,24 @@
   --surface-aluminum: #E6E2D8;
   --seal-teal:        #1F6B5C;
 
-  /* ─── Tactile Matte Obsidian Ink */
+  /* ─── Tactile Matte Obsidian Ink & Cerulean Bleu Tokens */
   --brand-ink:        #0C0D10;
   --brand-900:        #0C0D10;
-  --brand-800:        #181A20;
-  --brand-700:        #B83D00;
-  --brand-600:        #E04B00;
-  --brand-500:        #FF5500;   /* Signal security orange accent */
-  --brand-400:        #FF7733;
-  --brand-300:        #FFA575;
-  --brand-200:        #FFD1B8;
-  --brand-100:        #FFE8DC;
-  --brand-50:         #FFF5F0;
+  --brand-800:        #1E3A8A;
+  --brand-700:        #1E40AF;
+  --brand-600:        #1D4ED8;
+  --brand-500:        #2563EB;   /* Sovereign Cerulean Bleu Accent */
+  --brand-400:        #3B82F6;
+  --brand-300:        #60A5FA;
+  --brand-200:        #BFDBFE;
+  --brand-100:        #DBEAFE;
+  --brand-50:         #EFF6FF;
 
-  /* ─── Dedicated Signal Accent Tokens */
-  --signal-accent:        #FF5500;
-  --signal-accent-hover:  #E04B00;
-  --signal-accent-active: #C74200;
-  --signal-accent-subtle: #FFF5F0;
+  /* ─── Dedicated Signal Accent Tokens (Bleu) */
+  --signal-accent:        #2563EB;
+  --signal-accent-hover:  #1D4ED8;
+  --signal-accent-active: #1E40AF;
+  --signal-accent-subtle: #EFF6FF;
 
   /* ─── Restrained Warm Brass / Amber Seal */
   --seal-600:         #8A6220;
@@ -293,7 +293,7 @@
 
   /* ─── Functional Status */
   --status-success:    #059669;
-  --status-info:       #FF5500;
+  --status-info:       #2563EB;
   --status-warning:    #D97706;
   --status-danger:     #DC2626;
   --status-success-bg: #ECFDF5;
@@ -313,7 +313,7 @@
   --text-muted:       #52504A;
   --text-subtle:      #525866;
   --footer:           #0C0D10;
-  --focus-ring:       #FF5500;
+  --focus-ring:       #2563EB;
 
   --ink-soft:         #24262E;
   --ink-softer:       #5A5852;
@@ -323,18 +323,18 @@
   --sand-warm:         #F5F3EC;
   --ink:               #0C0D10;
   --ink-muted:         #5A5852;
-  --cta:               #FF5500;
-  --cta-hover:         #E04B00;
-  --cta-active:        #C74200;
+  --cta:               #2563EB;
+  --cta-hover:         #1D4ED8;
+  --cta-active:        #1E40AF;
   --trust:             #059669;
   --trust-bg:          #ECFDF5;
   --trust-border:      #A7F3D0;
 
-  /* ─── Gradients & Textures (Warm Ivory / Sand) */
+  /* ─── Gradients & Textures (Warm Ivory / Sand & Royal Bleu) */
   --gradient-hero:      radial-gradient(120% 90% at 50% 0%, #FAF8F3 0%, #F5F3EC 55%, #FDFBF7 100%);
   --gradient-panel:     linear-gradient(168deg, #FAF8F3 0%, #FFFFFF 100%);
   --gradient-dark-band: radial-gradient(90% 140% at 50% -20%, #171A21 0%, #0C0D10 70%);
-  --gradient-seal:      linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  --gradient-seal:      linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   --gradient-subtle:    linear-gradient(180deg, #F5F3EC 0%, #FDFBF7 100%);
   --grain:              url("/textures/grain.svg");
 
@@ -403,7 +403,7 @@
   --text-muted:       #52504A;
   --text-subtle:      #525866;
   --footer:           #0C0D10;
-  --focus-ring:       #FF5500;
+  --focus-ring:       #2563EB;
 
   --ink-soft:         #24262E;
   --ink-softer:       #5A5852;
@@ -412,26 +412,26 @@
   --sand-warm:         #F5F3EC;
   --ink:               #0C0D10;
   --ink-muted:         #5A5852;
-  --cta:               #FF5500;
-  --cta-hover:         #E04B00;
-  --cta-active:        #C74200;
+  --cta:               #2563EB;
+  --cta-hover:         #1D4ED8;
+  --cta-active:        #1E40AF;
   --trust:             #059669;
   --trust-bg:          #ECFDF5;
   --trust-border:      #A7F3D0;
 
   --brand-ink:        #0C0D10;
   --brand-900:        #0C0D10;
-  --brand-800:        #181A20;
-  --brand-700:        #B83D00;
-  --brand-500:        #FF5500;
-  --brand-300:        #FFA575;
-  --brand-100:        #FFE8DC;
-  --brand-50:         #FFF5F0;
+  --brand-800:        #1E3A8A;
+  --brand-700:        #1E40AF;
+  --brand-500:        #2563EB;
+  --brand-300:        #60A5FA;
+  --brand-100:        #DBEAFE;
+  --brand-50:         #EFF6FF;
 
-  --signal-accent:        #FF5500;
-  --signal-accent-hover:  #E04B00;
-  --signal-accent-active: #C74200;
-  --signal-accent-subtle: #FFF5F0;
+  --signal-accent:        #2563EB;
+  --signal-accent-hover:  #1D4ED8;
+  --signal-accent-active: #1E40AF;
+  --signal-accent-subtle: #EFF6FF;
 
   --lavender-100:     #EDE9DF;
   --lavender-50:      #F5F3EC;
@@ -440,7 +440,7 @@
   --parchment-50:     #FDFBF7;
 
   --status-success:    #059669;
-  --status-info:       #FF5500;
+  --status-info:       #2563EB;
   --status-warning:    #D97706;
   --status-danger:     #DC2626;
   --status-success-bg: #ECFDF5;
@@ -450,7 +450,7 @@
   --shadow-sm:   0 1px 2px rgba(12, 13, 16, 0.05), 0 1px 3px rgba(12, 13, 16, 0.04);
   --shadow-md:   0 2px 4px rgba(12, 13, 16, 0.05), 0 6px 16px rgba(12, 13, 16, 0.07);
   --shadow-lg:   0 4px 8px rgba(12, 13, 16, 0.05), 0 16px 36px rgba(12, 13, 16, 0.09);
-  --shadow-seal: 0 2px 14px rgba(217, 119, 6, 0.18);
+  --shadow-seal: 0 2px 14px rgba(37, 99, 235, 0.22);
 
   --gradient-hero:      radial-gradient(120% 90% at 50% 0%, #FAF8F3 0%, #F5F3EC 55%, #FDFBF7 100%);
   --gradient-panel:     linear-gradient(168deg, #FAF8F3 0%, #FFFFFF 100%);

@@ -30,7 +30,7 @@ export function PreFooterCTA() {
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
           <Link
-            href="/order/triage"
+            href="/translate"
             className="h-12 px-7 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors"
           >
             <span>Start Certified Translation</span>

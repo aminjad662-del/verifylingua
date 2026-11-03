@@ -5,6 +5,7 @@ import { LegalHero } from "@/components/marketing/LegalHero";
 import { InstitutionalTrustStrip } from "@/components/marketing/InstitutionalTrustStrip";
 import { LegalPrecisionBento } from "@/components/marketing/LegalPrecisionBento";
 import { WorkflowInteractive } from "@/components/marketing/WorkflowInteractive";
+import { ScrollWorldHero } from "@/components/marketing/ScrollWorldHero";
 import { SynthesiaHero } from "@/components/marketing/SynthesiaHero";
 import { SynthesiaWhyLoveBento } from "@/components/marketing/SynthesiaWhyLoveBento";
 import { SynthesiaTrustPills } from "@/components/marketing/SynthesiaTrustPills";
@@ -21,8 +22,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-canvas font-sans text-text selection:bg-brand-500/20 selection:text-brand-900 flex flex-col antialiased">
       <Header />
       <main className="flex-1 w-full">
-        {/* Synthesia Full Landing Suite (Reference Screenshot Injection) */}
-        <SynthesiaHero />
+        {/* Scroll-World Hero Suite (Continuous Diorama World + Verification Matrix) */}
+        <ScrollWorldHero />
         <SynthesiaWhyLoveBento />
         <SynthesiaTrustPills />
         <AcceptanceNetworkBanner />
@@ -35,6 +36,7 @@ export default function HomePage() {
 
         {/* Legal Precision Institutional Verification Suite */}
         <div className="hidden">
+          <SynthesiaHero />
           <LegalHero />
           <InstitutionalTrustStrip />
           <LegalPrecisionBento />

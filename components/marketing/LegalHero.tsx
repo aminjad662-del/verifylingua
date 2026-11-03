@@ -46,7 +46,7 @@ export function LegalHero() {
             {/* Direct Action CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
-                href="/order/triage"
+                href="/translate"
                 className="h-11 px-6 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors"
               >
                 <span>Start Certified Translation</span>

@@ -109,6 +109,12 @@
       "skillPath": "skills/find-security-vulnerabilities-in-code/SKILL.md",
       "computedHash": "b9aaebedb74653bed108ad54790be164fc70e60ca6fbca844e379cb0408498cf"
     },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "913b9d37d0d54047dd65222bb8c67b2bf04e3cb87dcad1729068d7a8b2c8c396"
+    },
     "fix-security-vulnerabilities-with-strix": {
       "source": "usestrix/strix",
       "sourceType": "github",
@@ -215,6 +221,12 @@
       "sourceType": "github",
       "skillPath": "skills/review-animations/SKILL.md",
       "computedHash": "6f8d633d7884c1390eff7af4bfaf7a450e798f117e1d49a555e00819dc877f64"
+    },
+    "scroll-world": {
+      "source": "oso95/scroll-world",
+      "sourceType": "github",
+      "skillPath": "skills/scroll-world/SKILL.md",
+      "computedHash": "07ad6d6bad1e154a271e7bf1ef582b4e56c892caba56aff2674e761dc34c6859"
     },
     "slides": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",

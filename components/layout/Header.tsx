@@ -411,10 +411,10 @@ export function Header() {
                 {credits !== null && (
                   <Link
                     href="/translate"
-                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-statutory/30 bg-amber-statutory/10 text-amber-statutory text-xs font-semibold hover:bg-amber-statutory/20 transition-all active:scale-[0.98] shrink-0"
+                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-brand-500/30 bg-brand-50 text-brand-600 text-xs font-semibold hover:bg-amber-statutory/20 transition-all active:scale-[0.98] shrink-0"
                     title="Available translation credits"
                   >
-                    <Zap className="w-3.5 h-3.5 text-amber-statutory fill-amber-statutory" />
+                    <Zap className="w-3.5 h-3.5 text-brand-500 fill-brand-500" />
                     <span><strong className="font-mono">{credits}</strong> Pages</span>
                   </Link>
                 )}

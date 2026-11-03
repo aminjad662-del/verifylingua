@@ -185,7 +185,7 @@ export function Footer() {
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-brand-ink font-bold font-sans">
-              <ShieldCheck className="w-4 h-4 text-amber-statutory shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-brand-500 shrink-0" />
               <span>ATA Corporate Member No. 278190</span>
             </div>
             <p className="leading-relaxed text-[11px]">
@@ -227,7 +227,7 @@ export function Footer() {
             <span>USCIS Acceptance Warranty</span>
           </div>
           <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-surface-raised border border-border text-xs text-text-muted shadow-2xs">
-            <ShieldCheck className="w-4 h-4 text-amber-statutory shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-brand-500 shrink-0" />
             <span>ATA Corporate Standards</span>
           </div>
           <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-surface-raised border border-border text-xs text-text-muted shadow-2xs">

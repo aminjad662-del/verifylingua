@@ -203,7 +203,7 @@ export function WorkflowInteractive() {
               {/* CTA link */}
               <div className="pt-2 flex justify-end">
                 <Link
-                  href="/order/triage"
+                  href="/translate"
                   className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1.5"
                 >
                   <span>Start with this stage</span>
