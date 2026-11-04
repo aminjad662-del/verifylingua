@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { ShieldCheck, CheckCircle2, ArrowRight, Building2, Globe2, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ export function AcceptanceNetworkBanner() {
   return (
     <section className="py-16 md:py-24 bg-surface border-b border-border/60">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="rounded-[var(--r-2xl)] bg-gradient-panel border border-brand-100/80 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-xl text-center space-y-8">
+        <motion.div initial={{ opacity: 0, y: 40, scale: 0.98 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-60px" }} className="rounded-[var(--r-2xl)] bg-gradient-panel border border-brand-100/80 p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-xl text-center space-y-8">
           {/* Subtle Ambient Glow */}
           <div
             className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full bg-brand-500/10 blur-[100px]"
@@ -26,7 +27,7 @@ export function AcceptanceNetworkBanner() {
           />
 
           <div className="max-w-3xl mx-auto space-y-4 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-mono font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-sans font-bold uppercase tracking-wider">
               <Globe2 className="w-4 h-4 text-brand-500" />
               <span>National &amp; International Acceptance Network</span>
             </div>
@@ -54,7 +55,7 @@ export function AcceptanceNetworkBanner() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-brand-ink leading-tight">{j.name}</p>
-                  <p className="text-[10px] text-ink-softer font-mono pt-1">{j.type}</p>
+                  <p className="text-[10px] text-ink-softer font-sans pt-1">{j.type}</p>
                 </div>
               </div>
             ))}
@@ -74,7 +75,7 @@ export function AcceptanceNetworkBanner() {
               </Link>
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

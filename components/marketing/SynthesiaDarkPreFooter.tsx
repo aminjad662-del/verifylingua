@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { 
   ArrowRight, 
@@ -80,6 +81,7 @@ export function SynthesiaDarkPreFooter() {
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
+        <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-80px" }}>
         {/* Top Eyebrow Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-obsidian-card border border-obsidian-border shadow-inner text-xs font-sans font-semibold text-brand-300 mb-8 backdrop-blur-md">
           <Sparkles className="w-3.5 h-3.5 text-brand-400 shrink-0" />
@@ -138,6 +140,8 @@ export function SynthesiaDarkPreFooter() {
           </div>
         </div>
 
+        </motion.div>
+
         {/* Interactive Verified Sample Document Strip */}
         <div className="mt-16 w-full max-w-5xl">
           <div className="flex items-center justify-between px-2 mb-4">
@@ -152,7 +156,7 @@ export function SynthesiaDarkPreFooter() {
 
           {/* Document selection cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left">
-            {sampleDocs.map((doc) => {
+            {sampleDocs.map((doc, idx) => {
               const isSelected = activeDoc === doc.id;
               return (
                 <button

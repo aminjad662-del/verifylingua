@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "motion/react";
 import { Lock, ShieldCheck, FileCheck, Award, Sparkles } from "lucide-react";
 
 const PILL_ITEMS = [
@@ -31,22 +32,26 @@ export function SynthesiaTrustPills() {
     <section className="py-16 sm:py-20 bg-canvas border-t border-border/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
+        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-60px" }} className="text-center max-w-3xl mx-auto space-y-3">
           <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-text font-display">
             Built on the foundations of legal precision and security
           </h3>
           <p className="text-sm sm:text-base text-text-muted">
             Institutional guarantees enforced across every certified document.
           </p>
-        </div>
+        </motion.div>
 
         {/* 4 Horizontal Pills (Matches Screenshot Pill Ribbon) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PILL_ITEMS.map((item, idx) => {
             const Icon = item.icon;
             return (
-              <div
+              <motion.div
                 key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true }}
                 className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-surface border border-border/80 shadow-xs hover:border-brand-300 hover:shadow-sm transition-all flex items-start gap-3.5 group cursor-default"
               >
                 <div className="w-10 h-10 rounded-lg bg-brand-50 border border-brand-200/80 flex items-center justify-center text-brand-600 shrink-0 group-hover:scale-105 transition-transform">
@@ -60,7 +65,7 @@ export function SynthesiaTrustPills() {
                     {item.subtitle}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

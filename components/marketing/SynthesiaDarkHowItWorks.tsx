@@ -106,7 +106,7 @@ export function SynthesiaDarkHowItWorks() {
     <section className="py-20 sm:py-32 bg-canvas">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Dark Container Box (Matches Screenshot Dark How It Works) */}
-        <div className="rounded-3xl bg-obsidian-950 border border-obsidian-border p-6 sm:p-12 shadow-2xl relative overflow-hidden">
+        <motion.div initial={{ opacity: 0, y: 48, scale: 0.98 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-100px" }} className="rounded-3xl bg-obsidian-950 border border-obsidian-border p-6 sm:p-12 shadow-2xl relative overflow-hidden">
           <div className="relative z-10 space-y-10 sm:space-y-12">
             {/* Header */}
             <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -240,7 +240,7 @@ export function SynthesiaDarkHowItWorks() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

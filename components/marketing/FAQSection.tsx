@@ -2,6 +2,7 @@
 import * as React from 'react';
 
 import Image from "next/image";
+import { motion } from "motion/react";
 import Link from "next/link";
 import {
   Accordion,
@@ -57,7 +58,7 @@ export function FAQSection() {
         {/* Synthesia 2-Column Minimalist Layout (Reference media_1788643404727.jpg) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column (Sticky 4-col Sidebar) */}
-          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
+          <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-60px" }} className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-200/60 bg-brand-50 text-brand-500 text-xs font-sans font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Compliance &amp; Legal FAQ</span>
@@ -108,10 +109,10 @@ export function FAQSection() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column (Expandable Accordion 8-col) */}
-          <div className="lg:col-span-8 space-y-4">
+          <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-60px" }} className="lg:col-span-8 space-y-4">
             <Accordion type="single" collapsible defaultValue="item-0" className="w-full divide-y divide-border/60">
               {FAQS.map((faq, idx) => (
                 <AccordionItem key={idx} value={`item-${idx}`} className="py-2 border-b border-border/60">
@@ -124,7 +125,7 @@ export function FAQSection() {
                 </AccordionItem>
               ))}
             </Accordion>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -20,7 +21,7 @@ export function SynthesiaCategoryLeader() {
     <section className="py-20 sm:py-28 bg-canvas border-t border-border/80 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16">
         {/* ΓöÇΓöÇΓöÇ Top 2-Column Section: Copy on Left, Quadrant Matrix on Right ΓöÇΓöÇΓöÇ */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-80px" }} className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Leadership Copy & Reviews Button */}
           <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
@@ -139,9 +140,9 @@ export function SynthesiaCategoryLeader() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* ΓöÇΓöÇΓöÇ Bottom Ribbon: 10+ Award & Certification Ribbons (Matches Screenshot Badge Row) ΓöÇΓöÇΓöÇ */}
+        {/* ─── Bottom Ribbon: 10+ Award & Certification Ribbons (Matches Screenshot Badge Row) ΓöÇΓöÇΓöÇ */}
         <div className="pt-6 border-t border-border/60">
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
             {[

@@ -29,7 +29,7 @@ export function SynthesiaWhyLoveBento() {
     <section className="py-20 sm:py-32 bg-surface/50 border-t border-border/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16">
         {/* Section Heading */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
+        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-60px" }} className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200/80 bg-brand-50/80 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5 text-brand-500" />
             <span>Proven Legal Results</span>
@@ -43,7 +43,7 @@ export function SynthesiaWhyLoveBento() {
             Everything you need to translate, certify, and submit vital civil documents
             with zero rejection risk and complete transparency.
           </p>
-        </div>
+        </motion.div>
 
         {/* 3-Card Bento Stack (Matches Screenshot Bento Layout) */}
         <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">

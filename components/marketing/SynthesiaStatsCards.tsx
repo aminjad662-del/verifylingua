@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { ArrowRight, TrendingUp, Clock, ShieldCheck } from "lucide-react";
 
@@ -39,20 +40,24 @@ export function SynthesiaStatsCards() {
     <section className="py-20 sm:py-28 bg-surface/40 border-t border-border/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-14">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
+        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-60px" }} className="text-center max-w-3xl mx-auto space-y-3">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-text font-display">
             You don&apos;t have to choose between cost, time, and quality
           </h2>
           <p className="text-base sm:text-lg text-text-muted leading-relaxed">
             VerifyLingua eliminates the traditional legal agency compromise through automated quality triage and certified ATA linguist precision.
           </p>
-        </div>
+        </motion.div>
 
         {/* 3 Large Stat Cards (Matches Screenshot Stats Cards) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
           {STAT_CARDS.map((card, idx) => (
-            <div
+            <motion.div
               key={idx}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true }}
               className="p-8 sm:p-10 rounded-2xl sm:rounded-3xl bg-surface-raised border border-border hover:border-brand-300 hover:shadow-md transition-all flex flex-col justify-between space-y-8 group"
             >
               <div className="space-y-4">
@@ -79,7 +84,7 @@ export function SynthesiaStatsCards() {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

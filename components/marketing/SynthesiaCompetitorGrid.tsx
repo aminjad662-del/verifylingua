@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React from "react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { ArrowRight, Scale, CheckCircle2, ShieldCheck, ExternalLink } from "lucide-react";
 
@@ -83,7 +84,7 @@ export function SynthesiaCompetitorGrid() {
     <section className="py-20 sm:py-28 bg-surface/30 border-t border-border/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-14">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
+        <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} viewport={{ once: true, margin: "-60px" }} className="text-center max-w-3xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-200 bg-brand-50 text-brand-700 text-xs font-sans font-bold uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 text-brand-600" />
             <span>Honest Market Comparisons</span>
@@ -96,13 +97,17 @@ export function SynthesiaCompetitorGrid() {
           <p className="text-base sm:text-lg text-text-muted leading-relaxed">
             Direct, factual comparisons to help immigration attorneys and applicants make the right certified choice.
           </p>
-        </div>
+        </motion.div>
 
         {/* 3x3 Grid (Matches Screenshot 3x3 Competitor Grid) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {COMPETITOR_CARDS.map((card, idx) => (
-            <div
+            <motion.div
               key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true }}
               className="p-6 sm:p-7 rounded-2xl bg-surface-raised border border-border hover:border-brand-300 hover:shadow-md transition-all flex flex-col justify-between space-y-6 group"
             >
               <div className="space-y-3">
@@ -134,7 +139,7 @@ export function SynthesiaCompetitorGrid() {
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
