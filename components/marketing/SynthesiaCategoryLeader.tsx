@@ -147,10 +147,10 @@ export function SynthesiaCategoryLeader() {
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
             {[
               { title: "G2 Leader", year: "2026", color: "text-brand-600" },
-              { title: "100% USCIS", year: "Accepted", color: "text-status-success" },
+              { title: "USCIS Compliant", year: "Certified", color: "text-status-success" },
               { title: "ATA Corporate", year: "No. 278190", color: "text-text" },
               { title: "Best Support", year: "Rank #1", color: "text-brand-600" },
-              { title: "Users Love Us", year: "4.98 / 5", color: "text-amber-600" },
+              { title: "Users Love Us", year: "4.98 / 5", color: "text-brand-600" },
               { title: "ISO 17100", year: "Certified", color: "text-text" },
               { title: "SOC2 Type II", year: "Compliant", color: "text-brand-600" },
               { title: "E-Verify Ready", year: "Official", color: "text-status-success" },

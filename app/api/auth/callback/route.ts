@@ -8,7 +8,11 @@ import { recordAuthAuditEvent } from "@/lib/auth/audit";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const callbackUrl = requestUrl.searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl =
+    requestUrl.searchParams.get("callbackUrl") ||
+    requestUrl.searchParams.get("returnUrl") ||
+    requestUrl.searchParams.get("redirect") ||
+    "/translate";
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
   const userAgent = request.headers.get("user-agent") || "unknown";
 
@@ -48,6 +52,7 @@ export async function GET(request: NextRequest) {
                   accountType: "INDIVIDUAL",
                   isGuest: false,
                   emailVerified: new Date(),
+                  creditsAvailable: 5,
                 },
               });
 

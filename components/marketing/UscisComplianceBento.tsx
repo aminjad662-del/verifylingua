@@ -110,7 +110,7 @@ export function UscisComplianceBento() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-surface-raised border border-border flex items-center justify-center text-amber-statutory">
+                    <div className="w-8 h-8 rounded-lg bg-surface-raised border border-border flex items-center justify-center text-brand-600">
                       <Scale className="w-4 h-4" />
                     </div>
                     <div>
@@ -120,7 +120,7 @@ export function UscisComplianceBento() {
                       </h3>
                     </div>
                   </div>
-                  <span className="font-mono text-[10px] text-amber-statutory bg-amber-statutory/10 border border-amber-statutory/20 px-2 py-0.5 rounded font-bold shrink-0">
+                  <span className="font-mono text-[10px] text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded font-bold shrink-0">
                     MANDATORY RULE
                   </span>
                 </div>
@@ -154,7 +154,7 @@ export function UscisComplianceBento() {
                     </button>
                   </div>
 
-                  <p className="font-serif italic text-xs text-brand-ink leading-relaxed pl-2 border-l-2 border-amber-statutory">
+                  <p className="font-serif italic text-xs text-brand-ink leading-relaxed pl-2 border-l-2 border-brand-500">
                     "{statutoryJuratText}"
                   </p>
 

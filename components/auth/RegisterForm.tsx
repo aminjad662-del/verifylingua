@@ -47,6 +47,9 @@ export function RegisterForm() {
     searchParams.get("redirect") ||
     "/translate";
 
+  const oauthError = searchParams.get("error");
+  const oauthProvider = searchParams.get("provider");
+
   // Form Render Timestamp for Bot Velocity Guard
   const renderTimestampRef = React.useRef<number>(Date.now());
 
@@ -67,7 +70,13 @@ export function RegisterForm() {
   // Submission UI state
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [ssoLoading, setSsoLoading] = React.useState<"google" | "apple" | null>(null);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(
+    oauthError === "oauth_unconfigured"
+      ? `${oauthProvider ? (oauthProvider === "google" ? "Google" : "Apple") : "Third-party"} Sign-Up requires active OAuth credentials. Please register your account using official email and password below.`
+      : oauthError === "oauth_callback_failed"
+      ? "OAuth registration could not be completed. Please create your account with email and password."
+      : null
+  );
 
   // Email typo suggestion calculation
   const suggestedEmail = React.useMemo(() => {
@@ -161,16 +170,7 @@ export function RegisterForm() {
 
   const handleSsoClick = (provider: "google" | "apple") => {
     setSsoLoading(provider);
-    let url = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-    if (email.trim() && email.includes("@")) {
-      url += `&email=${encodeURIComponent(email.trim().toLowerCase())}`;
-    }
-    if (name.trim()) {
-      url += `&name=${encodeURIComponent(name.trim())}`;
-    }
-    setTimeout(() => {
-      window.location.href = url;
-    }, 150);
+    window.location.href = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
   };
 
   return (

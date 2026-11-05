@@ -9,6 +9,9 @@ export interface MemoryUser {
   phone: string | null;
   isGuest: boolean;
   emailVerified?: Date | null;
+  creditsAvailable?: number;
+  creditsReserved?: number;
+  lifetimePagesUsed?: number;
   createdAt: Date;
   updatedAt: Date;
 }

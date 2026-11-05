@@ -17,6 +17,9 @@ export interface SafeUser {
   isGuest: boolean;
   emailVerified: Date | null;
   createdAt: Date;
+  creditsAvailable?: number;
+  creditsReserved?: number;
+  lifetimePagesUsed?: number;
 }
 
 /**
@@ -75,6 +78,9 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
               isGuest: true,
               emailVerified: true,
               createdAt: true,
+              creditsAvailable: true,
+              creditsReserved: true,
+              lifetimePagesUsed: true,
             },
           },
         },
@@ -109,6 +115,9 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
             isGuest: dbUser.isGuest,
             emailVerified: dbUser.emailVerified ?? null,
             createdAt: dbUser.createdAt,
+            creditsAvailable: dbUser.creditsAvailable ?? 0,
+            creditsReserved: dbUser.creditsReserved ?? 0,
+            lifetimePagesUsed: dbUser.lifetimePagesUsed ?? 0,
             passwordHash: "",
             updatedAt: dbUser.updatedAt,
           };
@@ -129,6 +138,9 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
         isGuest: memUser.isGuest,
         emailVerified: memUser.emailVerified ?? null,
         createdAt: memUser.createdAt,
+        creditsAvailable: memUser.creditsAvailable ?? 0,
+        creditsReserved: memUser.creditsReserved ?? 0,
+        lifetimePagesUsed: memUser.lifetimePagesUsed ?? 0,
       };
     }
   }

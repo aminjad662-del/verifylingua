@@ -116,7 +116,7 @@ export function LegalPrecisionBento() {
           {/* Bento Cell 3: Sworn Translator Competence Affidavit (Col Span 5) */}
           <div className="lg:col-span-5 p-6 sm:p-8 rounded-2xl bg-surface-raised border border-border shadow-xs flex flex-col justify-between space-y-6">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center text-brand-600">
                 <Scale className="w-5 h-5" />
               </div>
               <h3 className="text-xl font-bold text-brand-ink">
@@ -127,14 +127,14 @@ export function LegalPrecisionBento() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-2 text-xs">
-              <div className="font-bold text-amber-950 text-xs">
+            <div className="p-4 rounded-xl bg-surface border border-border/80 space-y-2 text-xs">
+              <div className="font-bold text-brand-ink text-xs">
                 Translator Competence Certificate
               </div>
-              <p className="text-[11px] text-amber-900 leading-snug">
+              <p className="text-[11px] text-text-muted leading-snug">
                 Signed under penalty of perjury under the laws of the United States. Admissible in federal court and consular interviews.
               </p>
-              <div className="text-[10px] font-mono text-amber-800 pt-1">
+              <div className="text-[10px] font-mono text-slate-500 pt-1">
                 Corporate Member No. 278190
               </div>
             </div>
@@ -147,7 +147,7 @@ export function LegalPrecisionBento() {
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <h3 className="text-xl font-bold text-brand-ink">
-                100% Acceptance & RFE Defense Warranty
+                USCIS Acceptance & Certified RFE Defense Warranty
               </h3>
               <p className="text-sm text-text-muted leading-relaxed">
                 If USCIS, an immigration court, or a university issues an inquiry regarding our translation, our senior legal staff drafts and dispatches a free supplemental response packet within 4 hours.

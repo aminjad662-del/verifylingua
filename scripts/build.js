@@ -4,7 +4,7 @@ const fs = require('fs');
 
 // Cloudflare Pages and local Windows build memory budget
 const isCloudflare = Boolean(process.env.CF_PAGES || process.env.CLOUDFLARE);
-const memoryMb = process.env.BUILD_MEMORY_MB || '2048';
+const memoryMb = process.env.BUILD_MEMORY_MB || (process.platform === 'win32' ? '4096' : '2048');
 let nodeOptions = (process.env.NODE_OPTIONS || '').replace(/--max-old-space-size=\d+/g, '').trim();
 process.env.NODE_OPTIONS = `${nodeOptions} --max-old-space-size=${memoryMb}`.trim();
 

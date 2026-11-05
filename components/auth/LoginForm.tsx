@@ -18,6 +18,7 @@ export function LoginForm() {
   const wasRegistered = searchParams.get("registered") === "true";
   const resetSuccess = searchParams.get("resetSuccess") === "true";
   const oauthError = searchParams.get("error");
+  const oauthProvider = searchParams.get("provider");
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -25,7 +26,11 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [ssoLoading, setSsoLoading] = React.useState<"google" | "apple" | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(
-    oauthError === "oauth_callback_failed" ? "OAuth sign-in could not be completed. Please try again or use your password." : null
+    oauthError === "oauth_unconfigured"
+      ? `${oauthProvider ? (oauthProvider === "google" ? "Google" : "Apple") : "Third-party"} Sign-In requires active OAuth client credentials (GOOGLE_CLIENT_ID / APPLE_CLIENT_ID). Please sign in using your official email and password below.`
+      : oauthError === "oauth_callback_failed"
+      ? "OAuth authentication could not be completed. Please try again or sign in with your email and password."
+      : null
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,13 +72,7 @@ export function LoginForm() {
 
   const handleSsoClick = (provider: "google" | "apple") => {
     setSsoLoading(provider);
-    let url = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-    if (email.trim() && email.includes("@")) {
-      url += `&email=${encodeURIComponent(email.trim().toLowerCase())}`;
-    }
-    setTimeout(() => {
-      window.location.href = url;
-    }, 150);
+    window.location.href = `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
   };
 
   return (

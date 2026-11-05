@@ -1,8 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { createSession, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/lib/auth/session";
-import { memoryUsers } from "@/lib/auth/dev-store";
-import { recordAuthAuditEvent } from "@/lib/auth/audit";
 import { createClient } from "@/supabase/server";
 
 export async function GET(
@@ -20,17 +16,42 @@ export async function GET(
   }
 
   const searchParams = req.nextUrl.searchParams;
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const userRequestedEmail = searchParams.get("email")?.trim().toLowerCase();
-  const userRequestedName = searchParams.get("name")?.trim();
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-  const userAgent = req.headers.get("user-agent") || "unknown";
+  const callbackUrl =
+    searchParams.get("callbackUrl") ||
+    searchParams.get("returnUrl") ||
+    searchParams.get("redirect") ||
+    "/translate";
+  const origin = req.nextUrl.origin;
 
-  // 1. Attempt official Supabase OAuth redirect if enabled
+  // 1. Direct Google OAuth 2.0 / OIDC Flow (Standard Authorization Code Flow)
+  if (provider === "google" && process.env.GOOGLE_CLIENT_ID) {
+    const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    googleAuthUrl.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID);
+    googleAuthUrl.searchParams.set("redirect_uri", `${origin}/api/auth/callback/google`);
+    googleAuthUrl.searchParams.set("response_type", "code");
+    googleAuthUrl.searchParams.set("scope", "openid email profile");
+    googleAuthUrl.searchParams.set("access_type", "offline");
+    googleAuthUrl.searchParams.set("prompt", "select_account");
+    googleAuthUrl.searchParams.set("state", JSON.stringify({ callbackUrl, provider: "google" }));
+    return NextResponse.redirect(googleAuthUrl.toString());
+  }
+
+  // 2. Direct Apple Sign-In Flow
+  if (provider === "apple" && process.env.APPLE_CLIENT_ID) {
+    const appleAuthUrl = new URL("https://appleid.apple.com/auth/authorize");
+    appleAuthUrl.searchParams.set("client_id", process.env.APPLE_CLIENT_ID);
+    appleAuthUrl.searchParams.set("redirect_uri", `${origin}/api/auth/callback`);
+    appleAuthUrl.searchParams.set("response_type", "code");
+    appleAuthUrl.searchParams.set("scope", "name email");
+    appleAuthUrl.searchParams.set("response_mode", "form_post");
+    appleAuthUrl.searchParams.set("state", JSON.stringify({ callbackUrl, provider: "apple" }));
+    return NextResponse.redirect(appleAuthUrl.toString());
+  }
+
+  // 3. Attempt official Supabase OAuth redirect if enabled
   if (process.env.NODE_ENV !== "test") {
     try {
       const supabase = await createClient();
-      const origin = req.nextUrl.origin;
       const redirectTo = `${origin}/api/auth/callback?callbackUrl=${encodeURIComponent(callbackUrl)}`;
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -41,7 +62,6 @@ export async function GET(
       });
 
       if (!error && data?.url) {
-        // If external provider is active in Supabase, redirect directly to Google/Apple consent screen
         return NextResponse.redirect(data.url);
       }
     } catch (err) {
@@ -49,155 +69,15 @@ export async function GET(
     }
   }
 
-  // 2. Verified Instant SSO Profile Provisioning
-  // Enables immediate, functional sign-in for Google and Apple identities without blocking on external dashboard key binding
-  const ssoEmail =
-    userRequestedEmail && userRequestedEmail.includes("@")
-      ? userRequestedEmail
-      : provider === "google"
-      ? "google.applicant@gmail.com"
-      : "applicant.privaterelay@appleid.com";
+  // 4. Strict Security & Zero-Mock Policy:
+  // When external OAuth credentials are not configured in the active environment,
+  // fail cleanly with explicit error parameters and instructions rather than fabricating fake credentials.
+  const loginUrl = new URL("/login", origin);
+  loginUrl.searchParams.set("error", "oauth_unconfigured");
+  loginUrl.searchParams.set("provider", provider);
+  loginUrl.searchParams.set("callbackUrl", callbackUrl);
 
-  const ssoName =
-    userRequestedName ||
-    (provider === "google"
-      ? (userRequestedEmail ? userRequestedEmail.split("@")[0] : "Google Verified Applicant")
-      : "Apple Verified Applicant");
-
-  let user = null;
-
-  // Check Database / Prisma
-  try {
-    user = await prisma.user.findUnique({
-      where: { email: ssoEmail },
-    });
-
-    if (user) {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          emailVerified: user.emailVerified || new Date(),
-          isGuest: false,
-          updatedAt: new Date(),
-        },
-      });
-    } else {
-      user = await prisma.user.create({
-        data: {
-          email: ssoEmail,
-          name: ssoName,
-          role: "CUSTOMER",
-          accountType: "INDIVIDUAL",
-          isGuest: false,
-          emailVerified: new Date(),
-        },
-      });
-
-      // Link Account record
-      await prisma.account.create({
-        data: {
-          userId: user.id,
-          type: "oauth",
-          provider,
-          providerAccountId: `sso_${provider}_${user.id}`,
-        },
-      }).catch(() => null);
-    }
-
-    // Automatically bind any prior guest orders placed under this email
-    await prisma.order.updateMany({
-      where: {
-        guestEmail: ssoEmail,
-        userId: null,
-      },
-      data: {
-        userId: user.id,
-      },
-    }).catch(() => null);
-
-    // Keep memory cache updated for tests and instant edge session resolution
-    memoryUsers.set(user.id, {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      passwordHash: "",
-      role: user.role,
-      accountType: user.accountType,
-      companyName: user.companyName,
-      phone: user.phone,
-      isGuest: user.isGuest,
-      emailVerified: user.emailVerified,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    });
-  } catch {
-    // Memory store fallback
-    let memUser = Array.from(memoryUsers.values()).find((u) => u.email === ssoEmail);
-    if (!memUser) {
-      const memId = `usr_${provider}_${Date.now()}`;
-      memUser = {
-        id: memId,
-        email: ssoEmail,
-        name: ssoName,
-        passwordHash: "",
-        role: "CUSTOMER",
-        accountType: "INDIVIDUAL",
-        companyName: null,
-        phone: null,
-        isGuest: false,
-        emailVerified: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      memoryUsers.set(memId, memUser);
-    }
-    user = memUser;
-  }
-
-  // 3. Create Authenticated Session Token
-  const sessionToken = await createSession(user.id);
-
-  // 4. Record Audit Event
-  await recordAuthAuditEvent({
-    userId: user.id,
-    action: `SSO_LOGIN_${provider.toUpperCase()}`,
-    ipAddress: ip,
-    userAgent,
-    details: {
-      provider,
-      email: ssoEmail,
-      instantSso: true,
-    },
-  }).catch(() => null);
-
-  // 5. Construct Redirect Response with secure cookies
-  const destinationUrl = new URL(callbackUrl, req.nextUrl.origin);
-  destinationUrl.searchParams.set("sso", provider);
-  destinationUrl.searchParams.set("verified", "true");
-
-  const response = NextResponse.redirect(destinationUrl);
-
-  response.cookies.set({
-    name: SESSION_COOKIE_NAME,
-    value: sessionToken,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
-
-  response.cookies.set({
-    name: "vl_role",
-    value: user.role || "CUSTOMER",
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
-
-  return response;
+  return NextResponse.redirect(loginUrl.toString());
 }
 
 export async function POST(
