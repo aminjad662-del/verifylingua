@@ -3934,6 +3934,35 @@ async function handleApiRequest(request, pathname, env, ctx) {
     });
   }
 
+  // OCR analyze API on Edge
+  if (pathname === '/api/ocr/analyze' || pathname.startsWith('/api/ocr/')) {
+    const cookieHeader = request.headers.get('Cookie') || '';
+    const hasSession = (cookieHeader.includes('vl_session=') && !cookieHeader.includes('vl_session=;')) ||
+      cookieHeader.includes('sso_google') || cookieHeader.includes('sso_apple') ||
+      Boolean(request.headers.get('authorization'));
+
+    if (!hasSession) {
+      return new Response(JSON.stringify({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication required to analyze document OCR. Please log in or create an account.',
+        loginUrl: '/login?returnUrl=/translate&redirect=/translate'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      text: 'Sample OCR document extraction completed.',
+      blocks: [],
+      timestamp: new Date().toISOString()
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
   // Default API fallback
   return new Response(JSON.stringify({
     success: true,
