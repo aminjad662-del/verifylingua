@@ -2,3 +2,7 @@
 /order/triage/ /translate 302
 /order/triage/* /translate 302
 /order/triage/:splat /translate 302
+/dashboard/request /translate 302
+/dashboard/request/ /translate 302
+/dashboard/request/* /translate 302
+/dashboard/request/:splat /translate 302

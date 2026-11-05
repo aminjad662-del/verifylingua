@@ -410,6 +410,18 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    // Direct redirects for decommissioned or redirected paths
+    if (pathname === '/order/triage' || pathname.startsWith('/order/triage/')) {
+      const redirectUrl = new URL('/translate', request.url);
+      redirectUrl.search = url.search;
+      return Response.redirect(redirectUrl.toString(), 302);
+    }
+    if (pathname === '/dashboard/request' || pathname.startsWith('/dashboard/request/')) {
+      const redirectUrl = new URL('/translate', request.url);
+      redirectUrl.search = url.search;
+      return Response.redirect(redirectUrl.toString(), 302);
+    }
+
     // 1. Health check endpoint (for uptime monitors and verification)
     if (pathname === '/healthz' || pathname === '/health' || pathname === '/api/health' || pathname === '/cdn-cgi/healthz') {
       return new Response(JSON.stringify({
@@ -2856,6 +2868,18 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
   // Translation upload API — extracts actual file, sends to Gemini for translation
   if (pathname === '/api/translate/upload' || pathname === '/api/upload') {
+    const cookieHeader = request.headers.get('Cookie') || '';
+    const hasSession = (cookieHeader.includes('vl_session=') && !cookieHeader.includes('vl_session=;')) || cookieHeader.includes('sso_google') || cookieHeader.includes('sso_apple') || Boolean(request.headers.get('authorization'));
+    if (!hasSession) {
+      return new Response(JSON.stringify({
+        error: 'UNAUTHORIZED',
+        message: 'Authentication required to translate documents. Please log in or create an account.',
+        loginUrl: '/login?returnUrl=/translate'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
     const jobId = 'VL-' + Math.random().toString(36).substring(2, 10).toUpperCase();
     const downloadToken = 'tok_' + Math.random().toString(36).substring(2, 15);
 

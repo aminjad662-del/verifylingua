@@ -60,7 +60,7 @@ export function DashboardNav() {
 
   const navLinks = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { href: "/dashboard/request", label: "New Request", icon: PlusCircle },
+    { href: "/translate", label: "New Request", icon: PlusCircle },
     { href: "/dashboard/documents", label: "Document Vault", icon: FolderLock },
     { href: "/dashboard/billing", label: "Billing & Quotes", icon: CreditCard },
     { href: "/dashboard/notifications", label: "Alerts", icon: Bell },

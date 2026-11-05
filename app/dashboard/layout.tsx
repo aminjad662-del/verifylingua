@@ -78,12 +78,12 @@ export default function DashboardLayout({
 
         <main className="max-w-md w-full mx-auto my-auto py-12">
           <div className="p-8 rounded-2xl bg-surface-raised border border-border shadow-sm text-center space-y-6">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-200/80 text-brand-600 flex items-center justify-center mx-auto">
               <Lock className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200/80">
                 Institutional Access Gate
               </span>
               <h1 className="text-2xl font-bold tracking-tight text-brand-ink pt-2">
@@ -111,7 +111,7 @@ export default function DashboardLayout({
             </div>
 
             <div className="pt-4 border-t border-border flex items-center justify-center gap-2 text-[11px] text-text-subtle font-mono">
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+              <ShieldAlert className="w-3.5 h-3.5 text-brand-600" />
               <span>Zero-knowledge session isolation active</span>
             </div>
           </div>

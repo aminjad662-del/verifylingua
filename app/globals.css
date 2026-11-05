@@ -351,7 +351,7 @@
   --shadow-md:   0 2px 4px rgba(12, 13, 16, 0.04), 0 6px 16px rgba(12, 13, 16, 0.06);
   --shadow-lg:   0 4px 8px rgba(12, 13, 16, 0.04), 0 16px 36px rgba(12, 13, 16, 0.08);
   --shadow-xl:   0 8px 16px rgba(12, 13, 16, 0.04), 0 24px 48px rgba(12, 13, 16, 0.1);
-  --shadow-seal: 0 2px 12px rgba(217, 119, 6, 0.16);
+  --shadow-seal: 0 2px 14px rgba(37, 99, 235, 0.20);
 
   /* ─── G22: Emil Kowalski & Apple Custom Easing Tokens */
   --ease-out:         cubic-bezier(0.23, 1, 0.32, 1);

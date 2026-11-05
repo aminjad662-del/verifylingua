@@ -391,7 +391,7 @@ export function ResultViewer({
             {onUpgradeToCertified && (
               <button
                 onClick={onUpgradeToCertified}
-                className="min-h-[44px] flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-amber-statutory/40 bg-amber-statutory/10 hover:bg-amber-statutory/20 text-amber-statutory-dark text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
+                className="min-h-[44px] flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-brand-200 bg-brand-50 hover:bg-brand-100 text-brand-600 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] touch-manipulation"
               >
                 <Sparkles className="w-3.5 h-3.5 text-signal-accent" />
                 <span>Upgrade to Certified</span>

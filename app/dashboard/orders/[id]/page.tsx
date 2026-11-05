@@ -251,7 +251,7 @@ export default function OrderDetailsPage() {
                     onClick={() => setIsRevisionModalOpen(true)}
                     variant="outline"
                     size="sm"
-                    className="rounded-xl font-bold border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 gap-1.5"
+                    className="rounded-xl font-bold border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 gap-1.5"
                   >
                     <RotateCcw className="w-4 h-4" />
                     Request Revision
@@ -598,7 +598,7 @@ export default function OrderDetailsPage() {
             <div className="max-w-lg w-full bg-surface-raised rounded-3xl border border-border p-6 space-y-4 shadow-xl">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-brand-ink flex items-center gap-2">
-                  <RotateCcw className="w-4 h-4 text-amber-600" />
+                  <RotateCcw className="w-4 h-4 text-brand-600" />
                   Request Translation Revision
                 </h3>
                 <button
@@ -634,7 +634,7 @@ export default function OrderDetailsPage() {
                   size="sm"
                   disabled={submittingRevision || !revisionNotes.trim()}
                   onClick={handleSubmitRevision}
-                  className="rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white gap-1.5"
+                  className="rounded-xl font-bold bg-brand-500 hover:bg-brand-600 text-white gap-1.5"
                 >
                   {submittingRevision ? "Submitting..." : "Submit Revision Request"}
                 </Button>

@@ -62,7 +62,7 @@ export default function ClientBillingPage() {
 
           <div className="flex items-center gap-3">
             <Button asChild size="sm" className="rounded-xl font-bold bg-brand-500 hover:bg-brand-600 text-white gap-2">
-              <Link href="/dashboard/request">
+              <Link href="/translate">
                 <Plus className="w-4 h-4" />
                 New Translation Request
               </Link>
@@ -82,12 +82,12 @@ export default function ClientBillingPage() {
             </p>
           </Card>
 
-          <Card className="p-5 rounded-2xl border border-status-warning/30 bg-status-warning-bg/40 space-y-2">
-            <span className="text-xs font-mono text-amber-800">Outstanding Balance</span>
-            <p className="text-3xl font-black font-mono text-amber-900">
+          <Card className="p-5 rounded-2xl border border-border bg-surface-raised space-y-2">
+            <span className="text-xs font-mono text-text-muted">Outstanding Balance</span>
+            <p className="text-3xl font-black font-mono text-brand-ink">
               ${billingData.metrics?.outstandingBalance || "144.70"}
             </p>
-            <p className="text-[11px] font-mono text-amber-800">
+            <p className="text-[11px] font-mono text-text-muted">
               Awaiting client approval / payment
             </p>
           </Card>
@@ -106,13 +106,13 @@ export default function ClientBillingPage() {
 
         {/* Pending Quotes Section */}
         {billingData.quotes?.filter((q: any) => q.status === "SENT").length > 0 && (
-          <div className="p-6 rounded-3xl border border-amber-200 bg-amber-50/60 space-y-4 shadow-sm">
+          <div className="p-6 rounded-3xl border border-border bg-surface-raised space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold font-mono text-amber-950 uppercase tracking-wider flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-600" />
+              <h2 className="text-sm font-bold font-mono text-brand-ink uppercase tracking-wider flex items-center gap-2">
+                <Clock className="w-4 h-4 text-brand-500" />
                 Pending Formal Quotes Requiring Approval
               </h2>
-              <span className="text-[11px] font-mono text-amber-800">
+              <span className="text-[11px] font-mono text-text-muted">
                 Guaranteed rates valid for 7 calendar days
               </span>
             </div>
@@ -123,7 +123,7 @@ export default function ClientBillingPage() {
                 .map((q: any) => (
                   <div
                     key={q.id}
-                    className="p-4 rounded-2xl border border-amber-200 bg-white space-y-3 shadow-sm"
+                    className="p-4 rounded-2xl border border-border bg-surface space-y-3 shadow-sm"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-bold text-sm text-brand-ink">
@@ -138,11 +138,11 @@ export default function ClientBillingPage() {
                       {q.serviceType} ? Includes certification affidavit &amp; notary jurat.
                     </p>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-amber-100 text-[11px] font-mono">
+                    <div className="flex items-center justify-between pt-2 border-t border-border text-[11px] font-mono">
                       <span className="text-text-muted">
                         Expires: {new Date(q.expiresAt).toLocaleDateString()}
                       </span>
-                      <Button asChild size="sm" className="rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs gap-1">
+                      <Button asChild size="sm" className="rounded-xl font-bold bg-brand-500 hover:bg-brand-600 text-white h-8 text-xs gap-1">
                         <Link href={`/dashboard/orders/${q.orderCode}`}>
                           Review &amp; Authorize
                           <ArrowRight className="w-3.5 h-3.5" />

@@ -411,7 +411,7 @@ export function Header() {
                 {credits !== null && (
                   <Link
                     href="/translate"
-                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-brand-500/30 bg-brand-50 text-brand-600 text-xs font-semibold hover:bg-amber-statutory/20 transition-all active:scale-[0.98] shrink-0"
+                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-brand-500/30 bg-brand-50 text-brand-600 text-xs font-semibold hover:bg-brand-50 transition-all active:scale-[0.98] shrink-0"
                     title="Available translation credits"
                   >
                     <Zap className="w-3.5 h-3.5 text-brand-500 fill-brand-500" />
@@ -474,7 +474,7 @@ export function Header() {
             {/* Primary Action Button */}
             <Link
               href="/translate"
-              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs sm:text-sm font-semibold shadow-[0_2px_10px_rgba(255,85,0,0.22)] transition-all duration-150 ease-out active:scale-[0.98] group cursor-pointer whitespace-nowrap shrink-0 min-h-[40px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs sm:text-sm font-semibold shadow-[0_2px_10px_rgba(37,99,235,0.20)] transition-all duration-150 ease-out active:scale-[0.98] group cursor-pointer whitespace-nowrap shrink-0 min-h-[40px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <span>Start translation</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5 shrink-0" />

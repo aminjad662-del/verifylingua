@@ -132,6 +132,7 @@ const RECEIVING_PARTIES = [
 
 export default function NewTranslationRequestWizard() {
   const router = useRouter();
+  React.useEffect(() => { router.replace("/translate"); }, [router]);
   const [currentStep, setCurrentStep] = React.useState(1);
 
   // Form State

@@ -202,6 +202,8 @@ export default function TranslatePage() {
 
   // Active translation job state
   const [job, setJob] = useState<JobState | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; name?: string | null } | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [availableCredits, setAvailableCredits] = useState<number | null>(null);
   const [grantingCredits, setGrantingCredits] = useState(false);
   const [lastUploadedFile, setLastUploadedFile] = useState<File | null>(null);
@@ -226,22 +228,47 @@ export default function TranslatePage() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch live credit balance on mount
+  // Check active user session
+  const checkAuth = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+          setIsAuthenticated(true);
+          return true;
+        }
+      }
+    } catch {}
+    setUser(null);
+    setIsAuthenticated(false);
+    return false;
+  }, []);
+
+  // Fetch live credit balance on mount - strictly requires authentication
   const fetchBalance = useCallback(async () => {
     try {
       const res = await fetch("/api/billing/balance");
       if (res.ok) {
         const data = await res.json();
-        setAvailableCredits(data.available ?? 20);
+        if (data.authenticated) {
+          setAvailableCredits(data.available ?? 0);
+        } else {
+          setAvailableCredits(null);
+        }
+      } else {
+        setAvailableCredits(null);
       }
     } catch {
-      setAvailableCredits(20);
+      setAvailableCredits(null);
     }
   }, []);
 
   useEffect(() => {
+    checkAuth();
     fetchBalance();
-  }, [fetchBalance]);
+  }, [checkAuth, fetchBalance]);
 
   // Gate G21: 0ms Escape key dismissal for lightbox modal
   useEffect(() => {
@@ -509,6 +536,18 @@ export default function TranslatePage() {
   // Execute upload and translation
   const executeUpload = useCallback(
     async (file: File, overridePageCount?: number) => {
+      if (!isAuthenticated) {
+        toast.warning("Sign in required", {
+          description: "Please sign in or create an account to translate and save your documents.",
+          action: {
+            label: "Sign In",
+            onClick: () => router.push("/login?returnUrl=/translate"),
+          },
+        });
+        router.push("/login?returnUrl=/translate");
+        return;
+      }
+
       stopPolling();
       setBlobUrl(null);
       setLastUploadedFile(file);
@@ -547,6 +586,17 @@ export default function TranslatePage() {
 
         if (!uploadRes.ok) {
           const errData = await uploadRes.json().catch(() => ({}));
+          if (uploadRes.status === 401 || errData.error === "UNAUTHORIZED") {
+            toast.warning("Sign in required", {
+              description: "Authentication is required to translate documents.",
+              action: {
+                label: "Sign In",
+                onClick: () => router.push("/login?returnUrl=/translate"),
+              },
+            });
+            router.push("/login?returnUrl=/translate");
+            return;
+          }
           const isCreditError =
             uploadRes.status === 402 || errData.error === "INSUFFICIENT_CREDITS";
 
@@ -755,11 +805,52 @@ export default function TranslatePage() {
     }
   };
 
-  const handleTranslateSample = () => {
+  const handleTranslateSample = async () => {
     const fileToTranslate = stagedFile || lastUploadedFile;
-    if (fileToTranslate) {
-      executeUpload(fileToTranslate);
+    if (!fileToTranslate) return;
+
+    // Strict Access Control: Unregistered visitors cannot execute translation
+    let authed = isAuthenticated;
+    if (authed === null) {
+      authed = await checkAuth();
     }
+
+    if (!authed) {
+      // Preserve document in sessionStorage so user work is not lost
+      try {
+        const reader = new FileReader();
+        reader.onload = () => {
+          sessionStorage.setItem("pending_upload", JSON.stringify({
+            fileBase64: reader.result,
+            fileName: fileToTranslate.name,
+            detectedLang: sourceLang,
+            targetLang,
+            tier: serviceTier,
+          }));
+        };
+        reader.readAsDataURL(fileToTranslate);
+      } catch {}
+
+      toast.info("Account Required", {
+        description: "Please sign in or create an account to translate documents. Your file has been preserved.",
+      });
+      router.push("/login?returnUrl=/translate");
+      return;
+    }
+
+    // Check balance for authenticated user
+    if (availableCredits !== null && availableCredits < 1) {
+      toast.warning("Insufficient Balance", {
+        description: "You have 0 page credits. Please top up to translate this document.",
+        action: {
+          label: "Add Credits",
+          onClick: () => router.push("/pricing"),
+        },
+      });
+      return;
+    }
+
+    executeUpload(fileToTranslate);
   };
 
   const handleDownload = (formatOverride?: "pdf" | "svg") => {
@@ -855,12 +946,34 @@ export default function TranslatePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-cta/20 bg-cta/5 text-brand-ink">
-            <Coins className="w-3.5 h-3.5 text-cta shrink-0" />
-            <span className="text-xs font-mono font-bold tabular-nums">
-              {availableCredits !== null ? `${availableCredits} Credits` : "..."}
-            </span>
-          </div>
+          {isAuthenticated === false ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login?returnUrl=/translate"
+                className="px-3 py-1.5 rounded-full border border-border bg-surface hover:bg-surface-raised text-xs font-semibold text-text hover:text-brand-500 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register?returnUrl=/translate"
+                className="px-3.5 py-1.5 rounded-full bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                Create Account
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface-raised text-brand-ink">
+              <Coins className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+              <span className="text-xs font-mono font-bold tabular-nums">
+                {availableCredits !== null ? `${availableCredits} Credits` : "Loading..."}
+              </span>
+              {availableCredits !== null && availableCredits < 2 && (
+                <Link href="/pricing" className="text-[10px] text-brand-500 hover:underline font-bold ml-1">
+                  + Add
+                </Link>
+              )}
+            </div>
+          )}
 
           <Button
             asChild
@@ -1082,6 +1195,30 @@ export default function TranslatePage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-6 max-w-xl"
                 >
+                  {/* Unauthenticated Security Banner */}
+                  {isAuthenticated === false && (
+                    <div className="p-4 rounded-2xl border border-blue-200/80 bg-blue-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-900 block font-sans">Account Required for Official Translation</span>
+                          <span className="text-slate-600 text-[11px] leading-tight block mt-0.5">
+                            Sign in or register to execute translations, reserve page credits, and access your encrypted Docket Vault.
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                        <Button asChild size="sm" variant="outline" className="h-8 text-xs rounded-xl flex-1 sm:flex-initial">
+                          <Link href="/login?returnUrl=/translate">Sign In</Link>
+                        </Button>
+                        <Button asChild size="sm" className="h-8 text-xs rounded-xl bg-brand-500 hover:bg-brand-600 text-white flex-1 sm:flex-initial shadow-xs">
+                          <Link href="/register?returnUrl=/translate">Create Account</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {/* Language Pair Selectors with Swap */}
                   <div className="grid grid-cols-[1fr,auto,1fr] gap-2 sm:gap-3 items-end">
                     <div>
