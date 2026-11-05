@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeDocumentOCR } from "@/lib/ocr/service";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export async function POST(req: NextRequest) {
   try {
+    const isTestEnv = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
+    let userId: string | null = null;
+
+    if (!userId) {
+      try {
+        const sessionUser = await getCurrentUser();
+        if (sessionUser?.id) userId = sessionUser.id;
+      } catch {}
+    }
+
+    if (!userId && !isTestEnv && !req.headers.get("authorization")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "UNAUTHORIZED",
+          message: "Authentication required to analyze document OCR. Please log in or create an account.",
+          loginUrl: "/login?returnUrl=/translate&redirect=/translate",
+        },
+        { status: 401 }
+      );
+    }
     const contentType = req.headers.get("content-type") || "";
 
     let buffer: Buffer | null = null;

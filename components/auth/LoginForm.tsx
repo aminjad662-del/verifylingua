@@ -10,7 +10,11 @@ import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, CheckCir
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl =
+    searchParams.get("callbackUrl") ||
+    searchParams.get("returnUrl") ||
+    searchParams.get("redirect") ||
+    "/translate";
   const wasRegistered = searchParams.get("registered") === "true";
   const resetSuccess = searchParams.get("resetSuccess") === "true";
   const oauthError = searchParams.get("error");
@@ -226,7 +230,7 @@ export function LoginForm() {
           <p className="text-xs text-text-muted">
             Don&apos;t have an account yet?{" "}
             <Link
-              href={`/register${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+              href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}&returnUrl=${encodeURIComponent(callbackUrl)}&redirect=${encodeURIComponent(callbackUrl)}`}
               className="font-bold text-brand-500 hover:text-brand-600 hover:underline"
             >
               Create verified account

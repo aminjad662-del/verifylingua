@@ -266,9 +266,24 @@ export default function TranslatePage() {
   }, []);
 
   useEffect(() => {
-    checkAuth();
-    fetchBalance();
-  }, [checkAuth, fetchBalance]);
+    let isMounted = true;
+    async function initAuth() {
+      const isAuth = await checkAuth();
+      if (!isMounted) return;
+      if (isAuth) {
+        fetchBalance();
+      } else {
+        toast.warning("Sign in required", {
+          description: "Please sign in or create an account to access the translation workspace.",
+        });
+        router.replace("/login?returnUrl=/translate&redirect=/translate");
+      }
+    }
+    initAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, [checkAuth, fetchBalance, router]);
 
   // Gate G21: 0ms Escape key dismissal for lightbox modal
   useEffect(() => {
@@ -911,6 +926,22 @@ export default function TranslatePage() {
     ? `/api/jobs/${job.jobId}/preview?lang=${job?.targetLang || targetLang}`
     : "";
 
+  if (isAuthenticated !== true) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-canvas text-brand-ink">
+        <div className="flex flex-col items-center gap-4 text-center max-w-sm px-6">
+          <div className="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-200/80 flex items-center justify-center text-brand-600 animate-pulse shadow-xs">
+            <Shield className="w-6 h-6 text-brand-500" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold tracking-tight text-brand-ink font-display">Authenticating Workspace</h3>
+            <p className="text-xs text-text-muted">Verifying encrypted translation vault credentials...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Suspense fallback={null}>
@@ -946,34 +977,17 @@ export default function TranslatePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {isAuthenticated === false ? (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/login?returnUrl=/translate"
-                className="px-3 py-1.5 rounded-full border border-border bg-surface hover:bg-surface-raised text-xs font-semibold text-text hover:text-brand-500 transition-colors"
-              >
-                Sign In
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface-raised text-brand-ink">
+            <Coins className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+            <span className="text-xs font-mono font-bold tabular-nums">
+              {availableCredits !== null ? `${availableCredits} Credits` : "Loading..."}
+            </span>
+            {availableCredits !== null && availableCredits < 2 && (
+              <Link href="/pricing" className="text-[10px] text-brand-500 hover:underline font-bold ml-1">
+                + Add
               </Link>
-              <Link
-                href="/register?returnUrl=/translate"
-                className="px-3.5 py-1.5 rounded-full bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-xs transition-colors"
-              >
-                Create Account
-              </Link>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface-raised text-brand-ink">
-              <Coins className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-              <span className="text-xs font-mono font-bold tabular-nums">
-                {availableCredits !== null ? `${availableCredits} Credits` : "Loading..."}
-              </span>
-              {availableCredits !== null && availableCredits < 2 && (
-                <Link href="/pricing" className="text-[10px] text-brand-500 hover:underline font-bold ml-1">
-                  + Add
-                </Link>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           <Button
             asChild
@@ -1195,30 +1209,7 @@ export default function TranslatePage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-6 max-w-xl"
                 >
-                  {/* Unauthenticated Security Banner */}
-                  {isAuthenticated === false && (
-                    <div className="p-4 rounded-2xl border border-blue-200/80 bg-blue-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-start gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                          <Lock className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-900 block font-sans">Account Required for Official Translation</span>
-                          <span className="text-slate-600 text-[11px] leading-tight block mt-0.5">
-                            Sign in or register to execute translations, reserve page credits, and access your encrypted Docket Vault.
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                        <Button asChild size="sm" variant="outline" className="h-8 text-xs rounded-xl flex-1 sm:flex-initial">
-                          <Link href="/login?returnUrl=/translate">Sign In</Link>
-                        </Button>
-                        <Button asChild size="sm" className="h-8 text-xs rounded-xl bg-brand-500 hover:bg-brand-600 text-white flex-1 sm:flex-initial shadow-xs">
-                          <Link href="/register?returnUrl=/translate">Create Account</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+
                   {/* Language Pair Selectors with Swap */}
                   <div className="grid grid-cols-[1fr,auto,1fr] gap-2 sm:gap-3 items-end">
                     <div>

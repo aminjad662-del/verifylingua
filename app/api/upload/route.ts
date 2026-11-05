@@ -115,6 +115,19 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
+    // Enforce authentication: unregistered visitors cannot upload documents or consume translation credits
+    if (!userId && !isTestEnv) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "UNAUTHORIZED",
+          message: "Authentication required to upload and translate documents. Please log in or create an account.",
+          loginUrl: "/login?returnUrl=/translate&redirect=/translate",
+        },
+        { status: 401 }
+      );
+    }
+
     // 2. MIME & Magic Bytes Validation
     const validation = validateInputFile(fileBuffer, fileName);
     if (validation.error) {

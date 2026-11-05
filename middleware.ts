@@ -8,6 +8,7 @@ const PROTECTED_CLIENT_ROUTES = [
   "/settings",
   "/history",
   "/counsel",
+  "/translate",
 ];
 
 // Admin route prefix requiring active authentication AND administrative role
@@ -44,6 +45,7 @@ export function middleware(req: NextRequest) {
     if (!token && !authHeader) {
       const loginUrl = new URL("/login", req.url);
       loginUrl.searchParams.set("returnUrl", pathname);
+      loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
 

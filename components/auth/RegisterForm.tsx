@@ -41,7 +41,11 @@ const EMAIL_TYPO_MAP: Record<string, string> = {
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl =
+    searchParams.get("callbackUrl") ||
+    searchParams.get("returnUrl") ||
+    searchParams.get("redirect") ||
+    "/translate";
 
   // Form Render Timestamp for Bot Velocity Guard
   const renderTimestampRef = React.useRef<number>(Date.now());
@@ -143,8 +147,9 @@ export function RegisterForm() {
         throw new Error(data.error || "Registration failed. Please try again.");
       }
 
-      // Success -> Redirect to dashboard with notification flags
-      router.push(`${callbackUrl}?registered=true&verifySent=true`);
+      // Success -> Redirect to destination workspace with notification flags
+      const separator = callbackUrl.includes("?") ? "&" : "?";
+      router.push(`${callbackUrl}${separator}registered=true&verifySent=true`);
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected network or server error occurred.";
@@ -539,7 +544,7 @@ export function RegisterForm() {
           <p className="text-xs text-text-muted">
             Already have an account?{" "}
             <Link
-              href={`/login${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+              href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}&returnUrl=${encodeURIComponent(callbackUrl)}&redirect=${encodeURIComponent(callbackUrl)}`}
               className="font-bold text-brand-ink hover:text-brand-500 hover:underline transition-colors"
             >
               Sign in to your vault

@@ -422,6 +422,23 @@ export default {
       return Response.redirect(redirectUrl.toString(), 302);
     }
 
+    // Strict Edge Route Protection for Authenticated Workspaces
+    const protectedClientRoutes = ['/translate', '/dashboard', '/app', '/settings', '/history', '/counsel'];
+    const isClientProtectedRoute = protectedClientRoutes.some(p => pathname === p || pathname === p + '/' || pathname.startsWith(p + '/'));
+    if (isClientProtectedRoute) {
+      const cookieHeader = request.headers.get('Cookie') || '';
+      const hasSession = (cookieHeader.includes('vl_session=') && !cookieHeader.includes('vl_session=;')) ||
+        cookieHeader.includes('sso_google') || cookieHeader.includes('sso_apple') ||
+        Boolean(request.headers.get('authorization'));
+
+      if (!hasSession) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('returnUrl', pathname + url.search);
+        loginUrl.searchParams.set('redirect', pathname + url.search);
+        return Response.redirect(loginUrl.toString(), 302);
+      }
+    }
+
     // 1. Health check endpoint (for uptime monitors and verification)
     if (pathname === '/healthz' || pathname === '/health' || pathname === '/api/health' || pathname === '/cdn-cgi/healthz') {
       return new Response(JSON.stringify({

@@ -139,21 +139,21 @@ export function LegalHero() {
                       className="space-y-4"
                     >
                       {/* Certified Header Banner */}
-                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-between">
+                      <div className="p-3 rounded-xl bg-surface-raised border border-border flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
+                          <div className="w-7 h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center font-bold text-xs">
                             ATA
                           </div>
                           <div>
-                            <div className="text-xs font-bold text-amber-950">
+                            <div className="text-xs font-bold text-brand-ink">
                               American Translators Association Corporate Member
                             </div>
-                            <div className="text-[10px] font-mono text-amber-800">
+                            <div className="text-[10px] font-mono text-text-muted">
                               Member ID: No. 278190 · Sworn Certification of Fluency
                             </div>
                           </div>
                         </div>
-                        <div className="text-[10px] font-mono font-bold text-amber-900 px-2 py-0.5 rounded bg-amber-100 border border-amber-300">
+                        <div className="text-[10px] font-mono font-bold text-brand-600 px-2 py-0.5 rounded bg-brand-50 border border-brand-200">
                           SEALED
                         </div>
                       </div>
