@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { memoryUsers } from "@/lib/auth/dev-store";
 import { recordAuthAuditEvent } from "@/lib/auth/audit";
 import { createVerificationToken } from "@/lib/auth/verification";
+import { grantWelcomeBonus } from "@/lib/services/credit-service";
 
 const registerSchema = z.object({
   name: z.string().trim().min(2, "Full legal name must be at least 2 characters").max(100),
@@ -202,7 +203,10 @@ export async function POST(req: NextRequest) {
       user = memUser;
     }
 
-    // 9. Generate email verification token
+    // 9. Grant official welcome bonus credits to the real account ledger
+    await grantWelcomeBonus(user.id).catch(() => null);
+
+    // 10. Generate email verification token
     const verificationToken = await createVerificationToken(email);
 
     // 10. Record immutable security audit event

@@ -1,34 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ShieldCheck, 
-  ArrowRight, 
   Download, 
   Search, 
   CheckCircle2,
   Clock, 
-  AlertTriangle, 
-  Filter, 
-  ChevronDown, 
   Lock, 
-  Shield, 
   FileText, 
   Plus,
   QrCode,
   Copy,
   Check,
-  ExternalLink,
   Award,
-  Layers,
   FileCheck2,
-  RefreshCw,
-  Eye
+  Eye,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardNav } from "@/components/layout/DashboardNav";
-import { motion, AnimatePresence } from "motion/react";
 
 interface MatterDocket {
   id: string;
@@ -41,75 +34,71 @@ interface MatterDocket {
   hash: string;
   certNumber: string;
   slaTarget: string;
+  downloadUrl?: string;
 }
 
-const MATTERS: MatterDocket[] = [
-  { 
-    id: "VL-8492-USCIS", 
-    matter: "Matter of Rodriguez Navarro (Birth Record)", 
-    category: "Civil Vital Record",
-    lang: "ES → EN", 
-    pages: 2, 
-    status: "COMPLETED", 
-    date: "Today, 14:22", 
-    hash: "7d4a98f1c8...e89b21", 
-    certNumber: "ATA-278190-CERT",
-    slaTarget: "Delivered in 4.2h"
-  },
-  { 
-    id: "VL-8491-USCIS", 
-    matter: "USCIS Form I-130 Marriage Evidence Packet", 
-    category: "Immigration Evidence",
-    lang: "FR → EN", 
-    pages: 6, 
-    status: "PROCESSING", 
-    date: "Today, 11:05", 
-    hash: "Pending Generation", 
-    certNumber: "Assigned: Senior ATA",
-    slaTarget: "Target: 4h 12m remaining"
-  },
-  { 
-    id: "VL-8488-COURT", 
-    matter: "EOIR Asylum Affidavit & Police Clearance", 
-    category: "Federal Court Record",
-    lang: "AR → EN", 
-    pages: 14, 
-    status: "IN_REVIEW", 
-    date: "Yesterday", 
-    hash: "Pending QC", 
-    certNumber: "Linguist Review",
-    slaTarget: "QC Review Stage"
-  },
-  { 
-    id: "VL-8472-UNIV", 
-    matter: "Academic Transcript & Degree Marksheets (MX)", 
-    category: "Academic Credential (WES)",
-    lang: "ES → EN", 
-    pages: 4, 
-    status: "COMPLETED", 
-    date: "Sep 22, 2026", 
-    hash: "e2c1a894b1...99f412", 
-    certNumber: "ATA-278190-CERT",
-    slaTarget: "Delivered in 6.1h"
-  },
-  { 
-    id: "VL-8470-CONSUL", 
-    matter: "Consular Visa Dossier & Financial Affidavits", 
-    category: "Consular Interview",
-    lang: "ES → EN", 
-    pages: 8, 
-    status: "COMPLETED", 
-    date: "Sep 21, 2026", 
-    hash: "f7d3b18204...4c2810", 
-    certNumber: "ATA-278190-CERT",
-    slaTarget: "Delivered in 8.0h"
-  },
-];
-
 export default function DashboardPage() {
+  const router = useRouter();
+  const [matters, setMatters] = useState<MatterDocket[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"ALL" | "PROCESSING" | "COMPLETED">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboard() {
+      try {
+        // 1. Verify authentication
+        const authRes = await fetch("/api/auth/me");
+        if (!authRes.ok) {
+          router.push("/login?returnUrl=/dashboard");
+          return;
+        }
+        const authData = await authRes.json();
+        if (!authData || !authData.authenticated) {
+          router.push("/login?returnUrl=/dashboard");
+          return;
+        }
+
+        // 2. Fetch authentic user orders / dockets
+        const ordersRes = await fetch("/api/dashboard/orders");
+        if (ordersRes.ok) {
+          const data = await ordersRes.json();
+          if (isMounted && data && Array.isArray(data.orders)) {
+            const mapped: MatterDocket[] = data.orders.map((o: any) => ({
+              id: o.publicCode || o.id,
+              matter: o.matterNumber || (o.uploadedFiles?.[0]?.name ? `Document: ${o.uploadedFiles[0].name}` : `Order #${o.publicCode}`),
+              category: o.serviceType ? `${o.serviceType} Translation` : "Certified Document",
+              lang: `${o.sourceLang || "Source"} → ${(o.targetLangs && o.targetLangs[0]) || "English"}`,
+              pages: typeof o.pageCount === "number" ? o.pageCount : 1,
+              status: o.status === "DELIVERED" || o.status === "COMPLETED"
+                ? "COMPLETED"
+                : o.status === "PROOFING" || o.status === "IN_REVIEW" || o.status === "CLIENT_REVIEW"
+                ? "IN_REVIEW"
+                : "PROCESSING",
+              date: o.submittedAt ? new Date(o.submittedAt).toLocaleDateString() : "Recent",
+              hash: o.uploadedFiles?.[0]?.sha256 ? `${o.uploadedFiles[0].sha256.slice(0, 10)}...${o.uploadedFiles[0].sha256.slice(-6)}` : "Pending Seal",
+              certNumber: o.assignedTranslator || "ATA Certified",
+              slaTarget: o.promisedAt ? `Delivery by ${new Date(o.promisedAt).toLocaleDateString()}` : "Standard Turnaround",
+              downloadUrl: o.deliveredFiles?.[0]?.certifiedPdfUrl || (o.status === "DELIVERED" || o.status === "COMPLETED" ? `/api/order/${o.id}/proof` : undefined),
+            }));
+            setMatters(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn("[Dashboard] Error loading orders:", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadDashboard();
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   const handleCopyHash = (id: string, hash: string) => {
     navigator.clipboard.writeText(hash);
@@ -117,7 +106,13 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const filteredMatters = MATTERS.filter((m) => {
+  const processingCount = matters.filter(
+    (m) => m.status === "PROCESSING" || m.status === "IN_REVIEW"
+  ).length;
+  const completedCount = matters.filter((m) => m.status === "COMPLETED").length;
+  const totalPages = matters.reduce((acc, m) => acc + (m.pages || 0), 0);
+
+  const filteredMatters = matters.filter((m) => {
     if (activeTab === "COMPLETED" && m.status !== "COMPLETED") return false;
     if (activeTab === "PROCESSING" && m.status === "COMPLETED") return false;
     if (searchQuery) {
@@ -190,18 +185,22 @@ export default function DashboardPage() {
               className="h-10 px-5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />
-              <span>New Certified Order</span>
+              <span>New Translation</span>
             </Link>
           </div>
         </div>
 
-        {/* High-Craft Telemetry Cards */}
+        {/* Dynamic Telemetry Cards (Derived strictly from live records) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-5 rounded-xl bg-surface-raised border border-border shadow-xs flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-[11px] font-mono font-bold text-text-muted uppercase tracking-wider">Total Matters</p>
-              <h4 className="text-2xl font-bold text-brand-ink tabular-nums">5 Dockets</h4>
-              <p className="text-[10px] text-text-subtle">34 Certified Pages under seal</p>
+              <h4 className="text-2xl font-bold text-brand-ink tabular-nums">
+                {isLoading ? "—" : `${matters.length} ${matters.length === 1 ? "Docket" : "Dockets"}`}
+              </h4>
+              <p className="text-[10px] text-text-subtle">
+                {isLoading ? "Calculating..." : `${totalPages} Certified ${totalPages === 1 ? "Page" : "Pages"} under seal`}
+              </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center border border-border text-brand-600">
               <FileCheck2 className="w-5 h-5" />
@@ -211,7 +210,9 @@ export default function DashboardPage() {
           <div className="p-5 rounded-xl bg-surface-raised border border-border shadow-xs flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-[11px] font-mono font-bold text-text-muted uppercase tracking-wider">Active Processing</p>
-              <h4 className="text-2xl font-bold text-brand-600 tabular-nums">2 Records</h4>
+              <h4 className="text-2xl font-bold text-brand-600 tabular-nums">
+                {isLoading ? "—" : `${processingCount} ${processingCount === 1 ? "Record" : "Records"}`}
+              </h4>
               <p className="text-[10px] text-text-subtle">Guaranteed &lt; 24h SLA delivery</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/40 flex items-center justify-center border border-brand-200 dark:border-brand-800 text-brand-600">
@@ -244,7 +245,7 @@ export default function DashboardPage() {
                   placeholder="Filter dockets, applicants, IDs..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 pl-8 pr-3 w-56 sm:w-64 rounded-lg bg-canvas border border-border text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 transition-shadow placeholder:text-text-subtle"
+                  className="h-8 pl-8 pr-3 rounded-lg border border-border bg-canvas text-xs text-text placeholder:text-text-subtle focus:outline-hidden focus:border-brand-500 w-48 sm:w-64"
                 />
               </div>
             </div>
@@ -260,7 +261,7 @@ export default function DashboardPage() {
                     : "text-text-muted hover:text-brand-ink"
                 )}
               >
-                All Matters ({MATTERS.length})
+                All Matters ({matters.length})
               </button>
               <button
                 onClick={() => setActiveTab("PROCESSING")}
@@ -271,7 +272,7 @@ export default function DashboardPage() {
                     : "text-text-muted hover:text-brand-ink"
                 )}
               >
-                Processing (2)
+                Processing ({processingCount})
               </button>
               <button
                 onClick={() => setActiveTab("COMPLETED")}
@@ -282,138 +283,182 @@ export default function DashboardPage() {
                     : "text-text-muted hover:text-brand-ink"
                 )}
               >
-                Completed (3)
+                Completed ({completedCount})
               </button>
             </div>
           </div>
 
-          {/* Dockets Data Table */}
+          {/* Dockets Data Table or Empty State */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-surface text-[10px] font-mono uppercase tracking-wider text-text-muted">
-                  <th className="py-3 px-4 font-bold">Docket ID & Category</th>
-                  <th className="py-3 px-4 font-bold">Matter Description</th>
-                  <th className="py-3 px-4 font-bold">Pair & Pages</th>
-                  <th className="py-3 px-4 font-bold">Certification Status</th>
-                  <th className="py-3 px-4 font-bold">Cryptographic Digest</th>
-                  <th className="py-3 px-4 font-bold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-xs">
-                {filteredMatters.map((matter) => (
-                  <tr key={matter.id} className="hover:bg-surface/50 transition-colors">
-                    
-                    {/* Docket ID & Category */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="font-mono font-bold text-brand-ink text-xs">{matter.id}</div>
-                      <div className="text-[10px] font-mono text-text-muted mt-0.5">{matter.category}</div>
-                    </td>
-
-                    {/* Matter Description */}
-                    <td className="py-3.5 px-4 min-w-[200px]">
-                      <div className="font-semibold text-brand-ink text-xs">{matter.matter}</div>
-                      <div className="text-[11px] text-text-subtle mt-0.5 flex items-center gap-1.5">
-                        <Clock className="w-3 h-3 text-text-subtle" />
-                        <span>{matter.slaTarget}</span>
-                      </div>
-                    </td>
-
-                    {/* Pair & Pages */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="font-mono font-semibold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-800 text-[10px]">
-                        {matter.lang}
-                      </span>
-                      <span className="text-[11px] text-text-muted ml-2">
-                        {matter.pages} {matter.pages === 1 ? "page" : "pages"}
-                      </span>
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {matter.status === "COMPLETED" && (
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-court-emerald bg-court-emerald/10 px-2.5 py-1 rounded-full border border-court-emerald/25">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>SEALED & VALIDATED</span>
-                        </span>
-                      )}
-                      {matter.status === "PROCESSING" && (
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/25">
-                          <Clock className="w-3 h-3 animate-spin" />
-                          <span>TRANSLATING</span>
-                        </span>
-                      )}
-                      {matter.status === "IN_REVIEW" && (
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1 rounded-full border border-brand-200 dark:border-brand-800">
-                          <ShieldCheck className="w-3 h-3" />
-                          <span>PEER QC REVIEW</span>
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Cryptographic Digest */}
-                    <td className="py-3.5 px-4 font-mono text-[11px] whitespace-nowrap">
-                      {matter.status === "COMPLETED" ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-text-muted">{matter.hash}</span>
-                          <button
-                            onClick={() => handleCopyHash(matter.id, matter.hash)}
-                            className="p-1 rounded hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer"
-                            title="Copy SHA-256 Digest"
-                          >
-                            {copiedId === matter.id ? (
-                              <Check className="w-3 h-3 text-court-emerald" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-text-subtle text-[10px] italic">In Pipeline</span>
-                      )}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      {matter.status === "COMPLETED" ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Link
-                            href={`/verify?docket=${matter.id}`}
-                            className="h-8 px-2.5 rounded-lg border border-border bg-surface hover:bg-surface-raised text-text font-medium text-[11px] flex items-center gap-1 transition-colors"
-                            title="Verify Public Seal"
-                          >
-                            <QrCode className="w-3 h-3 text-brand-600" />
-                            <span>Verify</span>
-                          </Link>
-                          <Link
-                            href="/documents"
-                            className="h-8 px-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold text-[11px] flex items-center gap-1.5 transition-colors shadow-2xs"
-                          >
-                            <Download className="w-3 h-3" />
-                            <span>Download PDF</span>
-                          </Link>
-                        </div>
-                      ) : (
-                        <Link
-                          href={`/tracker`}
-                          className="h-8 px-3 rounded-lg border border-border bg-surface hover:bg-surface-raised text-text font-medium text-[11px] inline-flex items-center gap-1 transition-colors"
-                        >
-                          <Eye className="w-3 h-3 text-brand-600" />
-                          <span>Track Live</span>
-                        </Link>
-                      )}
-                    </td>
-
+            {isLoading ? (
+              <div className="py-16 flex flex-col items-center justify-center gap-3 text-text-muted">
+                <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+                <span className="text-xs font-mono">Loading legal dockets from vault...</span>
+              </div>
+            ) : filteredMatters.length === 0 ? (
+              <div className="py-16 px-4 flex flex-col items-center justify-center text-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-muted">
+                  <FileText className="w-6 h-6 text-brand-600/50" />
+                </div>
+                <div className="space-y-1 max-w-sm">
+                  <h3 className="text-sm font-bold text-brand-ink">
+                    {searchQuery ? "No matching dockets found" : "No translation dockets found"}
+                  </h3>
+                  <p className="text-xs text-text-muted leading-relaxed">
+                    {searchQuery
+                      ? "Try adjusting your search criteria or clear the filter."
+                      : "Upload an official document in the workspace to begin certified translation."}
+                  </p>
+                </div>
+                {!searchQuery && (
+                  <Link
+                    href="/translate"
+                    className="mt-2 h-9 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Start New Translation</span>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-surface text-[10px] font-mono uppercase tracking-wider text-text-muted">
+                    <th className="py-3 px-4 font-bold">Docket ID & Category</th>
+                    <th className="py-3 px-4 font-bold">Matter Description</th>
+                    <th className="py-3 px-4 font-bold">Pair & Pages</th>
+                    <th className="py-3 px-4 font-bold">Certification Status</th>
+                    <th className="py-3 px-4 font-bold">Cryptographic Digest</th>
+                    <th className="py-3 px-4 font-bold text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border text-xs">
+                  {filteredMatters.map((matter) => (
+                    <tr key={matter.id} className="hover:bg-surface/50 transition-colors">
+                      
+                      {/* Docket ID & Category */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="font-mono font-bold text-brand-ink text-xs">{matter.id}</div>
+                        <div className="text-[10px] font-mono text-text-muted mt-0.5">{matter.category}</div>
+                      </td>
+
+                      {/* Matter Description */}
+                      <td className="py-3.5 px-4 min-w-[200px]">
+                        <div className="font-semibold text-brand-ink text-xs">{matter.matter}</div>
+                        <div className="text-[11px] text-text-subtle mt-0.5 flex items-center gap-1.5">
+                          <Clock className="w-3 h-3 text-text-subtle" />
+                          <span>{matter.slaTarget}</span>
+                        </div>
+                      </td>
+
+                      {/* Pair & Pages */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="font-mono font-semibold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-800 text-[10px]">
+                          {matter.lang}
+                        </span>
+                        <span className="text-[11px] text-text-muted ml-2">
+                          {matter.pages} {matter.pages === 1 ? "page" : "pages"}
+                        </span>
+                      </td>
+
+                      {/* Status Badge */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {matter.status === "COMPLETED" && (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-court-emerald bg-court-emerald/10 px-2.5 py-1 rounded-full border border-court-emerald/25">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>SEALED & VALIDATED</span>
+                          </span>
+                        )}
+                        {matter.status === "PROCESSING" && (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/25">
+                            <Clock className="w-3 h-3 animate-spin" />
+                            <span>TRANSLATING</span>
+                          </span>
+                        )}
+                        {matter.status === "IN_REVIEW" && (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1 rounded-full border border-brand-200 dark:border-brand-800">
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>PEER QC REVIEW</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Cryptographic Digest */}
+                      <td className="py-3.5 px-4 font-mono text-[11px] whitespace-nowrap">
+                        {matter.status === "COMPLETED" && matter.hash !== "Pending Seal" ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-text-muted">{matter.hash}</span>
+                            <button
+                              onClick={() => handleCopyHash(matter.id, matter.hash)}
+                              className="p-1 rounded hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer"
+                              title="Copy SHA-256 Digest"
+                            >
+                              {copiedId === matter.id ? (
+                                <Check className="w-3 h-3 text-court-emerald" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-text-subtle text-[10px] italic">In Pipeline</span>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        {matter.status === "COMPLETED" ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Link
+                              href={`/verify?docket=${matter.id}`}
+                              className="h-8 px-2.5 rounded-lg border border-border bg-surface hover:bg-surface-raised text-text font-medium text-[11px] flex items-center gap-1 transition-colors"
+                              title="Verify Public Seal"
+                            >
+                              <QrCode className="w-3 h-3 text-brand-600" />
+                              <span>Verify</span>
+                            </Link>
+                            {matter.downloadUrl ? (
+                              <a
+                                href={matter.downloadUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-8 px-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold text-[11px] flex items-center gap-1.5 transition-colors shadow-2xs"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>Download PDF</span>
+                              </a>
+                            ) : (
+                              <Link
+                                href="/documents"
+                                className="h-8 px-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold text-[11px] flex items-center gap-1.5 transition-colors shadow-2xs"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>Documents</span>
+                              </Link>
+                            )}
+                          </div>
+                        ) : (
+                          <Link
+                            href="/translate"
+                            className="h-8 px-3 rounded-lg border border-border bg-surface hover:bg-surface-raised text-text font-medium text-[11px] inline-flex items-center gap-1 transition-colors"
+                          >
+                            <Eye className="w-3 h-3 text-brand-600" />
+                            <span>Workspace</span>
+                          </Link>
+                        )}
+                      </td>
+
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* Table Footer */}
           <div className="p-3.5 px-5 bg-surface border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-text-muted">
             <span className="text-[11px]">
-              Showing {filteredMatters.length} of {MATTERS.length} legal dockets
+              Showing {filteredMatters.length} of {matters.length} legal dockets
             </span>
             <div className="flex items-center gap-2 font-mono text-[10px]">
               <span className="w-1.5 h-1.5 rounded-full bg-court-emerald" />

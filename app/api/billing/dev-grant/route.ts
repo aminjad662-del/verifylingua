@@ -6,6 +6,13 @@ import { CreditTransactionType } from "@prisma/client";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Developer credit grant is disabled in production environments." },
+      { status: 403 }
+    );
+  }
+
   try {
     let body: any = {};
     try {
@@ -14,24 +21,11 @@ export async function POST(req: NextRequest) {
 
     const pages = typeof body.pages === "number" && body.pages > 0 ? body.pages : 50;
 
-    let userId: string | null = null;
     const sessionUser = await getCurrentUser();
-    if (sessionUser?.id) {
-      userId = sessionUser.id;
-    } else if (body.userId) {
-      userId = body.userId;
-    } else {
-      // Find the most recently active user or fallback to lead user
-      const latestUser = await prisma.user.findFirst({
-        orderBy: { updatedAt: "desc" },
-      });
-      if (latestUser) {
-        userId = latestUser.id;
-      }
-    }
+    const userId = sessionUser?.id || (process.env.NODE_ENV === "test" ? body.userId : null);
 
     if (!userId) {
-      return NextResponse.json({ error: "No user found to grant credits" }, { status: 400 });
+      return NextResponse.json({ error: "Authentication required to grant test credits." }, { status: 401 });
     }
 
     const updatedUser = await prisma.$transaction(async (tx) => {

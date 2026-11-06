@@ -104,8 +104,8 @@ export async function GET(
           .createSignedUrl(cleanPath, 3600);
         downloadUrl = signRes?.signedUrl || null;
       } catch {}
-      if (!downloadUrl) {
-        downloadUrl = `https://mock.supabase.co/storage/v1/sign/translated_documents/${orderId}/translated_document.pdf?expires=3600`;
+      if (!downloadUrl && job.file_url) {
+        downloadUrl = job.file_url;
       }
     } else if (
       (job.status === "pending_review" || job.status === "approved") &&
@@ -119,8 +119,8 @@ export async function GET(
           .createSignedUrl(cleanPath, 3600);
         downloadUrl = signRes?.signedUrl || null;
       } catch {}
-      if (!downloadUrl) {
-        downloadUrl = `https://mock.supabase.co/storage/v1/sign/translated_documents/${orderId}/draft.pdf?expires=3600`;
+      if (!downloadUrl && job.file_url) {
+        downloadUrl = job.file_url;
       }
     } else if (job.file_url) {
       downloadUrl = job.file_url;

@@ -240,18 +240,12 @@ function OrderTrackingContent() {
     setMessages((prev) => [...prev, userMsg]);
     setNewMessage("");
 
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `m-rep-${Date.now()}`,
-          senderType: "TRANSLATOR",
-          senderName: "Elena V. (Translator)",
-          body: "Thank you for reaching out! I have verified your note and it is reflected in the certified draft.",
-          createdAt: "Just now",
-        },
-      ]);
-    }, 1200);
+    // Real message dispatch to order communication thread
+    fetch(`/api/order/${order.id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: userMsg.body }),
+    }).catch(() => null);
   };
 
   const TRACKER_STEPS = [

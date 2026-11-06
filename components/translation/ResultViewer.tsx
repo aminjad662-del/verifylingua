@@ -160,8 +160,8 @@ export function ResultViewer({
   const isRtlTarget = targetLanguage === "ar" || targetLanguage === "he" || targetLanguage === "fa" || targetLanguage === "ur";
   const isRtlSource = sourceLanguage === "ar" || sourceLanguage === "he" || sourceLanguage === "fa" || sourceLanguage === "ur";
 
-  // SHA-256 Digest
-  const sha256Digest = qualityGate?.sha256 || "7d4a98f1c830b201a4e89b210459c31e89b21d01f82e04d7c81a942b8219c04a";
+  // SHA-256 Digest (authentic hash from qualityGate; null if pending seal)
+  const sha256Digest = qualityGate?.sha256 || null;
 
   // Motion Values for 2.5x Loupe (Compositor Thread Only - 0 React re-renders on pointermove)
   const mouseX = useMotionValue(200);
@@ -347,6 +347,7 @@ export function ResultViewer({
   };
 
   const copyHash = () => {
+    if (!sha256Digest) return;
     navigator.clipboard?.writeText(sha256Digest);
     setHashCopied(true);
     setTimeout(() => setHashCopied(false), 2000);
@@ -936,19 +937,21 @@ export function ResultViewer({
                   </span>
                   <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-surface-raised border border-border">
                     <span className="truncate text-brand-ink font-bold select-all text-xs">
-                      {sha256Digest}
+                      {sha256Digest || "Pending cryptographic seal verification"}
                     </span>
-                    <button
-                      onClick={copyHash}
-                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer shrink-0 active:scale-[0.98] touch-manipulation"
-                      title="Copy SHA-256 digest"
-                    >
-                      {hashCopied ? (
-                        <Check className="w-4 h-4 text-court-emerald" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
+                    {sha256Digest && (
+                      <button
+                        onClick={copyHash}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-surface text-text-muted hover:text-brand-ink transition-colors cursor-pointer shrink-0 active:scale-[0.98] touch-manipulation"
+                        title="Copy SHA-256 digest"
+                      >
+                        {hashCopied ? (
+                          <Check className="w-4 h-4 text-court-emerald" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 

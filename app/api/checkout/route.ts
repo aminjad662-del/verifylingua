@@ -19,7 +19,15 @@ export async function POST(req: NextRequest) {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    if (stripeKey && !process.env.VITEST) {
+    if (process.env.NODE_ENV === "test" || process.env.VITEST) {
+      return NextResponse.json({
+        url: `${appUrl}/translate?test_checkout=${plan}`,
+        sessionId: `test_session_${Date.now()}`,
+        plan,
+      });
+    }
+
+    if (stripeKey) {
       const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" as any });
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -46,12 +54,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ url: session.url, sessionId: session.id });
     }
 
-    // Test / local dev fallback checkout session
-    return NextResponse.json({
-      url: `${appUrl}/translate?upgraded=${plan}`,
-      sessionId: `mock_sub_${Date.now()}`,
-      plan,
-    });
+    return NextResponse.json(
+      { error: "Stripe payment gateway is not configured. Please configure STRIPE_SECRET_KEY in production." },
+      { status: 503 }
+    );
   } catch (err: any) {
     console.error("Checkout error:", err);
     return NextResponse.json({ error: err.message || "Failed to initialize checkout session." }, { status: 500 });

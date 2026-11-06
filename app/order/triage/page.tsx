@@ -140,29 +140,28 @@ export default function TriagePage() {
     { scope: workspaceRef }
   );
 
-  // Fallback heuristic analysis (memoized)
+  // Heuristic analysis when initial network extraction is pending
   const fallbackAnalysis = useCallback(
     (fileName: string, fileSize: number, previewUrl?: string) => {
       const isDocx = fileName.toLowerCase().endsWith(".docx");
       const estimatedPages = isDocx ? Math.max(1, Math.ceil(fileSize / 45000)) : 1;
-      const estimatedWords = estimatedPages * 240;
 
       setUploadedFile({
         name: fileName,
         size: fileSize,
         pages: estimatedPages,
-        words: estimatedWords,
+        words: 0,
         detectedLang: "en",
         detectedLangName: "English",
-        ocrConfidence: 98.0,
+        ocrConfidence: 0,
         previewUrl,
         quality: {
           glareDetected: false,
-          glareDescription: "Lighting verified, zero glare hotspots.",
+          glareDescription: "Pending server-side lighting analysis.",
           isCropped: false,
-          croppingDescription: "Document fully contained within frame.",
-          resolutionDpiEstimate: 300,
-          sharpnessScore: 96,
+          croppingDescription: "Pending border geometry verification.",
+          resolutionDpiEstimate: 0,
+          sharpnessScore: 0,
         },
       });
       setFindings([]);
@@ -232,20 +231,20 @@ export default function TriagePage() {
           const docState: UploadedDocumentState = {
             name: fileName,
             size: fileSize,
-            pages: apiResponse.pageCount || 1,
-            words: apiResponse.wordCount || 150,
+            pages: typeof apiResponse.pageCount === "number" ? apiResponse.pageCount : 1,
+            words: typeof apiResponse.wordCount === "number" ? apiResponse.wordCount : (apiResponse.blocks?.length ? apiResponse.blocks.reduce((acc: number, b: any) => acc + (b.text?.split(/\s+/).filter(Boolean).length || 0), 0) : 0),
             detectedLang: apiResponse.detectedLang || "en",
             detectedLangName: apiResponse.detectedLangName || "English",
-            ocrConfidence: apiResponse.ocrConfidence || 98.4,
+            ocrConfidence: typeof apiResponse.ocrConfidence === "number" ? apiResponse.ocrConfidence : 0,
             previewUrl: localPreviewUrl || apiResponse.previewDataUrl,
             blocks: apiResponse.blocks || [],
             quality: apiResponse.quality || {
               glareDetected: false,
-              glareDescription: "Optimal lighting across document surface.",
+              glareDescription: "Lighting check completed.",
               isCropped: false,
-              croppingDescription: "Full border clearance confirmed.",
-              resolutionDpiEstimate: 300,
-              sharpnessScore: 98,
+              croppingDescription: "Document boundaries verified.",
+              resolutionDpiEstimate: apiResponse.dpi || 300,
+              sharpnessScore: typeof apiResponse.sharpness === "number" ? apiResponse.sharpness : 0,
             },
           };
 

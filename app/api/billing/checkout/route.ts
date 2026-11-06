@@ -117,10 +117,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      checkoutUrl: "/dashboard?mock_checkout=" + plan.id,
-    });
+    if (process.env.NODE_ENV === "test") {
+      return NextResponse.json({
+        success: true,
+        checkoutUrl: "/dashboard?mock_checkout=" + plan.id,
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Stripe payment gateway is not configured. Please configure STRIPE_SECRET_KEY in production." },
+      { status: 503 }
+    );
   } catch (error: any) {
     console.error("Billing checkout session error:", error);
     return NextResponse.json(

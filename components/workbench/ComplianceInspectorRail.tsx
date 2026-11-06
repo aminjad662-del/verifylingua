@@ -36,28 +36,6 @@ export function ComplianceInspectorRail({
 }: ComplianceInspectorRailProps) {
   const [activeTab, setActiveTab] = React.useState<"locks" | "credentials" | "audit">("locks");
 
-  const defaultAuditTrail: AuditEventItem[] = [
-    {
-      id: "ev-1",
-      timestamp: "10:14:02 AM",
-      actor: "OCR Engine (300 DPI)",
-      action: "Spatial vector extraction completed with 99.4% confidence",
-    },
-    {
-      id: "ev-2",
-      timestamp: "10:14:05 AM",
-      actor: "Glossary Agent",
-      action: `Locked ${lockedTerms.length} USCIS vital identity terms`,
-    },
-    {
-      id: "ev-3",
-      timestamp: "10:14:12 AM",
-      actor: "CAT Workspace",
-      action: "Assigned to Certified Legal Linguist for human verification",
-    },
-    ...auditEvents,
-  ];
-
   return (
     <div className="rounded-[var(--r-xl)] bg-surface-raised/60 border border-border/80 p-1.5 md:p-2 shadow-xs flex flex-col space-y-3">
       {/* Tab Switcher */}
@@ -182,18 +160,25 @@ export function ComplianceInspectorRail({
           </div>
 
           <div className="space-y-2.5">
-            {defaultAuditTrail.map((ev) => (
-              <div
-                key={ev.id}
-                className="p-2 rounded-xl bg-surface-raised border border-border text-xs space-y-0.5"
-              >
-                <div className="flex items-center justify-between font-mono text-[10px] text-text-subtle">
-                  <span className="font-bold text-brand-ink">{ev.actor}</span>
-                  <span>{ev.timestamp}</span>
+            {auditEvents.length > 0 ? (
+              auditEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="p-2 rounded-xl bg-surface-raised border border-border text-xs space-y-0.5"
+                >
+                  <div className="flex items-center justify-between font-mono text-[10px] text-text-subtle">
+                    <span className="font-bold text-brand-ink">{ev.actor}</span>
+                    <span>{ev.timestamp}</span>
+                  </div>
+                  <p className="text-[11px] text-text-muted leading-tight">{ev.action}</p>
                 </div>
-                <p className="text-[11px] text-text-muted leading-tight">{ev.action}</p>
+              ))
+            ) : (
+              <div className="py-6 px-3 text-center rounded-xl bg-surface-raised/40 border border-border/40 text-xs text-text-muted space-y-1">
+                <p className="font-semibold text-brand-ink">No Audit Records Yet</p>
+                <p className="text-[11px] text-text-subtle">Audit log triggers dynamically as translation actions occur.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

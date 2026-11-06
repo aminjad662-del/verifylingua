@@ -200,6 +200,7 @@ export default function TranslatePage() {
   const [detectedLangInfo, setDetectedLangInfo] = useState<{ lang: string; confidence: number; label: string } | null>(null);
   const [isSampleLoading, setIsSampleLoading] = useState(false);
 
+
   // Active translation job state
   const [job, setJob] = useState<JobState | null>(null);
   const [user, setUser] = useState<{ id: string; email: string; name?: string | null } | null>(null);
@@ -207,7 +208,7 @@ export default function TranslatePage() {
     process.env.NODE_ENV === "test" ? true : null
   );
   const [availableCredits, setAvailableCredits] = useState<number | null>(null);
-  const [grantingCredits, setGrantingCredits] = useState(false);
+
   const [lastUploadedFile, setLastUploadedFile] = useState<File | null>(null);
   const [translatedBlobUrl, setTranslatedBlobUrl] = useState<string | null>(null);
   const translatedBlobUrlRef = useRef<string | null>(null);
@@ -427,6 +428,39 @@ export default function TranslatePage() {
     setJob(null);
   }, [stagedPreviewUrl, setBlobUrl]);
 
+  // Load sample worksheet or authentic specimen
+  const handleLoadSample = useCallback(async (customSample?: SpecimenSample) => {
+    try {
+      setIsSampleLoading(true);
+      const targetUrl = customSample?.fileUrl || "/samples/worksheet-sample.jpg";
+      const targetFileName = customSample?.fileName || "reading_comprehension_beach.jpg";
+
+      let res = await fetch(targetUrl);
+      if (!res.ok) {
+        res = await fetch("/samples/worksheet-sample.jpg");
+      }
+      if (!res.ok) throw new Error("Sample file not found");
+      const blob = await res.blob();
+      const file = new File([blob], targetFileName, {
+        type: blob.type || "image/jpeg",
+        lastModified: Date.now(),
+      });
+      if (customSample) {
+        setSourceLang(customSample.sourceLang);
+        setTargetLang(customSample.targetLang);
+      }
+      handleStageFile(file);
+      toast.success("Sample Loaded", {
+        description: `Loaded ${customSample?.name || "Reading Comprehension Worksheet"} for interactive translation.`,
+      });
+    } catch (err) {
+      console.error("Failed to load sample worksheet:", err);
+      toast.error("Could not load specimen sample");
+    } finally {
+      setIsSampleLoading(false);
+    }
+  }, [handleStageFile]);
+
   // Restore any pending upload session from storage with full fidelity
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -465,39 +499,6 @@ export default function TranslatePage() {
     }
   }, [handleStageFile, stagedFile]);
 
-  // Load sample worksheet or authentic specimen
-  const handleLoadSample = useCallback(async (customSample?: SpecimenSample) => {
-    try {
-      setIsSampleLoading(true);
-      const targetUrl = customSample?.fileUrl || "/samples/worksheet-sample.jpg";
-      const targetFileName = customSample?.fileName || "reading_comprehension_beach.jpg";
-
-      let res = await fetch(targetUrl);
-      if (!res.ok) {
-        res = await fetch("/samples/worksheet-sample.jpg");
-      }
-      if (!res.ok) throw new Error("Sample file not found");
-      const blob = await res.blob();
-      const file = new File([blob], targetFileName, {
-        type: blob.type || "image/jpeg",
-        lastModified: Date.now(),
-      });
-      if (customSample) {
-        setSourceLang(customSample.sourceLang);
-        setTargetLang(customSample.targetLang);
-      }
-      handleStageFile(file);
-      toast.success("Sample Loaded", {
-        description: `Loaded ${customSample?.name || "Reading Comprehension Worksheet"} for interactive translation.`,
-      });
-    } catch (err) {
-      console.error("Failed to load sample worksheet:", err);
-      toast.error("Could not load specimen sample");
-    } finally {
-      setIsSampleLoading(false);
-    }
-  }, [handleStageFile]);
-
   // Handle URL search params securely inside Suspense
   const handleParams = useCallback(
     (params: {
@@ -525,7 +526,7 @@ export default function TranslatePage() {
       // 2. Service Tier
       if (params.tier) setServiceTier(params.tier);
 
-      // 3. Specimen sample auto-load with hyphen normalization
+      // 3. Document parameter normalization
       if (params.doc) {
         const normalizedDoc = params.doc.toLowerCase().replace(/[-_]/g, " ");
         const match = SPECIMEN_SAMPLES.find(
@@ -733,8 +734,8 @@ export default function TranslatePage() {
           downloadUrl: data.downloadUrl || null,
           downloadToken: data.downloadToken || null,
           qualityGate: data.qualityGate || null,
-          fidelityScore: data.fidelityScore ?? (data.status === "ready" ? 98.4 : undefined),
-          layoutPreserved: data.layoutPreserved ?? (data.status === "ready" ? true : null),
+          fidelityScore: typeof data.fidelityScore === "number" ? data.fidelityScore : null,
+          layoutPreserved: typeof data.layoutPreserved === "boolean" ? data.layoutPreserved : null,
           error: null,
           creditError: null,
           pageCount: data.pageCount || overridePageCount || 1,
@@ -797,30 +798,7 @@ export default function TranslatePage() {
     setTargetLang(prevSource);
   };
 
-  const handleGrantTestCredits = async () => {
-    setGrantingCredits(true);
-    try {
-      const res = await fetch("/api/billing/dev-grant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pages: 50 }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAvailableCredits(data.availableCredits ?? data.available ?? 50);
-        toast.success("Test Credits Granted", {
-          description: "50 page credits added to your active session balance.",
-        });
-        if (lastUploadedFile) {
-          await executeUpload(lastUploadedFile);
-        }
-      }
-    } catch {
-      // Ignore
-    } finally {
-      setGrantingCredits(false);
-    }
-  };
+
 
   const handleTranslateSample = async () => {
     const fileToTranslate = stagedFile || lastUploadedFile;
@@ -1487,15 +1465,6 @@ export default function TranslatePage() {
                       className="rounded-full text-xs font-bold min-h-[44px]"
                     >
                       <Link href="/pricing">Add Credits</Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGrantTestCredits}
-                      disabled={grantingCredits}
-                      className="rounded-full text-xs font-semibold min-h-[44px]"
-                    >
-                      {grantingCredits ? "Adding 50 Credits..." : "Dev: Add 50 Test Credits"}
                     </Button>
                   </div>
                 </div>

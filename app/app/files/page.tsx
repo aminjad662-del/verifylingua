@@ -43,7 +43,7 @@ export default async function DocumentVaultPage() {
             </thead>
             <tbody className="divide-y divide-border font-mono">
               {projects.map((p) => {
-                const mockHash = `sha256_${p.id.slice(0, 12)}...${p.id.slice(-6)}`;
+                const displayHash = (p as any).sha256 || (p as any).hash || "—";
                 return (
                   <tr key={p.id} className="hover:bg-surface-raised/50 transition-colors">
                     <td className="py-3.5 px-4 font-sans font-bold text-text">
@@ -61,7 +61,7 @@ export default async function DocumentVaultPage() {
                       {(p.fileSizeBytes / 1024).toFixed(1)} KB
                     </td>
                     <td className="py-3.5 px-4 text-text-muted text-[11px]">
-                      {mockHash}
+                      {displayHash}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">

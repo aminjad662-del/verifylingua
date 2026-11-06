@@ -685,7 +685,7 @@ export function DocumentInspectionStage() {
                       onMouseLeave={() => setActiveClauseId(null)}
                       className={`p-3 rounded-xl border transition-all cursor-pointer ${
                         isHovered
-                          ? "bg-brand-50/70 dark:bg-brand-950/30 border-brand-500 ring-1 ring-brand-500/30 shadow-2xs"
+                          ? "bg-amber-statutory/15 border-signal-accent shadow-2xs"
                           : "bg-surface border-border hover:border-border-strong"
                       }`}
                     >
