@@ -648,8 +648,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
     const canonicalOrigin = (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1')
       ? reqUrl.origin
       : 'https://verifylingua.pages.dev';
-    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID)
-      ? env.GOOGLE_CLIENT_ID
+    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_ID.trim())
+      ? env.GOOGLE_CLIENT_ID.trim()
       : '__BUILD_INJECTED_GOOGLE_CLIENT_ID__';
     const googleRedirectUri = (typeof env !== 'undefined' && env.GOOGLE_REDIRECT_URI)
       ? env.GOOGLE_REDIRECT_URI
@@ -703,8 +703,8 @@ async function handleApiRequest(request, pathname, env, ctx) {
       ? reqUrl.origin
       : 'https://verifylingua.pages.dev';
     const origin = canonicalOrigin;
-    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID)
-      ? env.GOOGLE_CLIENT_ID
+    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_ID.trim())
+      ? env.GOOGLE_CLIENT_ID.trim()
       : '__BUILD_INJECTED_GOOGLE_CLIENT_ID__';
     const googleRedirectUri = (typeof env !== 'undefined' && env.GOOGLE_REDIRECT_URI)
       ? env.GOOGLE_REDIRECT_URI
@@ -771,11 +771,11 @@ async function handleApiRequest(request, pathname, env, ctx) {
       return Response.redirect(loginRedirect.toString(), 302);
     }
 
-    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID)
-      ? env.GOOGLE_CLIENT_ID
+    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_ID.trim())
+      ? env.GOOGLE_CLIENT_ID.trim()
       : '__BUILD_INJECTED_GOOGLE_CLIENT_ID__';
-    const googleClientSecret = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_SECRET)
-      ? env.GOOGLE_CLIENT_SECRET
+    const googleClientSecret = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_CLIENT_SECRET.trim())
+      ? env.GOOGLE_CLIENT_SECRET.trim()
       : '__BUILD_INJECTED_GOOGLE_CLIENT_SECRET__';
 
     let userEmail = 'verified.user@verifylingua.org';
