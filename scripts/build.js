@@ -32,6 +32,16 @@ if (prismaBin) {
 }
 
 console.log(`⚡ Step 2: Running Next.js build with ${memoryMb}MB heap (isCloudflare: ${isCloudflare})...`);
+
+// Clear stale webpack cache before build to prevent Windows 0xC0000005 VirtualAlloc / memory fault
+const cacheDir = path.join(process.cwd(), '.next', 'cache');
+if (fs.existsSync(cacheDir)) {
+  try {
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+    console.log('🧹 Cleared stale .next/cache for clean build');
+  } catch (e) {}
+}
+
 let buildRes;
 if (nextBin) {
   buildRes = spawnSync(process.execPath, [nextBin, 'build'], {

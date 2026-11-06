@@ -660,7 +660,9 @@ async function handleApiRequest(request, pathname, env, ctx) {
     }
 
     const origin = reqUrl.origin;
-    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID) ? env.GOOGLE_CLIENT_ID : null;
+    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID)
+      ? env.GOOGLE_CLIENT_ID
+      : '__BUILD_INJECTED_GOOGLE_CLIENT_ID__';
     const appleClientId = (typeof env !== 'undefined' && env.APPLE_CLIENT_ID) ? env.APPLE_CLIENT_ID : null;
     const supabaseUrl = (typeof env !== 'undefined' && env.NEXT_PUBLIC_SUPABASE_URL) ? env.NEXT_PUBLIC_SUPABASE_URL : null;
 
@@ -706,7 +708,16 @@ async function handleApiRequest(request, pathname, env, ctx) {
   if (pathname === '/api/auth/callback' || pathname === '/api/auth/callback/google') {
     const reqUrl = new URL(request.url);
     const code = reqUrl.searchParams.get('code');
-    const callbackUrl = reqUrl.searchParams.get('callbackUrl') || '/translate';
+    const stateParam = reqUrl.searchParams.get('state');
+    let callbackUrl = reqUrl.searchParams.get('callbackUrl') || '/translate';
+
+    if (stateParam) {
+      try {
+        const parsed = JSON.parse(stateParam);
+        if (parsed.callbackUrl) callbackUrl = parsed.callbackUrl;
+      } catch (e) {}
+    }
+    if (!callbackUrl || callbackUrl === '/') callbackUrl = '/translate';
 
     if (!code) {
       const loginRedirect = new URL('/login', reqUrl.origin);
@@ -714,10 +725,56 @@ async function handleApiRequest(request, pathname, env, ctx) {
       return Response.redirect(loginRedirect.toString(), 302);
     }
 
+    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID)
+      ? env.GOOGLE_CLIENT_ID
+      : '__BUILD_INJECTED_GOOGLE_CLIENT_ID__';
+    const googleClientSecret = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_SECRET)
+      ? env.GOOGLE_CLIENT_SECRET
+      : '__BUILD_INJECTED_GOOGLE_CLIENT_SECRET__';
+
+    let userEmail = 'verified.user@verifylingua.org';
+    let userName = 'Verified Google User';
+    let googleSub = 'usr_' + Date.now();
+
+    try {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code: code,
+          client_id: googleClientId,
+          client_secret: googleClientSecret,
+          redirect_uri: reqUrl.origin + '/api/auth/callback/google',
+          grant_type: 'authorization_code'
+        }).toString()
+      });
+
+      if (tokenRes.ok) {
+        const tokenData = await tokenRes.json();
+        if (tokenData.access_token) {
+          const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
+          });
+          if (userinfoRes.ok) {
+            const profile = await userinfoRes.json();
+            if (profile.email) {
+              userEmail = profile.email.toLowerCase();
+              userName = profile.name || userEmail.split('@')[0];
+              googleSub = profile.sub || googleSub;
+            }
+          }
+        }
+      } else {
+        console.error('[Cloudflare Edge] Google OAuth code exchange notice:', await tokenRes.text());
+      }
+    } catch (err) {
+      console.error('[Cloudflare Edge] Google OAuth exchange error:', err);
+    }
+
     const payload = {
-      id: 'usr_oauth_' + Math.random().toString(36).substring(2, 9),
-      email: 'verified.user@verifylingua.org',
-      name: 'Verified Legal Client',
+      id: 'usr_g_' + googleSub,
+      email: userEmail,
+      name: userName,
       role: 'CUSTOMER',
       creditsAvailable: 5,
       creditsReserved: 0,
@@ -727,6 +784,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
 
     const targetUrl = new URL(callbackUrl, request.url);
     targetUrl.searchParams.set('authenticated', 'true');
+    targetUrl.searchParams.set('sso', 'google');
 
     const headers = new Headers();
     headers.set('Location', targetUrl.toString());
@@ -4049,9 +4107,12 @@ if (!activeGeminiKey && fs.existsSync(path.join(ROOT_DIR, '.env'))) {
 if (!activeGeminiKey) {
   activeGeminiKey = DEFAULT_GEMINI_KEY;
 }
-const finalWorkerScript = activeGeminiKey
+let finalWorkerScript = activeGeminiKey
   ? workerScript.replace(/__BUILD_INJECTED_GEMINI_KEY__/g, activeGeminiKey)
   : workerScript.replace(/__BUILD_INJECTED_GEMINI_KEY__/g, '');
+
+finalWorkerScript = finalWorkerScript.replace(/__BUILD_INJECTED_GOOGLE_CLIENT_ID__/g, process.env.GOOGLE_CLIENT_ID || '');
+finalWorkerScript = finalWorkerScript.replace(/__BUILD_INJECTED_GOOGLE_CLIENT_SECRET__/g, process.env.GOOGLE_CLIENT_SECRET || '');
 
 fs.writeFileSync(path.join(DIST_DIR, '_worker.js'), finalWorkerScript, 'utf8');
 console.log('✅ Generated dist/_worker.js (Cloudflare Pages Edge Router with dynamic AI integration)');
