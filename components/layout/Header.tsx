@@ -473,7 +473,7 @@ export function Header() {
 
             {/* Primary Action Button */}
             <Link
-              href={currentUser ? "/translate" : "/login?returnUrl=/translate&redirect=/translate"}
+              href="/translate"
               className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs sm:text-sm font-semibold shadow-[0_2px_10px_rgba(37,99,235,0.20)] transition-all duration-150 ease-out active:scale-[0.98] group cursor-pointer whitespace-nowrap shrink-0 min-h-[40px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <span>Start translation</span>
@@ -509,7 +509,7 @@ export function Header() {
                   Navigation
                 </div>
                 <Link
-                  href={currentUser ? "/translate" : "/login?returnUrl=/translate&redirect=/translate"}
+                  href="/translate"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-between p-2.5 rounded-xl hover:bg-canvas-subtle text-sm font-semibold text-brand-ink active:scale-[0.98] transition-transform"
                 >

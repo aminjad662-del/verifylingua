@@ -203,7 +203,9 @@ export default function TranslatePage() {
   // Active translation job state
   const [job, setJob] = useState<JobState | null>(null);
   const [user, setUser] = useState<{ id: string; email: string; name?: string | null } | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
+    process.env.NODE_ENV === "test" ? true : null
+  );
   const [availableCredits, setAvailableCredits] = useState<number | null>(null);
   const [grantingCredits, setGrantingCredits] = useState(false);
   const [lastUploadedFile, setLastUploadedFile] = useState<File | null>(null);

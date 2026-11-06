@@ -642,6 +642,46 @@ async function handleApiRequest(request, pathname, env, ctx) {
   }
 
   // -------------------------------------------------------------
+  // Diagnostic endpoint for Google OAuth setup verification
+  if (pathname === '/api/auth/google/diagnostic') {
+    const reqUrl = new URL(request.url);
+    const canonicalOrigin = (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1')
+      ? reqUrl.origin
+      : 'https://verifylingua.pages.dev';
+    const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID)
+      ? env.GOOGLE_CLIENT_ID
+      : '__BUILD_INJECTED_GOOGLE_CLIENT_ID__';
+    const googleRedirectUri = (typeof env !== 'undefined' && env.GOOGLE_REDIRECT_URI)
+      ? env.GOOGLE_REDIRECT_URI
+      : (canonicalOrigin + '/api/auth/callback/google');
+
+    return new Response(JSON.stringify({
+      status: 'ok',
+      configured: Boolean(googleClientId),
+      clientIdPreview: googleClientId ? (googleClientId.substring(0, 15) + '...' + googleClientId.slice(-10)) : null,
+      fullClientId: googleClientId,
+      canonicalOrigin,
+      effectiveRedirectUri: googleRedirectUri,
+      requiredGoogleCloudConsoleEntries: {
+        authorizedJavaScriptOrigins: [
+          'https://verifylingua.pages.dev',
+          'http://localhost:3000'
+        ],
+        authorizedRedirectUris: [
+          'https://verifylingua.pages.dev/api/auth/callback/google',
+          'https://verifylingua.pages.dev/api/auth/callback',
+          'https://lhmcenzdjcbqjvluacrj.supabase.co/auth/v1/callback',
+          'http://localhost:3000/api/auth/callback/google',
+          'http://localhost:3000/api/auth/callback'
+        ]
+      },
+      directGoogleConsoleUrl: 'https://console.cloud.google.com/apis/credentials/oauthclient/' + googleClientId + '?project=electric-orbit-513911-e3'
+    }, null, 2), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
   // Google & Apple Single Sign-On (SSO) Edge Authentication Handlers
   // -------------------------------------------------------------
   if (pathname.startsWith('/api/auth/signin/')) {
@@ -659,22 +699,28 @@ async function handleApiRequest(request, pathname, env, ctx) {
       });
     }
 
-    const origin = reqUrl.origin;
+    const canonicalOrigin = (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1')
+      ? reqUrl.origin
+      : 'https://verifylingua.pages.dev';
+    const origin = canonicalOrigin;
     const googleClientId = (typeof env !== 'undefined' && env.GOOGLE_CLIENT_ID)
       ? env.GOOGLE_CLIENT_ID
       : '__BUILD_INJECTED_GOOGLE_CLIENT_ID__';
+    const googleRedirectUri = (typeof env !== 'undefined' && env.GOOGLE_REDIRECT_URI)
+      ? env.GOOGLE_REDIRECT_URI
+      : (canonicalOrigin + '/api/auth/callback/google');
     const appleClientId = (typeof env !== 'undefined' && env.APPLE_CLIENT_ID) ? env.APPLE_CLIENT_ID : null;
     const supabaseUrl = (typeof env !== 'undefined' && env.NEXT_PUBLIC_SUPABASE_URL) ? env.NEXT_PUBLIC_SUPABASE_URL : null;
 
     if (provider === 'google' && googleClientId) {
       const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       googleAuthUrl.searchParams.set('client_id', googleClientId);
-      googleAuthUrl.searchParams.set('redirect_uri', origin + '/api/auth/callback/google');
+      googleAuthUrl.searchParams.set('redirect_uri', googleRedirectUri);
       googleAuthUrl.searchParams.set('response_type', 'code');
       googleAuthUrl.searchParams.set('scope', 'openid email profile');
       googleAuthUrl.searchParams.set('access_type', 'offline');
       googleAuthUrl.searchParams.set('prompt', 'select_account');
-      googleAuthUrl.searchParams.set('state', JSON.stringify({ callbackUrl, provider: 'google' }));
+      googleAuthUrl.searchParams.set('state', JSON.stringify({ callbackUrl, provider: 'google', redirectUri: googleRedirectUri }));
       return Response.redirect(googleAuthUrl.toString(), 302);
     }
 
@@ -736,6 +782,24 @@ async function handleApiRequest(request, pathname, env, ctx) {
     let userName = 'Verified Google User';
     let googleSub = 'usr_' + Date.now();
 
+    const canonicalOrigin = (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1')
+      ? reqUrl.origin
+      : 'https://verifylingua.pages.dev';
+
+    let expectedRedirectUri = (typeof env !== 'undefined' && env.GOOGLE_REDIRECT_URI)
+      ? env.GOOGLE_REDIRECT_URI
+      : null;
+
+    if (!expectedRedirectUri && stateParam) {
+      try {
+        const parsed = JSON.parse(stateParam);
+        if (parsed.redirectUri) expectedRedirectUri = parsed.redirectUri;
+      } catch (e) {}
+    }
+    if (!expectedRedirectUri) {
+      expectedRedirectUri = canonicalOrigin + reqUrl.pathname;
+    }
+
     try {
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -744,7 +808,7 @@ async function handleApiRequest(request, pathname, env, ctx) {
           code: code,
           client_id: googleClientId,
           client_secret: googleClientSecret,
-          redirect_uri: reqUrl.origin + '/api/auth/callback/google',
+          redirect_uri: expectedRedirectUri,
           grant_type: 'authorization_code'
         }).toString()
       });

@@ -13,10 +13,12 @@ export async function GET(req: NextRequest) {
   const userAgent = req.headers.get("user-agent") || "unknown";
 
   let callbackUrl = "/translate";
+  let stateRedirectUri: string | null = null;
   if (rawState) {
     try {
       const parsed = JSON.parse(rawState);
       if (parsed.callbackUrl) callbackUrl = parsed.callbackUrl;
+      if (parsed.redirectUri) stateRedirectUri = parsed.redirectUri;
     } catch {
       // Keep default
     }
@@ -41,7 +43,14 @@ export async function GET(req: NextRequest) {
 
   try {
     // 1. Exchange authorization code with Google OAuth token endpoint
-    const redirectUri = `${origin}/api/auth/callback/google`;
+    const canonicalOrigin =
+      req.nextUrl.hostname === "localhost" || req.nextUrl.hostname === "127.0.0.1"
+        ? origin
+        : (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes("localhost")
+            ? process.env.NEXTAUTH_URL
+            : "https://verifylingua.pages.dev");
+    const redirectUri =
+      stateRedirectUri || process.env.GOOGLE_REDIRECT_URI || `${canonicalOrigin}/api/auth/callback/google`;
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },

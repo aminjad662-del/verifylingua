@@ -22,17 +22,28 @@ export async function GET(
     searchParams.get("redirect") ||
     "/translate";
   const origin = req.nextUrl.origin;
+  const canonicalOrigin =
+    req.nextUrl.hostname === "localhost" || req.nextUrl.hostname === "127.0.0.1"
+      ? origin
+      : (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes("localhost")
+          ? process.env.NEXTAUTH_URL
+          : "https://verifylingua.pages.dev");
+  const googleRedirectUri =
+    process.env.GOOGLE_REDIRECT_URI || `${canonicalOrigin}/api/auth/callback/google`;
 
   // 1. Direct Google OAuth 2.0 / OIDC Flow (Standard Authorization Code Flow)
   if (provider === "google" && process.env.GOOGLE_CLIENT_ID) {
     const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     googleAuthUrl.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID);
-    googleAuthUrl.searchParams.set("redirect_uri", `${origin}/api/auth/callback/google`);
+    googleAuthUrl.searchParams.set("redirect_uri", googleRedirectUri);
     googleAuthUrl.searchParams.set("response_type", "code");
     googleAuthUrl.searchParams.set("scope", "openid email profile");
     googleAuthUrl.searchParams.set("access_type", "offline");
     googleAuthUrl.searchParams.set("prompt", "select_account");
-    googleAuthUrl.searchParams.set("state", JSON.stringify({ callbackUrl, provider: "google" }));
+    googleAuthUrl.searchParams.set(
+      "state",
+      JSON.stringify({ callbackUrl, provider: "google", redirectUri: googleRedirectUri })
+    );
     return NextResponse.redirect(googleAuthUrl.toString());
   }
 

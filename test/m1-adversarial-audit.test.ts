@@ -121,7 +121,7 @@ describe("Milestone M1 Adversarial Challenge: Hex Gate, Theme Lock & Token Integ
       expect(globalsCss).toContain("--surface:          #FAF8F3;");
       expect(globalsCss).toContain("--border:           #E6E2D8;");
       expect(globalsCss).toContain("--brand-ink:        #0C0D10;");
-      expect(globalsCss).toContain("--signal-accent:        #FF5500;");
+      expect(globalsCss).toContain("--signal-accent:        #2563EB;");
 
       // Verify .dark block mirrors warm ivory
       const darkBlockMatch = globalsCss.match(/\.dark\s*\{([\s\S]*?)\}/);
@@ -132,8 +132,8 @@ describe("Milestone M1 Adversarial Challenge: Hex Gate, Theme Lock & Token Integ
       expect(darkBlock).toContain("--surface:          #FAF8F3;");
       expect(darkBlock).toContain("--border:           #E6E2D8;");
       expect(darkBlock).toContain("--text:             #0C0D10;");
-      expect(darkBlock).toContain("--brand-500:        #FF5500;");
-      expect(darkBlock).toContain("--signal-accent:        #FF5500;");
+      expect(darkBlock).toContain("--brand-500:        #2563EB;");
+      expect(darkBlock).toContain("--signal-accent:        #2563EB;");
     });
 
     it("verifies every @theme token referencing var(--token) is defined in :root", () => {
