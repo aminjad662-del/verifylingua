@@ -556,14 +556,14 @@ export function DocumentInspectionStage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div className="space-y-0.5">
-                    <span className="font-mono text-[10px] font-bold text-amber-statutory uppercase tracking-wider block">
+                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
                       FOREIGN CIVIL SOURCE DOCUMENT (ORIGINAL SCAN)
                     </span>
                     <h3 className={`font-bold text-brand-ink text-sm sm:text-base ${isRtl ? "font-arabic" : "font-serif italic"}`}>
                       {activeDoc.authoritySource}
                     </h3>
                   </div>
-                  <span className="font-mono text-[10px] bg-amber-statutory/15 text-amber-statutory px-2 py-0.5 rounded font-bold border border-amber-statutory/30">
+                  <span className="font-mono text-[10px] bg-surface-raised text-slate-600 px-2 py-0.5 rounded font-bold border border-border">
                     300 DPI RASTER
                   </span>
                 </div>
@@ -572,35 +572,35 @@ export function DocumentInspectionStage() {
                   {activeDoc.clauses.map((clause) => (
                     <div
                       key={clause.id}
-                      className="p-2.5 rounded-xl border border-amber-statutory/30 bg-amber-statutory/5 text-xs flex justify-between items-start gap-4"
+                      className="p-2.5 rounded-xl border border-border/80 bg-surface text-xs flex justify-between items-start gap-4"
                     >
                       <div className="space-y-0.5">
-                        <span className="font-mono text-[10px] text-amber-statutory uppercase block">
+                        <span className="font-mono text-[10px] text-slate-500 uppercase block">
                           {clause.label} (Original)
                         </span>
                         <div className={`text-brand-ink text-xs font-semibold ${isRtl ? "font-arabic text-sm" : "font-serif"}`}>
                           {clause.sourceText}
                         </div>
                       </div>
-                      <span className="font-mono text-[10px] text-amber-statutory shrink-0">
+                      <span className="font-mono text-[10px] text-slate-400 shrink-0">
                         Physical Ink
                       </span>
                     </div>
                   ))}
                 </div>
 
-                <div className="p-3 rounded-xl border border-dashed border-amber-statutory/40 bg-amber-statutory/5 text-xs flex items-center justify-between">
+                <div className="p-3 rounded-xl border border-dashed border-border bg-surface-raised/60 text-xs flex items-center justify-between">
                   <span className="font-mono text-[11px] text-brand-ink font-serif italic">
                     {activeDoc.sealTranscription.source}
                   </span>
-                  <span className="font-mono text-[10px] text-amber-statutory font-bold uppercase shrink-0">
+                  <span className="font-mono text-[10px] text-slate-500 font-bold uppercase shrink-0">
                     Foreign State Seal
                   </span>
                 </div>
               </div>
 
               {/* Bottom Stamp Jurat */}
-              <div className="pt-3 border-t border-amber-statutory/30 flex items-center justify-between text-[11px] font-mono text-amber-statutory">
+              <div className="pt-3 border-t border-border flex items-center justify-between text-[11px] font-mono text-slate-500">
                 <span>Civil Folio Registered</span>
                 <span>Original Physical Record</span>
               </div>
@@ -672,7 +672,7 @@ export function DocumentInspectionStage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
               {/* Source Column */}
               <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
-                <div className="font-mono text-[10px] text-amber-statutory uppercase font-bold flex items-center justify-between">
+                <div className="font-mono text-[10px] text-slate-500 uppercase font-bold flex items-center justify-between">
                   <span>FOREIGN SOURCE SCAN</span>
                   <span>{activeDoc.sourceLanguage}</span>
                 </div>
@@ -685,7 +685,7 @@ export function DocumentInspectionStage() {
                       onMouseLeave={() => setActiveClauseId(null)}
                       className={`p-3 rounded-xl border transition-all cursor-pointer ${
                         isHovered
-                          ? "bg-amber-statutory/15 border-signal-accent shadow-2xs"
+                          ? "bg-brand-50/70 dark:bg-brand-950/30 border-brand-500 ring-1 ring-brand-500/30 shadow-2xs"
                           : "bg-surface border-border hover:border-border-strong"
                       }`}
                     >

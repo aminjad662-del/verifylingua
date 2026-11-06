@@ -53,13 +53,13 @@ export function LegalPrecisionBento() {
               <div className="p-3 rounded-lg bg-surface-raised border border-border space-y-2">
                 <div className="flex items-center justify-between text-[10px] font-mono text-text-subtle">
                   <span>FOREIGN RECORD</span>
-                  <span className="text-amber-600 font-semibold">ES ORIGINAL</span>
+                  <span className="text-slate-600 font-semibold">ES ORIGINAL</span>
                 </div>
                 <div className="h-1.5 w-3/4 bg-slate-200 rounded" />
                 <div className="h-1.5 w-full bg-slate-200 rounded" />
                 <div className="h-1.5 w-1/2 bg-slate-200 rounded" />
                 <div className="pt-2 flex items-center gap-1.5 text-[10px] text-text-subtle font-mono">
-                  <div className="w-4 h-4 rounded-full border border-amber-400 bg-amber-50 flex items-center justify-center text-[8px] font-bold text-amber-700">
+                  <div className="w-4 h-4 rounded-full border border-slate-300 bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-700">
                     S
                   </div>
                   <span>Registry Seal No. 04</span>

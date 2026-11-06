@@ -145,8 +145,8 @@ export function DocumentInspectionCanvas({
                     className={cn(
                       "absolute rounded-xs cursor-pointer transition-all pointer-events-auto",
                       isSelected
-                        ? "border-2 border-signal-accent bg-signal-accent/20 ring-2 ring-signal-accent/30 shadow-xs z-30"
-                        : "border border-amber-statutory/60 bg-amber-statutory/10 hover:border-amber-statutory hover:bg-amber-statutory/20 z-10"
+                        ? "border-2 border-brand-600 bg-brand-500/20 ring-2 ring-brand-500/30 shadow-xs z-30"
+                        : "border border-brand-500/40 bg-brand-500/5 hover:border-brand-500 hover:bg-brand-500/15 z-10"
                     )}
                     style={{
                       left: `${x}%`,

@@ -130,7 +130,7 @@ export function DashboardHeader({ user, orders = [], onTrackFiling }: DashboardH
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
               Active Filings
             </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-400">
+            <div className="w-7 h-7 rounded-lg bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 flex items-center justify-center text-brand-600 dark:text-brand-400">
               <Clock className="w-3.5 h-3.5" />
             </div>
           </div>
