@@ -4019,8 +4019,21 @@ let finalWorkerScript = activeGeminiKey
   ? workerScript.replace(/__BUILD_INJECTED_GEMINI_KEY__/g, activeGeminiKey)
   : workerScript.replace(/__BUILD_INJECTED_GEMINI_KEY__/g, '');
 
-finalWorkerScript = finalWorkerScript.replace(/__BUILD_INJECTED_GOOGLE_CLIENT_ID__/g, process.env.GOOGLE_CLIENT_ID || '');
-finalWorkerScript = finalWorkerScript.replace(/__BUILD_INJECTED_GOOGLE_CLIENT_SECRET__/g, process.env.GOOGLE_CLIENT_SECRET || '');
+let activeGoogleClientId = process.env.GOOGLE_CLIENT_ID || '';
+let activeGoogleClientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+
+if ((!activeGoogleClientId || !activeGoogleClientSecret) && fs.existsSync(path.join(ROOT_DIR, '.env'))) {
+  try {
+    const envContent = fs.readFileSync(path.join(ROOT_DIR, '.env'), 'utf8');
+    const idMatch = envContent.match(/GOOGLE_CLIENT_ID=["']?([^"'\r\n]+)["']?/);
+    if (idMatch) activeGoogleClientId = idMatch[1].trim();
+    const secretMatch = envContent.match(/GOOGLE_CLIENT_SECRET=["']?([^"'\r\n]+)["']?/);
+    if (secretMatch) activeGoogleClientSecret = secretMatch[1].trim();
+  } catch (e) {}
+}
+
+finalWorkerScript = finalWorkerScript.replace(/__BUILD_INJECTED_GOOGLE_CLIENT_ID__/g, activeGoogleClientId);
+finalWorkerScript = finalWorkerScript.replace(/__BUILD_INJECTED_GOOGLE_CLIENT_SECRET__/g, activeGoogleClientSecret);
 
 fs.writeFileSync(path.join(DIST_DIR, '_worker.js'), finalWorkerScript, 'utf8');
 console.log('✅ Generated dist/_worker.js (Cloudflare Pages Edge Router with dynamic AI integration)');
